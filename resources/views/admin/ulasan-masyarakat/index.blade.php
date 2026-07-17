@@ -1,0 +1,100 @@
+@extends('layouts.admin')
+
+@section('title', 'Ulasan Masyarakat - Admin DLH')
+@section('heading', 'Ulasan Masyarakat')
+
+@section('content')
+    <x-admin.page-header
+        title="Ulasan Masyarakat"
+        subtitle="Ringkasan rating dan komentar dari masyarakat"
+    />
+
+    {{-- Summary Cards --}}
+    <section class="grid gap-5 md:grid-cols-3 mb-8">
+        <x-admin.stat-card
+            label="Total Ulasan"
+            :value="$totalFeedback"
+            icon="star"
+            color="amber"
+        />
+        <x-admin.stat-card
+            label="Rata-rata Rating"
+            :value="number_format($avgOverall, 1)"
+            icon="trending-up"
+            color="emerald"
+        />
+        <x-admin.stat-card
+            label="Jenis Layanan"
+            :value="$ratingPerBidang->count()"
+            icon="folder"
+            color="sky"
+        />
+    </section>
+
+    {{-- Rating per Bidang --}}
+    <x-admin.card class="mb-8">
+        <div class="mb-4">
+            <h2 class="text-h4 font-bold text-ink-900">Rating per Jenis Layanan</h2>
+            <p class="text-xs text-slate-500">Rata-rata penilaian masyarakat per bidang</p>
+        </div>
+
+        @if ($ratingPerBidang->isEmpty())
+            <p class="text-sm text-slate-500">Belum ada ulasan dari masyarakat.</p>
+        @else
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                @foreach ($ratingPerBidang as $key => $data)
+                    <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+                        <p class="text-sm font-semibold text-ink-800 mb-2">{{ $data['label'] }}</p>
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center gap-0.5">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <svg class="h-4 w-4 {{ $i <= round($data['avg_rating']) ? 'text-amber-400' : 'text-slate-300' }}"
+                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                @endfor
+                            </div>
+                            <span class="text-lg font-bold text-ink-900">{{ $data['avg_rating'] }}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">{{ $data['total'] }} ulasan</p>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </x-admin.card>
+
+    {{-- Recent Comments --}}
+    <x-admin.card>
+        <div class="mb-4">
+            <h2 class="text-h4 font-bold text-ink-900">Komentar Terbaru</h2>
+            <p class="text-xs text-slate-500">Ulasan masyarakat yang menyertakan komentar</p>
+        </div>
+
+        @if ($recentFeedback->isEmpty())
+            <p class="text-sm text-slate-500">Belum ada komentar dari masyarakat.</p>
+        @else
+            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                @foreach ($recentFeedback as $fb)
+                    <div class="py-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center gap-0.5">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <svg class="h-3.5 w-3.5 {{ $i <= $fb['rating'] ? 'text-amber-400' : 'text-slate-300' }}"
+                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                @endfor
+                            </div>
+                            <span class="text-xs font-mono font-bold text-slate-600">{{ $fb['ticket_number'] }}</span>
+                            <span class="text-xs text-slate-400">•</span>
+                            <span class="text-xs text-slate-500">{{ $fb['model_label'] }}</span>
+                            <span class="text-xs text-slate-400">•</span>
+                            <span class="text-xs text-slate-400">{{ $fb['created_at']->diffForHumans() }}</span>
+                        </div>
+                        <p class="text-sm text-slate-700 dark:text-slate-300">{{ $fb['komentar'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </x-admin.card>
+@endsection

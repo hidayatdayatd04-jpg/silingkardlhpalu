@@ -1,0 +1,816 @@
+import './bootstrap';
+import './admin';
+import './map-components';
+import './dlh-markers';
+
+/**
+ * Helper terpusat untuk memastikan Leaflet sudah di-load sebelum callback dieksekusi.
+ * Semua komponen Livewire yang membutuhkan Leaflet harus memanggil fungsi ini
+ * daripada menduplikasi logika dynamic script injection.
+ *
+ * @param {Function} callback - Fungsi yang dipanggil setelah Leaflet siap
+ */
+window.ensureLeafletLoaded = function (callback) {
+    if (window.L) {
+        callback();
+        return;
+    }
+
+    // Cek apakah script sedang dalam proses loading (hindari double inject)
+    if (window._leafletLoading) {
+        window._leafletCallbacks = window._leafletCallbacks || [];
+        window._leafletCallbacks.push(callback);
+        return;
+    }
+
+    window._leafletLoading = true;
+    window._leafletCallbacks = [callback];
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => {
+        window._leafletLoading = false;
+        (window._leafletCallbacks || []).forEach(fn => fn());
+        window._leafletCallbacks = [];
+    };
+    document.head.appendChild(script);
+};
+
+/**
+ * Helper untuk memastikan MapLibre GL JS sudah di-load sebelum callback dieksekusi.
+ * Digunakan oleh komponen yang membutuhkan peta modern dengan vector tiles.
+ *
+ * @param {Function} callback - Fungsi yang dipanggil setelah MapLibre siap
+ */
+window.ensureMaplibreLoaded = function (callback) {
+    if (window.maplibregl) {
+        callback();
+        return;
+    }
+
+    if (window._maplibreLoading) {
+        window._maplibreCallbacks = window._maplibreCallbacks || [];
+        window._maplibreCallbacks.push(callback);
+        return;
+    }
+
+    window._maplibreLoading = true;
+    window._maplibreCallbacks = [callback];
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js';
+    script.onload = () => {
+        window._maplibreLoading = false;
+        (window._maplibreCallbacks || []).forEach(fn => fn());
+        window._maplibreCallbacks = [];
+    };
+    document.head.appendChild(script);
+};
+
+/**
+ * DLH Tracking Map — MapLibre GL JS
+ * Custom basemap + vehicle markers + geolocation
+ */
+window.dlhMapInit = function (containerId) {
+    if (window._dlhMapReady) return;
+    window._dlhMapReady = true;
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: [119.87, -0.9], zoom: 13,
+            attributionControl: false, maxPitch: 0
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true, visualizePitch: false }), 'top-left');
+        if (window.DlhScaleControl) map.addControl(new DlhScaleControl(), 'bottom-left');
+        if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        var locGrp = document.createElement('div');
+        locGrp.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        locGrp.style.cssText = 'position:absolute;top:120px;right:10px;z-index:1';
+        var locBtn = document.createElement('button');
+        locBtn.type = 'button'; locBtn.title = 'Lokasi Saya';
+        locBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+        locBtn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#4a5568';
+        locBtn.onclick = function () {
+            if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
+            navigator.geolocation.getCurrentPosition(function (p) {
+                var lng = p.coords.longitude, lat = p.coords.latitude;
+                map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
+                if (window._dlhLocMarker) window._dlhLocMarker.remove();
+                var dot = document.createElement('div');
+                dot.innerHTML = '<div style="width:20px;height:20px;background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,0.3),0 2px 8px rgba(0,0,0,0.2)"></div>';
+                window._dlhLocMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
+                    .setLngLat([lng, lat])
+                    .setPopup(new maplibregl.Popup({ offset: [0, -14], closeButton: false, maxWidth: '200px' })
+                        .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
+                    .addTo(map);
+                window._dlhLocMarker.togglePopup();
+            }, function () { alert('Gagal mendapatkan lokasi.'); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        };
+        locGrp.appendChild(locBtn);
+        map._container.appendChild(locGrp);
+
+        window._dlhMap = map;
+        window._dlhMarkers = [];
+
+        map.on('load', function () {
+            var layers = map.getStyle().layers;
+            function sid(id, p, v) { if (map.getLayer(id)) try { map.setPaintProperty(id, p, v); } catch(e){} }
+            function s2(id, p1, v1, p2, v2) { if (map.getLayer(id)) try { map.setPaintProperty(id, p1, v1); map.setPaintProperty(id, p2, v2); } catch(e){} }
+            sid('background', 'background-color', '#f6f7f9');
+            s2('water', 'fill-color', '#aad4f0', 'fill-opacity', 1);
+            s2('waterway', 'line-color', '#aad4f0', 'line-width', 1.5);
+            s2('park', 'fill-color', '#c8e6b8', 'fill-opacity', 0.75);
+            s2('landcover', 'fill-color', '#c8e6b8', 'fill-opacity', 0.5);
+            s2('landuse', 'fill-color', '#f0efec', 'fill-opacity', 0.2);
+            s2('building', 'fill-color', '#eae8e4', 'fill-opacity', 0.55);
+            sid('building', 'fill-outline-color', '#dddad5');
+            layers.forEach(function (l) {
+                if (l['source-layer'] !== 'transportation' || l.type !== 'line') return;
+                var c = (l.layout && l.layout['class']) || '', id = l.id;
+                var ic = id.indexOf('case') > -1 || id.indexOf('casing') > -1 || id.indexOf('outline') > -1;
+                if (c === 'motorway') s2(id, 'line-color', ic ? '#e0b840' : '#f0cc5c', 'line-width', ic ? 7 : 6);
+                else if (c === 'trunk') s2(id, 'line-color', ic ? '#e0b840' : '#f0cc5c', 'line-width', ic ? 6 : 5);
+                else if (c === 'primary') s2(id, 'line-color', ic ? '#ecd898' : '#f5dea0', 'line-width', ic ? 5.5 : 4);
+                else if (c === 'secondary') s2(id, 'line-color', ic ? '#d8d5d0' : '#fff', 'line-width', ic ? 5 : 3.5);
+                else if (c === 'tertiary') s2(id, 'line-color', ic ? '#e0ddd8' : '#fff', 'line-width', ic ? 4 : 2.8);
+                else if (c === 'path') s2(id, 'line-color', '#c8c5c0', 'line-width', 1.2);
+                else if (c === '' || c === 'minor' || c === 'service' || c === 'residential')
+                    s2(id, 'line-color', ic ? '#e8e6e3' : '#fff', 'line-width', ic ? 2.5 : 2);
+            });
+            s2('rail', 'line-color', '#d0ccc5', 'line-width', 1.5);
+            layers.forEach(function (l) {
+                if (l.type !== 'symbol' || !map.getLayer(l.id)) return;
+                try {
+                    map.setPaintProperty(l.id, 'text-halo-width', 3.5);
+                    map.setPaintProperty(l.id, 'text-halo-color', '#ffffff');
+                    map.setPaintProperty(l.id, 'text-halo-blur', 0.6);
+                    map.setPaintProperty(l.id, 'text-color', l['source-layer'] === 'place' ? '#2d3748' : '#4a5568');
+                    var op = map.getPaintProperty(l.id, 'text-opacity');
+                    if (Array.isArray(op) && op[0] === 'interpolate') {
+                        var n = ['interpolate', ['linear'], ['zoom']];
+                        for (var j = 2; j < op.length - 1; j += 2) { n.push(op[j]); n.push(Math.min(1, op[j + 1] + 0.4)); }
+                        map.setPaintProperty(l.id, 'text-opacity', n);
+                    } else if (typeof op === 'number' && op < 1) {
+                        map.setPaintProperty(l.id, 'text-opacity', Math.min(1, op + 0.4));
+                    }
+                } catch (e) {}
+            });
+        });
+    });
+};
+
+window.dlhMapDrawMarkers = function (vd, fv) {
+    var map = window._dlhMap;
+    if (!map) { setTimeout(function () { window.dlhMapDrawMarkers(vd, fv); }, 200); return; }
+    var markers = window._dlhMarkers;
+    var ni = new Set(vd.map(function (v) { return v.imei; }));
+    window._dlhMarkers = markers.filter(function (m) {
+        if (!ni.has(m._imei)) { m.remove(); return false; }
+        return true;
+    });
+    markers = window._dlhMarkers;
+
+    vd.forEach(function (v) {
+        var lat = parseFloat(v.latitude), lng = parseFloat(v.longitude);
+        if (isNaN(lat) || isNaN(lng)) return;
+        var isTruck = (parseInt(v.veh_type) === 4);
+        var pfx = isTruck ? 'truck' : 'car';
+        var st = (parseInt(v.acc) === 1) ? 'acc_on' : 'parking';
+        var iu = '/assets/tracking/' + pfx + '_' + st + '.png';
+        var el = document.createElement('div');
+        el.className = 'custom-vehicle-icon';
+        el.innerHTML = '<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.05);backdrop-filter:blur(4px)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'"><img src="' + iu + '" alt="" style="transform:rotate(' + v.angle + 'deg);width:30px;height:30px;transition:transform 0.3s ease;border-radius:8px" /></div>';
+        var sc = (parseInt(v.acc) === 1) ? '#10b981' : '#64748b';
+        var stx = (parseInt(v.acc) === 1) ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
+        var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + v.title + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + v.speed + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + v.server_time + '</p></div></div>';
+
+        var ex = markers.find(function (m) { return m._imei === v.imei; });
+        if (ex) {
+            ex.setLngLat([lng, lat]);
+            ex.getElement().querySelector('img').style.transform = 'rotate(' + v.angle + 'deg)';
+            ex.setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph));
+        } else {
+            var mk = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([lng, lat])
+                .setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph))
+                .addTo(map);
+            mk._imei = v.imei;
+            markers.push(mk);
+        }
+    });
+
+    if (fv && markers.length > 0) {
+        var b = new maplibregl.LngLatBounds();
+        markers.forEach(function (m) { b.extend(m.getLngLat()); });
+        map.fitBounds(b, { padding: 50, maxZoom: 15 });
+    }
+};
+
+window.addEventListener('guest-map-vehicles-updated', function (e) {
+    window.dlhMapDrawMarkers(e.detail.vehicles, e.detail.fitBounds);
+});
+
+/* ============================================================
+ * Generic MapLibre functions for all map pages
+ * ============================================================ */
+
+/** Helper: tambahkan tombol Lokasi Saya ke peta (pojok kiri bawah) */
+window.dlhAddLocBtn = function dlhAddLocBtn(map, onLocate) {
+    /* Tunggu map siap lalu tempel tombol di dalam container peta */
+    function addBtn() {
+        var container = map.getContainer();
+        var grp = document.createElement('div');
+        grp.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        grp.style.cssText = 'position:absolute;bottom:10px;left:10px;z-index:1;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.95);backdrop-filter:blur(8px)';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.title = 'Lokasi Saya';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+        btn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#475569';
+        btn.onclick = function () {
+            if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+            navigator.geolocation.getCurrentPosition(function (p) {
+                var lng = p.coords.longitude, lat = p.coords.latitude;
+                map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
+                if (window._dlhLocMarker) window._dlhLocMarker.remove();
+                var dot = document.createElement('div');
+                dot.innerHTML = '<div style="width:20px;height:20px;background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,0.3),0 2px 8px rgba(0,0,0,0.2)"></div>';
+                window._dlhLocMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
+                    .setLngLat([lng, lat])
+                    .setPopup(new maplibregl.Popup({ offset: [0, -14], closeButton: false, maxWidth: '200px' })
+                        .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
+                    .addTo(map);
+                window._dlhLocMarker.togglePopup();
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+                if (onLocate) onLocate(lat, lng);
+            }, function () {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+                alert('Gagal mendapatkan lokasi.');
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        };
+        grp.appendChild(btn);
+        container.appendChild(grp);
+    }
+    if (map.loaded()) { addBtn(); } else { map.on('load', addBtn); }
+}
+
+/** Simple map with single marker (admin show, cek pages) */
+window.dlhSimpleMap = function (containerId, cfg) {
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: [cfg.lng, cfg.lat],
+            zoom: cfg.zoom || 15,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+        map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (cfg.markerHtml) {
+            var el = document.createElement('div');
+            el.innerHTML = cfg.markerHtml;
+            new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([cfg.lng, cfg.lat])
+                .setPopup(new maplibregl.Popup({ offset: [0, -20] }).setHTML(cfg.popup || ''))
+                .addTo(map);
+        } else {
+            new maplibregl.Marker({ anchor: 'center' })
+                .setLngLat([cfg.lng, cfg.lat])
+                .setPopup(new maplibregl.Popup({ offset: [0, -20] }).setText(cfg.popupText || 'Lokasi'))
+                .addTo(map);
+        }
+        setTimeout(function () { map.resize(); }, 200);
+        dlhAddLocBtn(map);
+    });
+};
+
+/** Map with draggable marker (pengaduan forms) */
+window.dlhDraggableMap = function (containerId, cfg) {
+    window.ensureMaplibreLoaded(function () {
+        var hasInit = cfg.initLat !== null && cfg.initLng !== null;
+        var center = hasInit ? [cfg.initLng, cfg.initLat] : [cfg.defLng, cfg.defLat];
+
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: center,
+            zoom: cfg.zoom || 13,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        var marker = null;
+
+        function setMarker(lat, lng, writeInputs) {
+            if (marker) {
+                marker.setLngLat([lng, lat]);
+            } else {
+                marker = new maplibregl.Marker({ draggable: true, anchor: 'center' })
+                    .setLngLat([lng, lat])
+                    .addTo(map);
+                marker.on('dragend', function () {
+                    var p = marker.getLngLat();
+                    writeFields(p.lat, p.lng);
+                });
+            }
+            if (writeInputs) writeFields(lat, lng);
+        }
+
+        function writeFields(lat, lng) {
+            var la = document.getElementById(cfg.latInput) || document.querySelector('[name="' + cfg.latInput + '"]');
+            var ln = document.getElementById(cfg.lngInput) || document.querySelector('[name="' + cfg.lngInput + '"]');
+            if (la) { la.value = Number(lat).toFixed(6); la.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (ln) { ln.value = Number(lng).toFixed(6); ln.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+
+        if (hasInit) setMarker(cfg.initLat, cfg.initLng, false);
+        map.on('click', function (e) { setMarker(e.lngLat.lat, e.lngLat.lng, true); });
+
+        setTimeout(function () { map.resize(); }, 200);
+
+        // Lokasi Saya button
+        dlhAddLocBtn(map, function (lat, lng) { setMarker(lat, lng, true); });
+
+        // Expose for Livewire events
+        window['dlhDragMap_' + containerId] = {
+            setMarker: setMarker,
+            setCenter: function (lat, lng) { map.flyTo({ center: [lng, lat], zoom: 15 }); setMarker(lat, lng, true); }
+        };
+    });
+};
+
+/** Map with multiple markers from data array */
+window.dlhMultiMarkerMap = function (containerId, cfg) {
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: cfg.center || [119.87, -0.9],
+            zoom: cfg.zoom || 13,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        var markers = [];
+        (cfg.markers || []).forEach(function (m) {
+            var el = document.createElement('div');
+            el.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;backdrop-filter:blur(4px)';
+            el.innerHTML = '<img src="' + (m.icon || '/assets/tracking/car_acc_on.png') + '" style="width:24px;height:24px;object-fit:contain" />';
+
+            var mk = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([m.lng, m.lat])
+                .addTo(map);
+
+            if (m.popup) {
+                mk.setPopup(new maplibregl.Popup({ offset: [0, -20], maxWidth: '280px' }).setHTML(m.popup));
+            }
+            markers.push(mk);
+        });
+
+        if (cfg.fitBounds && markers.length > 0) {
+            var bounds = new maplibregl.LngLatBounds();
+            markers.forEach(function (m) { bounds.extend(m.getLngLat()); });
+            map.fitBounds(bounds, { padding: 50 });
+        }
+
+        setTimeout(function () { map.resize(); }, 200);
+        dlhAddLocBtn(map);
+    });
+};
+
+/** Peta persampahan with GeoJSON layers + armada tracking from API */
+window.dlhPetaPersampahan = function (containerId, layers, armada) {
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: [119.87, -0.9],
+            zoom: 12,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        window._dlhMap = map;
+        window._dlhArmadaMarkers = [];
+
+        // Simpan state checkbox
+        var layerVisibility = {};
+        layers.forEach(function (layer) { layerVisibility[layer.id] = true; });
+
+        // Fungsi untuk membuat popup HTML
+        function makePopupHtml(props, color, layerName) {
+            var details = [];
+            if (props.ALAMAT) details.push({ icon: 'lokasi', value: props.ALAMAT });
+            if (props.KECAMATAN) details.push({ icon: 'lokasi', value: props.KECAMATAN });
+            if (props.KAPASITAS) details.push({ icon: 'volume', value: 'Kapasitas: ' + props.KAPASITAS });
+            if (props.VOLUME) details.push({ icon: 'volume', value: 'Volume: ' + props.VOLUME });
+
+            var statusObj = null;
+            if (props.STATUS) {
+                var sc = props.STATUS === 'Aktif' ? '#22c55e' : props.STATUS === 'Non-aktif' ? '#ef4444' : '#f59e0b';
+                statusObj = { text: props.STATUS, color: sc };
+            }
+
+            var markerType = DlhMarkers.detectType(layerName, props);
+
+            return DlhMarkers.popup({
+                nama: props.NAMA || layerName,
+                kategori: layerName,
+                type: markerType,
+                status: statusObj,
+                details: details,
+            });
+        }
+
+        // Fungsi untuk menambahkan satu layer
+        function addSingleLayer(layer) {
+            var color = (layer.metadata && layer.metadata.color) || '#6b7280';
+            var sourceId = 'src-' + layer.id;
+            var visible = layerVisibility[layer.id] !== false;
+
+            // Hapus source dan layer lama jika ada
+            if (map.getSource(sourceId)) {
+                map.getStyle().layers.slice().forEach(function (l) {
+                    if (l.source === sourceId && map.getLayer(l.id)) {
+                        map.removeLayer(l.id);
+                    }
+                });
+                map.removeSource(sourceId);
+            }
+
+            // Tambahkan source baru
+            // Strip legacy CRS field from GeoJSON FeatureCollection
+            var geojsonData = layer.geojson ? JSON.parse(JSON.stringify(layer.geojson)) : { type: 'FeatureCollection', features: [] };
+            if (geojsonData.crs) delete geojsonData.crs;
+            map.addSource(sourceId, { type: 'geojson', data: geojsonData });
+
+            // Tambahkan layers berdasarkan jenis geometri
+            if (layer.jenis_geometri === 'point' || layer.jenis_geometri === 'mixed') {
+                // Gunakan DlhMarkers untuk custom SVG markers
+                var pointMarkers = [];
+                var features = (layer.geojson && layer.geojson.features) || [];
+                features.forEach(function (f) {
+                    if (!f.geometry || f.geometry.type !== 'Point') return;
+                    var coords = f.geometry.coordinates;
+                    if (!coords || !coords[0] || !coords[1]) return;
+                    var props = f.properties || {};
+                    var html = makePopupHtml(props, color, layer.nama_layer);
+                    var mk = DlhMarkers.addToMap(map, 'tps', [coords[0], coords[1]], html, { size: 26 });
+                    if (!visible) mk.remove();
+                    pointMarkers.push(mk);
+                });
+                // Simpan referensi marker untuk toggle visibility
+                layer._pointMarkers = pointMarkers;
+
+                // Event hover via delegation
+                map.on('click', function (e) {
+                    if (e.defaultPrevented) return;
+                });
+            }
+
+            if (layer.jenis_geometri === 'line' || layer.jenis_geometri === 'mixed') {
+                var lineId = sourceId + '-line';
+                map.addLayer({ id: lineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2 } });
+                if (!visible) map.setLayoutProperty(lineId, 'visibility', 'none');
+            }
+
+            if (layer.jenis_geometri === 'polygon' || layer.jenis_geometri === 'mixed') {
+                var fillId = sourceId + '-fill';
+                var outlineId = sourceId + '-outline';
+                map.addLayer({ id: fillId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.3 } });
+                map.addLayer({ id: outlineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1 } });
+                if (!visible) {
+                    map.setLayoutProperty(fillId, 'visibility', 'none');
+                    map.setLayoutProperty(outlineId, 'visibility', 'none');
+                }
+            }
+        }
+
+        // Fungsi untuk menambahkan semua layer persampahan
+        function addAllLayers() {
+            layers.forEach(function (layer) {
+                addSingleLayer(layer);
+            });
+        }
+
+        // Fungsi untuk menggambar marker armada di peta
+        window.dlhPetaPersampahanDrawArmada = function (vehicleData) {
+            var markers = window._dlhArmadaMarkers || [];
+            var ni = new Set(vehicleData.map(function (v) { return v.imei; }));
+            // Hapus marker yang tidak ada di data baru
+            window._dlhArmadaMarkers = markers.filter(function (m) {
+                if (!ni.has(m._imei)) { m.remove(); return false; }
+                return true;
+            });
+            markers = window._dlhArmadaMarkers;
+
+            vehicleData.forEach(function (v) {
+                var lat = parseFloat(v.latitude), lng = parseFloat(v.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+                var isTruck = (parseInt(v.veh_type) === 4);
+                var pfx = isTruck ? 'truck' : 'car';
+                var st = (parseInt(v.acc) === 1) ? 'acc_on' : 'parking';
+                var iu = '/assets/tracking/' + pfx + '_' + st + '.png';
+                var el = document.createElement('div');
+                el.className = 'custom-vehicle-icon';
+                el.innerHTML = '<img src="' + iu + '" alt="" style="width:36px;height:36px;transform:rotate(' + v.angle + 'deg);transition:transform 0.3s ease;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));cursor:pointer" onmouseover="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1.15)\'" onmouseout="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1)\'" />';
+                var sc = (parseInt(v.acc) === 1) ? '#10b981' : '#64748b';
+                var stx = (parseInt(v.acc) === 1) ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
+                var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + v.title + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + v.speed + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + v.server_time + '</p></div></div>';
+
+                var ex = markers.find(function (m) { return m._imei === v.imei; });
+                if (ex) {
+                    ex.setLngLat([lng, lat]);
+                    ex.getElement().querySelector('img').style.transform = 'rotate(' + v.angle + 'deg)';
+                    ex.setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph));
+                } else {
+                    var mk = new maplibregl.Marker({ element: el, anchor: 'center' })
+                        .setLngLat([lng, lat])
+                        .setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph))
+                        .addTo(map);
+                    mk._imei = v.imei;
+                    markers.push(mk);
+                }
+            });
+
+            window._dlhArmadaMarkers = markers;
+        };
+
+        map.on('load', function () {
+            addAllLayers();
+
+            // Gambar armada awal
+            if (armada && armada.length > 0) {
+                window.dlhPetaPersampahanDrawArmada(armada);
+            }
+
+            // Event listener untuk toggle layer
+            document.querySelectorAll('.layer-toggle').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    var layerId = el.dataset.layer;
+                    if (!layerId) return;
+
+                    // Handle armada toggle
+                    if (layerId === 'armada') {
+                        if (window._dlhArmadaMarkers) {
+                            window._dlhArmadaMarkers.forEach(function (mk) {
+                                el.checked ? mk.addTo(map) : mk.remove();
+                            });
+                        }
+                        return;
+                    }
+
+                    var sourceId = 'src-' + layerId;
+                    var layer = layers.find(function (l) { return l.id == layerId; });
+                    if (!layer) return;
+
+                    // Update state visibility
+                    layerVisibility[layerId] = el.checked;
+
+                    // Toggle visibility semua layer dengan source ini
+                    map.getStyle().layers.forEach(function (l) {
+                        if (l.source === sourceId && map.getLayer(l.id)) {
+                            map.setLayoutProperty(l.id, 'visibility', el.checked ? 'visible' : 'none');
+                        }
+                    });
+
+                    // Toggle point markers (DlhMarkers)
+                    if (layer._pointMarkers) {
+                        layer._pointMarkers.forEach(function (mk) {
+                            el.checked ? mk.addTo(map) : mk.remove();
+                        });
+                    }
+                });
+            });
+        });
+
+        // Ketika basemap berubah, tambahkan ulang semua layer
+        map.on('basemap-changed', function () {
+            setTimeout(addAllLayers, 150);
+        });
+
+        dlhAddLocBtn(map);
+    });
+};
+
+/** Peta Objek Pengawasan with multiple markers */
+window.dlhPetaObjekPengawasan = function (containerId, points) {
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: [119.87, -0.9],
+            zoom: 13,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        var markers = [];
+
+        function addMarkers() {
+            // Hapus marker lama
+            markers.forEach(function (m) { m.remove(); });
+            markers = [];
+
+            points.forEach(function (p) {
+                var popupHtml = DlhMarkers.popup({
+                    nama: p.nama_perusahaan,
+                    kategori: 'Objek Pengawasan',
+                    type: 'objek_pengawasan',
+                    details: [
+                        { icon: 'lokasi', value: p.alamat },
+                        { icon: 'doc', value: p.dokumen_summary || 'Belum ada data' },
+                    ],
+                });
+
+                var mk = DlhMarkers.addToMap(map, 'objek_pengawasan', [p.longitude, p.latitude], popupHtml, { size: 30 });
+                markers.push(mk);
+            });
+        }
+
+        map.on('load', function () {
+            addMarkers();
+
+            if (markers.length > 0) {
+                var bounds = new maplibregl.LngLatBounds();
+                markers.forEach(function (m) { bounds.extend(m.getLngLat()); });
+                map.fitBounds(bounds, { padding: 50 });
+            }
+        });
+
+        // Ketika basemap berubah, tambahkan ulang marker
+        map.on('basemap-changed', function () {
+            setTimeout(addMarkers, 150);
+        });
+
+        dlhAddLocBtn(map);
+        setTimeout(function () { map.resize(); }, 200);
+    });
+};
+
+/** Peta RTH with multiple layers (taman, hutan, jalur, pohon, aset) */
+window.dlhPetaRth = function (containerId, mapData) {
+    window.ensureMaplibreLoaded(function () {
+        var map = new maplibregl.Map({
+            container: containerId,
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+            center: [119.87, -0.9],
+            zoom: 13,
+            attributionControl: false
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+        // Custom GIS Layers
+        var gisLayers = mapData.gis_layers || [];
+        var gisVisibility = {};
+        gisLayers.forEach(function (layer) { gisVisibility[layer.id] = true; });
+
+        function makeGisPopupHtml(props, color, layerName) {
+            var details = [];
+            if (props.ALAMAT) details.push({ icon: 'lokasi', value: props.ALAMAT });
+            if (props.KECAMATAN) details.push({ icon: 'lokasi', value: props.KECAMATAN });
+            if (props.KELURAHAN) details.push({ icon: 'lokasi', value: props.KELURAHAN });
+            
+            var skipKeys = new Set(['NAMA', 'name', '_record', '_marker_type', 'ALAMAT', 'KECAMATAN', 'KELURAHAN']);
+            Object.keys(props).forEach(function (key) {
+                if (skipKeys.has(key) || key.indexOf('_') === 0) return;
+                if (props[key] === null || props[key] === '') return;
+                details.push({ icon: 'doc', value: key + ': ' + props[key] });
+            });
+
+            var statusObj = null;
+            if (props.STATUS) {
+                var sc = props.STATUS === 'Aktif' ? '#22c55e' : props.STATUS === 'Non-aktif' ? '#ef4444' : '#f59e0b';
+                statusObj = { text: props.STATUS, color: sc };
+            }
+
+            var markerType = DlhMarkers.detectType(layerName, props);
+
+            return DlhMarkers.popup({
+                nama: props.NAMA || props.name || layerName,
+                kategori: layerName,
+                type: markerType,
+                status: statusObj,
+                details: details,
+            });
+        }
+
+        function addSingleGisLayer(layer) {
+            var color = (layer.metadata && layer.metadata.color) || '#6b7280';
+            var sourceId = 'gis-src-' + layer.id;
+            var visible = gisVisibility[layer.id] !== false;
+
+            if (map.getSource(sourceId)) {
+                map.getStyle().layers.slice().forEach(function (l) {
+                    if (l.source === sourceId && map.getLayer(l.id)) {
+                        map.removeLayer(l.id);
+                    }
+                });
+                map.removeSource(sourceId);
+            }
+
+            // Strip legacy CRS field from GeoJSON FeatureCollection
+            var geoJsonClean = layer.geojson ? JSON.parse(JSON.stringify(layer.geojson)) : { type: 'FeatureCollection', features: [] };
+            if (geoJsonClean.crs) delete geoJsonClean.crs;
+            map.addSource(sourceId, { type: 'geojson', data: geoJsonClean });
+
+            if (layer.jenis_geometri === 'point' || layer.jenis_geometri === 'mixed') {
+                var pointMarkers = [];
+                var features = (layer.geojson && layer.geojson.features) || [];
+                features.forEach(function (f) {
+                    if (!f.geometry || f.geometry.type !== 'Point') return;
+                    var coords = f.geometry.coordinates;
+                    if (!coords || !coords[0] || !coords[1]) return;
+                    var props = f.properties || {};
+                    var html = makeGisPopupHtml(props, color, layer.nama_layer);
+                    var markerType = DlhMarkers.detectType(layer.nama_layer, props);
+                    var mk = DlhMarkers.addToMap(map, markerType, [coords[0], coords[1]], html, { size: 26 });
+                    if (!visible) mk.remove();
+                    pointMarkers.push(mk);
+                });
+                layer._pointMarkers = pointMarkers;
+            }
+
+            if (layer.jenis_geometri === 'line' || layer.jenis_geometri === 'mixed') {
+                var lineId = sourceId + '-line';
+                map.addLayer({ id: lineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2 } });
+                if (!visible) map.setLayoutProperty(lineId, 'visibility', 'none');
+            }
+
+            if (layer.jenis_geometri === 'polygon' || layer.jenis_geometri === 'mixed') {
+                var fillId = sourceId + '-fill';
+                var outlineId = sourceId + '-outline';
+                map.addLayer({ id: fillId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.3 } });
+                map.addLayer({ id: outlineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1 } });
+                if (!visible) {
+                    map.setLayoutProperty(fillId, 'visibility', 'none');
+                    map.setLayoutProperty(outlineId, 'visibility', 'none');
+                }
+            }
+        }
+
+        function addAllGisLayers() {
+            gisLayers.forEach(function (layer) {
+                addSingleGisLayer(layer);
+            });
+        }
+
+        map.on('load', function () {
+            addAllGisLayers();
+
+            document.querySelectorAll('.gis-layer-toggle').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    var layerId = el.dataset.layer;
+                    if (!layerId) return;
+                    var sourceId = 'gis-src-' + layerId;
+                    var layer = gisLayers.find(function (l) { return l.id == layerId; });
+                    if (!layer) return;
+
+                    gisVisibility[layerId] = el.checked;
+
+                    map.getStyle().layers.forEach(function (l) {
+                        if (l.source === sourceId && map.getLayer(l.id)) {
+                            map.setLayoutProperty(l.id, 'visibility', el.checked ? 'visible' : 'none');
+                        }
+                    });
+
+                    if (layer._pointMarkers) {
+                        layer._pointMarkers.forEach(function (mk) {
+                            el.checked ? mk.addTo(map) : mk.remove();
+                        });
+                    }
+                });
+            });
+        });
+
+        // Ketika basemap berubah, tambahkan ulang semua GIS layer
+        map.on('basemap-changed', function () {
+            setTimeout(function () {
+                addAllGisLayers();
+            }, 150);
+        });
+
+        dlhAddLocBtn(map);
+        setTimeout(function () { map.resize(); }, 200);
+    });
+};

@@ -1,0 +1,738 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+@import './admin-utilities.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* Safelist: dynamic Tailwind classes used in Blade templates */
+/* bg-{color}-50, bg-{color}-100, text-{color}-600, text-{color}-700, ring-{color}-200, hover:bg-{color}-50 */
+@source inline("bg-danger-50 bg-danger-100 bg-info-50 bg-info-100 bg-warning-50 bg-warning-100 bg-success-50 bg-success-100 bg-gray-50 bg-gray-100 bg-slate-50 bg-slate-100 bg-emerald-50 bg-emerald-100 bg-sky-50 bg-sky-100 bg-amber-50 bg-amber-100 bg-teal-50 bg-teal-100 bg-indigo-50 bg-indigo-100 bg-rose-50 bg-rose-100 bg-purple-50 bg-purple-100 text-danger-600 text-danger-700 text-info-600 text-info-700 text-warning-600 text-warning-700 text-success-600 text-success-700 text-gray-600 text-gray-700 text-slate-600 text-slate-700 text-emerald-600 text-emerald-700 text-sky-600 text-sky-700 text-amber-600 text-amber-700 text-teal-600 text-teal-700 text-indigo-600 text-indigo-700 text-rose-600 text-rose-700 text-purple-600 text-purple-700 ring-danger-200 ring-info-200 ring-warning-200 ring-success-200 ring-gray-200 ring-slate-200 ring-emerald-200 ring-sky-200 ring-amber-200 ring-teal-200 ring-indigo-200 ring-rose-200 ring-purple-200 hover:bg-danger-50 hover:bg-info-50 hover:bg-warning-50 hover:bg-success-50 hover:bg-gray-50 hover:bg-slate-50 hover:bg-emerald-50 hover:bg-sky-50 hover:bg-amber-50 hover:bg-teal-50 hover:bg-indigo-50 hover:bg-rose-50 hover:bg-purple-50");
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', 'Outfit', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+
+    --color-brand-50: #ecfdf5;
+    --color-brand-100: #d1fae5;
+    --color-brand-200: #a7f3d0;
+    --color-brand-300: #6ee7b7;
+    --color-brand-400: #34d399;
+    --color-brand-500: #10b981;
+    --color-brand-600: #059669;
+    --color-brand-700: #047857;
+    --color-brand-800: #065f46;
+    --color-brand-900: #064e3b;
+    --color-brand-950: #022c22;
+
+    /* Forest — hijau tua kredibel untuk sidebar & hero admin.
+       Lebih dalam dari brand-950 supaya kontras teks putih WCAG AA aman. */
+    --color-forest-50: #eef8f2;
+    --color-forest-100: #d5eede;
+    --color-forest-200: #a8ddc0;
+    --color-forest-300: #74c69d;
+    --color-forest-400: #4baa7d;
+    --color-forest-500: #2f8b62;
+    --color-forest-600: #1f6d4c;
+    --color-forest-700: #16553c;
+    --color-forest-800: #0f4030;
+    --color-forest-900: #0a2f24;
+    --color-forest-950: #061c15;
+
+    /* Teluk Palu — biru kehijauan laut/teluk (warna pendukung, aksen "air") */
+    --color-bay-50: #edfcff;
+    --color-bay-100: #d2f6fd;
+    --color-bay-200: #a9ecfa;
+    --color-bay-300: #6bddf5;
+    --color-bay-400: #28c6e8;
+    --color-bay-500: #0dabce;
+    --color-bay-600: #0989ad;
+    --color-bay-700: #0e6d8c;
+    --color-bay-800: #155a72;
+    --color-bay-900: #164b60;
+    --color-bay-950: #082f40;
+
+    /* Tanah / terracotta — refer isu lingkungan darat: reboisasi & RTH (aksen hangat) */
+    --color-clay-50: #fdf5f1;
+    --color-clay-100: #fbe8df;
+    --color-clay-200: #f6cdbb;
+    --color-clay-300: #efab8f;
+    --color-clay-400: #e57f5a;
+    --color-clay-500: #d95f36;
+    --color-clay-600: #c74a26;
+    --color-clay-700: #a5391f;
+    --color-clay-800: #86301f;
+    --color-clay-900: #6f2b1e;
+    --color-clay-950: #3c130c;
+
+    /* Ink — teks slate dengan sedikit warm supaya kredibel + tidak "corporate abu".
+       Dipakai untuk hierarki teks: ink-900 heading, ink-700 body, ink-500 muted, ink-400 hint. */
+    --color-ink-50: #f6f8fa;
+    --color-ink-100: #eaeef3;
+    --color-ink-200: #d2d9e2;
+    --color-ink-300: #a8b3c1;
+    --color-ink-400: #7a8595;
+    --color-ink-500: #566072;
+    --color-ink-600: #3c4557;
+    --color-ink-700: #2a3242;
+    --color-ink-800: #1c2432;
+    --color-ink-900: #111826;
+    --color-ink-950: #070b14;
+
+    /* Radius scale konsisten */
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
+    --radius-pill: 9999px;
+
+    /* Shadow scale layered lembut — dipakai kartu, tombol, modal */
+    --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+    --shadow-lift: 0 4px 8px -2px rgba(15, 23, 42, 0.06), 0 14px 32px -8px rgba(15, 23, 42, 0.10);
+    --shadow-elevated: 0 8px 16px -4px rgba(15, 23, 42, 0.08), 0 24px 48px -12px rgba(15, 23, 42, 0.16);
+    --shadow-modal: 0 24px 48px -12px rgba(15, 23, 42, 0.20), 0 48px 96px -24px rgba(15, 23, 42, 0.24);
+    --shadow-brand-glow: 0 10px 24px -8px rgba(16, 185, 129, 0.35);
+    --shadow-brand-glow-strong: 0 14px 32px -8px rgba(16, 185, 129, 0.5);
+
+    /* Motion tokens */
+    --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast: 150ms;
+    --duration-base: 220ms;
+    --duration-slow: 320ms;
+
+    /* Gradient tokens sistem */
+    --gradient-forest: linear-gradient(180deg, #0a2f24 0%, #061c15 100%);
+    --gradient-forest-radial: radial-gradient(1200px 600px at 0% 0%, rgba(52, 211, 153, 0.10), transparent 55%),
+        radial-gradient(900px 500px at 100% 100%, rgba(13, 171, 206, 0.08), transparent 55%),
+        linear-gradient(180deg, #0a2f24 0%, #061c15 100%);
+    --gradient-brand: linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%);
+    --gradient-brand-soft: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(52, 211, 153, 0.08) 100%);
+    --gradient-teal: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+    --gradient-amber: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+    --gradient-rose: linear-gradient(135deg, #be123c 0%, #f43f5e 100%);
+    --gradient-sky: linear-gradient(135deg, #075985 0%, #38bdf8 100%);
+    --gradient-page: linear-gradient(180deg, #f3faf7 0%, #ffffff 45%, #f6fbf9 100%);
+    --gradient-card-glow: radial-gradient(600px 240px at 100% 0%, rgba(16, 185, 129, 0.06), transparent 60%);
+
+    /* ── State color scales (redesign) ─────────────────────────────────
+       success=emerald (alias brand), warning=amber, danger=rose, info=bay. */
+    --color-success-50: #ecfdf5;
+    --color-success-100: #d1fae5;
+    --color-success-200: #a7f3d0;
+    --color-success-300: #6ee7b7;
+    --color-success-400: #34d399;
+    --color-success-500: #10b981;
+    --color-success-600: #059669;
+    --color-success-700: #047857;
+    --color-success-800: #065f46;
+    --color-success-900: #064e3b;
+    --color-success-950: #022c22;
+
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-200: #fde68a;
+    --color-warning-300: #fcd34d;
+    --color-warning-400: #fbbf24;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+    --color-warning-800: #92400e;
+    --color-warning-900: #78350f;
+    --color-warning-950: #451a03;
+
+    --color-danger-50: #fff1f2;
+    --color-danger-100: #ffe4e6;
+    --color-danger-200: #fecdd3;
+    --color-danger-300: #fda4af;
+    --color-danger-400: #fb7185;
+    --color-danger-500: #f43f5e;
+    --color-danger-600: #e11d48;
+    --color-danger-700: #be123c;
+    --color-danger-800: #9f1239;
+    --color-danger-900: #881337;
+    --color-danger-950: #4c0519;
+
+    --color-info-50: #edfcff;
+    --color-info-100: #d2f6fd;
+    --color-info-200: #a9ecfa;
+    --color-info-300: #6bddf5;
+    --color-info-400: #28c6e8;
+    --color-info-500: #0dabce;
+    --color-info-600: #0989ad;
+    --color-info-700: #0e6d8c;
+    --color-info-800: #155a72;
+    --color-info-900: #164b60;
+    --color-info-950: #082f40;
+
+    /* ── Redesign gradients ─────────────────────────────────────────── */
+    --gradient-sidebar: linear-gradient(184deg, #061c15 0%, #0a2f24 60%, #08251c 100%);
+    --gradient-header-hero: radial-gradient(1100px 480px at 12% -20%, rgba(52, 211, 153, 0.22), transparent 55%),
+        radial-gradient(900px 420px at 100% 0%, rgba(13, 171, 206, 0.16), transparent 55%),
+        linear-gradient(135deg, #0a2f24 0%, #0f4030 45%, #16553c 100%);
+    --gradient-stat-brand: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(52, 211, 153, 0.08));
+    --gradient-stat-info: linear-gradient(135deg, rgba(13, 171, 206, 0.16), rgba(107, 221, 245, 0.08));
+    --gradient-stat-warning: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(252, 211, 77, 0.08));
+    --gradient-stat-danger: linear-gradient(135deg, rgba(244, 63, 94, 0.16), rgba(253, 164, 175, 0.08));
+    --gradient-stat-clay: linear-gradient(135deg, rgba(217, 95, 54, 0.16), rgba(239, 171, 143, 0.08));
+
+    /* ── Redesign shadows ───────────────────────────────────────────── */
+    --shadow-card-hover: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -6px rgba(15, 23, 42, 0.14);
+    --shadow-sidebar-active: inset 0 0 0 1px rgba(52, 211, 153, 0.20), 0 6px 18px -8px rgba(16, 185, 129, 0.45);
+    --shadow-focus-ring-brand: 0 0 0 4px rgba(16, 185, 129, 0.18);
+
+    /* ── Redesign motion ────────────────────────────────────────────── */
+    --ease-emphasize: cubic-bezier(0.2, 0, 0, 1);
+    --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+    --duration-hover: 150ms;
+    --duration-state: 200ms;
+    --duration-section: 300ms;
+    --duration-overlay: 400ms;
+
+    /* ── Typography scale (redesign) ────────────────────────────────── */
+    --text-display: 2.25rem;
+    --text-display--line-height: 2.5rem;
+    --text-display--letter-spacing: -0.02em;
+    --text-display--font-weight: 800;
+    --text-h1: 1.75rem;
+    --text-h1--line-height: 2.15rem;
+    --text-h1--letter-spacing: -0.015em;
+    --text-h1--font-weight: 700;
+    --text-h2: 1.375rem;
+    --text-h2--line-height: 1.85rem;
+    --text-h2--font-weight: 700;
+    --text-h3: 1.125rem;
+    --text-h3--line-height: 1.6rem;
+    --text-h3--font-weight: 600;
+    --text-h4: 1rem;
+    --text-h4--line-height: 1.5rem;
+    --text-h4--font-weight: 600;
+    --text-body: 0.9375rem;
+    --text-body--line-height: 1.6rem;
+    --text-caption: 0.75rem;
+    --text-caption--line-height: 1rem;
+    --text-caption--letter-spacing: 0.04em;
+    --text-mono: 0.875rem;
+    --text-mono--line-height: 1.25rem;
+}
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
+    body {
+        @apply font-sans text-slate-800 dark:text-slate-100;
+    }
+
+    html.dark body {
+        background: #071a14 !important;
+    }
+
+    ::selection {
+        @apply bg-emerald-200 text-emerald-950;
+    }
+}
+
+/* Public pages — override font to Inter */
+.dlh-public, .dlh-public * {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Textarea — sembunyikan scrollbar, hide resize handle */
+.pub-textarea {
+    resize: none !important;
+    overflow: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+.pub-textarea::-webkit-scrollbar {
+    display: none !important;
+}
+
+@layer components {
+    .admin-surface {
+        @apply rounded-lg border border-white/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)];
+    }
+
+    .admin-muted-surface {
+        @apply rounded-lg border border-slate-200/80 bg-slate-50/80;
+    }
+
+    .admin-field {
+        @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100;
+    }
+}
+
+/* ==========================================================================
+   Beranda — sistem gerak terukur (scroll-reveal, hero entrance, status pulse)
+   Semua animasi dinonaktifkan otomatis bila pengguna meminta reduced-motion.
+   ========================================================================== */
+@layer utilities {
+    /* Elemen menunggu masuk viewport; JS menambahkan .is-revealed via IntersectionObserver.
+       Bidirectional: animasi MASUK saat elemen memasuki viewport, dan animasi KELUAR
+       (kembali ke state awal) saat elemen meninggalkan viewport. */
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition:
+            opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        transition-delay: var(--reveal-delay, 0ms);
+        will-change: opacity, transform;
+    }
+
+    /* Varian arah — set lewat class di HTML (opsional). */
+    .reveal-left  { transform: translateX(-40px); }
+    .reveal-right { transform: translateX(40px); }
+    .reveal-scale { transform: translateY(24px) scale(0.94); }
+    .reveal-zoom  { transform: scale(0.9); }
+
+    .reveal.is-revealed {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Momen signature: entrance hero saat load (fade + slide halus, berjenjang).
+       Dijeda sampai preloader terangkat (html.dlh-ready) agar animasi tak terbuang
+       di balik layar loading. Bila tanpa preloader, halaman lain tak memakai .hero-enter. */
+    .hero-enter {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: heroEnter 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation-delay: var(--hero-delay, 0ms);
+        animation-play-state: paused;
+    }
+
+    html.dlh-ready .hero-enter {
+        animation-play-state: running;
+    }
+
+    @keyframes heroEnter {
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /* Indikator "Online" armada — denyut lembut agar terasa real-time. */
+    .status-ping {
+        animation: statusPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes statusPing {
+        0% {
+            transform: scale(1);
+            opacity: 0.75;
+        }
+        75%,
+        100% {
+            transform: scale(2.4);
+            opacity: 0;
+        }
+    }
+
+    /* Kursor mengetik untuk streaming chatbot. */
+    .cb-caret {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        margin-left: 1px;
+        vertical-align: text-bottom;
+        background: currentColor;
+        border-radius: 1px;
+        animation: cbCaret 0.9s step-end infinite;
+    }
+
+    @keyframes cbCaret {
+        50% { opacity: 0; }
+    }
+
+    /* Loading chatbot: logo Kota Palu berputar dalam cincin (indikator "mengetik"). */
+    .cb-spinner {
+        position: relative;
+        display: inline-flex;
+        width: 24px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
+    }
+    .cb-spinner__ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        border: 2px solid rgba(16, 185, 129, 0.18);
+        border-top-color: #10b981;
+        border-right-color: #28c6e8;
+        animation: cbSpin 0.8s linear infinite;
+    }
+    .cb-spinner__logo {
+        width: 14px;
+        height: 14px;
+        object-fit: contain;
+        animation: cbLogoPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes cbSpin {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes cbLogoPulse {
+        0%, 100% { transform: scale(0.88); opacity: 0.85; }
+        50% { transform: scale(1.06); opacity: 1; }
+    }
+}
+
+/* ==========================================================================
+   Admin redesign — motion helpers (Alpine + CSS saja, no lib).
+   staggerReveal() di admin.js menambah .is-in ke elemen .stagger-item.
+   ========================================================================== */
+@layer utilities {
+    /* Section entrance untuk detail/dashboard — JS/Alpine set .is-in */
+    .stagger-item {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+            opacity var(--duration-section, 300ms) var(--ease-emphasize, cubic-bezier(0.2, 0, 0, 1)),
+            transform var(--duration-section, 300ms) var(--ease-emphasize, cubic-bezier(0.2, 0, 0, 1));
+    }
+    .stagger-item.is-in {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Error shake untuk field invalid */
+    .field-shake {
+        animation: fieldShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    @keyframes fieldShake {
+        10%, 90% { transform: translateX(-1px); }
+        20%, 80% { transform: translateX(2px); }
+        30%, 50%, 70% { transform: translateX(-4px); }
+        40%, 60% { transform: translateX(4px); }
+    }
+
+    /* Grain overlay halus untuk sidebar/hero (dipakai via ::before di komponen) */
+    .bg-grain {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+
+    /* Card lift micro-interaction */
+    .card-lift {
+        transition:
+            box-shadow var(--duration-state, 200ms) var(--ease-emphasize),
+            transform var(--duration-state, 200ms) var(--ease-emphasize);
+    }
+    .card-lift:hover {
+        box-shadow: var(--shadow-card-hover);
+        transform: translateY(-2px);
+    }
+
+    /* Status dot pulse */
+    .dot-pulse::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        background: currentColor;
+        opacity: 0.55;
+        animation: dotPulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes dotPulse {
+        0% { transform: scale(1); opacity: 0.55; }
+        70%, 100% { transform: scale(2.6); opacity: 0; }
+    }
+
+    /* Toast progress bar shrink */
+    @keyframes toastProgress {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale,
+    .reveal-zoom,
+    .hero-enter {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .status-ping,
+    .cb-caret,
+    .cb-spinner__ring,
+    .cb-spinner__logo {
+        animation: none !important;
+    }
+
+    .stagger-item {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .field-shake,
+    .dot-pulse::before,
+    .card-lift {
+        animation: none !important;
+        transition: none !important;
+    }
+    .card-lift:hover { transform: none !important; }
+}
+
+/* ==========================================================================
+   Form publik — gaya modern premium untuk file upload, tombol submit.
+   Scoped ke .dlh-public agar tidak menyentuh panel admin. Select sengaja
+   dibiarkan (sudah sesuai). Textarea menggunakan komponen x-public.textarea.
+   ========================================================================== */
+
+/* File upload — kotak dashed + tombol pemilih bergaya. */
+.dlh-public input[type="file"] {
+    display: block;
+    width: 100%;
+    border-radius: 0.9rem !important;
+    border: 1.5px dashed var(--color-brand-300) !important;
+    background-color: color-mix(in srgb, var(--color-brand-50) 55%, transparent) !important;
+    padding: 0.7rem 0.85rem !important;
+    height: auto !important;
+    font-size: 0.85rem !important;
+    color: var(--color-slate-500);
+    cursor: pointer;
+    transition: border-color .2s ease, background-color .2s ease;
+}
+.dlh-public input[type="file"]:hover {
+    border-color: var(--color-brand-400) !important;
+    background-color: color-mix(in srgb, var(--color-brand-50) 85%, transparent) !important;
+}
+.dlh-public input[type="file"]::file-selector-button {
+    margin-right: 0.85rem;
+    border: 0;
+    border-radius: 0.65rem;
+    background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-500));
+    color: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter .2s ease, transform .2s ease;
+}
+.dlh-public input[type="file"]::file-selector-button:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+/* Tombol submit — pill gradien brand, elevasi & micro-interaction. */
+.dlh-public button[type="submit"] {
+    border-radius: 1rem !important;
+    background: linear-gradient(135deg, var(--color-brand-700), var(--color-brand-500)) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    box-shadow: 0 10px 26px -10px color-mix(in srgb, var(--color-brand-600) 70%, transparent) !important;
+    transition: transform .25s ease, box-shadow .25s ease, filter .25s ease !important;
+}
+.dlh-public button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 16px 34px -12px color-mix(in srgb, var(--color-brand-600) 80%, transparent) !important;
+}
+.dlh-public button[type="submit"]:active:not(:disabled) { transform: translateY(0); }
+.dlh-public button[type="submit"]:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.dark .dlh-public input[type="file"] {
+    border-color: color-mix(in srgb, var(--color-brand-700) 80%, transparent) !important;
+    background-color: color-mix(in srgb, var(--color-brand-900) 20%, transparent) !important;
+    color: var(--color-slate-300);
+}
+
+/* ==========================================================================
+   Admin Topbar — premium glassmorphism styles & micro-interactions
+   ========================================================================== */
+.topbar-glass {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark .topbar-glass {
+    background: rgba(7, 26, 20, 0.92);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.topbar-noise {
+    position: relative;
+}
+.topbar-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    pointer-events: none;
+    z-index: 0;
+}
+.dark .topbar-noise::before { opacity: 0.04; }
+
+.topbar-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    color: #475569;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+.topbar-btn:hover {
+    background: #f0fdf4;
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.25);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+    transform: translateY(-1px);
+}
+.topbar-btn:active {
+    transform: scale(0.95);
+}
+.dark .topbar-btn {
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.dark .topbar-btn:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.3);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.cmd-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.dark .cmd-overlay {
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.theme-spin-enter {
+    animation: themeSpinIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes themeSpinIn {
+    from { transform: rotate(-90deg) scale(0.5); opacity: 0; }
+    to { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+.notif-pulse::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: notifPulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes notifPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    70%, 100% { transform: scale(1.8); opacity: 0; }
+}
+
+.glass-dropdown {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.15), 0 4px 12px -4px rgba(0, 0, 0, 0.05);
+}
+.dark .glass-dropdown {
+    background: rgba(8, 37, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.4), 0 4px 12px -4px rgba(0, 0, 0, 0.2);
+}
+
+.search-glow {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.search-glow:focus-within {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12), 0 4px 16px -4px rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+.dark .search-glow:focus-within {
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15), 0 4px 16px -4px rgba(52, 211, 153, 0.25);
+    border-color: rgba(52, 211, 153, 0.5);
+}
+
+.quick-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%);
+    box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.quick-action-btn:hover {
+    box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.5);
+    transform: translateY(-1px) scale(1.02);
+}
+.quick-action-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.15s ease;
+}
+.profile-menu-item:hover {
+    background: #f0fdf4;
+    color: #047857;
+}
+.dark .profile-menu-item {
+    color: #94a3b8;
+}
+.dark .profile-menu-item:hover {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .topbar-btn, .quick-action-btn, .search-glow { transition: none !important; }
+    .topbar-btn:hover, .quick-action-btn:hover { transform: none !important; }
+    .notif-pulse::after { animation: none !important; }
+    .theme-spin-enter { animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dlh-public button[type="submit"],
+    .dlh-public input[type="file"]::file-selector-button { transition: none !important; }
+}

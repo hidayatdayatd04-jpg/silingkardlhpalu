@@ -1,0 +1,123 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: dlh-palu-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+      - ./bootstrap/cache:/var/www/bootstrap/cache
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-dlh_palu}
+      - DB_USERNAME=${DB_USERNAME:-dlh_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dlh-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: dlh-palu-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - dlh-network
+
+  db:
+    image: mysql:8.0
+    container_name: dlh-palu-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-dlh_palu}
+      MYSQL_USER: ${DB_USERNAME:-dlh_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dlh-network
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: dlh-palu-queue
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work --tries=3 --timeout=60
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-dlh_palu}
+      - DB_USERNAME=${DB_USERNAME:-dlh_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dlh-network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: dlh-palu-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    command: >
+      sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-dlh_palu}
+      - DB_USERNAME=${DB_USERNAME:-dlh_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dlh-network
+
+volumes:
+  db-data:
+
+networks:
+  dlh-network:
+    driver: bridge
