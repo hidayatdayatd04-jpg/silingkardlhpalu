@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdminPanelAccess;
+use App\Http\Middleware\EnsureSiteAccess;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackWebsiteVisit;
 use Illuminate\Foundation\Application;
@@ -17,9 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.access' => EnsureAdminPanelAccess::class,
             'track.visit' => TrackWebsiteVisit::class,
+            'site.access' => EnsureSiteAccess::class,
         ]);
         $middleware->appendToGroup('web', TrackWebsiteVisit::class);
         $middleware->appendToGroup('web', SetLocale::class);
+        $middleware->appendToGroup('web', EnsureSiteAccess::class);
         
         // Exclude webhook endpoints from CSRF protection
         $middleware->validateCsrfTokens(except: [

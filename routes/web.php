@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessGateController;
 use App\Enums\ArtikelStatus;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AuthController;
@@ -25,6 +26,13 @@ use App\Support\ProfileMarkdown;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+
+// ══════════════════ Access Gate (site.access middleware di-skip) ══════════════════
+Route::withoutMiddleware(\App\Http\Middleware\EnsureSiteAccess::class)->group(function () {
+    Route::get('/gate', [AccessGateController::class, 'show'])->name('access-gate.show');
+    Route::post('/gate', [AccessGateController::class, 'verify'])->name('access-gate.verify');
+    Route::post('/gate/logout', [AccessGateController::class, 'logout'])->name('access-gate.logout');
+});
 
 Route::get('/', function () {
     return view('welcome', [
@@ -81,7 +89,7 @@ Route::get('/peta-objek-pengawasan', fn () => view('public.peta-objek-pengawasan
 
 Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->middleware('throttle:30,1')->name('feedback.store');
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::withoutMiddleware(\App\Http\Middleware\EnsureSiteAccess::class)->prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['guest', 'throttle:30,1'])->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -90,7 +98,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 });
 
-Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
+Route::withoutMiddleware(\App\Http\Middleware\EnsureSiteAccess::class)->middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     // Peta (GIS) Routes - unified page
