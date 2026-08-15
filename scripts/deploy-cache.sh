@@ -34,9 +34,15 @@ else
     php artisan route:clear
 fi
 
+# OPcache (Task 13): pastikan aktif di production.
+#  - cek manual : php -i | grep opcache.enable
+#  - contoh konfigurasi ada di scripts/opcache.ini.example
 if php -r 'echo ini_get("opcache.enable") ? "1" : "0";' | grep -q 1; then
+    echo "    opcache.enable = 1"
     echo "==> opcache_reset()"
     php -r 'if (function_exists("opcache_reset")) opcache_reset();'
+else
+    echo "    !!! opcache.enable = 0 (matikan) — aktifkan via php.ini, lihat scripts/opcache.ini.example"
 fi
 
 echo "==> Selesai. Isi bootstrap/cache:"

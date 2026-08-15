@@ -1,0 +1,33 @@
+; Task 13 — Contoh konfigurasi OPcache untuk PHP production.
+;
+; Cara pakai:
+;   1) Cek status:            php -i | grep opcache.enable
+;   2) Salin ke server:       /etc/php/{version}/cli/conf.d/10-opcache.ini
+;                             /etc/php/{version}/fpm/conf.d/10-opcache.ini   (jika pakai PHP-FPM)
+;   3) Restart PHP-FPM:       sudo systemctl restart php*-fpm
+;   4) Setelah deploy (lihat scripts/deploy-cache.sh), panggil opcache_reset()
+;      agar tidak perlu restart PHP-FPM tiap rilis.
+;
+; PENTING: opcache.validate_timestamps=0 MEMATIKAN deteksi perubahan file.
+; Hanya pakai di production bila deploy selalu menjalankan opcache_reset().
+
+opcache.enable=1
+opcache.enable_cli=0
+
+; Timer validasi OLD default 2s. Di production nonaktifkan (deploy wajib reset).
+opcache.validate_timestamps=0
+opcache.revalidate_freq=0
+
+opcache.memory_consumption=192
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+
+; Sekali request, PHP boleh mengeksekusi banyak script (Laravel).
+opcache.max_wasted_percentage=5
+
+; Dampak besar di Laravel 12 / Livewire 4.
+opcache.jit_buffer_size=64M
+
+; Rekomendasi footprint (tidak wajib):
+; opcache.file_update_protection=2
+; opcache.enable_file_override=1
