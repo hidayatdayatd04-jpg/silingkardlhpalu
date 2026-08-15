@@ -86,14 +86,16 @@ function initPageTransition() {
         // Jangan tampilkan ulang bila tetap di halaman yang sama.
         if (url.pathname === window.location.pathname && url.search === window.location.search) return;
 
-        e.preventDefault();
+        // JANGAN preventDefault(): biarkan browser langsung memulai request
+        // native saat link diklik. Overlay hanya bersifat dekoratif dan berjalan
+        // PARALEL dengan proses navigasi, bukan menunda navigasi.
         overlay.classList.add('is-active');
 
-        // Failsafe: jika navigasi terblokir (prompt browser, koneksi lambat, dll.)
+        // Failsafe: jika navigasi terhalang (prompt browser, koneksi lambat, dll.)
         // overlay tidak boleh menghalangi interaksi formulir selamanya.
         window.setTimeout(() => overlay.classList.remove('is-active'), 3000);
 
-        // Animasi progress bar.
+        // Animasi progress bar — dekorasi visual saja (tidak menunda navigasi).
         const fill = overlay.querySelector('.admin-preloader-fill');
         if (fill) {
             fill.style.width = '0%';
@@ -105,11 +107,6 @@ function initPageTransition() {
                 if (p < 1) requestAnimationFrame(tickBar);
             })();
         }
-
-        // Beri waktu overlay terlihat sebelum pindah halaman.
-        setTimeout(() => {
-            window.location.href = link.href;
-        }, 850);
     });
 
     // Saat halaman baru mulai dimuat, sembunyikan overlay lama.
