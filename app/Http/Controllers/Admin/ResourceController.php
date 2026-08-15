@@ -305,7 +305,7 @@ class ResourceController extends Controller
         $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
         // Ekspor selalu berisi DATA LENGKAP tiap menu (semua kolom tabel),
         // bukan sekadar subset $meta['columns'].
-        $exportMap = $meta['exportColumns']
+        $exportMap = \App\Support\Admin\AdminRegistry::exportColumns($meta['slug'], $meta['model'])
             ?? array_combine($meta['columns'], $meta['columns']);
         $columns = array_keys($exportMap);
         $headings = array_values($exportMap);

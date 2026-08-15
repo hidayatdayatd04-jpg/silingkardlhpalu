@@ -27,9 +27,13 @@ use Illuminate\Support\Facades\Schema;
 
 class AdminRegistry
 {
+    private static ?array $allCache = null;
+
+    private static array $columnCache = [];
+
     public static function all(): array
     {
-        return [
+        return self::$allCache ??= [
             'pengendalian' => [
                 'label' => 'Pengendalian',
                 'icon' => 'alert-circle',
@@ -1647,7 +1651,6 @@ class AdminRegistry
             'model' => $model,
             'columns' => $columns,
             'filters' => self::buildFilters($slug, $model, $columns),
-            'exportColumns' => self::exportColumns($slug, $model),
             'can_create' => true,
         ];
     }
@@ -1667,6 +1670,12 @@ class AdminRegistry
     {
         $instance = new $modelClass;
         $table = $instance->getTable();
+
+        // Hasil introspeksi skema di-cache per tabel agar tidak memicu
+        // puluhan query (pg_class/pg_attribute) setiap kali registry dibangun.
+        if (array_key_exists($table, self::$columnCache)) {
+            return self::$columnCache[$table];
+        }
 
         $columns = Schema::hasTable($table)
             ? Schema::getColumnListing($table)
@@ -1706,7 +1715,7 @@ class AdminRegistry
             $map[$col] = Str::headline($col);
         }
 
-        return $map;
+        return self::$columnCache[$table] = $map;
     }
 
     /**

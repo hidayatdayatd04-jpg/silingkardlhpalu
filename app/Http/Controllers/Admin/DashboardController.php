@@ -13,6 +13,7 @@ use App\Models\WebsiteVisit;
 use App\Support\Admin\AdminRegistry;
 use App\Services\StatistikService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -22,46 +23,66 @@ class DashboardController extends Controller
         $user = auth()->user();
         $allowedGroups = $user->allowedGroups();
         $statistik = app(StatistikService::class);
-
-        $cards = $this->buildCards($allowedGroups, $user);
-        $recent = $this->buildRecent($allowedGroups);
-
         $isSuperadmin = $user->isSuperadmin();
+
+        // Agregat Laporan dihitung SEKALI (2 query) lalu dipakai semua kartu/chart.
+        $bidangValues = array_values(array_intersect(
+            ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
+            $allowedGroups,
+        ));
+        $agg = $this->aggregateLaporan($bidangValues);
+
+        // Statistik berat di-cache 60 dtk agar navigasi berulang ke dashboard instan.
+        $cacheKey = 'dashboard:' . $user->id . ':' . md5(implode(',', $allowedGroups));
+        $cached = Cache::remember($cacheKey, now()->addMinutes(1), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $agg) {
+            return [
+                'cards'        => $this->buildCards($allowedGroups, $user, $agg),
+                'statusStats'  => $this->buildStatusStats($allowedGroups, $agg),
+                'pendingTasks' => $this->buildPendingTasks($allowedGroups, $agg),
+                'charts'       => $this->buildCharts($allowedGroups, $agg),
+                'recent'       => $this->buildRecent($allowedGroups),
+                'summary'      => $isSuperadmin ? $statistik->summary() : null,
+                'mapReports'   => (new \App\Http\Controllers\PetaLaporanController)->reports(
+                    now()->startOfMonth()->toDateString(),
+                    now()->endOfMonth()->toDateString(),
+                    $allowedGroups,
+                ),
+            ];
+        });
+
+        $recent = $cached['recent'];
 
         return view('admin.dashboard', [
             'groups'        => AdminRegistry::forUser($user),
-            'cards'         => $cards,
+            'cards'         => $cached['cards'],
             'recent'        => $recent,
             'activeUsers'   => $isSuperadmin ? User::where('is_active', true)->count() : null,
             'visits'        => $isSuperadmin && class_exists(WebsiteVisit::class) ? WebsiteVisit::count() : null,
             'allowedGroups' => $allowedGroups,
-            'charts'        => $this->buildCharts($allowedGroups),
-            'mapReports'    => (new \App\Http\Controllers\PetaLaporanController)->reports(
-                now()->startOfMonth()->toDateString(),
-                now()->endOfMonth()->toDateString(),
-                $allowedGroups,
-            ),
+            'charts'        => $cached['charts'],
+            'mapReports'    => $cached['mapReports'],
             'activityFeed'  => ActivityLog::with('user')->latest()->take(10)->get(),
             // ── Data ringkas tambahan ──
-            'summary'       => $isSuperadmin ? $statistik->summary() : null,
-            'statusStats'   => $this->buildStatusStats($allowedGroups),
-            'pendingTasks'  => $this->buildPendingTasks($allowedGroups, $isSuperadmin),
+            'summary'       => $cached['summary'],
+            'statusStats'   => $cached['statusStats'],
+            'pendingTasks'  => $cached['pendingTasks'],
         ]);
     }
 
-    protected function buildCards(array $allowedGroups, User $user): array
+    protected function buildCards(array $allowedGroups, User $user, array $agg): array
     {
         $cards = [];
+        $bidangTotal = fn (string $bidang) => array_sum($agg['byStatus'][$bidang] ?? []);
 
         if (in_array('pengendalian', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Pengendalian', 'value' => Laporan::where('bidang', 'pengendalian')->count(), 'tone' => 'emerald', 'icon' => 'alert-circle'];
+            $cards[] = ['label' => 'Laporan Pengendalian', 'value' => $bidangTotal('pengendalian'), 'tone' => 'emerald', 'icon' => 'alert-circle'];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Sampah', 'value' => Laporan::where('bidang', 'sampah-lb3')->count(), 'tone' => 'sky', 'icon' => 'recycle'];
+            $cards[] = ['label' => 'Laporan Sampah', 'value' => $bidangTotal('sampah-lb3'), 'tone' => 'sky', 'icon' => 'recycle'];
             $cards[] = ['label' => 'Registrasi LB3', 'value' => RegistrasiUsahaLb3::count(), 'tone' => 'amber', 'icon' => 'building'];
         }
         if (in_array('rth', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan RTH', 'value' => Laporan::where('bidang', 'rth')->count(), 'tone' => 'teal', 'icon' => 'tree'];
+            $cards[] = ['label' => 'Laporan RTH', 'value' => $bidangTotal('rth'), 'tone' => 'teal', 'icon' => 'tree'];
             $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text'];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
@@ -82,24 +103,22 @@ class DashboardController extends Controller
     /**
      * Ringkasan status pengaduan untuk kartu KPI + doughnut performa.
      */
-    protected function buildStatusStats(array $allowedGroups): array
+    protected function buildStatusStats(array $allowedGroups, array $agg): array
     {
         $bidangValues = array_values(array_intersect(
             ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
             $allowedGroups,
         ));
 
-        $query = Laporan::query();
-        if (! empty($bidangValues)) {
-            $query->whereIn('bidang', $bidangValues);
+        $total = 0; $belum = 0; $proses = 0; $selesai = 0; $ditolak = 0;
+        foreach ($bidangValues as $b) {
+            $row = $agg['byStatus'][$b] ?? [];
+            $total += array_sum($row);
+            $belum += (int) ($row['Belum Ditindaklanjuti'] ?? 0) + (int) ($row['Belum Ditinjau'] ?? 0);
+            $proses += (int) ($row['Ditindaklanjuti'] ?? 0) + (int) ($row['Ditinjau'] ?? 0);
+            $selesai += (int) ($row['Selesai'] ?? 0);
+            $ditolak += (int) ($row['Ditolak'] ?? 0);
         }
-
-        $total = (clone $query)->count();
-
-        $belum = (clone $query)->whereIn('status', ['Belum Ditindaklanjuti', 'Belum Ditinjau'])->count();
-        $proses = (clone $query)->whereIn('status', ['Ditindaklanjuti', 'Ditinjau'])->count();
-        $selesai = (clone $query)->where('status', 'Selesai')->count();
-        $ditolak = (clone $query)->where('status', 'Ditolak')->count();
 
         $selesaiPct = $total > 0 ? round(($selesai / $total) * 100) : 0;
 
@@ -120,23 +139,23 @@ class DashboardController extends Controller
     /**
      * Tugas tertunda (butuh tindakan admin) untuk CTA + badges.
      */
-    protected function buildPendingTasks(array $allowedGroups, bool $isSuperadmin): array
+    protected function buildPendingTasks(array $allowedGroups, array $agg): array
     {
         $tasks = [];
 
         if (in_array('pengendalian', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Pengendalian belum ditindaklanjuti', 'count' => Laporan::where('bidang', 'pengendalian')->where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-pengendalian'])];
+            $tasks[] = ['label' => 'Laporan Pengendalian belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'pengendalian', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-pengendalian'])];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Sampah belum ditindaklanjuti', 'count' => Laporan::where('bidang', 'sampah-lb3')->where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-sampah'])];
+            $tasks[] = ['label' => 'Laporan Sampah belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'sampah-lb3', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-sampah'])];
             $tasks[] = ['label' => 'Registrasi LB3 menunggu verifikasi', 'count' => RegistrasiUsahaLb3::where('status', 'Diajukan')->count(), 'href' => route('admin.resources.index', ['resource' => 'registrasi-usaha-lb3'])];
         }
         if (in_array('rth', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan RTH belum ditinjau', 'count' => Laporan::where('bidang', 'rth')->where('status', 'Belum Ditinjau')->count(), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-rth'])];
+            $tasks[] = ['label' => 'Laporan RTH belum ditinjau', 'count' => $this->aggCount($agg, 'rth', ['Belum Ditinjau']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-rth'])];
             $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi'])];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Tata Penataan belum ditindaklanjuti', 'count' => \App\Models\PengaduanTataPenataan::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
+            $tasks[] = ['label' => 'Laporan Tata Penataan belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'tata-penataan', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
         }
 
         $total = collect($tasks)->sum('count');
@@ -172,44 +191,53 @@ class DashboardController extends Controller
 
     /**
      * Data agregat untuk chart (line tren, bar per modul, doughnut status, performa).
+     * Semua dihitung dari $agg (2 query) — tanpa query per bulan/per bidang.
      */
-    protected function buildCharts(array $allowedGroups): array
+    protected function buildCharts(array $allowedGroups, array $agg): array
     {
         $bidangValues = array_values(array_intersect(
             ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
             $allowedGroups,
         ));
 
-        // ── Tren 6 bulan terakhir (line) ──
-        $months = collect(range(5, 0))->map(fn ($i) => Carbon::now()->subMonths($i));
+        // ── Tren 6 bulan terakhir (line) dari agregat ──
+        $months = collect(range(5, 0))->map(fn ($i) => Carbon::now()->startOfMonth()->subMonths($i));
         $trendLabels = $months->map(fn ($m) => $m->translatedFormat('M Y'))->all();
 
-        $trendData = $months->map(function ($m) use ($bidangValues) {
-            $q = Laporan::whereYear('created_at', $m->year)->whereMonth('created_at', $m->month);
-            if (! empty($bidangValues)) {
-                $q->whereIn('bidang', $bidangValues);
+        $trendData = $months->map(function ($m) use ($agg, $bidangValues) {
+            $key = $m->format('Y-m');
+            $total = 0;
+            foreach ($bidangValues as $b) {
+                $total += $agg['byMonth'][$b][$key] ?? 0;
             }
 
-            return $q->count();
+            return $total;
         })->all();
 
-        // ── Jumlah data per modul (bar) ──
+        $trendPerBidang = ['labels' => $trendLabels, 'datasets' => []];
+        foreach ($bidangValues as $b) {
+            $trendPerBidang['datasets'][$b] = $months->map(
+                fn ($m) => $agg['byMonth'][$b][$m->format('Y-m')] ?? 0
+            )->all();
+        }
+
+        // ── Jumlah data per modul (bar) dari kartu ──
+        $cards = $this->buildCards($allowedGroups, auth()->user(), $agg);
         $barLabels = [];
         $barData = [];
-        $cards = $this->buildCards($allowedGroups, auth()->user());
         foreach ($cards as $card) {
             $barLabels[] = $card['label'];
             $barData[] = $card['value'];
         }
 
-        // ── Distribusi status pengaduan (doughnut) ──
-        $statusQuery = Laporan::query();
-        if (! empty($bidangValues)) {
-            $statusQuery->whereIn('bidang', $bidangValues);
+        // ── Distribusi status pengaduan (doughnut) dari agregat ──
+        $statusTotals = [];
+        foreach ($bidangValues as $b) {
+            foreach ($agg['byStatus'][$b] ?? [] as $status => $count) {
+                $statusTotals[$status] = ($statusTotals[$status] ?? 0) + $count;
+            }
         }
-        $statusRows = $statusQuery->select('status', DB::raw('COUNT(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $statusRows = collect($statusTotals)->filter(fn ($v) => $v > 0);
 
         return [
             'trend' => [
@@ -230,7 +258,50 @@ class DashboardController extends Controller
                     'total'  => $total,
                 ];
             })->values()->all(),
-            'trendPerBidang' => app(StatistikService::class)->trenPerBidang($allowedGroups),
+            'trendPerBidang' => $trendPerBidang,
         ];
+    }
+
+    /**
+     * Hitung agregat Laporan SEKALI: byStatus (bidang→status) dan byMonth (bidang→YYYY-MM).
+     * Hanya 2 query grouped, bukan puluhan COUNT terpisah.
+     */
+    protected function aggregateLaporan(array $bidangValues): array
+    {
+        $base = Laporan::query();
+        if (! empty($bidangValues)) {
+            $base->whereIn('bidang', $bidangValues);
+        }
+
+        $byStatus = [];
+        $statusRows = (clone $base)
+            ->select('bidang', 'status', DB::raw('COUNT(*) as total'))
+            ->groupBy('bidang', 'status')
+            ->get();
+        foreach ($statusRows as $r) {
+            $byStatus[$r->bidang][$r->status] = (int) $r->total;
+        }
+
+        $byMonth = [];
+        $monthRows = (clone $base)
+            ->select('bidang', DB::raw("to_char(created_at, 'YYYY-MM') as ym"), DB::raw('COUNT(*) as total'))
+            ->groupBy('bidang', 'ym')
+            ->get();
+        foreach ($monthRows as $r) {
+            $byMonth[$r->bidang][$r->ym] = (int) $r->total;
+        }
+
+        return ['byStatus' => $byStatus, 'byMonth' => $byMonth];
+    }
+
+    protected function aggCount(array $agg, string $bidang, array $statuses): int
+    {
+        $row = $agg['byStatus'][$bidang] ?? [];
+        $sum = 0;
+        foreach ($statuses as $s) {
+            $sum += (int) ($row[$s] ?? 0);
+        }
+
+        return $sum;
     }
 }

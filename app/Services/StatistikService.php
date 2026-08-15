@@ -15,9 +15,16 @@ use Illuminate\Support\Facades\Schema;
 
 class StatistikService
 {
+    private static array $tableCache = [];
+
+    private function hasTableCached(string $table): bool
+    {
+        return self::$tableCache[$table] ??= Schema::hasTable($table);
+    }
+
     public function pengunjungHariIni(): int
     {
-        if (! Schema::hasTable('website_visits')) {
+        if (! $this->hasTableCached('website_visits')) {
             return 0;
         }
 
@@ -28,7 +35,7 @@ class StatistikService
 
     public function totalPengunjung(): int
     {
-        if (! Schema::hasTable('website_visits')) {
+        if (! $this->hasTableCached('website_visits')) {
             return 0;
         }
 
@@ -37,7 +44,7 @@ class StatistikService
 
     public function totalPelapor(): int
     {
-        if (! Schema::hasTable('laporans')) {
+        if (! $this->hasTableCached('laporans')) {
             return 0;
         }
 
@@ -48,19 +55,19 @@ class StatistikService
     {
         $total = 0;
 
-        if (Schema::hasTable('permohonan_rekomendasis')) {
+        if ($this->hasTableCached('permohonan_rekomendasis')) {
             $total += PermohonanRekomendasi::query()->count();
         }
 
-        if (Schema::hasTable('registrasi_usaha_lb3s')) {
+        if ($this->hasTableCached('registrasi_usaha_lb3s')) {
             $total += RegistrasiUsahaLb3::query()->count();
         }
 
-        if (Schema::hasTable('pengajuan_rintek_perteks')) {
+        if ($this->hasTableCached('pengajuan_rintek_perteks')) {
             $total += PengajuanRintekPertek::query()->count();
         }
 
-        if (Schema::hasTable('permohonan_pinjam_tamans')) {
+        if ($this->hasTableCached('permohonan_pinjam_tamans')) {
             $total += PermohonanPinjamTaman::query()->count();
         }
 
