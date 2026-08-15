@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk Admin DLH Kota Palu</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
-    {{-- Vite bundle harus dimuat sebelum Alpine CDN start (urutan script deferred). --}}
+    {{-- Vite bundle memuat Alpine self-hosted (resources/js/alpine.js) — tanpa CDN. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="min-h-screen text-ink-900 antialiased">
+<body class="min-h-screen text-ink-900 antialiased" data-alpine-bootstrap>
     <main class="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
         {{-- â•â•â•â•â•â•â•â•â•â• Brand panel (kiri) â•â•â•â•â•â•â•â•â•â• --}}
         <section class="relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between" style="background: var(--gradient-header-hero);">

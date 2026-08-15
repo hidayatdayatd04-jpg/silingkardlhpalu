@@ -1,5 +1,6 @@
 import './bootstrap';
 import './admin';
+import './alpine';
 import './map-components';
 import './dlh-markers';
 

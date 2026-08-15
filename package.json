@@ -21,6 +21,10 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@alpinejs/collapse": "^3.16.1",
+        "@alpinejs/focus": "^3.16.1",
+        "@alpinejs/intersect": "^3.16.1",
+        "alpinejs": "^3.16.1",
         "chart.js": "^4.4.7",
         "jodit": "^4.12.44",
         "leaflet": "^1.9.4"

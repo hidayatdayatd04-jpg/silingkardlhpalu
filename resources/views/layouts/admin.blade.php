@@ -21,24 +21,9 @@
         /* Prevent Alpine flash before init */
         [x-cloak] { display: none !important; }
     </style>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.store('sidebar', {
-                collapsed: localStorage.getItem('sidebar-collapsed') === 'true',
-                toggle() {
-                    this.collapsed = !this.collapsed;
-                    localStorage.setItem('sidebar-collapsed', this.collapsed);
-                }
-            });
-        });
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="min-h-screen text-ink-900 antialiased" x-data style="background: var(--gradient-page);">
+<body class="min-h-screen text-ink-900 antialiased" x-data data-alpine-bootstrap style="background: var(--gradient-page);">
     @php
         $user = auth()->user();
         $adminGroups = \App\Support\Admin\AdminRegistry::forUser($user);
