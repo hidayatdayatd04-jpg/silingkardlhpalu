@@ -28,7 +28,7 @@ Route::get('/', function () {
     return view('welcome', [
         'profil' => ProfilDinas::current(),
         'statistik' => app(StatistikService::class)->summary(),
-        'artikels' => Artikel::published()->latest('tanggal_publish')->take(6)->get(),
+        'artikels' => Artikel::published()->latest('tanggal_publish')->take(6)->with('user')->get(),
     ]);
 });
 

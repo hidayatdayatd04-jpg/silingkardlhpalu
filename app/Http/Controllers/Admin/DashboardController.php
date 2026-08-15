@@ -41,6 +41,7 @@ class DashboardController extends Controller
                 'pendingTasks' => $this->buildPendingTasks($allowedGroups, $agg),
                 'charts'       => $this->buildCharts($allowedGroups, $agg),
                 'recent'       => $this->buildRecent($allowedGroups),
+                'activity'     => ActivityLog::with('user')->latest()->take(10)->get(),
                 'summary'      => $isSuperadmin ? $statistik->summary() : null,
                 'mapReports'   => (new \App\Http\Controllers\PetaLaporanController)->reports(
                     now()->startOfMonth()->toDateString(),
@@ -61,7 +62,7 @@ class DashboardController extends Controller
             'allowedGroups' => $allowedGroups,
             'charts'        => $cached['charts'],
             'mapReports'    => $cached['mapReports'],
-            'activityFeed'  => ActivityLog::with('user')->latest()->take(10)->get(),
+            'activityFeed'  => $cached['activity'],
             // ── Data ringkas tambahan ──
             'summary'       => $cached['summary'],
             'statusStats'   => $cached['statusStats'],

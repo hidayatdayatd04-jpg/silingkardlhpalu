@@ -10,6 +10,7 @@ use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\WebsiteVisit;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -19,7 +20,16 @@ class StatistikService
 
     private function hasTableCached(string $table): bool
     {
-        return self::$tableCache[$table] ??= Schema::hasTable($table);
+        if (array_key_exists($table, self::$tableCache)) {
+            return self::$tableCache[$table];
+        }
+
+        // Cache hasil introspeksi skema 1 jam (sekarang di file cache, bukan Neon).
+        return self::$tableCache[$table] = Cache::remember(
+            'schema:has:' . $table,
+            now()->addHour(),
+            fn () => Schema::hasTable($table)
+        );
     }
 
     public function pengunjungHariIni(): int
@@ -76,12 +86,15 @@ class StatistikService
 
     public function summary(): array
     {
-        return [
-            'pengunjung_hari_ini' => $this->pengunjungHariIni(),
-            'total_pengunjung' => $this->totalPengunjung(),
-            'total_pelapor' => $this->totalPelapor(),
-            'total_pengajuan' => $this->totalPengajuan(),
-        ];
+        // Ringkasan bersifat statistik — cache 5 menit agar tidak query tiap request.
+        return Cache::remember('statistik:summary', now()->addMinutes(5), function () {
+            return [
+                'pengunjung_hari_ini' => $this->pengunjungHariIni(),
+                'total_pengunjung' => $this->totalPengunjung(),
+                'total_pelapor' => $this->totalPelapor(),
+                'total_pengajuan' => $this->totalPengajuan(),
+            ];
+        });
     }
 
     /**

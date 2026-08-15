@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class NotificationController extends Controller
 {
@@ -93,6 +94,7 @@ class NotificationController extends Controller
 
         if ($notification && $notification->read_at === null) {
             $notification->markAsRead();
+            Cache::forget('admin:notifications:' . auth()->id());
         }
 
         if ($request->wantsJson()) {
@@ -105,6 +107,7 @@ class NotificationController extends Controller
     public function markAllAsRead(Request $request)
     {
         auth()->user()->unreadNotifications->markAsRead();
+        Cache::forget('admin:notifications:' . auth()->id());
 
         if ($request->wantsJson()) {
             return response()->json(['ok' => true, 'unread' => 0]);

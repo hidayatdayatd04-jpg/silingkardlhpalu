@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\LogSuccessfulLogin;
+use Illuminate\Support\Facades\Cache;
 use App\Listeners\LogSuccessfulLogout;
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
@@ -106,43 +107,53 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $user = auth()->user();
-            $allowedGroups = $user->accessibleGroups();
+            $cacheKey = 'admin:notifications:' . $user->id;
 
-            $notifications = $user->notifications()->latest()->take(20)->get()->map(function ($n) use ($allowedGroups) {
-                $data = $n->data;
-                $module = $data['module'] ?? 'system';
+            // Cache 60 dtk agar topbar tidak query notifications pada setiap request admin.
+            $data = Cache::remember($cacheKey, now()->addMinute(), function () use ($user) {
+                $allowedGroups = $user->accessibleGroups();
 
-                $moduleGroupMap = [
-                    'pengendalian' => 'pengendalian',
-                    'sampah-lb3' => 'sampah-lb3',
-                    'rth' => 'rth',
-                    'tata-penataan' => 'tata-penataan',
-                ];
+                $notifications = $user->notifications()->latest()->take(20)->get()->map(function ($n) use ($allowedGroups) {
+                    $data = $n->data;
+                    $module = $data['module'] ?? 'system';
 
-                // Tampilkan notifikasi jika module-nya sesuai dengan akses role,
-                // atau jika module adalah 'system'/'global' yang selalu terlihat.
-                $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
-                    return $moduleGroupMap[$g] ?? $g;
-                })->push('system')->push('global')->all();
+                    $moduleGroupMap = [
+                        'pengendalian' => 'pengendalian',
+                        'sampah-lb3' => 'sampah-lb3',
+                        'rth' => 'rth',
+                        'tata-penataan' => 'tata-penataan',
+                    ];
 
-                if (! in_array($module, $allowedModules)) {
-                    return null;
-                }
+                    // Tampilkan notifikasi jika module-nya sesuai dengan akses role,
+                    // atau jika module adalah 'system'/'global' yang selalu terlihat.
+                    $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
+                        return $moduleGroupMap[$g] ?? $g;
+                    })->push('system')->push('global')->all();
+
+                    if (! in_array($module, $allowedModules)) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $n->id,
+                        'icon' => $data['icon'] ?? 'bell',
+                        'color' => $data['color'] ?? 'emerald',
+                        'title' => $data['title'] ?? 'Notifikasi',
+                        'message' => $data['message'] ?? '',
+                        'time' => $n->created_at?->diffForHumans() ?? 'Baru',
+                        'href' => $data['href'] ?? '#',
+                        'read' => $n->read_at !== null,
+                    ];
+                })->filter()->values();
 
                 return [
-                    'id' => $n->id,
-                    'icon' => $data['icon'] ?? 'bell',
-                    'color' => $data['color'] ?? 'emerald',
-                    'title' => $data['title'] ?? 'Notifikasi',
-                    'message' => $data['message'] ?? '',
-                    'time' => $n->created_at?->diffForHumans() ?? 'Baru',
-                    'href' => $data['href'] ?? '#',
-                    'read' => $n->read_at !== null,
+                    'notifications' => $notifications,
+                    'count' => $user->unreadNotifications()->count(),
                 ];
-            })->filter()->values();
+            });
 
-            $view->with('notifications', $notifications);
-            $view->with('notificationCount', $user->unreadNotifications()->count());
+            $view->with('notifications', $data['notifications']);
+            $view->with('notificationCount', $data['count']);
         });
     }
 }
