@@ -422,9 +422,13 @@ class ResourceController extends Controller
             $query->orderByDesc($model->getKeyName());
         }
 
-        // Eager load relationships for specific resources
+        // Eager load relationships for specific resources — cegah N+1 di tabel index.
         if ($meta['slug'] === 'pelanggaran') {
+            // Kolom index jenis_sanksi_text / status_sanksi_text memakai relasi sanksi.
             $query->with('sanksi');
+        } elseif ($meta['slug'] === 'user') {
+            // Kolom 'role' dan nama peran di index memakai $record->roles->first().
+            $query->with('roles');
         }
         
         // Search
