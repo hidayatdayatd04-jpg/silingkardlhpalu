@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('gis_data_layers', function (Blueprint $table) {
-            $table->boolean('is_public')->default(true)->after('is_visible');
+            $table->boolean('is_public')->default(true);
         });
     }
 

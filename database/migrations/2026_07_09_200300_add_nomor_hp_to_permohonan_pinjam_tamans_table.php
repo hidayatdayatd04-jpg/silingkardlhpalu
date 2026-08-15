@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('permohonan_pinjam_tamans', function (Blueprint $table) {
-            $table->string('nomor_hp')->nullable()->after('nama_pemohon');
-            $table->string('email')->nullable()->after('nomor_hp');
+            $table->string('nomor_hp')->nullable();
+            $table->string('email')->nullable();
         });
     }
 

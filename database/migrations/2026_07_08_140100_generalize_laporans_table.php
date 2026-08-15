@@ -10,11 +10,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('laporans', function (Blueprint $table) {
-            $table->string('bidang', 50)->default('rth')->after('id');
-            $table->string('nama_pelapor')->nullable()->after('nomor_hp');
-            $table->text('alamat')->nullable()->after('longitude');
-            $table->text('catatan_admin')->nullable()->after('status');
-            $table->string('jenis_pengaduan')->nullable()->after('kategori');
+            $table->string('bidang', 50)->default('rth');
+            $table->string('nama_pelapor')->nullable();
+            $table->text('alamat')->nullable();
+            $table->text('catatan_admin')->nullable();
+            $table->string('jenis_pengaduan')->nullable();
         });
 
         DB::table('laporans')->update(['bidang' => 'rth']);

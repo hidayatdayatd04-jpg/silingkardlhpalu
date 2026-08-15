@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('bidang'); // pengendalian, sampah-lb3, rth, tata-penataan
             $table->string('nama_layer');
             $table->string('deskripsi')->nullable();
-            $table->enum('jenis_geometri', ['point', 'polygon', 'line', 'mixed'])->default('point');
+            $table->string('jenis_geometri')->default('point');
             $table->json('geojson_features'); // Array of GeoJSON features
             $table->json('metadata')->nullable(); // warna, ukuran marker, opacity, dll
             $table->boolean('is_visible')->default(true);

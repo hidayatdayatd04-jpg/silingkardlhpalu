@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -26,7 +27,8 @@ class ResourceController extends Controller
         }
         
         // Cek apakah user bisa akses group dari resource ini
-        if (!$user->canAccessGroup($meta['group'])) {
+        // (atau slug menu spesifik yang diberikan sebagai akses tambahan).
+        if (!$user->canAccessResource($meta)) {
             throw new AccessDeniedHttpException('Anda tidak memiliki izin untuk mengakses menu ini. Silakan hubungi administrator.');
         }
     }
@@ -38,7 +40,6 @@ class ResourceController extends Controller
         $query = $this->query($meta, $request);
 
         $view = match($meta['slug']) {
-            'ikm-response' => 'admin.ikm.index',
             default => 'admin.resources.index',
         };
 
@@ -56,9 +57,11 @@ class ResourceController extends Controller
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
 
+        abort_if(($meta['can_create'] ?? true) === false, 403,
+            'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.');
+
         $view = match($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
-            'ikm-response' => 'admin.ikm.form',
             default => 'admin.resources.form',
         };
 
@@ -75,12 +78,17 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
+
+        abort_if(($meta['can_create'] ?? true) === false, 403,
+            'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.');
         $this->validateSpecialFields($request, $meta, false);
+        $this->validateFromFields($request, $meta, false, null);
 
         $record = new $meta['model'];
         $record->fill($this->payload($request, $meta, $record));
         $record->save();
         $this->storeSpecialRelations($request, $meta, $record);
+        $this->storeDaftarHadir($request, $meta, $record);
         $this->storeSanksiIfPelanggaran($request, $record);
         
         // Handle role assignment untuk user
@@ -91,6 +99,12 @@ class ResourceController extends Controller
         // Handle additional_access untuk user
         if ($resource === 'user' && $request->has('additional_access')) {
             $record->additional_access = $request->input('additional_access', []);
+            $record->save();
+        }
+
+        // Simpan foto profil user (bila diunggah).
+        if ($resource === 'user' && $request->hasFile('photo')) {
+            $record->photo_path = $request->file('photo')->store('avatars', 'public');
             $record->save();
         }
 
@@ -105,7 +119,6 @@ class ResourceController extends Controller
 
         $view = match($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.show',
-            'ikm-response' => 'admin.ikm.show',
             default => 'admin.resources.show',
         };
 
@@ -124,7 +137,6 @@ class ResourceController extends Controller
 
         $view = match($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
-            'ikm-response' => 'admin.ikm.form',
             default => 'admin.resources.form',
         };
 
@@ -144,9 +156,11 @@ class ResourceController extends Controller
         $this->validateSpecialFields($request, $meta, true);
 
         $model = $meta['model']::findOrFail($record);
+        $this->validateFromFields($request, $meta, true, $model);
         $model->fill($this->payload($request, $meta, $model));
         $model->save();
         $this->storeSpecialRelations($request, $meta, $model);
+        $this->storeDaftarHadir($request, $meta, $model);
         $this->storeSanksiIfPelanggaran($request, $model);
         
         // Handle role assignment untuk user
@@ -163,7 +177,86 @@ class ResourceController extends Controller
             $model->save();
         }
 
+        // Foto profil: hapus bila diminta, atau ganti bila ada file baru.
+        if ($resource === 'user') {
+            if ($request->boolean('photo_remove') && $model->photo_path) {
+                if (Storage::disk('public')->exists($model->photo_path)) {
+                    Storage::disk('public')->delete($model->photo_path);
+                }
+                $model->photo_path = null;
+                $model->save();
+            } elseif ($request->hasFile('photo')) {
+                if ($model->photo_path && Storage::disk('public')->exists($model->photo_path)) {
+                    Storage::disk('public')->delete($model->photo_path);
+                }
+                $model->photo_path = $request->file('photo')->store('avatars', 'public');
+                $model->save();
+            }
+        }
+
         return redirect()->route('admin.resources.show', [$resource, $model])->with('success', $meta['label'].' berhasil diperbarui.');
+    }
+
+    /**
+     * Reset password pengguna secara langsung (tanpa memerlukan password saat ini).
+     * Hanya boleh dilakukan oleh superadmin — berguna bila admin lupa password
+     * sehingga tidak terkunci keluar dari panel.
+     */
+    public function resetPassword(Request $request, int|string $record)
+    {
+        abort_unless(auth()->user()?->isSuperadmin(), 403, 'Hanya Admin yang dapat mereset password pengguna.');
+
+        $target = \App\Models\User::findOrFail($record);
+
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8'],
+        ], [
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal 8 karakter.',
+        ]);
+
+        $target->password = Hash::make($validated['password']);
+        $target->password_hint = $validated['password'];
+        $target->save();
+
+        return redirect()
+            ->route('admin.resources.show', ['user', $target])
+            ->with('success', 'Password untuk ' . $target->name . ' berhasil direset. Password baru: ' . $validated['password']);
+    }
+
+    /**
+     * Unduh dokumen/lampiran (field file maupun relasi dokumen) dari storage publik.
+     * Path divalidasi agar tetap berada di dalam direktori storage/app/public
+     * sehingga tidak bisa digunakan untuk mengakses file di luar storage publik.
+     */
+    public function downloadFile(Request $request)
+    {
+        $path = (string) $request->query('path', '');
+        $name = (string) $request->query('name', '');
+
+        abort_unless($path !== '' && ! str_contains($path, '..'), 403, 'Akses file ditolak.');
+        abort_unless(Storage::disk('public')->exists($path), 404, 'File tidak ditemukan.');
+
+        // Nama unduhan: gunakan nama yang dikirim (lebih mudah dibaca), lalu
+        // pastikan ekstensi sesuai dengan file asli di storage agar format
+        // (pdf, docx, xlsx, jpg, png, dll) tidak hilang saat disimpan.
+        $downloadName = basename($name) ?: basename($path);
+
+        $pathExt = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+        $nameExt = strtolower((string) pathinfo($downloadName, PATHINFO_EXTENSION));
+
+        if ($pathExt !== '') {
+            if ($nameExt === '' || $nameExt === 'file') {
+                // Belum ada ekstensi (atau ekstensi generik ".file") -> gunakan ekstensi asli.
+                $base = $nameExt === 'file' ? pathinfo($downloadName, PATHINFO_FILENAME) : $downloadName;
+                $downloadName = $base . '.' . $pathExt;
+            } elseif ($nameExt !== $pathExt) {
+                // Ekstensi tidak cocok dengan file asli -> ganti agar sesuai format.
+                $downloadName = pathinfo($downloadName, PATHINFO_FILENAME) . '.' . $pathExt;
+            }
+        }
+
+        return Storage::disk('public')->download($path, $downloadName);
     }
 
     public function destroy(string $resource, int|string $record)
@@ -205,99 +298,32 @@ class ResourceController extends Controller
     }
 
     /**
-     * Unduh data resource dalam format xlsx | csv | pdf.
+     * Unduh data resource dalam format xlsx | csv.
      */
     protected function downloadData(array $meta, $query, string $format, string $scope)
     {
-        $format = in_array($format, ['xlsx', 'csv', 'pdf'], true) ? $format : 'xlsx';
-        $columns = $meta['columns'];
+        $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
+        // Ekspor selalu berisi DATA LENGKAP tiap menu (semua kolom tabel),
+        // bukan sekadar subset $meta['columns'].
+        $exportMap = $meta['exportColumns']
+            ?? array_combine($meta['columns'], $meta['columns']);
+        $columns = array_keys($exportMap);
+        $headings = array_values($exportMap);
         $filename = $meta['slug'].'-'.$scope.'-'.now()->format('Ymd-His');
 
         \App\Support\ActivityLogger::log('exported', $meta['label'].' ('.strtoupper($format).', '.$scope.')', $meta['slug']);
 
         $dataIO = app(\App\Support\DataIO::class);
 
-        if ($format === 'pdf') {
-            $rows = (clone $query)->limit(5000)->get();
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.resource-table', [
-                'title'   => $meta['label'],
-                'columns' => $columns,
-                'rows'    => $rows,
-            ])->setPaper('a4', 'landscape');
-
-            return $pdf->download($filename.'.pdf');
-        }
-
         if ($format === 'csv') {
-            return $dataIO->csvDownload($query, $columns, $filename.'.csv');
+            return $dataIO->csvDownload($query, $columns, $filename.'.csv', $headings);
         }
 
         // XLSX via DataIO (ZipArchive-based, dependency-free).
         $tmpPath = storage_path('app/private/'.$filename.'.xlsx');
-        $dataIO->writeXlsx($query, $columns, $tmpPath);
+        $dataIO->writeXlsx($query, $columns, $tmpPath, $headings);
 
         return response()->download($tmpPath, $filename.'.xlsx')->deleteFileAfterSend(true);
-    }
-
-    /**
-     * Import data dari file .xlsx / .csv.
-     */
-    public function import(Request $request, string $resource)
-    {
-        $meta = AdminRegistry::find($resource);
-        $this->authorize($meta);
-        $this->authorize('create', $meta['model']);
-
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:10240'],
-        ], [
-            'file.required' => 'Silakan pilih file untuk diimpor.',
-            'file.mimes'    => 'Format file harus .xlsx atau .csv.',
-            'file.max'      => 'Ukuran file maksimal 10MB.',
-        ]);
-
-        $import = new \App\Imports\ResourceImport($meta);
-
-        try {
-            $rows = \App\Support\DataIO::readFile($request->file('file')->getRealPath());
-            $import->collection($rows);
-        } catch (\Throwable $e) {
-            return back()->with('error', 'Gagal memproses file: '.$e->getMessage());
-        }
-
-        \App\Support\ActivityLogger::log('imported', $meta['label'].' ('.$import->imported.' baris)', $meta['slug']);
-
-        if (! empty($import->errors)) {
-            $preview = collect($import->errors)->take(5)->implode(' | ');
-
-            return back()->with('warning', "Berhasil impor {$import->imported} baris. ".count($import->errors)." baris gagal: ".$preview);
-        }
-
-        return back()->with('success', "Berhasil mengimpor {$import->imported} baris data.");
-    }
-
-    /**
-     * Unduh template import (hanya header kolom).
-     */
-    public function importTemplate(string $resource)
-    {
-        $meta = AdminRegistry::find($resource);
-        $this->authorize($meta);
-
-        $model = new $meta['model'];
-        $readonly = ['id', 'nomor_tiket', 'nomor_pengajuan', 'nomor_registrasi', 'nomor_sidak', 'nomor_pelanggaran', 'nomor_sanksi', 'created_at', 'updated_at', 'password', 'remember_token', 'email_verified_at', 'additional_access', 'photo_path', 'preferences'];
-        $columns = collect($model->getFillable())
-            ->reject(fn ($c) => in_array($c, $readonly, true))
-            ->values()
-            ->all();
-
-        $emptyQuery = $meta['model']::query()->whereRaw('1 = 0');
-        $filename = $meta['slug'].'-template.xlsx';
-        $tmpPath = storage_path('app/private/'.$filename);
-
-        app(\App\Support\DataIO::class)->writeXlsx($emptyQuery, $columns, $tmpPath);
-
-        return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
 
     public function bulkDelete(Request $request, string $resource)
@@ -337,28 +363,60 @@ class ResourceController extends Controller
             // (sudah dihandle di authorization)
         }
         
-        // Filtering
-        // Status filter (multi-select)
-        if ($request->has('status') && is_array($request->status)) {
-            $statuses = array_filter($request->status);
-            if (!empty($statuses)) {
-                $query->whereIn('status', $statuses);
+        // Filtering generik berdasarkan definisi $meta['filters'].
+        foreach (($meta['filters'] ?? []) as $filter) {
+            $key    = $filter['key'] ?? null;
+            $type   = $filter['type'] ?? null;
+            $column = $filter['column'] ?? null;
+
+            if (! $key || ! $type || ! $column) {
+                continue;
+            }
+
+            if ($type === 'daterange') {
+                // Terima {key}_from/{key}_to, kompatibel dengan date_from/date_to lama.
+                $from = $request->input($key.'_from') ?? $request->input('date_from');
+                $to   = $request->input($key.'_to') ?? $request->input('date_to');
+
+                if (filled($from)) {
+                    $query->whereDate($column, '>=', $from);
+                }
+                if (filled($to)) {
+                    $query->whereDate($column, '<=', $to);
+                }
+
+                continue;
+            }
+
+            if (in_array($type, ['multiselect', 'select'], true)) {
+                $value = $request->input($key);
+                $values = is_array($value)
+                    ? array_filter($value)
+                    : (filled($value) ? [$value] : []);
+
+                if (empty($values)) {
+                    continue;
+                }
+
+                // Penanganan khusus: role user disimpan di tabel relation (spatie).
+                if ($column === 'role' && method_exists($meta['model'], 'roles')) {
+                    $query->whereHas('roles', fn ($q) => $q->whereIn('name', $values));
+
+                    continue;
+                }
+
+                $query->whereIn($column, $values);
             }
         }
-        
-        // Date range filter
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-        
+
         // Sorting
         $sortColumn = $request->string('sort')->toString();
         $sortDirection = $request->string('direction', 'asc')->toString();
-        
-        if ($sortColumn && in_array($sortColumn, $meta['columns'])) {
+
+        // Columns that are not direct DB columns (virtual/computed)
+        $virtualColumns = ['role'];
+
+        if ($sortColumn && in_array($sortColumn, $meta['columns']) && !in_array($sortColumn, $virtualColumns)) {
             $query->orderBy($sortColumn, in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc');
         } else {
             $query->orderByDesc($model->getKeyName());
@@ -375,7 +433,7 @@ class ResourceController extends Controller
         if ($search !== '') {
             $columns = collect(array_merge($meta['columns'], $model->getFillable()))
                 ->unique()
-                ->reject(fn ($column) => Str::endsWith($column, '_id') || in_array($column, ['password', 'remember_token', 'email_verified_at', 'additional_access', 'photo_path', 'preferences']))
+                ->reject(fn ($column) => Str::endsWith($column, '_id') || in_array($column, ['password', 'remember_token', 'email_verified_at', 'additional_access', 'photo_path', 'preferences', 'role', 'password_hint']))
                 ->take(8)
                 ->values();
 
@@ -396,19 +454,16 @@ class ResourceController extends Controller
         foreach (AdminRegistry::formFields($meta) as $field) {
             $name = $field['name'];
 
-            if (in_array($field['type'], ['section', 'photos', 'relation_files'], true)) {
+            if (in_array($field['type'], ['section', 'photos', 'relation_files', 'daftar_hadir'], true)) {
                 continue;
             }
 
             if ($field['type'] === 'file') {
                 if ($request->hasFile($name)) {
                     $file = $request->file($name);
-                    $allowedMimes = $field['accept'] ?? 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx';
-                    $mimes = collect(explode(',', $allowedMimes))->map(fn ($m) => trim($m))->filter()->values()->all();
-                    if (! empty($mimes) && ! in_array($file->getClientOriginalExtension(), $mimes, true)) {
-                        continue;
+                    if ($this->fileMatchesAccept($file, $field['accept'] ?? null)) {
+                        $payload[$name] = $file->store('admin/'.$meta['slug'], 'public');
                     }
-                    $payload[$name] = $file->store('admin/'.$meta['slug'], 'public');
                 }
 
                 continue;
@@ -422,7 +477,24 @@ class ResourceController extends Controller
 
             if ($name === 'password') {
                 if (filled($request->input($name))) {
-                    $payload[$name] = Hash::make($request->input($name));
+                    $plain = $request->input($name);
+                    $payload[$name] = Hash::make($plain);
+
+                    // Petunjuk password otomatis mengikuti password yang diisi.
+                    // Field password_hint disembunyikan saat create & read-only saat edit,
+                    // sehingga nilainya diambil dari password agar tidak pernah NULL
+                    // (sebelumnya akun baru / edit tanpa petunjuk jadi "(belum ada petunjuk)").
+                    $payload['password_hint'] = $plain;
+                }
+
+                continue;
+            }
+
+            if ($name === 'password_hint') {
+                // Sudah diisi otomatis dari password di atas bila password diubah.
+                // Fallback: pertahankan nilai lama saat edit tanpa mengganti password.
+                if (! array_key_exists('password_hint', $payload) && $request->filled($name)) {
+                    $payload[$name] = $request->input($name);
                 }
 
                 continue;
@@ -451,48 +523,104 @@ class ResourceController extends Controller
             if (array_key_exists('jenis_pengaduan', $payload)) {
                 $payload['kategori'] = $payload['jenis_pengaduan'];
             }
-        }
-
-        // Handle 'lainnya' (other) option for SIDAK fields
-        if ($meta['slug'] === 'sidak') {
-            // Objek Pengawasan Lainnya
-            if (($payload['objek_pengawasan_id'] ?? null) === '__lainnya__' && $request->filled('objek_pengawasan_lainnya')) {
-                $objek = \App\Models\ObjekPengawasan::create([
-                    'nama_perusahaan' => $request->input('objek_pengawasan_lainnya'),
-                ]);
-                $payload['objek_pengawasan_id'] = $objek->id;
-            }
-
-            // Pengaduan Tata Penataan Lainnya
-            if (($payload['pengaduan_tata_penataan_id'] ?? null) === '__lainnya__' && $request->filled('pengaduan_tata_penataan_lainnya')) {
-                $pengaduan = \App\Models\PengaduanTataPenataan::create([
-                    'nama_pelapor' => $request->input('pengaduan_tata_penataan_lainnya'),
-                    'deskripsi' => 'Dibuat dari form sidak (lainnya)',
-                ]);
-                $payload['pengaduan_tata_penataan_id'] = $pengaduan->id;
-            }
-
-            // User/Petugas Lainnya
-            if (($payload['user_id'] ?? null) === '__lainnya__' && $request->filled('user_lainnya')) {
-                $user = \App\Models\User::create([
-                    'name' => $request->input('user_lainnya'),
-                    'email' => strtolower(str_replace(' ', '.', $request->input('user_lainnya'))) . '@dlh-palu.go.id',
-                    'password' => \Illuminate\Support\Facades\Hash::make('password'),
-                ]);
-                $payload['user_id'] = $user->id;
-            }
-
-            // Hasil Lainnya - store as custom string value
-            if (($payload['hasil'] ?? null) === '__lainnya__' && $request->filled('hasil_lainnya')) {
-                $payload['hasil'] = $request->input('hasil_lainnya');
+        } elseif ($meta['slug'] === 'pinjam-taman') {
+            // Taman "Lainnya" -> simpan nama manual dan kosongkan relasi taman_kota_id.
+            if (($payload['taman_kota_id'] ?? null) === '__lainnya__' && $request->filled('taman_kota_id_lainnya')) {
+                $payload['nama_taman_manual'] = $request->input('taman_kota_id_lainnya');
+                $payload['taman_kota_id'] = null;
             }
         }
 
         return $payload;
     }
 
+    /**
+     * Cek apakah file yang diunggah cocok dengan atribut `accept`.
+     * Mendukung mime type (image/jpeg), wildcard (image/*), serta
+     * ekstensi bertitik (.pdf) maupun polos (jpg). Bersikap permisif:
+     * jika accept kosong / tidak bisa diurai, file tetap diterima.
+     */
+    protected function fileMatchesAccept(\Illuminate\Http\UploadedFile $file, ?string $accept): bool
+    {
+        $accept = trim((string) $accept);
+        if ($accept === '') {
+            return true;
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension());
+        $mime = strtolower((string) $file->getMimeType());
+
+        // Peta mime -> ekstensi umum untuk mencocokkan token accept.
+        $mimeExtensions = [
+            'image/jpeg' => ['jpg', 'jpeg'],
+            'image/jpg' => ['jpg', 'jpeg'],
+            'image/png' => ['png'],
+            'image/gif' => ['gif'],
+            'image/webp' => ['webp'],
+            'application/pdf' => ['pdf'],
+            'application/msword' => ['doc'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
+            'application/vnd.ms-excel' => ['xls'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => ['xlsx'],
+        ];
+
+        foreach (explode(',', $accept) as $token) {
+            $token = strtolower(trim($token));
+            if ($token === '') {
+                continue;
+            }
+
+            // Wildcard mime seperti image/* atau video/*
+            if (str_ends_with($token, '/*')) {
+                $prefix = substr($token, 0, -1); // "image/"
+                if (str_starts_with($mime, $prefix)) {
+                    return true;
+                }
+                if (str_starts_with($token, 'image/') && in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            // Mime type penuh seperti image/jpeg
+            if (str_contains($token, '/')) {
+                if ($token === $mime) {
+                    return true;
+                }
+                if (in_array($ext, $mimeExtensions[$token] ?? [], true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            // Ekstensi bertitik (.pdf) atau polos (pdf)
+            $tokenExt = ltrim($token, '.');
+            if ($tokenExt !== '' && $tokenExt === $ext) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected function validateSpecialFields(Request $request, array $meta, bool $updating): void
     {
+        // Validasi foto profil untuk resource 'user' (tambah / ubah / hapus).
+        if ($meta['slug'] === 'user') {
+            $request->validate([
+                'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+                'photo_remove' => ['nullable', 'boolean'],
+            ], [
+                'photo.image' => 'File foto profil harus berupa gambar.',
+                'photo.mimes' => 'Foto profil harus berformat JPG, PNG, atau WEBP.',
+                'photo.max' => 'Ukuran foto profil maksimal 2MB.',
+            ]);
+
+            return;
+        }
+
         $pengaduanSlugs = ['pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth'];
 
         if (! in_array($meta['slug'], $pengaduanSlugs)) {
@@ -516,17 +644,16 @@ class ResourceController extends Controller
             : false;
 
         $request->validate([
-            'nama_pelapor' => ['required', 'string', 'max:255'],
-            'nomor_hp' => ['required', 'string', 'max:30'],
-            'jenis_pengaduan' => ['required', Rule::in(array_keys($jenisOptions))],
-            'alamat' => ['required', 'string'],
-            'deskripsi' => ['required', 'string'],
+            'nama_pelapor' => [$updating ? 'nullable' : 'required', 'string', 'max:255'],
+            'nomor_hp' => [$updating ? 'nullable' : 'required', 'string', 'max:30'],
+            'jenis_pengaduan' => $updating ? ['nullable'] : ['required', Rule::in(array_keys($jenisOptions))],
+            'alamat' => [$updating ? 'nullable' : 'required', 'string'],
+            'deskripsi' => [$updating ? 'nullable' : 'required', 'string'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'status' => ['required', Rule::in(array_keys($statusOptions))],
             'catatan_admin' => ['nullable', 'string'],
-            'alasan_penolakan' => [$isDitolak ? 'required' : 'nullable', 'string'],
-            'bukti_foto_selesai' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'alasan_penolakan' => $meta['slug'] === 'pengaduan-rth' ? [$isDitolak ? 'required' : 'nullable', 'string'] : ['nullable', 'string'],
             'photos' => [$updating ? 'nullable' : 'required', 'array', 'max:5'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ], [
@@ -547,6 +674,95 @@ class ResourceController extends Controller
             'photos.*.mimes' => 'Foto bukti harus berformat JPG atau PNG.',
             'photos.*.max' => 'Ukuran setiap foto maksimal 2MB.',
         ]);
+    }
+
+    /**
+     * Validasi server tambahan.
+     * - 'user': mencegah error NOT NULL (500) pada name/username/password saat
+     *   create, dan menjamin username/email unik.
+     * - 'artikel': memastikan judul wajib diisi (mencegah slug/model crash).
+     * Resource lain memakai atribut required pada form serta
+     * validateSpecialFields() untuk pengaduan.
+     */
+    protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
+    {
+        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth'], true)) {
+            $request->validate([
+                'judul' => ['required', 'string', 'max:255'],
+                'konten' => ['required', 'string'],
+            ], [], [
+                'judul' => 'Judul',
+                'konten' => 'Konten',
+            ]);
+
+            return;
+        }
+
+        if ($meta['slug'] !== 'user') {
+            return;
+        }
+
+        $rules = [];
+        $attributes = [];
+
+        foreach (AdminRegistry::formFields($meta) as $field) {
+            $name = $field['name'] ?? null;
+            $type = $field['type'] ?? 'text';
+
+            if (! $name || in_array($type, ['section', 'photos', 'relation_files'], true)) {
+                continue;
+            }
+            if (($field['readonly'] ?? false) === true) {
+                continue;
+            }
+
+            $required = ($field['required'] ?? false) === true;
+            $rule = [];
+
+            if ($type === 'password') {
+                $rule[] = ($required && ! $updating) ? 'required' : 'nullable';
+                $rule[] = 'string';
+                $rule[] = 'min:6';
+            } elseif ($type === 'file') {
+                $rule[] = ($required && ! $updating) ? 'required' : 'nullable';
+                $rule[] = 'file';
+                $rule[] = 'max:5120';
+            } elseif ($type === 'checkbox') {
+                $rule[] = 'nullable';
+                $rule[] = 'boolean';
+            } elseif ($type === 'number') {
+                $rule[] = $required ? 'required' : 'nullable';
+                $rule[] = 'numeric';
+            } elseif ($type === 'email') {
+                $rule[] = $required ? 'required' : 'nullable';
+                $rule[] = 'email';
+                $rule[] = 'max:255';
+            } elseif ($type === 'date') {
+                $rule[] = $required ? 'required' : 'nullable';
+                $rule[] = 'date';
+            } else {
+                $rule[] = $required ? 'required' : 'nullable';
+                $rule[] = 'string';
+            }
+
+            $rules[$name] = $rule;
+            $attributes[$name] = $field['label'] ?? $name;
+        }
+
+        // Aturan khusus resource 'user': unique username/email.
+        if ($meta['slug'] === 'user') {
+            $ignoreId = $model?->getKey();
+            $rules['username'] = ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($ignoreId)];
+            $rules['email'] = ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($ignoreId)];
+            $rules['role'] = ['nullable', Rule::in(collect(\App\Enums\AdminRole::cases())->map(fn ($r) => $r->value)->all())];
+            $attributes['username'] = 'Username';
+            $attributes['email'] = 'Email';
+            $attributes['role'] = 'Role';
+        }
+
+        if (! empty($rules)) {
+            $request->validate($rules, [], $attributes);
+        }
     }
 
     protected function storeSpecialRelations(Request $request, array $meta, Model $record): void
@@ -579,9 +795,41 @@ class ResourceController extends Controller
         }
     }
 
-    protected function storeSanksiIfPelanggaran(Request $request, Model $record): void
+    /**
+     * Simpan daftar hadir (baris kunjungan) untuk kegiatan Monitoring & Evaluasi
+     * pada resource 'sosialisasi' (menu Monitoring, Evaluasi dan Sosialisasi).
+     * Baris lama dihapus lalu dibuat ulang agar selalu sinkron dengan form.
+     */
+    protected function storeDaftarHadir(Request $request, array $meta, Model $record): void
     {
-        if (! ($record instanceof \App\Models\Pelanggaran)) {
+        if ($meta['slug'] !== 'sosialisasi') {
+            return;
+        }
+
+        if ($request->input('jenis_kegiatan') !== 'monitoring-evaluasi') {
+            return;
+        }
+
+        $rows = collect($request->input('daftar_hadir', []))
+            ->filter(fn ($row) => is_array($row) && (filled($row['nama_perusahaan'] ?? null) || filled($row['lokasi'] ?? null) || filled($row['tim_survey'] ?? null)))
+            ->map(fn ($row) => [
+                'nama_perusahaan' => trim((string) ($row['nama_perusahaan'] ?? '')),
+                'jenis_usaha' => trim((string) ($row['jenis_usaha'] ?? '')),
+                'tanggal' => ($row['tanggal'] ?? null) ?: null,
+                'lokasi' => trim((string) ($row['lokasi'] ?? '')),
+                'tim_survey' => trim((string) ($row['tim_survey'] ?? '')),
+            ])
+            ->values();
+
+        $record->pesertas()->delete();
+
+        foreach ($rows as $row) {
+            $record->pesertas()->create($row);
+        }
+    }
+
+    protected function storeSanksiIfPelanggaran(Request $request, Model $record): void
+    {        if (! ($record instanceof \App\Models\Pelanggaran)) {
             return;
         }
 

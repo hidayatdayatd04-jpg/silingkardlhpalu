@@ -20,7 +20,7 @@ class UploadController extends Controller
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
         $path = $file->storeAs('artikel-images', $filename, 'public');
 
-        $url = Storage::disk('public')->url($path);
+        $url = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
 
         return response()->json([
             'success' => true,

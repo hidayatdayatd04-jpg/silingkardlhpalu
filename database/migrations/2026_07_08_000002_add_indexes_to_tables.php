@@ -11,10 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('ikm_responses', function (Blueprint $table) {
-            $table->index('created_at');
-        });
-
         Schema::table('laporans', function (Blueprint $table) {
             $table->index('status');
             $table->index('created_at');
@@ -26,10 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('ikm_responses', function (Blueprint $table) {
-            $table->dropIndex(['created_at']);
-        });
-
         Schema::table('laporans', function (Blueprint $table) {
             $table->dropIndex(['status']);
             $table->dropIndex(['created_at']);

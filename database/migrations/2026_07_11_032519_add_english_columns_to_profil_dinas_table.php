@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('profil_dinas', function (Blueprint $table) {
-            $table->text('visi_en')->nullable()->after('visi');
-            $table->text('misi_en')->nullable()->after('misi');
-            $table->text('tugas_fungsi_en')->nullable()->after('tugas_fungsi');
+            $table->text('visi_en')->nullable();
+            $table->text('misi_en')->nullable();
+            $table->text('tugas_fungsi_en')->nullable();
         });
     }
 

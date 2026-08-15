@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (! Schema::hasColumn('users', 'photo_path')) {
-                $table->string('photo_path')->nullable()->after('email');
+                $table->string('photo_path')->nullable();
             }
             if (! Schema::hasColumn('users', 'preferences')) {
-                $table->json('preferences')->nullable()->after('additional_access');
+                $table->json('preferences')->nullable();
             }
         });
     }

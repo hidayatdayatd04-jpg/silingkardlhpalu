@@ -7,7 +7,7 @@
     $hasStructureImage = ! empty($profil->struktur_organisasi_image);
     $assetStructurePath = 'assets/images/struktur.jpg';
     $structureImage = $hasStructureImage
-        ? asset('storage/' . $profil->struktur_organisasi_image)
+        ? Storage::disk('public')->temporaryUrl($profil->struktur_organisasi_image, now()->addHours(24))
         : (file_exists(public_path($assetStructurePath)) ? asset($assetStructurePath) : null);
 @endphp
 
@@ -21,12 +21,29 @@
             this.tab = name;
             const hash = name === 'visi-misi' ? '#visi-misi' : (name === 'struktur' ? '#struktur-organisasi' : '#tugas-fungsi');
             history.replaceState(null, '', hash);
+            this.$nextTick(() => {
+                const el = document.getElementById(hash.replace('#', ''));
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        },
+        scrollToSection(hash) {
+            if (!hash) return;
+            const el = document.getElementById(hash.replace('#', ''));
+            if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
         }
     }"
     x-init="
         if (window.location.hash === '#struktur-organisasi') tab = 'struktur';
         else if (window.location.hash === '#tugas-fungsi') tab = 'tugas';
         else if (window.location.hash === '#visi-misi') tab = 'visi-misi';
+        scrollToSection(window.location.hash);
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash;
+            if (hash === '#struktur-organisasi') this.tab = 'struktur';
+            else if (hash === '#tugas-fungsi') this.tab = 'tugas';
+            else if (hash === '#visi-misi') this.tab = 'visi-misi';
+            scrollToSection(hash);
+        });
     "
     class="space-y-8 pb-16"
 >
@@ -70,29 +87,48 @@
         </nav>
     </div>
 
-    <section x-show="tab === 'visi-misi'" x-cloak id="visi-misi" class="space-y-6">
-        <article class="profile-visi-card relative overflow-hidden rounded-3xl p-8 text-white sm:p-10 lg:p-12">
-            <div class="profile-visi-glow profile-visi-glow-1"></div>
-            <div class="profile-visi-glow profile-visi-glow-2"></div>
-            <div class="relative flex flex-col items-center text-center">
-                <span class="inline-flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-sm">
-                    <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
-                </span>
-                <p class="mt-4 text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">{{ __('Visi') }}</p>
-                <div class="profile-vision mt-5">
-                    {!! $profil->visi_translated !!}
-                </div>
-            </div>
-        </article>
+    <section x-show="tab === 'visi-misi'" x-cloak id="visi-misi" class="space-y-10">
+        <div class="relative space-y-8">
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-20"></div>
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-20"></div>
 
-        <article class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-lg shadow-slate-200/50 dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-slate-900/50 sm:p-8 lg:p-10">
-            <div class="flex flex-col items-center border-b border-slate-100 pb-10 text-center dark:border-slate-800">
-                <p class="text-xs font-bold uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">{{ __('Misi') }}</p>
-            </div>
-            <div class="profile-prose profile-mission mt-7">
-                {!! $profil->misi_translated !!}
-            </div>
-        </article>
+            <article class="relative overflow-hidden rounded-3xl p-8 text-white sm:p-10 lg:p-14">
+                <div class="absolute inset-0 bg-gradient-to-br from-emerald-700 via-teal-800 to-slate-900"></div>
+                <div class="absolute inset-0">
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-400/10 rounded-full -translate-y-1/2 translate-x-1/2 filter blur-3xl"></div>
+                    <div class="absolute bottom-0 left-0 w-80 h-80 bg-teal-400/10 rounded-full translate-y-1/2 -translate-x-1/2 filter blur-3xl"></div>
+                </div>
+                <div class="relative flex flex-col items-center text-center">
+                    <span class="inline-flex size-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur-sm">
+                        <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                        </svg>
+                    </span>
+                    <p class="mt-6 text-xs font-bold uppercase tracking-[0.3em] text-emerald-200/80">{{ __('Visi') }}</p>
+                    <div class="profile-vision mt-6">
+                        {!! $profil->visi_translated !!}
+                    </div>
+
+                </div>
+            </article>
+
+            <article class="relative rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-slate-900/50 sm:p-8 lg:p-10">
+                <div class="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent dark:via-emerald-700"></div>
+                <div class="flex flex-col items-center text-center mb-8">
+                    <span class="inline-flex size-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 mb-4">
+                        <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15L15 9.75M7.5 3.75h9A2.25 2.25 0 0118.75 6v12A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V6A2.25 2.25 0 017.5 3.75Z"/>
+                        </svg>
+                    </span>
+                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">{{ __('Misi') }}</p>
+
+                </div>
+                <div class="profile-prose profile-mission mt-4">
+                    {!! $profil->misi_translated !!}
+                </div>
+            </article>
+        </div>
     </section>
 
     <section x-show="tab === 'struktur'" x-cloak id="struktur-organisasi" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
@@ -126,7 +162,6 @@
             <h3>Tugas Dinas Lingkungan Hidup Kota Palu</h3>
             <p>Dinas Lingkungan Hidup mempunyai tugas membantu Wali Kota melaksanakan urusan Pemerintahan yang menjadi kewenangan Daerah di bidang lingkungan hidup dan Tugas Pembantuan yang diberikan kepada Daerah.</p>
             <h3>Fungsi Dinas Lingkungan Hidup Kota Palu</h3>
-            <p>antara lain adalah :</p>
             <ol>
                 <li>Pengoordinasian perumusan kebijakan teknis bidang lingkungan hidup;</li>
                 <li>Penyelenggaraan pembinaan, pengumpulan dan pengolahan data, penyusunan rencana dan program bidang lingkungan hidup;</li>
@@ -226,8 +261,8 @@
     }
 
     .profile-prose li:hover {
-        border-color: rgb(16 185 129 / 0.3);
-        box-shadow: 0 4px 16px rgb(16 185 129 / 0.1);
+        border-color: rgb(16 185 112 / 0.3);
+        box-shadow: 0 4px 16px rgb(16 185, 112, 0.1);
         transform: translateY(-2px);
     }
 
@@ -237,8 +272,8 @@
     }
 
     .dark .profile-prose li:hover {
-        border-color: rgb(16 185 129 / 0.4);
-        box-shadow: 0 4px 20px rgb(16 185 129 / 0.15);
+        border-color: rgb(16 185 112 / 0.4);
+        box-shadow: 0 4px 20px rgb(16 185, 112, 0.15);
     }
 
     .profile-prose li::before {
@@ -249,13 +284,13 @@
         width: 0.6rem;
         height: 0.6rem;
         border-radius: 999px;
-        background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 129) 100%);
-        box-shadow: 0 0 0 5px rgb(16 185 129 / 0.15);
+        background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 112) 100%);
+        box-shadow: 0 0 0 5px rgb(16 185, 112, 0.15);
     }
 
     .profile-mission ol {
         display: grid;
-        gap: 1rem;
+        gap: 1.25rem;
     }
 
     @media (min-width: 900px) {
@@ -267,7 +302,66 @@
     .profile-mission li {
         margin-top: 0;
         min-height: 7rem;
-        padding: 1.15rem 1.25rem 1.15rem 3.25rem;
+        padding: 1.25rem 1.35rem 1.25rem 3.35rem;
+        border-radius: 1.25rem;
+        border: 1px solid rgb(226 232 240);
+        background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-mission li::before {
+        content: attr(data-number);
+        position: absolute;
+        left: 1rem;
+        top: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 112) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 0 0 5px rgb(16 185, 112, 0.15);
+    }
+
+    .profile-mission li::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90, rgb(5 150 105), rgb(16 185 112));
+        opacity: 0.5;
+    }
+
+    .profile-mission li:hover {
+        border-color: rgb(16 185 112 / 0.3);
+        box-shadow: 0 10px 25px rgb(16 185, 112, 0.1);
+        transform: translateY(-4px);
+    }
+
+    .profile-mission li:hover::after {
+        opacity: 1;
+    }
+
+    .dark .profile-mission li {
+        border-color: rgb(30 41 59);
+        background: linear-gradient(135deg, rgb(15 23 42 / 0.55) 0%, rgb(15 23 42 / 0.7) 100%);
+    }
+
+    .dark .profile-mission li::after {
+        background: linear-gradient(90, rgb(16 185 112), rgb(5 150 105));
+    }
+
+    .dark .profile-mission li:hover {
+        border-color: rgb(16 185 112 / 0.4);
+        box-shadow: 0 10px 30px rgb(16 185, 112, 0.15);
     }
 
     .profile-prose-long {
@@ -290,17 +384,17 @@
 
     .profile-prose-long ol li {
         background: linear-gradient(135deg, rgb(240 253 250) 0%, rgb(236 253 245) 100%);
-        border-color: rgb(16 185 129 / 0.15);
+        border-color: rgb(16 185 112 / 0.15);
     }
 
     .dark .profile-prose-long ol li {
-        background: linear-gradient(135deg, rgb(16 185 129 / 0.08) 0%, rgb(16 185 129 / 0.12) 100%);
-        border-color: rgb(16 185 129 / 0.25);
+        background: linear-gradient(135deg, rgb(16 185 112 / 0.08) 0%, rgb(16 185 112 / 0.12) 100%);
+        border-color: rgb(16 185 112 / 0.25);
     }
 
     .profile-prose-long ol li::before {
-        background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 129) 100%);
-        box-shadow: 0 0 0 5px rgb(16 185 129 / 0.2);
+        background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 112) 100%);
+        box-shadow: 0 0 0 5px rgb(16 185, 112, 0.2);
     }
 </style>
 @endpush

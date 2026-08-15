@@ -9,15 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pengajuan_rintek_perteks', function (Blueprint $table) {
-            $table->string('nama_penanggung_jawab')->default('')->after('nama_perusahaan');
-            $table->string('nomor_nib')->default('')->after('nama_penanggung_jawab');
-            $table->string('npwp', 30)->nullable()->after('nomor_nib');
-            $table->string('jenis_usaha')->default('')->after('npwp');
-            $table->text('alamat_lengkap')->nullable()->after('jenis_usaha');
-            $table->string('nomor_telepon', 20)->default('')->after('alamat_lengkap');
-            $table->string('email')->default('')->after('nomor_telepon');
-            $table->string('jenis_pengajuan')->default('')->after('email');
-            $table->text('keterangan_tambahan')->nullable()->after('sop_tanggap_darurat');
+            $table->string('nama_penanggung_jawab')->default('');
+            $table->string('nomor_nib')->default('');
+            $table->string('npwp', 30)->nullable();
+            $table->string('jenis_usaha')->default('');
+            $table->text('alamat_lengkap')->nullable();
+            $table->string('nomor_telepon', 20)->default('');
+            $table->string('email')->default('');
+            $table->string('jenis_pengajuan')->default('');
+            $table->text('keterangan_tambahan')->nullable();
         });
     }
 

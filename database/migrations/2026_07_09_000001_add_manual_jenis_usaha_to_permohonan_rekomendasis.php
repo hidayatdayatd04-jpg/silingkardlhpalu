@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::table('permohonan_rekomendasis', function (Blueprint $table) {
             if (! Schema::hasColumn('permohonan_rekomendasis', 'jenis_usaha')) {
-                $table->string('jenis_usaha')->nullable()->after('npwp');
+                $table->string('jenis_usaha')->nullable();
             }
         });
 

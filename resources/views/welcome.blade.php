@@ -110,25 +110,26 @@
             $bidangs = [
                 [
                     'title' => __('Pengendalian'),
-                    'desc' => __('Pengaduan, permohonan rekomendasi, & RINTEK/PERTEK lingkungan.'),
+                    'desc' => __('Pengaduan dampak lingkungan, permohonan rekomendasi lingkungan.'),
                     'accent' => 'clay',
                     'icon' => 'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Zm9-5v5l3 2',
                     'links' => [
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Cek Status'), '/cek-pengaduan-pengendalian'],
                         [__('Permohonan'), '/permohonan-rekomendasi'],
-                        ['RINTEK/PERTEK', '/pengajuan-rintek-pertek'],
                     ],
                 ],
                 [
                     'title' => __('Sampah & LB3'),
-                    'desc' => __('Peta persampahan, pengaduan, & registrasi usaha LB3.'),
+                    'desc' => __('Peta persampahan, pengaduan, registrasi LB3, & RINTEK/PERTEK.'),
                     'accent' => 'amber',
                     'icon' => 'M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6',
                     'links' => [
                         [__('Peta Sampah'), '/peta-persampahan'],
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Registrasi LB3'), '/registrasi-usaha-lb3'],
+                        ['RINTEK/PERTEK', '/pengajuan-rintek-pertek'],
+                        [__('Cek RINTEK/PERTEK'), '/cek-rintek-pertek'],
                     ],
                 ],
                 [
@@ -137,7 +138,6 @@
                     'accent' => 'bay',
                     'icon' => 'M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7',
                     'links' => [
-                        [__('Info Modul'), '/tata-penataan'],
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Cek Status'), '/cek-pengaduan-tata-penataan'],
                         [__('Peta Objek'), '/peta-objek-pengawasan'],
@@ -145,14 +145,12 @@
                 ],
                 [
                     'title' => __('Ruang Terbuka Hijau'),
-                    'desc' => __('Peta RTH, pengaduan, izin tebang & pinjam pakai taman.'),
+                    'desc' => __('Pengaduan dan penyewaan taman.'),
                     'accent' => 'brand',
                     'icon' => 'M12 22V12m0 0c0-3 2-5 5-5 0 3-2 5-5 5Zm0 0C9 12 7 9.5 7 6c3 0 5 2.5 5 6Z',
                     'links' => [
-                        [__('Peta RTH'), '/peta-rth'],
                         [__('Pengaduan'), '/pengaduan'],
-                        [__('Izin Tebang'), '/perizinan-tebang-pohon'],
-                        [__('Pinjam Taman'), '/pinjam-taman'],
+                        [__('Penyewaan Taman'), '/pinjam-taman'],
                     ],
                 ],
             ];
@@ -226,86 +224,6 @@
         </section>
 
         {{-- ========================================================= --}}
-        {{-- TEMUKAN JENIS ADUAN — pencarian + filter kategori (Alpine)  --}}
-        {{-- ========================================================= --}}
-        @php
-        $aduanCategories = [
-            ['label' => __('Pembakaran Sampah'), 'bidang' => 'Pengendalian', 'bidangLabel' => __('Pengendalian'), 'accent' => 'clay', 'url' => '/pengaduan'],
-            ['label' => __('Limbah B3'), 'bidang' => 'Pengendalian', 'bidangLabel' => __('Pengendalian'), 'accent' => 'clay', 'url' => '/pengaduan'],
-            ['label' => __('Banjir'), 'bidang' => 'Pengendalian', 'bidangLabel' => __('Pengendalian'), 'accent' => 'clay', 'url' => '/pengaduan'],
-            ['label' => __('Longsor'), 'bidang' => 'Pengendalian', 'bidangLabel' => __('Pengendalian'), 'accent' => 'clay', 'url' => '/pengaduan'],
-            ['label' => __('Sampah Menumpuk'), 'bidang' => 'Sampah & LB3', 'bidangLabel' => __('Sampah & LB3'), 'accent' => 'amber', 'url' => '/pengaduan'],
-            ['label' => __('Armada Tidak Lewat'), 'bidang' => 'Sampah & LB3', 'bidangLabel' => __('Sampah & LB3'), 'accent' => 'amber', 'url' => '/pengaduan'],
-            ['label' => __('Sampah Tidak Diangkut'), 'bidang' => 'Sampah & LB3', 'bidangLabel' => __('Sampah & LB3'), 'accent' => 'amber', 'url' => '/pengaduan'],
-            ['label' => __('Limbah / Asap / Kebisingan'), 'bidang' => 'Tata Penataan', 'bidangLabel' => __('Tata Penataan'), 'accent' => 'bay', 'url' => '/pengaduan'],
-            ['label' => __('Penebangan Liar'), 'bidang' => 'RTH', 'bidangLabel' => __('RTH'), 'accent' => 'brand', 'url' => '/pengaduan'],
-            ['label' => __('Taman Rusak'), 'bidang' => 'RTH', 'bidangLabel' => __('RTH'), 'accent' => 'brand', 'url' => '/pengaduan'],
-            ['label' => __('Fasilitas Rusak'), 'bidang' => 'RTH', 'bidangLabel' => __('RTH'), 'accent' => 'brand', 'url' => '/pengaduan'],
-            ['label' => __('Lahan Beralih Fungsi'), 'bidang' => 'RTH', 'bidangLabel' => __('RTH'), 'accent' => 'brand', 'url' => '/pengaduan'],
-        ];
-        // Key filter stabil (Indonesia) untuk pencocokan; label ditampilkan terjemah.
-        $aduanFilters = ['Semua' => __('Semua'), 'Pengendalian' => __('Pengendalian'), 'Sampah & LB3' => __('Sampah & LB3'), 'Tata Penataan' => __('Tata Penataan'), 'RTH' => __('RTH')];
-        @endphp
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
-                 x-data="{ q: '', filter: 'Semua', items: {{ Illuminate\Support\Js::from($aduanCategories) }} }">
-            <div class="reveal text-center max-w-2xl mx-auto mb-10">
-                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-clay-600 dark:text-clay-400 mb-3">{{ __('Cari Cepat') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Temukan Jenis Aduan Anda') }}</h2>
-                <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Ketik kata kunci atau pilih bidang untuk langsung menuju formulir pengaduan yang tepat.') }}</p>
-            </div>
-
-            <div class="reveal rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.2)] p-5 sm:p-7">
-                {{-- Kotak pencarian --}}
-                <div class="relative">
-                    <svg class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-                    <input type="text" x-model="q" placeholder="{{ __('Cari jenis aduan…') }}"
-                           aria-label="{{ __('Cari jenis aduan…') }}"
-                           class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 pl-12 pr-4 py-3.5 text-sm font-medium text-slate-800 dark:text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:focus:ring-brand-500/20">
-                </div>
-
-                {{-- Filter bidang --}}
-                <div class="mt-4 flex flex-wrap gap-2">
-                    @foreach ($aduanFilters as $val => $flabel)
-                        <button type="button" @click="filter = '{{ $val }}'"
-                                :class="filter === '{{ $val }}'
-                                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/30'
-                                    : 'bg-white dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-300 hover:text-brand-700 dark:hover:text-brand-300'"
-                                class="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold transition-all duration-200">
-                            {{ $flabel }}
-                        </button>
-                    @endforeach
-                </div>
-
-                {{-- Hasil --}}
-                <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                    <template x-for="item in items.filter(i => (filter === 'Semua' || i.bidang === filter) && i.label.toLowerCase().includes(q.toLowerCase()))" :key="item.label">
-                        <a :href="item.url"
-                           class="group flex flex-col gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 dark:hover:border-brand-700 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
-                            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug group-hover:text-brand-700 dark:group-hover:text-brand-300 transition-colors" x-text="item.label"></span>
-                            <span class="inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
-                                  :class="{
-                                      'bg-brand-50 text-brand-700 ring-brand-500/20 dark:bg-brand-900/25 dark:text-brand-300': item.accent === 'brand',
-                                      'bg-bay-50 text-bay-700 ring-bay-500/20 dark:bg-bay-900/25 dark:text-bay-300': item.accent === 'bay',
-                                      'bg-clay-50 text-clay-700 ring-clay-500/20 dark:bg-clay-900/25 dark:text-clay-300': item.accent === 'clay',
-                                      'bg-amber-50 text-amber-700 ring-amber-500/20 dark:bg-amber-900/25 dark:text-amber-300': item.accent === 'amber',
-                                  }"
-                                  x-text="item.bidangLabel"></span>
-                        </a>
-                    </template>
-
-                    {{-- Kosong --}}
-                    <div class="col-span-full py-10 text-center"
-                         x-show="items.filter(i => (filter === 'Semua' || i.bidang === filter) && i.label.toLowerCase().includes(q.toLowerCase())).length === 0"
-                         x-cloak>
-                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ __('Tidak ada jenis aduan yang cocok.') }}
-                            <a href="/pengaduan" class="font-semibold text-brand-600 hover:underline">{{ __('lihat semua layanan') }}</a>.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        {{-- ========================================================= --}}
         {{-- PROFIL KEPALA DINAS — pelayanan transparan & cepat         --}}
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -333,7 +251,7 @@
                         </p>
                         <div class="mt-7 grid sm:grid-cols-3 gap-3">
                             @foreach ([
-                                ['t' => __('Gratis'), 's' => __('Tanpa dipungut biaya'), 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m0-6c1.11 0 2.08.402 2.599 1M12 8V6m0 0a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z', 'c' => 'brand'],
+                                ['t' => __('Terintegrasi'), 's' => __('Satu pintu layanan'), 'c' => 'brand', 'icon' => 'M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5ZM4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-4Z'],
                                 ['t' => __('Real-time'), 's' => __('Pelacakan via GPS'), 'icon' => 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 'c' => 'bay'],
                                 ['t' => __('Terbuka'), 's' => __('Status dapat dipantau'), 'icon' => 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'c' => 'clay'],
                             ] as $feat)
@@ -354,7 +272,7 @@
                             @endforeach
                         </div>
                         <div class="mt-7">
-                            <a href="/profil" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
+                            <a href="/tentang" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
                                 {{ __('Selengkapnya tentang DLH Kota Palu') }}
                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
                             </a>
@@ -419,18 +337,15 @@
             @if(isset($artikels) && $artikels->count())
                 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($artikels->take(6) as $i => $artikel)
-                        <a href="/berita/{{ $artikel->slug }}"
+                        <a href="/berita/{{ $artikel->slug }}?dari=beranda"
                            class="reveal group flex flex-col rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.25)] hover:border-brand-200 dark:hover:border-brand-800"
                            style="--reveal-delay: {{ ($i % 3) * 100 }}ms">
                             <div class="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
                                 @if($artikel->thumbnail)
-                                    <img src="{{ asset('storage/'.$artikel->thumbnail) }}" alt="{{ $artikel->judul }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                                    <img src="{{ $artikel->thumbnail ? Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) : '' }}" alt="{{ $artikel->judul }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
                                 @else
                                     <div class="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-bay-400"></div>
                                 @endif
-                                <span class="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-700 dark:text-brand-300 ring-1 ring-inset ring-brand-500/20">
-                                    {{ $artikel->kategori?->label() ?? 'Umum' }}
-                                </span>
                             </div>
                             <div class="p-5 flex flex-col flex-1">
                                 <h3 class="font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ $artikel->judul }}</h3>
@@ -529,67 +444,6 @@
         @endif
 
         {{-- ========================================================= --}}
-        {{-- ARMADA OPERASIONAL — dark, teknis, pulse indikator Online  --}}
-        {{-- ========================================================= --}}
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="reveal relative overflow-hidden rounded-[2rem] bg-slate-950 p-7 sm:p-10 lg:p-12 ring-1 ring-white/10">
-                {{-- Aksen cahaya --}}
-                <div class="absolute -top-24 -right-24 size-80 rounded-full bg-brand-600/25 blur-3xl" aria-hidden="true"></div>
-                <div class="absolute -bottom-24 -left-24 size-72 rounded-full bg-bay-600/20 blur-3xl" aria-hidden="true"></div>
-                {{-- Grid teknis halus --}}
-                <div class="absolute inset-0 opacity-[0.04]" aria-hidden="true"
-                     style="background-image:linear-gradient(to right,white 1px,transparent 1px),linear-gradient(to bottom,white 1px,transparent 1px);background-size:44px 44px"></div>
-
-                <div class="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-9">
-                    <div class="max-w-xl">
-                        <span class="inline-flex items-center gap-2 rounded-full bg-white/5 ring-1 ring-inset ring-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-300 mb-4">
-                            <span class="relative flex size-2">
-                                <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400"></span>
-                                <span class="relative inline-flex size-2 rounded-full bg-emerald-400"></span>
-                            </span>
-                            {{ __('Sistem Online') }}
-                        </span>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{{ __('Kesiapan Armada Operasional') }}</h2>
-                        <p class="text-slate-400 mt-3 text-sm sm:text-base leading-relaxed">{{ __('Armada siap merespons di seluruh penjuru Kota Palu, dipantau secara real-time via GPS.') }}</p>
-                    </div>
-                    <a href="/armada" class="group inline-flex items-center gap-2 rounded-2xl bg-white/5 ring-1 ring-inset ring-white/15 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 shrink-0">
-                        {{ __('Peta Pelacakan GPS') }}
-                        <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                    </a>
-                </div>
-
-                <div class="relative z-10 grid md:grid-cols-2 gap-5">
-                    @foreach ([
-                        ['img' => 'r4_pickup.jpeg', 'title' => __('Armada L300 / Pick Up'), 'desc' => __('Menjangkau pemukiman padat dan gang sempit.'), 'tag' => __('Unit Ringan')],
-                        ['img' => 'r6_truck.jpeg', 'title' => __('Armada Truk (R6)'), 'desc' => __('Memindahkan sampah dari TPS menuju TPA.'), 'tag' => __('Unit Berat')],
-                    ] as $i => $armada)
-                    <div class="reveal group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm transition-all duration-300 hover:border-white/20"
-                         style="--reveal-delay: {{ $i * 120 }}ms">
-                        <div class="relative aspect-[16/9] overflow-hidden">
-                            <img src="{{ asset('assets/images/'.$armada['img']) }}" alt="{{ $armada['title'] }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 to-transparent"></div>
-                            <span class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-slate-950/70 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
-                                <span class="relative flex size-1.5">
-                                    <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400"></span>
-                                    <span class="relative inline-flex size-1.5 rounded-full bg-emerald-400"></span>
-                                </span>
-                                {{ __('Online') }}
-                            </span>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center justify-between gap-3">
-                                <h3 class="font-bold text-white">{{ $armada['title'] }}</h3>
-                                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-white/5 rounded-full px-2 py-0.5 ring-1 ring-inset ring-white/10">{{ $armada['tag'] }}</span>
-                            </div>
-                            <p class="text-sm text-slate-400 mt-1.5 leading-relaxed">{{ $armada['desc'] }}</p>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-
-        {{-- ========================================================= --}}
         {{-- FAQ — akordeon pertanyaan umum (Alpine)                    --}}
         {{-- ========================================================= --}}
         <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -603,7 +457,7 @@
             $faqs = [
                 ['q' => __('Apakah saya perlu mendaftar akun untuk melapor?'), 'a' => __('Tidak. Seluruh layanan pengaduan dan permohonan dapat diakses tanpa registrasi akun. Cukup isi formulir, dan Anda akan mendapatkan nomor tiket untuk memantau status.')],
                 ['q' => __('Bagaimana cara melacak status laporan saya?'), 'a' => __('Simpan nomor tiket yang muncul setelah Anda mengirim laporan, lalu buka menu “Lacak Pelaporan” atau halaman Cek Status pada bidang terkait, dan masukkan nomor tiket tersebut.')],
-                ['q' => __('Apakah ada biaya untuk layanan pengaduan?'), 'a' => __('Seluruh layanan pengaduan lingkungan, persampahan, dan RTH bersifat gratis dan tidak dipungut biaya apa pun.')],
+                ['q' => __('Apakah laporan saya bersifat rahasia?'), 'a' => __('Ya. Anda dapat melapor tanpa membuka akun dan identitas Anda dijaga kerahasiaannya. Cukup simpan nomor tiket untuk memantau status penanganan.')],
                 ['q' => __('Berapa lama laporan saya akan ditindaklanjuti?'), 'a' => __('Laporan mendesak diupayakan direspons dalam 24 jam. Waktu penanganan akhir menyesuaikan jenis aduan dan tingkat kompleksitas di lapangan, dan dapat Anda pantau melalui nomor tiket.')],
                 ['q' => __('Apa saja yang perlu saya siapkan saat melapor?'), 'a' => __('Sebaiknya siapkan deskripsi singkat kejadian, titik lokasi, serta foto atau dokumen pendukung agar petugas dapat memverifikasi dan menindaklanjuti dengan lebih cepat.')],
             ];
@@ -635,25 +489,6 @@
         </section>
 
         {{-- ========================================================= --}}
-        {{-- CTA SURVEI IKM — pita gradien premium                      --}}
-        {{-- ========================================================= --}}
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="reveal relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-brand-700 via-brand-600 to-bay-600 p-8 sm:p-10 shadow-[0_20px_60px_-24px_rgba(5,150,105,0.5)]">
-                <div class="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_15%_20%,white,transparent_45%),radial-gradient(circle_at_85%_85%,rgba(255,255,255,0.4),transparent_40%)]" aria-hidden="true"></div>
-                <div class="relative flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div class="text-center sm:text-left max-w-xl">
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{{ __('Bantu Kami Menjadi Lebih Baik') }}</h2>
-                        <p class="text-brand-50/90 mt-2 text-sm sm:text-base leading-relaxed">{{ __('Isi Survei Kepuasan Masyarakat (IKM) untuk membantu kami mengevaluasi dan meningkatkan kualitas layanan.') }}</p>
-                    </div>
-                    <a href="/survei" class="group flex-shrink-0 inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-sm font-bold text-brand-700 shadow-xl shadow-brand-950/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50">
-                        {{ __('Isi Survei Sekarang') }}
-                        <svg class="size-4 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        {{-- ========================================================= --}}
         {{-- LOKASI & JAM LAYANAN — info faktual + peta lokasi kantor    --}}
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -671,7 +506,7 @@
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Alamat Kantor') }}</p>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Jl. Pipit, Tanamodindi, Kec. Palu Selatan, Kota Palu, Sulawesi Tengah 94111') }}</p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu') }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3.5">
@@ -680,7 +515,7 @@
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Jam Kerja') }}</p>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Senin – Jumat, 08.00 – 16.00 WITA') }}</p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Senin – Kamis, 08.00 – 16.00 WITA') }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3.5">
@@ -709,25 +544,6 @@
                         class="absolute inset-0 h-full w-full grayscale-[0.15] contrast-[1.05]"
                         style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
                 </div>
-            </div>
-        </section>
-
-        {{-- ========================================================= --}}
-        {{-- DARURAT — banner WhatsApp/darurat di atas footer           --}}
-        {{-- ========================================================= --}}
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-clay-200/80 dark:border-clay-900/40 bg-clay-50/70 dark:bg-clay-950/20 px-6 py-4 text-center">
-                <span class="inline-flex items-center gap-2 text-sm font-bold text-clay-700 dark:text-clay-300">
-                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-                    {{ __('Butuh Penanganan Mendesak?') }}
-                </span>
-                <span class="text-sm text-slate-600 dark:text-slate-400">
-                    {{ __('Hubungi Call Center:') }}
-                    <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 font-bold text-brand-600 dark:text-brand-400 hover:underline">
-                        <svg class="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
-                        0851-9151-2076 (WhatsApp)
-                    </a>
-                </span>
             </div>
         </section>
 

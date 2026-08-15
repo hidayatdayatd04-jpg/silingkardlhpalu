@@ -2,20 +2,21 @@
 
 @section('title', $artikel->judul.' - DLH Kota Palu')
 @section('description', \Illuminate\Support\Str::limit(strip_tags($artikel->konten), 160))
+@if ($artikel->thumbnail)
+    @section('og_image', url('/file/og?path='.urlencode($artikel->thumbnail)))
+@endif
 
 @section('content')
 <article class="max-w-3xl mx-auto">
     {{-- Kembali --}}
-    <a href="/berita" class="reveal is-revealed group inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
+    @php $dariBeranda = request('dari') === 'beranda'; @endphp
+    <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="reveal is-revealed group inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
         <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
-        {{ __('Kembali ke Berita') }}
+        {{ $dariBeranda ? __('Kembali ke Beranda') : __('Kembali ke Berita') }}
     </a>
 
     {{-- Header --}}
     <header class="reveal mt-6 text-center">
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-700 dark:bg-brand-900/25 dark:text-brand-300 ring-1 ring-inset ring-brand-500/15">
-            {{ $artikel->kategori?->label() ?? __('Umum') }}
-        </span>
         <h1 class="mt-5 text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.1] tracking-tight text-slate-900 dark:text-white">{{ $artikel->judul }}</h1>
         <div class="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
             <span class="inline-flex items-center gap-1.5">
@@ -32,7 +33,7 @@
     {{-- Gambar utama --}}
     @if ($artikel->thumbnail)
         <figure class="reveal reveal-scale mt-9 overflow-hidden rounded-3xl shadow-[0_28px_70px_-30px_rgba(15,23,42,0.4)] ring-1 ring-slate-900/5 dark:ring-white/10">
-            <img src="{{ asset('storage/'.$artikel->thumbnail) }}" alt="{{ $artikel->judul }}" class="w-full object-cover max-h-[30rem]">
+            <img src="{{ Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) }}" alt="{{ $artikel->judul }}" class="w-full object-cover max-h-[30rem]">
         </figure>
     @else
         <div class="reveal mt-9 h-56 rounded-3xl bg-gradient-to-br from-brand-600 via-brand-500 to-bay-400"></div>
@@ -77,9 +78,9 @@
                 <span class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-0.5 text-[10px] text-white opacity-0"></span>
             </button>
         </div>
-        <a href="/berita" class="group inline-flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all">
+        <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="group inline-flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all">
             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
-            {{ __('Semua Berita') }}
+            {{ $dariBeranda ? __('Kembali ke Beranda') : __('Semua Berita') }}
         </a>
     </div>
 </article>

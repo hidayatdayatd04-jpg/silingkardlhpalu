@@ -13,27 +13,22 @@ return new class extends Migration
     {
         // Laporan
         Schema::table('laporans', function (Blueprint $table) {
-            $table->string('email')->nullable()->after('nomor_hp');
+            $table->string('email')->nullable();
         });
 
         // PengaduanTataPenataan
         Schema::table('pengaduan_tata_penataans', function (Blueprint $table) {
-            $table->string('email')->nullable()->after('no_hp');
+            $table->string('email')->nullable();
         });
-
-        // PerizinanTebangPohon - akan ditambahkan di migration khusus
-        // Schema::table('perizinan_tebang_pohons', function (Blueprint $table) {
-        //     $table->string('email')->nullable()->after('nomor_hp');
-        // });
 
         // PermohonanPinjamTaman - akan ditambahkan di migration khusus
         // Schema::table('permohonan_pinjam_tamans', function (Blueprint $table) {
-        //     $table->string('email')->nullable()->after('nomor_hp');
+        //     $table->string('email')->nullable();
         // });
 
         // RegistrasiUsahaLb3 - akan ditambahkan di migration khusus
         // Schema::table('registrasi_usaha_lb3s', function (Blueprint $table) {
-        //     $table->string('email')->nullable()->after('nomor_telepon');
+        //     $table->string('email')->nullable();
         // });
     }
 
@@ -49,10 +44,6 @@ return new class extends Migration
         Schema::table('pengaduan_tata_penataans', function (Blueprint $table) {
             $table->dropColumn('email');
         });
-
-        // Schema::table('perizinan_tebang_pohons', function (Blueprint $table) {
-        //     $table->dropColumn('email');
-        // });
 
         // Schema::table('permohonan_pinjam_tamans', function (Blueprint $table) {
         //     $table->dropColumn('email');

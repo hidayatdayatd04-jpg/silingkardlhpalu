@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('registrasi_usaha_lb3s', function (Blueprint $table) {
-            $table->string('nomor_telepon')->nullable()->after('nama_perusahaan');
-            $table->string('email')->nullable()->after('nomor_telepon');
+            $table->string('nomor_telepon')->nullable();
+            $table->string('email')->nullable();
         });
     }
 
