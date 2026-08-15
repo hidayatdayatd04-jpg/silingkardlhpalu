@@ -166,6 +166,7 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
     Route::get('/{resource}/export', [ResourceController::class, 'export'])->name('resources.export');
     Route::get('/{resource}/export-all', [ResourceController::class, 'exportAll'])->name('resources.export-all');
     Route::get('/{resource}/bulk-export', [ResourceController::class, 'bulkExport'])->name('resources.bulk-export');
+    Route::get('/exports/download/{token}', [ResourceController::class, 'downloadExport'])->name('exports.download');
     Route::delete('/{resource}/bulk-delete', [ResourceController::class, 'bulkDelete'])->name('resources.bulk-delete');
 
     // Reset password pengguna (khusus superadmin) — agar tidak terkunci jika lupa password.

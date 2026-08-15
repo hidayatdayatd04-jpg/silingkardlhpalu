@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Bidang;
 use App\Http\Controllers\Controller;
+use App\Jobs\GenerateExportJob;
 use App\Models\LaporanFoto;
 use App\Services\ImageCompressionService;
 use App\Support\Admin\AdminRegistry;
@@ -273,6 +274,20 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
+
+        // Task 12: saat antrean aktif, jangan blokir request — buat file via job.
+        if (config('exports.queue')) {
+            GenerateExportJob::dispatch(
+                userId: auth()->id(),
+                slug: $resource,
+                scope: 'filter',
+                format: $request->string('format', 'xlsx')->toString(),
+                filters: $request->query(),
+            );
+
+            return back()->with('info', 'Ekspor (.xlsx) sedang dibuat di antrean. Notifikasi akan muncul saat file siap diunduh.');
+        }
+
         $query = $this->query($meta, $request);
 
         return $this->downloadData($meta, $query, $request->string('format', 'xlsx')->toString(), 'filter');
@@ -282,6 +297,18 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
+
+        if (config('exports.queue')) {
+            GenerateExportJob::dispatch(
+                userId: auth()->id(),
+                slug: $resource,
+                scope: 'all',
+                format: $request->string('format', 'xlsx')->toString(),
+            );
+
+            return back()->with('info', 'Ekspor "Semua Data" dijadwalkan di antrean. Notifikasi akan muncul saat file siap diunduh.');
+        }
+
         $query = $meta['model']::query()->orderByDesc((new $meta['model'])->getKeyName());
 
         return $this->downloadData($meta, $query, $request->string('format', 'xlsx')->toString(), 'all');
@@ -292,9 +319,44 @@ class ResourceController extends Controller
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
         $ids = $request->input('ids', []);
+
+        if (config('exports.queue')) {
+            GenerateExportJob::dispatch(
+                userId: auth()->id(),
+                slug: $resource,
+                scope: 'bulk',
+                format: $request->string('format', 'xlsx')->toString(),
+                ids: (array) $ids,
+            );
+
+            return back()->with('info', 'Ekspor '.count($ids).' data terpilih dijadwalkan di antrean. Notifikasi akan muncul saat file siap diunduh.');
+        }
+
         $query = $meta['model']::query()->whereIn('id', $ids);
 
         return $this->downloadData($meta, $query, $request->string('format', 'xlsx')->toString(), 'bulk');
+    }
+
+    /**
+     * Task 12 — unduh file ekspor berantre (privasi: hanya user pemilik notifikasi).
+     */
+    public function downloadExport(Request $request, string $token)
+    {
+        $notification = auth()->user()->notifications()
+            ->get()
+            ->first(fn ($n) => is_string($n->data['href'] ?? null) && str_ends_with($n->data['href'], '/'.$token));
+
+        abort_if(! $notification, 404, 'File ekspor tidak ditemukan atau kadaluwarsa.');
+
+        $dir  = storage_path('app/private/'.trim(config('exports.storage_dir', 'exports'), '/'));
+        $file = $dir.'/'.$token;
+
+        abort_if(! is_file($file), 404, 'File ekspor sudah diunduh atau dihapus.');
+
+        $downloadName = $notification->data['download_name'] ?? $token;
+        $notification->markAsRead();
+
+        return response()->download($file, $downloadName)->deleteFileAfterSend(true);
     }
 
     /**

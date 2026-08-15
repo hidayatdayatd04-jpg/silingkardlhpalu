@@ -75,6 +75,34 @@ class DataIO
     }
 
     /**
+     * Tulis file CSV ke path absolut (dipakai job export berantre).
+     * Mirip csvDownload tapi ke disk, bukan stream ke browser.
+     *
+     * @param  array<int,string>  $columns
+     */
+    public static function writeCsvFile(Builder $builder, array $columns, string $absolutePath, ?array $headings = null): void
+    {
+        $dir = dirname($absolutePath);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $handle = fopen($absolutePath, 'w');
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, $headings ?? self::headings($columns));
+
+        (clone $builder)->chunk(500, function ($rows) use ($handle, $columns) {
+            foreach ($rows as $row) {
+                fputcsv($handle, collect($columns)
+                    ->map(fn ($c) => self::displayValue($row->{$c} ?? null))
+                    ->all());
+            }
+        });
+
+        fclose($handle);
+    }
+
+    /**
      * Tulis file .xlsx asli (bagi-kali/baris) ke path absolut.
      *
      * @param  array<int,string>  $columns
@@ -83,8 +111,15 @@ class DataIO
     {
         $headings = $headings ?? self::headings($columns);
 
+        // Pastikan direktori tujuan ada (ZipArchive tidak membuat parent dir).
+        $dir = dirname($absolutePath);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
         $zip = new \ZipArchive();
-        if (! $zip->open($absolutePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+        // open() mengembalikan true (sukses) atau kode error integer — bandingkan eksplisit.
+        if ($zip->open($absolutePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             throw new \RuntimeException('Tidak dapat membuat file XLSX.');
         }
 
