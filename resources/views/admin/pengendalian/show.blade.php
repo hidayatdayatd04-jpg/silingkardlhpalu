@@ -155,6 +155,7 @@
                     </x-admin.section-card>
                 </div>
                 @push('scripts')
+                @vite('resources/js/map-bundle.js')
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         window.ensureMaplibreLoaded(function () {

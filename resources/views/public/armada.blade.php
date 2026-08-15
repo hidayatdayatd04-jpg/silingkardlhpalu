@@ -44,3 +44,7 @@
     @endif
 </div>
 @endsection
+@push('scripts')
+{{-- Task 5: tracking-armada (dlhMapInit) butuh DlhZoomControl/DlhMarkers — muat map-bundle --}}
+@vite('resources/js/map-bundle.js')
+@endpush

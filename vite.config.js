@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/chatbot.css',
                 'resources/js/app.js',
                 'resources/js/admin-common.js',
+                'resources/js/map-bundle.js',
                 'resources/js/tata-lingkungan.ts',
             ],
             refresh: true,

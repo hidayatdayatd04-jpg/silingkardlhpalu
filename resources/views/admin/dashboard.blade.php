@@ -502,6 +502,8 @@
 @endsection
 
 @push('scripts')
+{{-- Task 5: peta di sebaran-pengaduan butuh map-bundle (DlhMarkers, DlhZoomControl, dll.) --}}
+@vite('resources/js/map-bundle.js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>

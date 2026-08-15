@@ -15,3 +15,7 @@
     <livewire:public.pengaduan-unified />
 </div>
 @endsection
+@push('scripts')
+{{-- Task 5: form pengaduan unified memakai DlhZoomControl/dlhBasemapSwitcher — muat map-bundle --}}
+@vite('resources/js/map-bundle.js')
+@endpush

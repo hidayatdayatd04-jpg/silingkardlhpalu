@@ -1052,6 +1052,8 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 </div>
 
     @push('scripts')
+    {{-- Task 5: DlhZoomControl, DlhBasemapSwitcher, DlhMarkers, dll. via map-bundle --}}
+    @vite('resources/js/map-bundle.js')
     <script src="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js"></script>
     <script>
     // Initialize Alpine store for peta sidebar

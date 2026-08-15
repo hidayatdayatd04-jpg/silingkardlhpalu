@@ -14,3 +14,7 @@
     <livewire:public.peta-objek-pengawasan />
 </div>
 @endsection
+@push('scripts')
+{{-- Task 5: peta-objek-pengawasan (dlhPetaObjekPengawasan) butuh map-bundle --}}
+@vite('resources/js/map-bundle.js')
+@endpush

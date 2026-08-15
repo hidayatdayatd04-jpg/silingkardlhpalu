@@ -57,6 +57,8 @@
 
 @once
     @push('scripts')
+    {{-- Task 5: kelas peta (DlhZoomControl, DlhBasemapSwitcher, dll.) dimuat on-demand via map-bundle --}}
+    @vite('resources/js/map-bundle.js')
     <script>
         function mapPicker(cfg) {
             return {

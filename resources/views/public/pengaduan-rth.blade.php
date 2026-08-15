@@ -13,3 +13,7 @@
     <livewire:public.pengaduan-rth />
 </div>
 @endsection
+@push('scripts')
+{{-- Task 5: form pengaduan-rth memakai peta MapLibre — muat map-bundle --}}
+@vite('resources/js/map-bundle.js')
+@endpush

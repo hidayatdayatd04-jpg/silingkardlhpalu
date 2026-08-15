@@ -314,6 +314,8 @@
 </div>
 
 @push('scripts')
+{{-- Task 5: peta persampahan memakai DlhMarkers/DlhZoomControl — muat map-bundle --}}
+@vite('resources/js/map-bundle.js')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var mapLayers = @json($layers);

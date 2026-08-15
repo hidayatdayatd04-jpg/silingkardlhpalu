@@ -1,8 +1,32 @@
 import './bootstrap';
 import './admin';
 import './alpine';
-import './map-components';
-import './dlh-markers';
+
+/**
+ * Task 5 — code-split peta.
+ * Kelas MapLibre control (DlhZoomControl, DlhBasemapSwitcher, ...) dan DlhMarkers
+ * TIDAK lagi di-import di sini (app.js dimuat di SEMUA halaman). Keduanya dipindah
+ * ke entry terpisah `resources/js/map-bundle.js` yang di-load via:
+ *   1. `@vite('resources/js/map-bundle.js')` di view yang menampilkan peta, atau
+ *   2. dynamic import di bawah ini sebagai fallback (dijamin tersedia sebelum map dibuat).
+ */
+let _mapComponentsPromise = null;
+
+function ensureMapComponents() {
+    if (window.DlhZoomControl && window.DlhMarkers) {
+        return Promise.resolve();
+    }
+    if (!_mapComponentsPromise) {
+        _mapComponentsPromise = import('./map-bundle').catch((err) => {
+            _mapComponentsPromise = null; // izinkan retry sekali lagi
+            console.error('[DLH] Gagal memuat map-bundle:', err);
+            throw err;
+        });
+    }
+    return _mapComponentsPromise;
+}
+
+window.ensureMapComponents = ensureMapComponents;
 
 /**
  * Helper terpusat untuk memastikan Leaflet sudah di-load sebelum callback dieksekusi.
@@ -12,34 +36,39 @@ import './dlh-markers';
  * @param {Function} callback - Fungsi yang dipanggil setelah Leaflet siap
  */
 window.ensureLeafletLoaded = function (callback) {
-    if (window.L) {
-        callback();
-        return;
-    }
+    // Pastikan chunk peta (DlhMarkers, dll.) sudah terdaftar sebelum peta dibuat.
+    ensureMapComponents().then(function () {
+        if (window.L) {
+            callback();
+            return;
+        }
 
-    // Cek apakah script sedang dalam proses loading (hindari double inject)
-    if (window._leafletLoading) {
-        window._leafletCallbacks = window._leafletCallbacks || [];
-        window._leafletCallbacks.push(callback);
-        return;
-    }
+        // Cek apakah script sedang dalam proses loading (hindari double inject)
+        if (window._leafletLoading) {
+            window._leafletCallbacks = window._leafletCallbacks || [];
+            window._leafletCallbacks.push(callback);
+            return;
+        }
 
-    window._leafletLoading = true;
-    window._leafletCallbacks = [callback];
+        window._leafletLoading = true;
+        window._leafletCallbacks = [callback];
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => {
-        window._leafletLoading = false;
-        (window._leafletCallbacks || []).forEach(fn => fn());
-        window._leafletCallbacks = [];
-    };
-    document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = () => {
+            window._leafletLoading = false;
+            (window._leafletCallbacks || []).forEach(fn => fn());
+            window._leafletCallbacks = [];
+        };
+        document.head.appendChild(script);
+    }).catch(function (err) {
+        console.error('[DLH] ensureLeafletLoaded gagal memuat map-bundle:', err);
+    });
 };
 
 /**
@@ -49,33 +78,38 @@ window.ensureLeafletLoaded = function (callback) {
  * @param {Function} callback - Fungsi yang dipanggil setelah MapLibre siap
  */
 window.ensureMaplibreLoaded = function (callback) {
-    if (window.maplibregl) {
-        callback();
-        return;
-    }
+    // Pastikan chunk peta (DlhZoomControl, DlhMarkers, dll.) siap sebelum map dibuat.
+    ensureMapComponents().then(function () {
+        if (window.maplibregl) {
+            callback();
+            return;
+        }
 
-    if (window._maplibreLoading) {
-        window._maplibreCallbacks = window._maplibreCallbacks || [];
-        window._maplibreCallbacks.push(callback);
-        return;
-    }
+        if (window._maplibreLoading) {
+            window._maplibreCallbacks = window._maplibreCallbacks || [];
+            window._maplibreCallbacks.push(callback);
+            return;
+        }
 
-    window._maplibreLoading = true;
-    window._maplibreCallbacks = [callback];
+        window._maplibreLoading = true;
+        window._maplibreCallbacks = [callback];
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css';
-    document.head.appendChild(link);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css';
+        document.head.appendChild(link);
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js';
-    script.onload = () => {
-        window._maplibreLoading = false;
-        (window._maplibreCallbacks || []).forEach(fn => fn());
-        window._maplibreCallbacks = [];
-    };
-    document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js';
+        script.onload = () => {
+            window._maplibreLoading = false;
+            (window._maplibreCallbacks || []).forEach(fn => fn());
+            window._maplibreCallbacks = [];
+        };
+        document.head.appendChild(script);
+    }).catch(function (err) {
+        console.error('[DLH] ensureMaplibreLoaded gagal memuat map-bundle:', err);
+    });
 };
 
 /**
