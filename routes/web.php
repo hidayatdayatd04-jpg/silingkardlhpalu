@@ -123,6 +123,13 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
     // Component Demo (only for development)
     if (app()->environment('local')) {
         Route::get('/component-demo', fn() => view('admin.component-demo'))->name('component-demo');
+
+        // Task 9 — PoC wire:navigate (SPA-like Livewire) — khusus environment lokal.
+        // Halaman memakai layout terpisah (layouts.admin-navigate-poc) yang TIDAK
+        // memuat app.js sendiri sehingga tidak terjadi double-Alpine dengan
+        // Alpine yang dibundel @livewireScripts. Lihat docs/perf/task09-...md.
+        Route::get('/navigate-poc', fn () => view('admin.navigate-poc.index'))->name('navigate-poc.index');
+        Route::get('/navigate-poc/item/{n}', fn (int $n) => view('admin.navigate-poc.show', ['n' => $n]))->name('navigate-poc.show');
     }
 
     Route::get('/ulasan-masyarakat', [\App\Http\Controllers\Admin\UlasanMasyarakatController::class, 'index'])->name('ulasan-masyarakat.index');
