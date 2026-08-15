@@ -48,6 +48,11 @@ class DashboardController extends Controller
                     now()->endOfMonth()->toDateString(),
                     $allowedGroups,
                 ),
+                // Counters ringan namun TETAP ditaruh di dalam cache agar tidak
+                // dieksekusi ulang setiap request saat cache dashboard masih hit.
+                // Nilainya tidak dependen per-user, jadi aman digabung ke cache yang sama.
+                'activeUsers'  => $isSuperadmin ? User::where('is_active', true)->count() : null,
+                'visits'       => $isSuperadmin && class_exists(WebsiteVisit::class) ? WebsiteVisit::count() : null,
             ];
         });
 
@@ -57,8 +62,8 @@ class DashboardController extends Controller
             'groups'        => AdminRegistry::forUser($user),
             'cards'         => $cached['cards'],
             'recent'        => $recent,
-            'activeUsers'   => $isSuperadmin ? User::where('is_active', true)->count() : null,
-            'visits'        => $isSuperadmin && class_exists(WebsiteVisit::class) ? WebsiteVisit::count() : null,
+            'activeUsers'   => $cached['activeUsers'],
+            'visits'        => $cached['visits'],
             'allowedGroups' => $allowedGroups,
             'charts'        => $cached['charts'],
             'mapReports'    => $cached['mapReports'],
