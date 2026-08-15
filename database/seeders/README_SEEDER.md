@@ -7,7 +7,7 @@ Berikut adalah daftar lengkap seeder yang telah dibuat untuk aplikasi DLH Palu:
 ### 1. **RolePermissionSeeder**
    - Membuat role dan user admin untuk masing-masing bidang
    - User yang dibuat:
-     - Superadmin (username: `superadmin`, password: `superadmin123`)
+      - Admin (username: `admin`, password: `admin123`, akses penuh)
      - Admin Pengendalian (username: `pengendalian`, password: `pengendalian123`)
      - Admin Sampah & LB3 (username: `sampah-lb3`, password: `sampah123`)
      - Admin Tata Penataan (username: `tata-penataan`, password: `tata123`)

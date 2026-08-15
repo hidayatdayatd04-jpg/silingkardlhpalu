@@ -1,5 +1,5 @@
-<th class="w-12 px-5 py-4">
-    <input 
+<th class="sticky top-0 z-10 w-12 rounded-tl-xl bg-slate-50/95 px-5 py-3.5 backdrop-blur-sm">
+    <input
         type="checkbox"
         x-model="selectAll"
         x-on:change="
@@ -9,6 +9,6 @@
                 selected = [];
             }
         "
-        class="size-4 rounded border-slate-300 text-emerald-600 transition focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0"
+        class="size-4 cursor-pointer rounded-md border-slate-300 text-brand-600 transition focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-0 checked:bg-brand-600"
     >
 </th>

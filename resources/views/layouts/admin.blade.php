@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#0a2f24">
     <title>@yield('title', 'Admin DLH Kota Palu')</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-common.js'])
     <style>
         /* Hide scrollbar on sidebar nav */
         .sidebar-nav::-webkit-scrollbar { display: none; }
@@ -18,6 +18,8 @@
         /* Hide scrollbar on main content */
         .main-scroll::-webkit-scrollbar { display: none; }
         .main-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Prevent Alpine flash before init */
+        [x-cloak] { display: none !important; }
     </style>
     <script>
         document.addEventListener('alpine:init', () => {
@@ -32,6 +34,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
@@ -56,7 +59,7 @@
                 @yield('content')
             @else
             <main class="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-                <div class="space-y-6">
+                <div class="space-y-6" data-page-content>
                 <!-- Flash Messages -->
                 @if(session('success'))
                     <x-admin.alert type="success" dismissible class="mb-6">

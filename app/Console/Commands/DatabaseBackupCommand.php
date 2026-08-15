@@ -9,7 +9,7 @@ class DatabaseBackupCommand extends Command
 {
     protected $signature = 'app:db-backup';
 
-    protected $description = 'Buat backup database (.sql) via PDO murni ke disk privat.';
+    protected $description = 'Buat backup database + file upload (.zip) via PDO murni ke disk privat.';
 
     public function handle(DatabaseBackup $backup): int
     {

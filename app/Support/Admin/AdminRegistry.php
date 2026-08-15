@@ -4,9 +4,6 @@ namespace App\Support\Admin;
 
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
-use App\Models\EmailNotificationLog;
-use App\Models\IkmResponse;
-use App\Models\JadwalArmada;
 use App\Models\JenisLb3;
 use App\Models\JenisUsaha;
 use App\Models\Laporan;
@@ -15,19 +12,18 @@ use App\Models\ObjekPengawasan;
 use App\Models\Pelanggaran;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
-use App\Models\PerizinanTebangPohon;
 use App\Models\PermohonanPinjamTaman;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
-use App\Models\Sanksi;
 use App\Models\Sidak;
 use App\Models\Sosialisasi;
-use App\Models\SosialisasiPeserta;
+use App\Models\TamanKota;
 use App\Models\StatistikSampah;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class AdminRegistry
 {
@@ -38,41 +34,36 @@ class AdminRegistry
                 'label' => 'Pengendalian',
                 'icon' => 'alert-circle',
                 'items' => [
-                    self::resource('pengaduan-pengendalian', 'Pengaduan Masyarakat', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at'], ['status' => []]),
-                    self::resource('permohonan-rekomendasi', 'Permohonan/Rekomendasi', PermohonanRekomendasi::class, ['nomor_tiket', 'nama_perusahaan', 'jenis_usaha', 'jenis_pengajuan', 'status', 'created_at']),
+                    array_merge(self::resource('pengaduan-pengendalian', 'Pengaduan Pengendalian', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('permohonan-rekomendasi', 'Permohonan/Rekomendasi', PermohonanRekomendasi::class, ['nomor_tiket', 'nama_perusahaan', 'jenis_usaha', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
                 ],
             ],
             'sampah-lb3' => [
                 'label' => 'Sampah & LB3',
                 'icon' => 'recycle',
                 'items' => [
-                    self::resource('pengaduan-sampah', 'Pengaduan Sampah', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at'], ['status' => []]),
-                    self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']),
-                    self::resource('jadwal-armada', 'Jadwal Armada', JadwalArmada::class, ['nama_rute', 'hari', 'jam', 'wilayah_dilalui']),
+                    array_merge(self::resource('pengaduan-sampah', 'Pengaduan Sampah', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('statistik-sampah', 'Statistik Sampah', StatistikSampah::class, ['tanggal', 'volume_ton', 'periode']),
-                    self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']),
-                    self::resource('pengajuan-rintek-pertek-lb3', 'RINTEK/PERTEK LB3', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']),
+                    array_merge(self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
                 ],
             ],
+
             'tata-penataan' => [
                 'label' => 'Tata Penataan',
                 'icon' => 'building',
                 'items' => [
-                    self::resource('pengaduan-tata-penataan', 'Pengaduan Tata Penataan', PengaduanTataPenataan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']),
-                    self::resource('objek-pengawasan', 'Objek Pengawasan', ObjekPengawasan::class, ['nama_perusahaan', 'jenis_usaha_id', 'alamat', 'no_hp', 'email']),
-                    self::resource('sidak', 'Sidak', Sidak::class, ['tanggal_sidak', 'hasil', 'status_tindak_lanjut', 'is_jadwal']),
+                    array_merge(self::resource('pengaduan-tata-penataan', 'Pengaduan Tata Penataan', PengaduanTataPenataan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('pelanggaran', 'Pelanggaran', Pelanggaran::class, ['jenis_pelanggaran', 'keterangan', 'jenis_sanksi_text', 'status_sanksi_text', 'created_at']),
-                    self::resource('sosialisasi', 'Sosialisasi', Sosialisasi::class, ['judul', 'tanggal', 'materi', 'hasil_evaluasi']),
-                    self::resource('sosialisasi-peserta', 'Peserta Sosialisasi', SosialisasiPeserta::class, ['sosialisasi_id', 'objek_pengawasan_id', 'sertifikat_path']),
+                    self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
                 ],
             ],
             'rth' => [
                 'label' => 'RTH',
                 'icon' => 'tree',
                 'items' => [
-                    self::resource('pengaduan-rth', 'Pengaduan RTH', LaporanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at'], ['status' => []]),
-                    self::resource('perizinan-tebang-pohon', 'Izin Tebang Pohon', PerizinanTebangPohon::class, ['nomor_tiket', 'nama_pemohon', 'status', 'created_at']),
-                    self::resource('pinjam-taman', 'Peminjaman Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']),
+                    array_merge(self::resource('pengaduan-rth', 'Pengaduan RTH', LaporanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('pinjam-taman', 'Penyewaan Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']), ['can_create' => false]),
                     self::resource('data-tanam-pohon', 'Data Tanam Pohon', DataTanamPohon::class, ['jenis_pohon', 'jumlah_pohon', 'nama_penanggung_jawab', 'latitude', 'longitude']),
                 ],
             ],
@@ -80,10 +71,9 @@ class AdminRegistry
                 'label' => 'Konten & Sistem',
                 'icon' => 'file-text',
                 'items' => [
-                    self::resource('artikel', 'Artikel', Artikel::class, ['judul', 'kategori', 'status', 'tanggal_publish']),
-                    self::resource('ikm-response', 'Survei IKM', IkmResponse::class, ['id', 'indikator_1', 'indikator_2', 'indikator_3', 'indikator_4', 'indikator_5', 'indikator_6', 'indikator_7', 'saran', 'created_at']),
-                    self::resource('email-notification-log', 'Log Email', EmailNotificationLog::class, ['email', 'subject', 'status', 'created_at']),
-                    self::resource('user', 'Pengguna Admin', User::class, ['name', 'username', 'email', 'is_active']),
+                    self::resource('artikel', 'Artikel', Artikel::class, ['judul', 'status', 'tanggal_publish']),
+                    self::resource('user', 'Pengguna Admin', User::class, ['name', 'username', 'email', 'role', 'is_active']),
+                    ['slug' => 'sekretariat', 'label' => 'Kesekretariatan', 'link' => '/admin/sekretariat', 'icon' => 'building'],
                 ],
             ],
         ];
@@ -106,9 +96,33 @@ class AdminRegistry
     public static function forUser(\App\Models\User $user): array
     {
         $allowedGroups = $user->allowedGroups();
-        
+        $allowedSlugs = $user->allowedSlugs();
+
         return collect(self::all())
-            ->filter(fn ($group, $key) => in_array($key, $allowedGroups))
+            ->map(function (array $group, string $groupKey) use ($allowedGroups, $allowedSlugs) {
+                $hasFullGroup = in_array($groupKey, $allowedGroups, true);
+
+                // Bila grup diberikan penuh via role -> tampilkan semua item.
+                // Bila tidak, hanya tampilkan item yang diberikan secara spesifik
+                // melalui additional_access (slug menu).
+                $items = collect($group['items'])
+                    ->filter(function (array $item) use ($hasFullGroup, $allowedSlugs) {
+                        if ($hasFullGroup) {
+                            return true;
+                        }
+
+                        $slug = $item['slug'] ?? null;
+
+                        return $slug !== null && in_array($slug, $allowedSlugs, true);
+                    })
+                    ->values()
+                    ->all();
+
+                $group['items'] = $items;
+
+                return $group;
+            })
+            ->filter(fn (array $group) => ! empty($group['items']))
             ->all();
     }
 
@@ -142,27 +156,52 @@ class AdminRegistry
         if ($resource['slug'] === 'user') {
             return self::decorateFields($resource, [
                 [
+                    'name' => '_section_account',
+                    'label' => 'Informasi Akun',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
                     'name' => 'name',
                     'label' => 'Nama Lengkap',
                     'type' => 'text',
                     'options' => [],
+                    'required' => true,
                 ],
                 [
                     'name' => 'username',
                     'label' => 'Username',
                     'type' => 'text',
                     'options' => [],
+                    'required' => true,
                 ],
                 [
                     'name' => 'email',
                     'label' => 'Email',
                     'type' => 'email',
                     'options' => [],
+                    'wide' => true,
+                    'readonly' => true,
                 ],
                 [
                     'name' => 'password',
                     'label' => 'Password',
                     'type' => 'password',
+                    'options' => [],
+                    'required' => true,
+                ],
+                [
+                    'name' => 'password_hint',
+                    'label' => 'Petunjuk Password (ditampilkan di detail pengguna)',
+                    'type' => 'text',
+                    'options' => [],
+                    'hide_on_create' => true,
+                    'readonly' => true,
+                ],
+                [
+                    'name' => '_section_access',
+                    'label' => 'Role & Akses',
+                    'type' => 'section',
                     'options' => [],
                 ],
                 [
@@ -182,8 +221,8 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'artikel'
-        if ($resource['slug'] === 'artikel') {
+        // Custom fields untuk resource 'artikel' (termasuk salinan di masing-masing bidang)
+        if (in_array($resource['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth'], true)) {
             return self::decorateFields($resource, [
                 [
                     'name' => '_section_info',
@@ -198,13 +237,6 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
-                ],
-                [
-                    'name' => 'kategori',
-                    'label' => 'Kategori',
-                    'type' => 'select',
-                    'options' => \App\Enums\ArtikelKategori::options(),
-                    'required' => true,
                 ],
                 [
                     'name' => 'thumbnail',
@@ -248,86 +280,6 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'ikm-response'
-        if ($resource['slug'] === 'ikm-response') {
-            $ikmScaleOptions = [
-                1 => 'Sangat Tidak Puas',
-                2 => 'Kurang Puas',
-                3 => 'Puas',
-                4 => 'Sangat Puas',
-            ];
-
-            return self::decorateFields($resource, [
-                [
-                    'name' => '_section_jawaban',
-                    'label' => 'Penilaian Indikator',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'indikator_1',
-                    'label' => '1. Kemudahan Persyaratan Pelayanan',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_2',
-                    'label' => '2. Kecepatan Waktu Petugas',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_3',
-                    'label' => '3. Transparansi Biaya/Tarif',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_4',
-                    'label' => '4. Kelayakan Sarana & Prasarana',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_5',
-                    'label' => '5. Kompetensi & Perilaku Petugas',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_6',
-                    'label' => '6. Penanganan Pengaduan',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'indikator_7',
-                    'label' => '7. Hasil Layanan (Produk)',
-                    'type' => 'select',
-                    'options' => $ikmScaleOptions,
-                    'required' => true,
-                ],
-                [
-                    'name' => '_section_lain',
-                    'label' => 'Saran & Masukan',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'saran',
-                    'label' => 'Saran & Masukan',
-                    'type' => 'textarea',
-                    'options' => [],
-                ],
-            ]);
-        }
-
         // Custom fields untuk resource 'pengaduan-pengendalian'
         if ($resource['slug'] === 'pengaduan-pengendalian') {
             return self::decorateFields($resource, [
@@ -344,6 +296,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nomor_hp',
@@ -352,13 +305,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
-                ],
-                [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
-                    'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_pengaduan',
@@ -371,9 +318,9 @@ class AdminRegistry
                     'label' => 'Jenis Pengaduan',
                     'type' => 'select',
                     'options' => \App\Enums\JenisPengaduanPengendalian::options(),
-                    'has_lainnya' => true,
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat',
@@ -381,6 +328,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'deskripsi',
@@ -388,6 +336,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_koordinat',
@@ -401,6 +350,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'longitude',
@@ -408,6 +358,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -439,23 +390,6 @@ class AdminRegistry
                     'wide' => true,
                 ],
                 [
-                    'name' => 'alasan_penolakan',
-                    'label' => 'Alasan Penolakan',
-                    'type' => 'textarea',
-                    'options' => [],
-                    'wide' => true,
-                    'show_on_status' => 'Ditolak',
-                ],
-                [
-                    'name' => 'bukti_foto_selesai',
-                    'label' => 'Bukti Foto Selesai',
-                    'type' => 'file',
-                    'options' => [],
-                    'accept' => 'jpg,jpeg,png',
-                    'hint' => 'Upload foto bukti penyelesaian tugas oleh petugas.',
-                    'show_on_status' => 'Selesai',
-                ],
-                [
                     'name' => '_section_foto',
                     'label' => 'Lampiran Foto',
                     'options' => [],
@@ -469,11 +403,14 @@ class AdminRegistry
                     'required' => true,
                     'accept' => 'image/jpeg,image/png,image/jpg',
                     'wide' => true,
+                    'add_new_on_edit' => false,
                 ],
             ]);
         }
         
         // Custom fields untuk resource 'pengaduan-sampah'
+        // Admin hanya memvalidasi & memberi catatan: data dari masyarakat bersifat
+        // readonly (tidak bisa diedit), dan opsi tambah foto baru dihilangkan.
         if ($resource['slug'] === 'pengaduan-sampah') {
             return self::decorateFields($resource, [
                 [
@@ -489,6 +426,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nomor_hp',
@@ -497,6 +435,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'email',
@@ -504,6 +443,7 @@ class AdminRegistry
                     'type' => 'email',
                     'options' => [],
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_pengaduan',
@@ -516,9 +456,9 @@ class AdminRegistry
                     'label' => 'Jenis Pengaduan',
                     'type' => 'select',
                     'options' => \App\Enums\JenisPengaduanSampah::options(),
-                    'has_lainnya' => true,
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat',
@@ -526,6 +466,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'deskripsi',
@@ -533,6 +474,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_koordinat',
@@ -546,6 +488,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'longitude',
@@ -553,6 +496,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -584,23 +528,6 @@ class AdminRegistry
                     'wide' => true,
                 ],
                 [
-                    'name' => 'alasan_penolakan',
-                    'label' => 'Alasan Penolakan',
-                    'type' => 'textarea',
-                    'options' => [],
-                    'wide' => true,
-                    'show_on_status' => 'Ditolak',
-                ],
-                [
-                    'name' => 'bukti_foto_selesai',
-                    'label' => 'Bukti Foto Selesai',
-                    'type' => 'file',
-                    'options' => [],
-                    'accept' => 'jpg,jpeg,png',
-                    'hint' => 'Upload foto bukti penyelesaian tugas oleh petugas.',
-                    'show_on_status' => 'Selesai',
-                ],
-                [
                     'name' => '_section_foto',
                     'label' => 'Lampiran Foto',
                     'options' => [],
@@ -613,6 +540,7 @@ class AdminRegistry
                     'options' => [],
                     'accept' => 'image/jpeg,image/png,image/jpg',
                     'wide' => true,
+                    'add_new_on_edit' => false,
                 ],
             ]);
         }
@@ -633,6 +561,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nomor_hp',
@@ -641,13 +570,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
-                ],
-                [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
-                    'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_pengaduan',
@@ -660,9 +583,9 @@ class AdminRegistry
                     'label' => 'Jenis Pengaduan',
                     'type' => 'select',
                     'options' => \App\Enums\JenisPengaduanRth::options(),
-                    'has_lainnya' => true,
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat',
@@ -670,6 +593,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'deskripsi',
@@ -677,6 +601,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_koordinat',
@@ -690,6 +615,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'longitude',
@@ -697,6 +623,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -736,15 +663,6 @@ class AdminRegistry
                     'show_on_status' => 'Ditolak',
                 ],
                 [
-                    'name' => 'bukti_foto_selesai',
-                    'label' => 'Bukti Foto Selesai',
-                    'type' => 'file',
-                    'options' => [],
-                    'accept' => 'jpg,jpeg,png',
-                    'hint' => 'Upload foto bukti penyelesaian tugas oleh petugas.',
-                    'show_on_status' => 'Selesai',
-                ],
-                [
                     'name' => '_section_foto',
                     'label' => 'Lampiran Foto',
                     'options' => [],
@@ -757,6 +675,7 @@ class AdminRegistry
                     'options' => [],
                     'accept' => 'image/jpeg,image/png,image/jpg',
                     'wide' => true,
+                    'add_new_on_edit' => false,
                 ],
             ]);
         }
@@ -804,7 +723,6 @@ class AdminRegistry
                     'label' => 'Jenis Pengaduan',
                     'type' => 'select',
                     'options' => \App\Enums\JenisPengaduanTataPenataan::options(),
-                    'has_lainnya' => true,
                     'required' => true,
                     'wide' => true,
                 ],
@@ -883,6 +801,21 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                 ],
+                [
+                    'name' => '_section_foto',
+                    'label' => 'Lampiran Foto',
+                    'options' => [],
+                    'type' => 'section',
+                ],
+                [
+                    'name' => 'photos',
+                    'label' => 'Foto Bukti',
+                    'type' => 'photos',
+                    'options' => [],
+                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'wide' => true,
+                    'add_new_on_edit' => false,
+                ],
             ]);
         }
 
@@ -908,6 +841,7 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nama_pemilik',
@@ -915,6 +849,7 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'npwp',
@@ -922,6 +857,7 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'jenis_usaha',
@@ -929,6 +865,7 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat_lengkap',
@@ -936,6 +873,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nomor_telepon',
@@ -943,6 +881,7 @@ class AdminRegistry
                     'type' => 'tel',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'email',
@@ -950,6 +889,7 @@ class AdminRegistry
                     'type' => 'email',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_pengajuan',
@@ -958,19 +898,13 @@ class AdminRegistry
                     'options' => [],
                 ],
                 [
-                    'name' => 'jenis_pengajuan',
-                    'label' => 'Jenis Pengajuan',
-                    'type' => 'text',
-                    'options' => [],
-                    'required' => true,
-                ],
-                [
                     'name' => 'surat_permohonan',
                     'label' => 'Surat Permohonan',
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
                     'accept' => '.pdf,.doc,.docx',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -1003,8 +937,8 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'pengajuan-rintek-pertek' dan 'pengajuan-rintek-pertek-lb3'
-        if (in_array($resource['slug'], ['pengajuan-rintek-pertek', 'pengajuan-rintek-pertek-lb3'])) {
+        // Custom fields untuk resource 'pengajuan-rintek-pertek'
+        if (in_array($resource['slug'], ['pengajuan-rintek-pertek'])) {
             return self::decorateFields($resource, [
                 [
                     'name' => 'nomor_pengajuan',
@@ -1180,118 +1114,6 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'sidak'
-        if ($resource['slug'] === 'sidak') {
-            return self::decorateFields($resource, [
-                [
-                    'name' => '_section_jadwal',
-                    'label' => 'Jadwal Sidak',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'is_jadwal',
-                    'label' => 'Jadikan Jadwal',
-                    'type' => 'checkbox',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'catatan_jadwal',
-                    'label' => 'Catatan Jadwal',
-                    'type' => 'textarea',
-                    'options' => [],
-                ],
-                [
-                    'name' => '_section_data',
-                    'label' => 'Data Sidak',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'objek_pengawasan_id',
-                    'label' => 'Objek Pengawasan',
-                    'type' => 'select',
-                    'options' => ObjekPengawasan::orderBy('nama_perusahaan')
-                        ->get(['id', 'nama_perusahaan'])
-                        ->mapWithKeys(fn ($o) => [$o->id => $o->nama_perusahaan])
-                        ->all(),
-                    'has_lainnya' => true,
-                    'required' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'tanggal_sidak',
-                    'label' => 'Tanggal Sidak',
-                    'type' => 'date',
-                    'options' => [],
-                    'required' => true,
-                ],
-                [
-                    'name' => '_section_petugas',
-                    'label' => 'Petugas & Hasil',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'nama_petugas',
-                    'label' => 'Nama Petugas',
-                    'type' => 'text',
-                    'options' => [],
-                    'required' => true,
-                ],
-                [
-                    'name' => 'user_id',
-                    'label' => 'Petugas/Admin',
-                    'type' => 'select',
-                    'options' => \App\Models\User::where('is_active', true)
-                        ->where('role', \App\Enums\AdminRole::BIDANG_TATA_PENATAAN->value)
-                        ->orderBy('name')
-                        ->get(['id', 'name'])
-                        ->mapWithKeys(fn ($u) => [$u->id => $u->name])
-                        ->all(),
-                    'has_lainnya' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'hasil',
-                    'label' => 'Hasil Sidak',
-                    'type' => 'select',
-                    'options' => \App\Enums\HasilSidak::options(),
-                    'has_lainnya' => true,
-                    'required' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => '_section_tindak_lanjut',
-                    'label' => 'Tindak Lanjut & Temuan',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'status_tindak_lanjut',
-                    'label' => 'Status Tindak Lanjut',
-                    'type' => 'select',
-                    'options' => \App\Enums\StatusTindakLanjutSidak::options(),
-                    'required' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'temuan',
-                    'label' => 'Temuan',
-                    'type' => 'textarea',
-                    'options' => [],
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'rekomendasi',
-                    'label' => 'Rekomendasi',
-                    'type' => 'textarea',
-                    'options' => [],
-                    'wide' => true,
-                ],
-            ]);
-        }
-
         // Custom fields untuk resource 'pelanggaran' (gabungan Pelanggaran + Sanksi)
         if ($resource['slug'] === 'pelanggaran') {
             return self::decorateFields($resource, [
@@ -1379,40 +1201,6 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'sosialisasi-peserta'
-        if ($resource['slug'] === 'sosialisasi-peserta') {
-            return self::decorateFields($resource, [
-                [
-                    'name' => 'sosialisasi_id',
-                    'label' => 'Sosialisasi',
-                    'type' => 'select',
-                    'options' => Sosialisasi::orderBy('judul')
-                        ->get(['id', 'judul', 'tanggal'])
-                        ->mapWithKeys(fn ($s) => [$s->id => $s->judul.' — '.$s->tanggal->format('d M Y')])
-                        ->all(),
-                    'required' => true,
-                ],
-                [
-                    'name' => 'objek_pengawasan_id',
-                    'label' => 'Objek Pengawasan (Perusahaan)',
-                    'type' => 'select',
-                    'options' => ObjekPengawasan::orderBy('nama_perusahaan')
-                        ->get(['id', 'nama_perusahaan'])
-                        ->mapWithKeys(fn ($o) => [$o->id => $o->nama_perusahaan])
-                        ->all(),
-                    'has_lainnya' => true,
-                    'required' => true,
-                ],
-                [
-                    'name' => 'sertifikat_path',
-                    'label' => 'Sertifikat',
-                    'type' => 'file',
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
-                    'options' => [],
-                ],
-            ]);
-        }
-
         // Custom fields untuk resource 'registrasi-usaha-lb3'
         if ($resource['slug'] === 'registrasi-usaha-lb3') {
             return self::decorateFields($resource, [
@@ -1437,6 +1225,8 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
+                    'hint' => 'Data perusahaan hanya dapat diubah oleh perusahaan terkait. Admin hanya memvalidasi & memberi catatan.',
                 ],
                 [
                     'name' => 'nomor_telepon',
@@ -1444,13 +1234,7 @@ class AdminRegistry
                     'type' => 'tel',
                     'options' => [],
                     'required' => true,
-                ],
-                [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
-                    'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat',
@@ -1458,6 +1242,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'jenis_lb3_id',
@@ -1468,6 +1253,7 @@ class AdminRegistry
                         ->mapWithKeys(fn ($j) => [$j->id => $j->nama])
                         ->all(),
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -1487,6 +1273,133 @@ class AdminRegistry
                     'name' => 'catatan',
                     'label' => 'Catatan',
                     'type' => 'textarea',
+                    'options' => [],
+                ],
+            ]);
+        }
+
+        // Custom fields untuk resource 'pinjam-taman'
+        // Taman dibatasi ke 5 taman resmi (konsisten dgn form publik).
+        // nama_taman_manual dikelola lewat alur "Lainnya" form publik, tidak ditampilkan di admin.
+        if ($resource['slug'] === 'pinjam-taman') {
+            $fields = collect($model->getFillable())
+                ->reject(fn (string $field) => in_array($field, ['id', 'created_at', 'updated_at', 'email_verified_at', 'remember_token', 'additional_access', 'nama_taman_manual'], true))
+                ->map(fn (string $field) => [
+                    'name' => $field,
+                    'label' => self::labelForField($field),
+                    'type' => self::fieldType($model, $field),
+                    'options' => self::fieldOptions($model, $field),
+                ])
+                ->values()
+                ->all();
+
+            $namaTaman = [
+                'Taman Vatulemo',
+                'Taman Gor',
+                'Taman Nasional',
+                'Taman Doyata',
+                'Taman Lasoso',
+            ];
+
+            foreach ($fields as &$field) {
+                if ($field['name'] === 'taman_kota_id') {
+                    $field['options'] = TamanKota::whereIn('nama', $namaTaman)
+                        ->orderBy('nama')
+                        ->pluck('nama', 'id')
+                        ->all();
+                }
+                if ($field['name'] === 'jaminan_kebersihan') {
+                    $field['type'] = 'checkbox';
+                    $field['options'] = [];
+                }
+            }
+            unset($field);
+
+            return self::decorateFields($resource, $fields);
+        }
+
+        // Custom fields untuk resource 'sosialisasi' (Monitoring, Evaluasi dan Sosialisasi)
+        if ($resource['slug'] === 'sosialisasi') {
+            return self::decorateFields($resource, [
+                [
+                    'name' => '_section_jenis',
+                    'label' => 'Jenis Kegiatan',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'jenis_kegiatan',
+                    'label' => 'Jenis Kegiatan',
+                    'type' => 'select',
+                    'options' => [
+                        'sosialisasi' => 'Sosialisasi',
+                        'monitoring-evaluasi' => 'Monitoring & Evaluasi',
+                    ],
+                    'required' => true,
+                ],
+                [
+                    'name' => '_section_info',
+                    'label' => 'Informasi Kegiatan',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'judul',
+                    'label' => 'Nama Kegiatan',
+                    'type' => 'text',
+                    'options' => [],
+                    'required' => true,
+                ],
+                [
+                    'name' => 'periode_tw',
+                    'label' => 'Periode (Triwulan)',
+                    'type' => 'select',
+                    'options' => [
+                        'TW I' => 'Triwulan I (Jan - Mar)',
+                        'TW II' => 'Triwulan II (Apr - Jun)',
+                        'TW III' => 'Triwulan III (Jul - Sep)',
+                        'TW IV' => 'Triwulan IV (Okt - Des)',
+                    ],
+                    'show_on_kegiatan' => 'monitoring-evaluasi',
+                ],
+                [
+                    'name' => 'tahun',
+                    'label' => 'Tahun',
+                    'type' => 'text',
+                    'options' => [],
+                    'show_on_kegiatan' => 'monitoring-evaluasi',
+                ],
+                [
+                    'name' => 'tanggal',
+                    'label' => 'Tanggal Kegiatan',
+                    'type' => 'date',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'materi',
+                    'label' => 'Materi',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'show_on_kegiatan' => 'sosialisasi',
+                ],
+                [
+                    'name' => 'hasil_evaluasi',
+                    'label' => 'Hasil Evaluasi',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'show_on_kegiatan' => 'sosialisasi',
+                ],
+                [
+                    'name' => '_section_daftar_hadir',
+                    'label' => 'Daftar Hadir Monitoring & Evaluasi',
+                    'type' => 'section',
+                    'options' => [],
+                    'show_on_kegiatan' => 'monitoring-evaluasi',
+                ],
+                [
+                    'name' => 'daftar_hadir',
+                    'label' => 'Daftar Hadir',
+                    'type' => 'daftar_hadir',
                     'options' => [],
                 ],
             ]);
@@ -1571,20 +1484,7 @@ class AdminRegistry
                     'directory' => 'permohonan-rekomendasi/dokumen',
                     'accept' => '.pdf,.doc,.docx,.jpg,.jpeg,.png',
                     'image' => false,
-                ],
-            ],
-            'sidak' => [
-                [
-                    'name' => 'media',
-                    'label' => 'Media Sidak',
-                    'relation' => 'media',
-                    'model' => \App\Models\SidakMedia::class,
-                    'foreign_key' => 'sidak_id',
-                    'path_field' => 'path',
-                    'directory' => 'sidak-media',
-                    'accept' => 'image/jpeg,image/png,image/jpg,.pdf',
-                    'image' => false,
-                    'defaults' => ['tipe' => 'foto'],
+                    'readonly_on_edit' => true,
                 ],
             ],
             'pelanggaran' => [
@@ -1599,44 +1499,6 @@ class AdminRegistry
                     'accept' => 'image/jpeg,image/png,image/jpg,.pdf',
                     'image' => false,
                     'defaults' => ['tipe' => 'foto'],
-                ],
-            ],
-            'objek-pengawasan' => [
-                [
-                    'name' => 'dokumen_amdal',
-                    'label' => 'Dokumen AMDAL',
-                    'relation' => 'dokumens',
-                    'model' => \App\Models\ObjekPengawasanDokumen::class,
-                    'foreign_key' => 'objek_pengawasan_id',
-                    'path_field' => 'file_path',
-                    'directory' => 'objek-pengawasan/dokumen',
-                    'accept' => '.pdf,.doc,.docx',
-                    'image' => false,
-                    'defaults' => ['jenis_dokumen' => 'AMDAL', 'status_dokumen' => 'Aktif'],
-                ],
-                [
-                    'name' => 'dokumen_ukl_upl',
-                    'label' => 'Dokumen UKL-UPL',
-                    'relation' => 'dokumens',
-                    'model' => \App\Models\ObjekPengawasanDokumen::class,
-                    'foreign_key' => 'objek_pengawasan_id',
-                    'path_field' => 'file_path',
-                    'directory' => 'objek-pengawasan/dokumen',
-                    'accept' => '.pdf,.doc,.docx',
-                    'image' => false,
-                    'defaults' => ['jenis_dokumen' => 'UKL-UPL', 'status_dokumen' => 'Aktif'],
-                ],
-                [
-                    'name' => 'dokumen_sppl',
-                    'label' => 'Dokumen SPPL',
-                    'relation' => 'dokumens',
-                    'model' => \App\Models\ObjekPengawasanDokumen::class,
-                    'foreign_key' => 'objek_pengawasan_id',
-                    'path_field' => 'file_path',
-                    'directory' => 'objek-pengawasan/dokumen',
-                    'accept' => '.pdf,.doc,.docx',
-                    'image' => false,
-                    'defaults' => ['jenis_dokumen' => 'SPPL', 'status_dokumen' => 'Aktif'],
                 ],
             ],
             'sosialisasi' => [
@@ -1769,7 +1631,7 @@ class AdminRegistry
         return $resource['label'].' - '.$record->getKey();
     }
 
-    protected static function resource(string $slug, string $label, string $model, array $columns, array $filters = []): array
+    protected static function resource(string $slug, string $label, string $model, array $columns): array
     {
         $instance = new $model;
         $availableColumns = array_merge($instance->getFillable(), ['id', 'created_at', 'updated_at']);
@@ -1779,17 +1641,203 @@ class AdminRegistry
             ->values()
             ->all();
 
-        // Auto-detect status filter if model has status field
-        if (empty($filters) && in_array('status', $instance->getFillable())) {
-            $filters = ['status' => self::enumOptions($instance, 'status')];
-        }
-
         return [
             'slug' => $slug,
             'label' => $label,
             'model' => $model,
             'columns' => $columns,
-            'filters' => $filters,
+            'filters' => self::buildFilters($slug, $model, $columns),
+            'exportColumns' => self::exportColumns($slug, $model),
+            'can_create' => true,
+        ];
+    }
+
+    /**
+     * Daftar kolom lengkap untuk ekspor (excel/csv/pdf).
+     *
+     * Mengambil SELURUH kolom tabel (bukan sekadar subset $columns) agar
+     * file ekspor berisi data lengkap tiap menu — termasuk no. HP, email,
+     * petunjuk password, dst. Kolom internal/rahasia (hash password, token,
+     * field terenkripsi) dikecualikan; kolom "password" diganti dengan
+     * "password_hint" (plaintext) bila ada.
+     *
+     * @return array<string,string> [nama_kolom => label_terbaca]
+     */
+    public static function exportColumns(string $slug, string $modelClass): array
+    {
+        $instance = new $modelClass;
+        $table = $instance->getTable();
+
+        $columns = Schema::hasTable($table)
+            ? Schema::getColumnListing($table)
+            : array_merge(['id'], $instance->getFillable());
+
+        if (empty($columns)) {
+            $columns = array_merge(['id'], $instance->getFillable());
+        }
+
+        // Kolom yang tidak perlu / tidak aman diekspor.
+        $deny = [
+            'remember_token', 'email_verified_at',
+            'two_factor_secret', 'two_factor_recovery_codes',
+            'additional_access', 'preferences', 'photo_path',
+            'deleted_at', 'updated_at',
+        ];
+
+        $map = [];
+        foreach ($columns as $col) {
+            // Hash password tak terbaca -> ganti dengan petunjuk (plaintext).
+            if ($col === 'password') {
+                if (in_array('password_hint', $columns, true)) {
+                    $map['password_hint'] = 'Password (Petunjuk)';
+                }
+                continue;
+            }
+
+            // Sudah ditambahkan lewat cabang "password" di atas.
+            if ($col === 'password_hint') {
+                continue;
+            }
+
+            if (in_array($col, $deny, true)) {
+                continue;
+            }
+
+            $map[$col] = Str::headline($col);
+        }
+
+        return $map;
+    }
+
+    /**
+     * Bangun definisi filter lengkap & menyesuaikan tiap menu.
+     *
+     * Skema tiap filter:
+     * ['key','label','type'=>'multiselect|select|daterange','column','options'=>[]]
+     *
+     * - status (jika model punya field status) -> multiselect
+     * - range tanggal pada created_at (atau kolom tanggal* / *_at pertama) -> daterange
+     * - kolom select/enum/relasi (*_id) di $columns -> select
+     * - override per slug (lihat filterOverrides()) untuk filter khusus.
+     */
+    public static function buildFilters(string $slug, string $modelClass, array $columns): array
+    {
+        $instance = new $modelClass;
+        $overrides = self::filterOverrides()[$slug] ?? [];
+
+        $filters = [];
+
+        // 1) Status (multiselect) bila model punya field status bertipe enum/options.
+        if (in_array('status', $instance->getFillable(), true)) {
+            $statusOptions = $overrides['status']['options']
+                ?? self::enumOptions($instance, 'status');
+            if (! empty($statusOptions)) {
+                $filters['status'] = [
+                    'key'     => 'status',
+                    'label'   => 'Status',
+                    'type'    => 'multiselect',
+                    'column'  => 'status',
+                    'options' => $statusOptions,
+                ];
+            }
+        }
+
+        // 2) Range tanggal pada created_at (atau kolom tanggal*/ *_at pertama).
+        $dateColumn = collect(array_merge($instance->getFillable(), ['created_at']))
+            ->first(fn ($c) => $c === 'created_at' || str_starts_with($c, 'tanggal') || str_ends_with($c, '_at'));
+        if ($dateColumn) {
+            $filters['date'] = [
+                'key'     => 'date',
+                'label'   => 'Tanggal',
+                'type'    => 'daterange',
+                'column'  => $dateColumn,
+                'options' => [],
+            ];
+        }
+
+        // 3) Kolom select/enum/relasi (*_id) di $columns -> select.
+        foreach ($columns as $column) {
+            if (in_array($column, ['status', 'created_at', 'updated_at', 'id'], true)) {
+                continue;
+            }
+            $options = self::fieldOptions($instance, $column) ?: self::enumOptions($instance, $column);
+            if (! empty($options)) {
+                $filters[$column] = [
+                    'key'     => $column,
+                    'label'   => self::labelForField($column),
+                    'type'    => 'select',
+                    'column'  => $column,
+                    'options' => $options,
+                ];
+            }
+        }
+
+        // 4) Override per slug (bisa menambah filter non-fillable, mis. user.role).
+        foreach ($overrides as $key => $def) {
+            if ($key === 'status') {
+                continue; // sudah ditangani di atas
+            }
+            if (is_array($def) && isset($def['key'])) {
+                $filters[$key] = $def;
+            }
+        }
+
+        return array_values($filters);
+    }
+
+    /**
+     * Override filter khusus per slug (nama, tipe, opsi).
+     */
+    protected static function filterOverrides(): array
+    {
+        return [
+            'user' => [
+                'role' => [
+                    'key'     => 'role',
+                    'label'   => 'Role',
+                    'type'    => 'select',
+                    'column'  => 'role',
+                    'options' => collect(\App\Enums\AdminRole::cases())
+                        ->mapWithKeys(fn ($role) => [$role->value => $role->label()])
+                        ->all(),
+                ],
+                'is_active' => [
+                    'key'     => 'is_active',
+                    'label'   => 'Status Aktif',
+                    'type'    => 'select',
+                    'column'  => 'is_active',
+                    'options' => ['1' => 'Aktif', '0' => 'Nonaktif'],
+                ],
+            ],
+            'pengaduan-pengendalian'   => self::jenisPengaduanOverride(\App\Enums\JenisPengaduanPengendalian::class),
+            'pengaduan-sampah'        => self::jenisPengaduanOverride(\App\Enums\JenisPengaduanSampah::class),
+            'pengaduan-rth'           => self::jenisPengaduanOverride(\App\Enums\JenisPengaduanRth::class),
+            'pengaduan-tata-penataan' => self::jenisPengaduanOverride(\App\Enums\JenisPengaduanTataPenataan::class),
+            'sosialisasi' => [
+                'jenis_kegiatan' => [
+                    'key'     => 'jenis_kegiatan',
+                    'label'   => 'Jenis Kegiatan',
+                    'type'    => 'select',
+                    'column'  => 'jenis_kegiatan',
+                    'options' => [
+                        'sosialisasi' => 'Sosialisasi',
+                        'monitoring-evaluasi' => 'Monitoring & Evaluasi',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    protected static function jenisPengaduanOverride(string $enumClass): array
+    {
+        return [
+            'jenis_pengaduan' => [
+                'key'     => 'jenis_pengaduan',
+                'label'   => 'Jenis Pengaduan',
+                'type'    => 'select',
+                'column'  => 'jenis_pengaduan',
+                'options' => $enumClass::options(),
+            ],
         ];
     }
 

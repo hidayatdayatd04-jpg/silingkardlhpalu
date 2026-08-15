@@ -9,20 +9,22 @@
     };
 @endphp
 
-<div {{ $attributes->merge(['class' => "space-y-2 $spanClass"]) }}>
-    <div class="flex items-center gap-2">
+<div {{ $attributes->merge(['class' => "detail-field $spanClass"]) }}>
+    <div class="flex items-center gap-2 mb-2">
         @if($icon)
-            <x-admin.icon :name="$icon" :size="16" class="text-slate-400" />
+            <span class="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-white/[.06] dark:text-slate-500">
+                <x-admin.icon :name="$icon" :size="14" />
+            </span>
         @endif
-        <p class="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">{{ $label }}</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">{{ $label }}</p>
     </div>
-    
+
     @if($slot->isNotEmpty())
-        <div class="text-sm font-semibold leading-relaxed text-slate-800">
+        <div class="pl-9 text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
             {{ $slot }}
         </div>
     @else
-        <p class="text-sm font-semibold leading-relaxed text-slate-800">
+        <p class="pl-9 text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
             {{ $value ?? '-' }}
         </p>
     @endif

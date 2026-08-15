@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\JenisPengaduanPengendalian;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StorePermohonanRekomendasiRequest extends FormRequest
 {
@@ -24,7 +22,6 @@ class StorePermohonanRekomendasiRequest extends FormRequest
             'alamat_lengkap' => ['required', 'string', 'max:2000'],
             'nomor_telepon' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
             'email' => ['required', 'email', 'max:255'],
-            'jenis_pengajuan' => ['required', 'string', Rule::in(array_column(JenisPengaduanPengendalian::cases(), 'value'))],
             'surat_permohonan' => ['required', 'file', 'mimes:pdf', 'max:5120'],
             'dokumen_pendukung' => ['required', 'array', 'min:1', 'max:10'],
             'dokumen_pendukung.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],

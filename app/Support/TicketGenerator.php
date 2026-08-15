@@ -26,7 +26,6 @@ class TicketGenerator
     public static function prefixForModel(string $modelKey): string
     {
         return match ($modelKey) {
-            'perizinan_tebang_pohon' => 'PTP',
             'permohonan_pinjam_taman' => 'PJM',
             'pengaduan_tata_penataan' => 'TTP',
             default => 'DLH',

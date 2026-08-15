@@ -1,14 +1,14 @@
-{{-- ChatBot Floating Widget — DLH Assistant Kota Palu (single root) --}}
+{{-- ChatBot Floating Widget - DLH Assistant Kota Palu (single root) --}}
 
 @php
     $chatMessages = $messages ?? [];
     $chatHistory  = array_map(fn ($m) => ['role' => $m['role'], 'content' => $m['content']], $chatMessages);
     $avatar       = asset('assets/images/chatbot.png');
-    $cityLogo     = asset('assets/images/logo_kota_palu.png');
+    $cityLogo     = asset('assets/images/logo-web.png');
 @endphp
 
 <div id="chatbot-wrapper" class="fixed inset-0 pointer-events-none z-[9999]">
-    {{-- ═══ FAB Button ═══ --}}
+    {{-- â•â•â• FAB Button â•â•â• --}}
     <button
         id="chatbot-fab"
         onclick="chatbotOpen()"
@@ -22,7 +22,7 @@
         <span id="chatbot-unread" class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 border-2 border-white text-[9px] font-bold text-white z-20 flex items-center justify-center" style="display:none;">0</span>
     </button>
 
-    {{-- ═══ Chat Panel ═══ --}}
+    {{-- â•â•â• Chat Panel â•â•â• --}}
     <div
         id="chatbot-panel"
         wire:ignore
@@ -51,7 +51,7 @@
                         <p class="text-white font-bold text-sm tracking-tight">{{ __('DLH Assistant') }}</p>
                         <p class="text-emerald-200 text-[11px] flex items-center gap-1.5 mt-0.5">
                             <span id="chatbot-status-dot" class="h-1.5 w-1.5 rounded-full bg-green-400 inline-block"></span>
-                            <span id="chatbot-status-text">{{ __('Online · DLH Kota Palu') }}</span>
+                            <span id="chatbot-status-text">{{ __('Online Â· DLH Kota Palu') }}</span>
                         </p>
                     </div>
                 </div>
@@ -127,7 +127,7 @@
                     <svg id="chatbot-loading-icon" class="h-4 w-4 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647Z"/></svg>
                 </button>
             </div>
-            <p class="text-center text-[10px] text-slate-400 pb-2 select-none">{{ __('DLH Assistant · Kota Palu · Enter untuk kirim') }}</p>
+            <p class="text-center text-[10px] text-slate-400 pb-2 select-none">{{ __('DLH Assistant Â· Kota Palu Â· Enter untuk kirim') }}</p>
         </div>
     </div>
 </div>
@@ -154,7 +154,7 @@
         return (window.Livewire && id) ? window.Livewire.find(id) : null;
     }
 
-    // ── Open / Close ──
+    // â”€â”€ Open / Close â”€â”€
     window.chatbotOpen = function () {
         var p = panel(), f = fab();
         if (!p || !f) return;
@@ -202,7 +202,7 @@
         });
         var chips = el('chatbot-chips');
         if (chips) chips.style.display = 'flex';
-        appendAIBubble(@js(__('Chat telah dihapus. Ada yang bisa saya bantu? 🙂')));
+        appendAIBubble(@js(__('Chat telah dihapus. Ada yang bisa saya bantu? ðŸ™‚')));
         wire()?.call('clearChat');
     };
 
@@ -211,7 +211,7 @@
         chatbotSend();
     };
 
-    // ── Send ──
+    // â”€â”€ Send â”€â”€
     window.chatbotSend = function () {
         var text = input().value.trim();
         if (!text || _isStreaming) return;
@@ -227,7 +227,7 @@
         startStream(text, historyForApi);
     };
 
-    // ── Streaming ──
+    // â”€â”€ Streaming â”€â”€
     function startStream(userMessage, historyForApi) {
         _isStreaming = true;
         setLoadingState(true);
@@ -334,7 +334,7 @@
         setLoadingState(false);
     }
 
-    // ── Helpers ──
+    // â”€â”€ Helpers â”€â”€
     function setLoadingState(loading) {
         el('chatbot-send-icon').classList.toggle('hidden', loading);
         el('chatbot-loading-icon').classList.toggle('hidden', !loading);
@@ -342,7 +342,7 @@
         btn.style.cursor = loading ? 'not-allowed' : 'pointer';
         btn.style.opacity = loading ? '0.7' : '1';
         var st = el('chatbot-status-text');
-        if (st) st.textContent = loading ? @js(__('Sedang mengetik…')) : @js(__('Online · DLH Kota Palu'));
+        if (st) st.textContent = loading ? @js(__('Sedang mengetik...')) : @js(__('Online · DLH Kota Palu'));
     }
 
     function updateUnread() {

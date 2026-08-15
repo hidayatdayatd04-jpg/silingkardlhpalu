@@ -9,6 +9,9 @@ class Sosialisasi extends Model
 {
     protected $fillable = [
         'judul',
+        'jenis_kegiatan',
+        'periode_tw',
+        'tahun',
         'tanggal',
         'materi',
         'hasil_evaluasi',
@@ -19,6 +22,11 @@ class Sosialisasi extends Model
         return [
             'tanggal' => 'date',
         ];
+    }
+
+    public function isMonitoringEvaluasi(): bool
+    {
+        return ($this->jenis_kegiatan ?? 'sosialisasi') === 'monitoring-evaluasi';
     }
 
     public function pesertas(): HasMany

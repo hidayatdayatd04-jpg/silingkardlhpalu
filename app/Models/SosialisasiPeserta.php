@@ -11,7 +11,19 @@ class SosialisasiPeserta extends Model
         'sosialisasi_id',
         'objek_pengawasan_id',
         'sertifikat_path',
+        'nama_perusahaan',
+        'jenis_usaha',
+        'tanggal',
+        'lokasi',
+        'tim_survey',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tanggal' => 'date',
+        ];
+    }
 
     public function sosialisasi(): BelongsTo
     {

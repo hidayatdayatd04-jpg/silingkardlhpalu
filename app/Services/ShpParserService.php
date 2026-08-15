@@ -171,16 +171,8 @@ class ShpParserService
      */
     public function extractZip(string $zipPath, string $destDir): void
     {
-        if (class_exists('ZipArchive')) {
-            $zip = new \ZipArchive();
-            if ($zip->open($zipPath) === true) {
-                $zip->extractTo($destDir);
-                $zip->close();
-                return;
-            }
-        }
-
-        // Pure PHP fallback: manual ZIP extraction
+        // Always use pure PHP extraction — ZipArchive::extractTo() is unreliable
+        // on some Windows/XAMPP configs (silently extracts only dirs, not files)
         $this->extractZipPure($zipPath, $destDir);
     }
 
@@ -212,8 +204,9 @@ class ShpParserService
         $cdOffset = unpack('V', fread($handle, 4))[1];
 
         // Read Central Directory
-        fseek($handle, $cdOffset);
+        $cdPos = $cdOffset;
         for ($i = 0; $i < $numEntries; $i++) {
+            fseek($handle, $cdPos);
             $entry = fread($handle, 46);
             if (strlen($entry) < 46) break;
 
@@ -228,8 +221,13 @@ class ShpParserService
             $commentLen = unpack('v', substr($entry, 32, 2))[1];
             $localOffset = unpack('V', substr($entry, 42, 4))[1];
 
-            $fileName = fread($handle, $nameLen);
+        $fileName = fread($handle, $nameLen);
+        if ($extraLen + $commentLen > 0) {
             fread($handle, $extraLen + $commentLen);
+        }
+
+        // Advance CD position for next iteration
+        $cdPos += 46 + $nameLen + $extraLen + $commentLen;
 
             // Skip directories
             if (substr($fileName, -1) === '/') {
@@ -246,9 +244,9 @@ class ShpParserService
             $localExtraLen = unpack('v', fread($handle, 2))[1];
             $dataOffset = $localOffset + 30 + $localNameLen + $localExtraLen;
 
-            // Read compressed data
-            fseek($handle, $dataOffset);
-            $compData = fread($handle, $compSize);
+        // Read compressed data
+        fseek($handle, $dataOffset);
+        $compData = $compSize > 0 ? fread($handle, $compSize) : '';
 
             // Decompress
             if ($compMethod === 0) {

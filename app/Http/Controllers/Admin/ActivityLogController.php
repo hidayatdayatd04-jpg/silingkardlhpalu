@@ -13,7 +13,7 @@ class ActivityLogController extends Controller
     protected function authorizeSuperadmin(): void
     {
         if (! auth()->user()?->isSuperadmin()) {
-            throw new AccessDeniedHttpException('Hanya Kepala Bidang (superadmin) yang dapat mengakses log aktivitas.');
+            throw new AccessDeniedHttpException('Hanya Admin yang dapat mengakses log aktivitas.');
         }
     }
 
@@ -65,6 +65,54 @@ class ActivityLogController extends Controller
                 'q'         => $request->input('q'),
             ],
         ]);
+    }
+
+    /**
+     * Export log aktivitas (xlsx / csv / pdf) dari query terfilter.
+     */
+    public function export(Request $request)
+    {
+        $this->authorizeSuperadmin();
+
+        $query = ActivityLog::query()->with('user')->latest();
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->input('user_id'));
+        }
+        if ($request->filled('event')) {
+            $query->where('event', $request->input('event'));
+        }
+        if ($request->filled('module')) {
+            $query->where('module', $request->input('module'));
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date('date_to'));
+        }
+        if ($search = trim($request->string('q')->toString())) {
+            $query->where(function ($q) use ($search) {
+                $q->where('subject_label', 'like', '%'.$search.'%')
+                    ->orWhere('user_name', 'like', '%'.$search.'%')
+                    ->orWhere('ip_address', 'like', '%'.$search.'%');
+            });
+        }
+
+        $format = $request->string('format', 'xlsx')->toString();
+        $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
+
+        $columns = ['created_at', 'user_name', 'event', 'module', 'subject_label', 'ip_address'];
+        $filename = 'activity-log-'.now()->format('Ymd-His');
+
+        if ($format === 'csv') {
+            return \App\Support\DataIO::csvDownload($query, $columns, $filename.'.csv');
+        }
+
+        $tmpPath = storage_path('app/private/'.$filename.'.xlsx');
+        \App\Support\DataIO::writeXlsx($query, $columns, $tmpPath);
+
+        return response()->download($tmpPath, $filename.'.xlsx')->deleteFileAfterSend(true);
     }
 
     protected function eventOptions(): array

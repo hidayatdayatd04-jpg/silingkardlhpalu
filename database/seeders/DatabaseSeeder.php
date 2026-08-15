@@ -12,36 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // User & Roles
+            SetupStorageSeeder::class,
             RolePermissionSeeder::class,
-            
-            // Master Data
-            ProfilDinasSeeder::class,
-            MasterDataSeeder::class,
-            
-            // RTH (Ruang Terbuka Hijau)
-            RthSeeder::class,
-            AplikasiRthSeeder::class,
-
-            // Tata Penataan
-            TataPenataanSeeder::class,
-            
-            // Pengendalian
-            PengendalianSeeder::class,
-            
-            // Laporan (Semua Bidang)
-            LaporanSeeder::class,
-
-            // SLA Settings
-            SlaSettingSeeder::class,
-            
-            // IKM (Indeks Kepuasan Masyarakat)
-            IkmSeeder::class,
-            
-            // Artikel (Optional - uncomment jika diperlukan)
-            // ArtikelSeeder::class,
-            
-
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GisDataLayer;
 use App\Services\ShpParserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PetaController extends Controller
@@ -29,27 +30,18 @@ class PetaController extends Controller
         $isSuperadmin = $adminRole->isSuperadmin();
         $allowedGroups = $adminRole->allowedGroups();
 
-        // Build accessible bidang list (tata-penataan tidak perlu di peta karena data input manual)
+        // Build accessible bidang list (hanya Sampah & LB3 yang tampil di peta admin)
         $accessibleBidang = [];
-        foreach (['sampah-lb3', 'rth'] as $b) {
-            if ($isSuperadmin || in_array($b, $allowedGroups)) {
-                $accessibleBidang[] = $b;
-            }
+        if ($isSuperadmin || in_array('sampah-lb3', $allowedGroups)) {
+            $accessibleBidang[] = 'sampah-lb3';
         }
 
         if (empty($accessibleBidang)) {
             abort(403, 'Anda tidak memiliki akses ke peta');
         }
 
-        // Active bidang filter (from query or show all)
-        // Support both ?bidang=rth and ?rth for backwards compatibility
+        // Active bidang filter (from query)
         $activeBidang = $request->input('bidang');
-        if (! $activeBidang && $request->has('rth')) {
-            $activeBidang = 'rth';
-        }
-        if (! $activeBidang && $request->has('sampah-lb3')) {
-            $activeBidang = 'sampah-lb3';
-        }
         if ($activeBidang && ! in_array($activeBidang, $accessibleBidang)) {
             $activeBidang = null;
         }
@@ -87,10 +79,8 @@ class PetaController extends Controller
         $allowedGroups = $adminRole->allowedGroups();
 
         $accessibleBidang = [];
-        foreach (['sampah-lb3', 'rth'] as $b) {
-            if ($isSuperadmin || in_array($b, $allowedGroups)) {
-                $accessibleBidang[] = $b;
-            }
+        if ($isSuperadmin || in_array('sampah-lb3', $allowedGroups)) {
+            $accessibleBidang[] = 'sampah-lb3';
         }
 
         $activeBidang = $request->input('bidang');
@@ -108,12 +98,13 @@ class PetaController extends Controller
 
         $layers = $query->get();
 
-        $collections = $layers->map(fn ($layer) => [
-            'id' => $layer->id,
-            'nama_layer' => $layer->nama_layer,
-            'deskripsi' => $layer->deskripsi,
-            'bidang' => $layer->bidang,
-            'jenis_geometri' => $layer->jenis_geometri,
+$collections = $layers->map(fn ($layer) => [
+    'id' => $layer->id,
+    'parent_id' => $layer->parent_id,
+    'nama_layer' => $layer->nama_layer,
+    'deskripsi' => $layer->deskripsi,
+    'bidang' => $layer->bidang,
+    'jenis_geometri' => $layer->jenis_geometri,
             'metadata' => $layer->metadata ?? ['color' => GisDataLayer::defaultColor($layer->bidang)],
             'is_visible' => $layer->is_visible,
             'geojson' => $layer->toGeoJson(),
@@ -127,31 +118,125 @@ class PetaController extends Controller
      */
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|max:50000', // 50MB max
-            'bidang' => 'required|string|in:sampah-lb3,rth',
-            'nama_layer' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string|max:500',
-            'color' => 'nullable|string|max:7',
-        ]);
+        $layerId = $request->input('layer_id');
+        $isAppend = ! empty($layerId);
 
-        $bidang = $request->input('bidang');
-        $this->authorizeBidang($bidang);
+        if ($isAppend) {
+            // Import per-layer: tambahkan (append) fitur ke layer yang dipilih.
+            $layer = GisDataLayer::findOrFail($layerId);
+            $this->authorizeBidang($layer->bidang);
+            $bidang = $layer->bidang;
+            $request->validate([
+                'file' => 'required|file|max:50000', // 50MB max
+            ]);
+        } else {
+            $request->validate([
+                'file' => 'required|file|max:50000', // 50MB max
+                'bidang' => 'required|string|in:sampah-lb3',
+                'nama_layer' => 'required|string|max:255',
+                'deskripsi' => 'nullable|string|max:500',
+                'color' => 'nullable|string|max:7',
+            ]);
+            $bidang = $request->input('bidang');
+            $this->authorizeBidang($bidang);
+        }
 
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
         $tempPath = $file->store('temp/gis', 'local');
 
+        \Log::info("IMPORT DEBUG: ext={$extension}, stored={$tempPath}, size=" . $file->getSize());
+
         try {
             $realPath = Storage::disk('local')->path($tempPath);
+            \Log::info("IMPORT DEBUG: realPath={$realPath}, exists=" . (file_exists($realPath) ? 'YES' : 'NO'));
+
+            // ═══ IMPORT KE DALAM LAYER (parent) → buat SUB-LAYER per folder/file ═══
+            if ($isAppend) {
+                // Pecah file menjadi sub-layer (satu folder/.shp = satu sub-layer)
+                // agar terbentuk hierarki: layer induk berisi sub-layer per kelurahan/file.
+                if ($extension === 'zip') {
+                    $subLayers = $this->parseShpZipLayers($realPath, $file->getClientOriginalName());
+                } else {
+                    $features = match ($extension) {
+                        'shp' => $this->shpParser->parseShp($realPath),
+                        'geojson', 'json' => $this->shpParser->parseGeoJson($realPath),
+                        'kml' => $this->shpParser->parseKml($realPath),
+                        'csv' => $this->shpParser->parseCsv($realPath),
+                        default => throw new \RuntimeException("Format tidak didukung: {$extension}"),
+                    };
+                    $subLayers = [[
+                        'name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                        'features' => $features,
+                    ]];
+                }
+
+                $parentColor = $layer->metadata['color'] ?? GisDataLayer::defaultColor($layer->bidang);
+                $maxZ = (int) GisDataLayer::where('parent_id', $layer->id)->max('z_index');
+                $createdChildren = [];
+                $totalFeatures = 0;
+
+                foreach ($subLayers as $sub) {
+                    $features = $sub['features'];
+                    $this->shpParser->validateAndSwapCoordinates($features);
+                    $jenisGeometri = $this->detectGeometryType($features);
+
+                    $child = GisDataLayer::create([
+                        'bidang' => $layer->bidang,
+                        'parent_id' => $layer->id,
+                        'nama_layer' => $sub['name'],
+                        'deskripsi' => $layer->deskripsi,
+                        'jenis_geometri' => $jenisGeometri,
+                        'geojson_features' => $features,
+                        'metadata' => [
+                            'color' => $parentColor,
+                            'source_file' => $file->getClientOriginalName(),
+                            'feature_count' => count($features),
+                            'imported_at' => now()->toISOString(),
+                        ],
+                        'is_visible' => true,
+                        'is_public' => false,
+                        'z_index' => $maxZ + 1,
+                    ]);
+                    $maxZ++;
+
+                    $createdChildren[] = [
+                        'id' => $child->id,
+                        'nama_layer' => $child->nama_layer,
+                        'bidang' => $child->bidang,
+                        'jenis_geometri' => $jenisGeometri,
+                        'parent_id' => $child->parent_id,
+                        'metadata' => $child->metadata,
+                        'is_visible' => $child->is_visible,
+                        'is_public' => $child->is_public,
+                        'geojson' => $child->toGeoJson(),
+                    ];
+                    $totalFeatures += count($features);
+                }
+
+                Storage::disk('local')->delete($tempPath);
+
+                $msg = "Berhasil import " . count($createdChildren) . " sub-layer ke \"{$layer->nama_layer}\" ({$totalFeatures} fitur total)";
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $msg,
+                    'layer' => [
+                        'id' => $layer->id,
+                        'nama_layer' => $layer->nama_layer,
+                    ],
+                    'layers' => $createdChildren,
+                ]);
+            }
+
             $color = $request->input('color', GisDataLayer::defaultColor($bidang));
             $deskripsi = $request->input('deskripsi');
 
             // ═══ ZIP: bisa multi-layer (satu subfolder = satu layer) ═══
             if ($extension === 'zip') {
-                $layerDatas = $this->parseShpZipLayers($realPath, $file->getClientOriginalName());
-                $createdLayers = [];
-                $totalFeatures = 0;
+            $layerDatas = $this->parseShpZipLayers($realPath, $file->getClientOriginalName());
+            $createdLayers = [];
+            $totalFeatures = 0;
 
                 foreach ($layerDatas as $layerData) {
                     $features = $layerData['features'];
@@ -251,12 +336,79 @@ class PetaController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
+            \Log::error("IMPORT FAILED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
             Storage::disk('local')->delete($tempPath);
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal import: ' . $e->getMessage(),
+                'message' => 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']',
             ], 422);
         }
+    }
+
+    /**
+     * Buat layer kosong (tanpa fitur) untuk diisi nanti via import per-layer.
+     */
+    public function storeLayer(Request $request)
+    {
+        $validated = $request->validate([
+            'bidang' => 'required|string|in:sampah-lb3',
+            'nama_layer' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string|max:500',
+            'color' => 'nullable|string|max:7',
+            'jenis_geometri' => 'nullable|string|in:point,line,polygon,mixed',
+            'parent_id' => 'nullable|integer|exists:gis_data_layers,id',
+        ]);
+
+        // Jika membuat sub-layer, warisi bidang dari parent dan otorisasi
+        // berdasarkan bidang parent (bukan bidang form).
+        $parent = null;
+        if (! empty($validated['parent_id'])) {
+            $parent = GisDataLayer::findOrFail($validated['parent_id']);
+            $this->authorizeBidang($parent->bidang);
+            $validated['bidang'] = $parent->bidang;
+        } else {
+            $this->authorizeBidang($validated['bidang']);
+        }
+
+        $color = $request->input('color')
+            ?: ($parent ? ($parent->metadata['color'] ?? GisDataLayer::defaultColor($validated['bidang']))
+                        : GisDataLayer::defaultColor($validated['bidang']));
+        $jenisGeometri = $request->input('jenis_geometri', 'point');
+
+        // Urutan z_index dihitung dalam cakupan parent (layer akar vs sub-layer).
+        $maxZ = (int) GisDataLayer::where('parent_id', $validated['parent_id'] ?? null)->max('z_index');
+
+        $layer = GisDataLayer::create([
+            'bidang' => $validated['bidang'],
+            'parent_id' => $validated['parent_id'] ?? null,
+            'nama_layer' => $validated['nama_layer'],
+            'deskripsi' => $request->input('deskripsi'),
+            'jenis_geometri' => $jenisGeometri,
+            'geojson_features' => [],
+            'metadata' => [
+                'color' => $color,
+                'created_at' => now()->toISOString(),
+            ],
+            'is_visible' => true,
+            'is_public' => false,
+            'z_index' => $maxZ + 1,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Layer \"{$layer->nama_layer}\" berhasil dibuat",
+            'layer' => [
+                'id' => $layer->id,
+                'parent_id' => $layer->parent_id,
+                'nama_layer' => $layer->nama_layer,
+                'bidang' => $layer->bidang,
+                'jenis_geometri' => $layer->jenis_geometri,
+                'metadata' => $layer->metadata,
+                'is_visible' => $layer->is_visible,
+                'is_public' => $layer->is_public,
+                'geojson' => ['type' => 'FeatureCollection', 'features' => []],
+            ],
+        ]);
     }
 
     /**
@@ -296,6 +448,9 @@ class PetaController extends Controller
     public function destroyLayer(GisDataLayer $layer)
     {
         $this->authorizeBidang($layer->bidang);
+
+        // Hapus juga sub-layer (child) agar tidak menjadi yatim (orphan).
+        GisDataLayer::where('parent_id', $layer->id)->delete();
 
         $layerId = $layer->id;
         $layer->delete();
@@ -357,10 +512,8 @@ class PetaController extends Controller
         $allowedGroups = $adminRole->allowedGroups();
 
         $accessibleBidang = [];
-        foreach (['sampah-lb3', 'rth'] as $b) {
-            if ($isSuperadmin || in_array($b, $allowedGroups)) {
-                $accessibleBidang[] = $b;
-            }
+        if ($isSuperadmin || in_array('sampah-lb3', $allowedGroups)) {
+            $accessibleBidang[] = 'sampah-lb3';
         }
 
         $visible = $request->input('visible');
@@ -542,9 +695,19 @@ class PetaController extends Controller
     private function parseShpZipLayers(string $filePath, string $originalName): array
     {
         $tempDir = sys_get_temp_dir() . '/shp_' . uniqid();
-        mkdir($tempDir, 0755, true);
+        if (!@mkdir($tempDir, 0755, true) && !is_dir($tempDir)) {
+            throw new \RuntimeException("Gagal membuat temp directory: {$tempDir}");
+        }
 
         $this->shpParser->extractZip($filePath, $tempDir);
+
+        // DEBUG: check what was extracted
+        $tempFiles = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        $totalExtracted = 0;
+        foreach ($tempFiles as $f) { $totalExtracted++; }
+        \Log::info("IMPORT DEBUG: tempDir={$tempDir}, totalFilesExtracted={$totalExtracted}");
 
         // Step 1: Scan semua file, temukan .shp dan geojson
         $shpGroups = []; // [dirPath => shpPath]
@@ -570,6 +733,8 @@ class PetaController extends Controller
                 $dirsHavingShp[$dir] = true;
             }
         }
+
+        \Log::info("IMPORT DEBUG: shpGroups=" . count($shpGroups) . ", geojsonSingles=" . count($geojsonSingles));
 
         // Step 2: Scan geojson — hanya yang BUKAN di folder yang punya .shp
         // Dan namanya TIDAK sama dengan nama folder yang punya .shp
@@ -599,16 +764,20 @@ class PetaController extends Controller
 
         $layers = [];
 
-        // Step 3: Proses shapefile groups (per kelurahan)
-        foreach ($shpGroups as $dir => $shpPath) {
-            $name = basename($dir);
-            try {
-                $this->shpParser->normalizeCompanionFiles($shpPath);
+// Step 3: Proses shapefile groups (per kelurahan)
+foreach ($shpGroups as $dir => $shpPath) {
+    // Nama layer diambil dari NAMA FILE .shp (bukan folder, bukan file .zip),
+    // agar konsisten dengan import file tunggal. Untuk folder tunggal yang
+    // berisi <nama>.shp, ini sama dengan nama folder.
+    $name = pathinfo($shpPath, PATHINFO_FILENAME);
+    try {
+        $this->shpParser->normalizeCompanionFiles($shpPath);
                 $features = $this->shpParser->parseShp($shpPath);
                 if (! empty($features)) {
                     $layers[] = ['name' => $name, 'features' => $features];
                 }
             } catch (\Throwable $e) {
+                \Log::warning("SHP parse failed for {$name}: " . $e->getMessage());
                 continue;
             }
         }
@@ -628,7 +797,8 @@ class PetaController extends Controller
         $this->cleanupDir($tempDir);
 
         if (empty($layers)) {
-            throw new \RuntimeException("Tidak ada data GIS yang valid ditemukan dalam archive");
+            $debug = "Extracted: {$totalExtracted} files, SHP groups: " . count($shpGroups) . ", geojson: " . count($geojsonSingles) . ", tempDir: {$tempDir}";
+            throw new \RuntimeException("Tidak ada data GIS valid. Debug: {$debug}");
         }
 
         $layerNames = array_map(fn($l) => $l['name'], $layers);

@@ -65,7 +65,7 @@ class SetupSeederCommand extends Command
         $this->table(
             ['Username', 'Password', 'Role'],
             [
-                ['superadmin', 'superadmin123', 'Superadmin'],
+                ['admin', 'admin123', 'Admin (akses penuh)'],
                 ['pengendalian', 'pengendalian123', 'Admin Pengendalian'],
                 ['sampah-lb3', 'sampah123', 'Admin Sampah & LB3'],
                 ['tata-penataan', 'tata123', 'Admin Tata Penataan'],

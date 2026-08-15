@@ -22,7 +22,6 @@ class SetupStorageSeeder extends Seeder
             'admin/pelanggaran',
             'admin/sanksi',
             'admin/sosialisasi',
-            'admin/perizinan-tebang-pohon',
             'admin/data-tanam-pohon',
             'admin/pinjam-taman',
             'admin/permohonan-rekomendasi',

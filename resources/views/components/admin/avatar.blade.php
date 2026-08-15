@@ -31,13 +31,13 @@
     $sizeCls = [
         'sm' => 'size-8 text-xs',
         'md' => 'size-10 text-sm',
-        'lg' => 'size-14 text-lg',
+        'lg' => 'size-16 text-lg',
     ][$size] ?? 'size-10 text-sm';
 @endphp
 
-<span {{ $attributes->merge(['class' => "relative inline-grid shrink-0 place-items-center overflow-hidden rounded-full font-bold $sizeCls " . ($src ? '' : $color)]) }}>
+<span {{ $attributes->merge(['class' => "relative inline-grid shrink-0 place-items-center aspect-square overflow-hidden rounded-full font-bold $sizeCls " . ($src ? '' : $color)]) }}>
     @if($src)
-        <img src="{{ $src }}" alt="{{ $name }}" class="size-full object-cover">
+        <img src="{{ $src }}" alt="{{ $name }}" class="size-full rounded-full object-cover object-center">
     @else
         {{ $initials }}
     @endif

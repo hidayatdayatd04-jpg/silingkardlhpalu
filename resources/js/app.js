@@ -93,16 +93,18 @@ window.dlhMapInit = function (containerId) {
             center: [119.87, -0.9], zoom: 13,
             attributionControl: false, maxPitch: 0
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true, visualizePitch: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         if (window.DlhScaleControl) map.addControl(new DlhScaleControl(), 'bottom-left');
         if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         var locGrp = document.createElement('div');
         locGrp.className = 'maplibregl-ctrl maplibregl-ctrl-group';
         locGrp.style.cssText = 'position:absolute;top:120px;right:10px;z-index:1';
         var locBtn = document.createElement('button');
         locBtn.type = 'button'; locBtn.title = 'Lokasi Saya';
-        locBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+        locBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
         locBtn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#4a5568';
         locBtn.onclick = function () {
             if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
@@ -239,11 +241,11 @@ window.dlhAddLocBtn = function dlhAddLocBtn(map, onLocate) {
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.title = 'Lokasi Saya';
-        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
         btn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#475569';
         btn.onclick = function () {
             if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
-            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
             navigator.geolocation.getCurrentPosition(function (p) {
                 var lng = p.coords.longitude, lat = p.coords.latitude;
                 map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
@@ -256,10 +258,10 @@ window.dlhAddLocBtn = function dlhAddLocBtn(map, onLocate) {
                         .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
                     .addTo(map);
                 window._dlhLocMarker.togglePopup();
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
                 if (onLocate) onLocate(lat, lng);
             }, function () {
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
                 alert('Gagal mendapatkan lokasi.');
             }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
         };
@@ -279,8 +281,10 @@ window.dlhSimpleMap = function (containerId, cfg) {
             zoom: cfg.zoom || 15,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
         if (cfg.markerHtml) {
             var el = document.createElement('div');
             el.innerHTML = cfg.markerHtml;
@@ -312,8 +316,10 @@ window.dlhDraggableMap = function (containerId, cfg) {
             zoom: cfg.zoom || 13,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         var marker = null;
 
@@ -365,8 +371,10 @@ window.dlhMultiMarkerMap = function (containerId, cfg) {
             zoom: cfg.zoom || 13,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         var markers = [];
         (cfg.markers || []).forEach(function (m) {
@@ -396,7 +404,24 @@ window.dlhMultiMarkerMap = function (containerId, cfg) {
 };
 
 /** Peta persampahan with GeoJSON layers + armada tracking from API */
-window.dlhPetaPersampahan = function (containerId, layers, armada) {
+window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
+    config = config || {};
+    var vehicleTypes = config.vehicleTypes || [];
+    var defaultType = config.defaultType || (vehicleTypes[0] && vehicleTypes[0].key) || null;
+
+    // Map layerId -> tipe kendaraan & warna tipe
+    var typeByLayer = {};
+    var typeColor = {};
+    vehicleTypes.forEach(function (t) {
+        typeColor[t.key] = t.color;
+        (t.layerIds || []).forEach(function (id) { typeByLayer[id] = t.key; });
+    });
+
+    // State single-select: hanya satu tipe kendaraan aktif pada satu waktu
+    var activeType = defaultType;
+    var activeKelurahan = null;
+    var armadaVisible = true;
+
     window.ensureMaplibreLoaded(function () {
         var map = new maplibregl.Map({
             container: containerId,
@@ -405,15 +430,18 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
             zoom: 12,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         window._dlhMap = map;
         window._dlhArmadaMarkers = [];
-
-        // Simpan state checkbox
-        var layerVisibility = {};
-        layers.forEach(function (layer) { layerVisibility[layer.id] = true; });
+        window._dlhArmadaVisible = true;
+        window._dlhArmadaFilter = window._dlhArmadaFilter || {
+            types: new Set(['pickup', 'truck']),
+            statuses: new Set(['active', 'parked'])
+        };
 
         // Fungsi untuk membuat popup HTML
         function makePopupHtml(props, color, layerName) {
@@ -442,9 +470,9 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
 
         // Fungsi untuk menambahkan satu layer
         function addSingleLayer(layer) {
-            var color = (layer.metadata && layer.metadata.color) || '#6b7280';
+            var layerType = typeByLayer[layer.id];
+            var color = typeColor[layerType] || (layer.metadata && layer.metadata.color) || '#6b7280';
             var sourceId = 'src-' + layer.id;
-            var visible = layerVisibility[layer.id] !== false;
 
             // Hapus source dan layer lama jika ada
             if (map.getSource(sourceId)) {
@@ -474,22 +502,15 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
                     var props = f.properties || {};
                     var html = makePopupHtml(props, color, layer.nama_layer);
                     var mk = DlhMarkers.addToMap(map, 'tps', [coords[0], coords[1]], html, { size: 26 });
-                    if (!visible) mk.remove();
                     pointMarkers.push(mk);
                 });
                 // Simpan referensi marker untuk toggle visibility
                 layer._pointMarkers = pointMarkers;
-
-                // Event hover via delegation
-                map.on('click', function (e) {
-                    if (e.defaultPrevented) return;
-                });
             }
 
             if (layer.jenis_geometri === 'line' || layer.jenis_geometri === 'mixed') {
                 var lineId = sourceId + '-line';
                 map.addLayer({ id: lineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2 } });
-                if (!visible) map.setLayoutProperty(lineId, 'visibility', 'none');
             }
 
             if (layer.jenis_geometri === 'polygon' || layer.jenis_geometri === 'mixed') {
@@ -497,10 +518,6 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
                 var outlineId = sourceId + '-outline';
                 map.addLayer({ id: fillId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.3 } });
                 map.addLayer({ id: outlineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1 } });
-                if (!visible) {
-                    map.setLayoutProperty(fillId, 'visibility', 'none');
-                    map.setLayoutProperty(outlineId, 'visibility', 'none');
-                }
             }
         }
 
@@ -511,28 +528,106 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
             });
         }
 
+        // Visibility: hanya layer milik tipe aktif (dan kelurahan terpilih) yang tampil
+        function layerVisible(layerId) {
+            if (!activeType) return false;
+            var t = typeByLayer[layerId];
+            if (t !== activeType) return false;
+            if (activeKelurahan && layerId != activeKelurahan) return false;
+            return true;
+        }
+
+        function applyVisibility() {
+            layers.forEach(function (layer) {
+                var vis = layerVisible(layer.id);
+                var sourceId = 'src-' + layer.id;
+                if (map.getSource(sourceId)) {
+                    map.getStyle().layers.forEach(function (l) {
+                        if (l.source === sourceId && map.getLayer(l.id)) {
+                            map.setLayoutProperty(l.id, 'visibility', vis ? 'visible' : 'none');
+                        }
+                    });
+                }
+                if (layer._pointMarkers) {
+                    layer._pointMarkers.forEach(function (mk) {
+                        vis ? mk.addTo(map) : mk.remove();
+                    });
+                }
+            });
+        }
+
+        // Fit bounds ke seluruh feature milik satu layer (kelurahan)
+        function fitToLayer(layerId) {
+            var layer = layers.find(function (l) { return l.id == layerId; });
+            if (!layer || !layer.geojson || !layer.geojson.features) return;
+            var bounds = new maplibregl.LngLatBounds();
+            var any = false;
+            function walk(coords) {
+                if (typeof coords[0] === 'number') {
+                    bounds.extend(coords);
+                    any = true;
+                    return;
+                }
+                coords.forEach(walk);
+            }
+            layer.geojson.features.forEach(function (f) {
+                if (f.geometry && f.geometry.coordinates) walk(f.geometry.coordinates);
+            });
+            if (any) map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+        }
+
+        // API publik untuk filter frontend
+        window.dlhPetaPersampahanSelectType = function (key) {
+            activeType = key;
+            activeKelurahan = null;
+            applyVisibility();
+        };
+
+        window.dlhPetaPersampahanSelectKelurahan = function (layerId) {
+            activeKelurahan = layerId ? String(layerId) : null;
+            applyVisibility();
+            if (activeKelurahan) fitToLayer(activeKelurahan);
+        };
+
+        window.dlhPetaPersampahanSetArmada = function (visible) {
+            armadaVisible = !!visible;
+            window._dlhArmadaVisible = armadaVisible;
+            if (window._dlhArmadaMarkers) {
+                window._dlhArmadaMarkers.forEach(function (mk) {
+                    armadaVisible ? mk.addTo(map) : mk.remove();
+                });
+            }
+        };
+
         // Fungsi untuk menggambar marker armada di peta
         window.dlhPetaPersampahanDrawArmada = function (vehicleData) {
+            var f = window._dlhArmadaFilter || { types: new Set(['pickup', 'truck']), statuses: new Set(['active', 'parked']) };
+            var visible = window._dlhArmadaVisible !== false;
+
+            // Filter hanya berdasarkan jenis (pickup/truck); warna seragam untuk semua status
+            var filtered = (vehicleData || []).filter(function (v) {
+                var type = (parseInt(v.veh_type) === 4) ? 'truck' : 'pickup';
+                return f.types.has(type);
+            });
+
             var markers = window._dlhArmadaMarkers || [];
-            var ni = new Set(vehicleData.map(function (v) { return v.imei; }));
-            // Hapus marker yang tidak ada di data baru
+            var ni = new Set(filtered.map(function (v) { return v.imei; }));
+            // Hapus marker yang tidak ada di data baru / ter-filter-out
             window._dlhArmadaMarkers = markers.filter(function (m) {
                 if (!ni.has(m._imei)) { m.remove(); return false; }
                 return true;
             });
             markers = window._dlhArmadaMarkers;
 
-            vehicleData.forEach(function (v) {
+            filtered.forEach(function (v) {
                 var lat = parseFloat(v.latitude), lng = parseFloat(v.longitude);
                 if (isNaN(lat) || isNaN(lng)) return;
                 var isTruck = (parseInt(v.veh_type) === 4);
-                var pfx = isTruck ? 'truck' : 'car';
-                var st = (parseInt(v.acc) === 1) ? 'acc_on' : 'parking';
-                var iu = '/assets/tracking/' + pfx + '_' + st + '.png';
+                var iu = isTruck ? '/assets/tracking/truck_blue.png' : '/assets/tracking/car_blue.png';
                 var el = document.createElement('div');
                 el.className = 'custom-vehicle-icon';
                 el.innerHTML = '<img src="' + iu + '" alt="" style="width:36px;height:36px;transform:rotate(' + v.angle + 'deg);transition:transform 0.3s ease;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));cursor:pointer" onmouseover="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1.15)\'" onmouseout="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1)\'" />';
-                var sc = (parseInt(v.acc) === 1) ? '#10b981' : '#64748b';
+                var sc = '#8BB2D8';
                 var stx = (parseInt(v.acc) === 1) ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
                 var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + v.title + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + v.speed + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + v.server_time + '</p></div></div>';
 
@@ -544,8 +639,8 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
                 } else {
                     var mk = new maplibregl.Marker({ element: el, anchor: 'center' })
                         .setLngLat([lng, lat])
-                        .setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph))
-                        .addTo(map);
+                        .setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph));
+                    if (visible) mk.addTo(map); else mk.remove();
                     mk._imei = v.imei;
                     markers.push(mk);
                 }
@@ -556,55 +651,20 @@ window.dlhPetaPersampahan = function (containerId, layers, armada) {
 
         map.on('load', function () {
             addAllLayers();
+            applyVisibility();
 
             // Gambar armada awal
             if (armada && armada.length > 0) {
                 window.dlhPetaPersampahanDrawArmada(armada);
             }
-
-            // Event listener untuk toggle layer
-            document.querySelectorAll('.layer-toggle').forEach(function (el) {
-                el.addEventListener('change', function () {
-                    var layerId = el.dataset.layer;
-                    if (!layerId) return;
-
-                    // Handle armada toggle
-                    if (layerId === 'armada') {
-                        if (window._dlhArmadaMarkers) {
-                            window._dlhArmadaMarkers.forEach(function (mk) {
-                                el.checked ? mk.addTo(map) : mk.remove();
-                            });
-                        }
-                        return;
-                    }
-
-                    var sourceId = 'src-' + layerId;
-                    var layer = layers.find(function (l) { return l.id == layerId; });
-                    if (!layer) return;
-
-                    // Update state visibility
-                    layerVisibility[layerId] = el.checked;
-
-                    // Toggle visibility semua layer dengan source ini
-                    map.getStyle().layers.forEach(function (l) {
-                        if (l.source === sourceId && map.getLayer(l.id)) {
-                            map.setLayoutProperty(l.id, 'visibility', el.checked ? 'visible' : 'none');
-                        }
-                    });
-
-                    // Toggle point markers (DlhMarkers)
-                    if (layer._pointMarkers) {
-                        layer._pointMarkers.forEach(function (mk) {
-                            el.checked ? mk.addTo(map) : mk.remove();
-                        });
-                    }
-                });
-            });
         });
 
         // Ketika basemap berubah, tambahkan ulang semua layer
         map.on('basemap-changed', function () {
-            setTimeout(addAllLayers, 150);
+            setTimeout(function () {
+                addAllLayers();
+                applyVisibility();
+            }, 150);
         });
 
         dlhAddLocBtn(map);
@@ -621,8 +681,10 @@ window.dlhPetaObjekPengawasan = function (containerId, points) {
             zoom: 13,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         var markers = [];
 
@@ -677,8 +739,10 @@ window.dlhPetaRth = function (containerId, mapData) {
             zoom: 13,
             attributionControl: false
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
         // Custom GIS Layers
         var gisLayers = mapData.gis_layers || [];

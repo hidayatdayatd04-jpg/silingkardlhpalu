@@ -1,6 +1,9 @@
-@props(['name', 'size' => 20, 'stroke' => 2])
+@props(['name', 'size' => 20, 'stroke' => 2, 'filled' => null])
 
 @php
+    // Logo berwarna (filled) otomatis untuk ikon merek seperti WhatsApp.
+    $filled = $filled ?? ($name === 'whatsapp');
+
     $icons = [
         // Navigation & UI
         'dashboard' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h6v8h-6z"/><path d="M4 16h6v4h-6z"/><path d="M14 12h6v8h-6z"/><path d="M14 4h6v4h-6z"/>',
@@ -20,6 +23,9 @@
         'edit' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/><path d="M16 5l3 3"/>',
         'trash' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>',
         'eye' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>',
+        'eye-off' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.585a2 2 0 1 0 2.829 2.829"/><path d="M16.249 12.249c1.178 -1.178 2.743 -1.833 4.249 -1.833a5 5 0 0 1 1.714 9.622"/><path d="M5 12c-1.811 -1.843 -3 -4.004 -3 -6.5a9.846 9.846 0 0 1 2.675 -6.073"/><path d="M20.999 12a9.846 9.846 0 0 1 -2.675 6.073"/><path d="M12 3c-4.97 0 -9 4.03 -9 9"/><path d="M12 21c4.97 0 9 -4.03 9 -9"/><path d="M3.999 12c0 -4.97 4.03 -9 9 -9"/>',
+        'at-sign' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M16 8v5a3 3 0 0 0 6 0v-10l-4 4"/><path d="M4 4v16"/><path d="M4 11h8"/>',
+        'check-circle' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/>',
         'download' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/>',
         'upload' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/>',
         'refresh' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>',
@@ -81,6 +87,7 @@
         'star' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2l3 6l7 1l-5 5l1 7l-6 -3l-6 3l1 -7l-5 -5l7 -1z"/>',
         'send' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M22 2l-7 20l-4 -9l-9 -4z"/><path d="M22 2l-11 11"/>',
         'user-check' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M15 11l2 2l4 -4"/>',
+        'whatsapp' => '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.102.117-.204.131-.378.044-.174-.087-.735-.271-1.4-.863-.517-.46-.866-1.03-1.046-1.203-.087-.174-.009-.268.066-.355.068-.068.174-.174.262-.261.087-.087.116-.152.174-.262.058-.087.029-.174-.015-.261-.044-.087-.394-1.016-.555-1.39-.145-.37-.295-.32-.394-.326-.102-.006-.222-.008-.34-.008a.656.656 0 0 0-.47.222c-.16.174-.62.607-.62 1.48 0 .873.638 1.716.727 3.074.149.198 2.096 3.2 5.077 4.487.421.306 1.262.489 1.694.373.422.135 1.36.116 1.871.07.339-.05 1.03-.42 1.176-.827.145-.407.145-.756.102-.827-.044-.07-.16-.116-.334-.203m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 0-1.51-5.26c0-5.45 4.215-9.396 9.397-9.396 1.74 0 3.365-.474 4.77-1.296l4.572 1.203-1.229-4.38a9.32 9.32 0 0 0 2.182-5.98c0-5.45-4.216-9.397-9.397-9.397M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.358.101 11.94c-.003 2.074.543 4.097 1.577 5.885l-1.657 6.115 6.18-1.621a11.9 11.9 0 0 0 5.845 1.49h.005c6.582 0 11.942-5.358 11.945-11.94a11.857 11.857 0 0 0-3.486-8.42"/>',
         
         // Topbar icons
         'command' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 9l0 -4a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-2"/><path d="M17 9l0 -4a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v4a1 1 0 0 0 1 1h2"/><path d="M7 9l0 6a1 1 0 0 0 1 1h2"/><path d="M17 9l0 6a1 1 0 0 1 -1 1h-2"/>',
@@ -103,8 +110,8 @@
     width="{{ $size }}" 
     height="{{ $size }}" 
     viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
+    fill="{{ $filled ? 'currentColor' : 'none' }}" 
+    stroke="{{ $filled ? 'none' : 'currentColor' }}" 
     stroke-width="{{ $stroke }}" 
     stroke-linecap="round" 
     stroke-linejoin="round"

@@ -91,15 +91,33 @@ window.DlhMarkers = (function () {
         },
 
         // ─── RTH Tambahan ───
-        perizinan_tebang: {
-            color: '#dc2626', bg: '#fef2f2', size: 28,
-            label: 'Izin Tebang',
-            svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>',
-        },
+
         pinjam_taman: {
             color: '#8b5cf6', bg: '#f5f3ff', size: 28,
-            label: 'Pinjam Taman',
+            label: 'Penyewaan Taman',
             svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        },
+
+        // ─── Bidang Laporan ───
+        'bidang-pengendalian': {
+            color: '#10b981', bg: '#f0fdf4', size: 32,
+            label: 'Pengendalian',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V7a3 3 0 016 0v4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M12 15v2"/><path d="M8 15v2"/><path d="M16 15v2"/></svg>',
+        },
+        'bidang-sampah-lb3': {
+            color: '#10b981', bg: '#f0fdf4', size: 32,
+            label: 'Sampah & LB3',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6"/><path d="M10 11v5"/><path d="M14 11v5"/><path d="M12 12V8"/></svg>',
+        },
+        'bidang-rth': {
+            color: '#10b981', bg: '#f0fdf4', size: 32,
+            label: 'RTH',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0020 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/><circle cx="12" cy="8" r="2"/><path d="M17 2h-2v4h2V2z"/><path d="M9 2H7v4h2V2z"/></svg>',
+        },
+        'bidang-tata-penataan': {
+            color: '#10b981', bg: '#f0fdf4', size: 32,
+            label: 'Tata Penataan',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h12"/><rect x="15" y="12" width="6" height="8" rx="1"/><rect x="16" y="9" width="4" height="3" rx="0.5"/><circle cx="17" cy="14" r="1"/><circle cx="19" cy="17" r="1"/></svg>',
         },
 
         // ─── Generic ───
@@ -161,7 +179,6 @@ window.DlhMarkers = (function () {
         if (name.indexOf('tpa') !== -1) return 'tpa';
         if (name.indexOf('tps') !== -1) return 'tps';
         if (name.indexOf('armada') !== -1) return 'armada';
-        if (name.indexOf('tebang') !== -1) return 'perizinan_tebang';
         if (name.indexOf('pinjam') !== -1) return 'pinjam_taman';
         if (name.indexOf('pengaduan') !== -1) return 'pengaduan';
         if (name.indexOf('pengawasan') !== -1) return 'objek_pengawasan';
@@ -472,7 +489,7 @@ window.DlhMarkers = (function () {
         return { element: el, marker: marker };
     }
 
-    function renderAll(map, data) {
+    function renderAll(map, data, useNative) {
         var markers = [];
         (data || []).forEach(function (item) {
             if (!item.lat || !item.lng) return;
@@ -482,7 +499,14 @@ window.DlhMarkers = (function () {
                 item.popup.type = item.type;
                 popupHTML = popup(item.popup);
             }
-            markers.push(addToMap(map, item.type, [item.lng, item.lat], popupHTML, item.opts || {}));
+            if (useNative) {
+                // Use MapLibre native Marker — lebih kompatibel dengan v4+ DOM
+                var result = create(item.type, [item.lng, item.lat], popupHTML, item.opts || {});
+                result.marker.addTo(map);
+                markers.push(result.marker);
+            } else {
+                markers.push(addToMap(map, item.type, [item.lng, item.lat], popupHTML, item.opts || {}));
+            }
         });
         return markers;
     }

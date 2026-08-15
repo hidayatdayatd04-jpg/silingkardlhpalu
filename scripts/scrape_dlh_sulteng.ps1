@@ -279,7 +279,7 @@ class ArtikelSeeder extends Seeder
 {
     public function run(): void
     {
-        $author = User::where('username', 'superadmin')->first();
+        $author = User::where('username', 'admin')->first();
 
         $articles = [
 '@

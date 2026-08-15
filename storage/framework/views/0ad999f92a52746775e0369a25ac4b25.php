@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <script>
+        (function () {
+            var stored = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (stored === 'dark' || (!stored && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <title><?php echo $__env->yieldContent('title', 'Portal Operasional DLH Kota Palu'); ?></title>
+
+    <meta name="description" content="<?php echo $__env->yieldContent('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.'); ?>">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo e(url()->current()); ?>">
+    <meta property="og:title" content="<?php echo $__env->yieldContent('title', 'Portal Operasional DLH Kota Palu'); ?>">
+    <meta property="og:description" content="<?php echo $__env->yieldContent('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.'); ?>">
+    <meta property="og:image" content="<?php echo $__env->yieldContent('og_image', asset('assets/images/logo_kota_palu.png')); ?>">
+    <meta property="og:image:width" content="<?php echo $__env->yieldContent('og_image_width', '1200'); ?>">
+    <meta property="og:image:height" content="<?php echo $__env->yieldContent('og_image_height', '630'); ?>">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="<?php echo e(url()->current()); ?>">
+    <meta property="twitter:title" content="<?php echo $__env->yieldContent('title', 'Portal Operasional DLH Kota Palu'); ?>">
+    <meta property="twitter:description" content="<?php echo $__env->yieldContent('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.'); ?>">
+    <meta property="twitter:image" content="<?php echo $__env->yieldContent('og_image', asset('assets/images/logo_kota_palu.png')); ?>">
+
+    <link rel="canonical" href="<?php echo e(url()->current()); ?>">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('favicon-32x32.png')); ?>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+    <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles(); ?>
+
+    <style>
+        /* Textarea - paksa hide resize handle & scrollbar */
+        textarea.pub-textarea { resize: none !important; overflow-y: auto !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        textarea.pub-textarea::-webkit-scrollbar { display: none !important; width: 0 !important; }
+        textarea.pub-textarea::-webkit-resizer { display: none !important; }
+
+        /* ---- Custom scrollbar - menyatu dengan tema website ---- */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #6ee7b7 #ecfdf5;
+        }
+        html::-webkit-scrollbar {
+            width: 8px;
+        }
+        html::-webkit-scrollbar-track {
+            background: #ecfdf5;
+        }
+        html::-webkit-scrollbar-thumb {
+            background: #6ee7b7;
+            border-radius: 9999px;
+            border: 2px solid #ecfdf5;
+        }
+        html::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+        html.dark {
+            scrollbar-color: #065f46 #022c22;
+        }
+        html.dark::-webkit-scrollbar-track {
+            background: #022c22;
+        }
+        html.dark::-webkit-scrollbar-thumb {
+            background: #065f46;
+            border: 2px solid #022c22;
+        }
+        html.dark::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+    </style>
+    <link rel="stylesheet" href="<?php echo e(asset('css/chatbot.css')); ?>">
+    <?php echo $__env->yieldContent('styles'); ?>
+    <?php echo $__env->yieldPushContent('styles'); ?>
+</head>
+
+<body class="dlh-public-page bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-md focus:shadow-md"><?php echo e(__('Lewati ke konten utama')); ?></a>
+    <?php
+        $mtPreview = false;
+        try {
+            $mtPreview = \App\Models\Setting::get('maintenance_enabled')
+                && request()->boolean('preview')
+                && \App\Support\AdminAccess::hasAnyPanelRole(auth()->user());
+        } catch (\Throwable $e) {
+            $mtPreview = false;
+        }
+    ?>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($mtPreview): ?>
+        <div style="position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:.5rem;justify-content:center;flex-wrap:wrap;padding:.6rem 1rem;background:#fffbeb;border-bottom:1px solid #fcd34d;color:#92400e;font-size:.8rem;text-align:center;">
+            <span style="width:.5rem;height:.5rem;border-radius:9999px;background:#f59e0b;display:inline-block;"></span>
+            <span><strong>Mode Pemeliharaan AKTIF</strong> &mdash; Anda mem-pratinjau situs publik sebagai admin.</span>
+            <a href="<?php echo e(request()->fullUrlWithoutQuery('preview')); ?>" style="margin-left:.5rem;font-weight:600;text-decoration:underline;">Tutup pratinjau</a>
+        </div>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+
+    <header x-data="{ mobileMenuOpen: false }"
+        class="sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_0_0_rgba(15,23,42,0.02),0_8px_24px_-16px_rgba(15,23,42,0.15)]">
+        <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-bay-500 to-brand-500"></div>
+        <div class="max-w-[88rem] mx-auto px-4 sm:px-5 lg:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center shrink-0">
+                <a href="/" class="group flex items-center gap-2.5 sm:gap-3">
+                    <span class="relative inline-flex items-center justify-center shrink-0">
+                        <span class="absolute -inset-1 rounded-full bg-brand-500/15 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></span>
+                        <img src="<?php echo e(asset('assets/images/logo_kota_palu.png')); ?>" alt="Logo Kota Palu" class="relative h-11 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+                    </span>
+                    <div class="border-l border-slate-200 dark:border-slate-700 pl-2.5 sm:pl-3">
+                        <span class="block text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-white uppercase leading-none whitespace-nowrap">
+                            <span class="hidden xl:inline">Dinas Lingkungan Hidup</span>
+                            <span class="xl:hidden">DLH</span>
+                        </span>
+                        <span class="mt-1 block text-[10px] sm:text-[11px] font-bold tracking-[0.18em] text-brand-600 dark:text-brand-400 uppercase leading-none whitespace-nowrap">
+                            Kota Palu
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="hidden lg:flex items-center gap-0.5 xl:gap-1 shrink-0">
+                <!-- Beranda Link -->
+                <a href="/"
+                    class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('/') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none whitespace-nowrap">
+                    <span><?php echo e(__('Beranda')); ?></span>
+                </a>
+
+                <!-- Profile Dropdown -->
+                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                    <button @click="open = !open" 
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('profil') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('Profil')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[300px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <a href="/profil#visi-misi" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap"><?php echo e(__('Visi & Misi')); ?></a>
+                        <a href="/profil#struktur-organisasi" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap"><?php echo e(__('Struktur Organisasi Dinas Lingkungan Hidup')); ?></a>
+                        <a href="/profil#tugas-fungsi" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap"><?php echo e(__('Tugas & Fungsi Dinas Lingkungan Hidup')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Sekretariat Link -->
+                <a href="/sekretariat"
+                    class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('sekretariat') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none whitespace-nowrap">
+                    <span><?php echo e(__('Sekretariat')); ?></span>
+                </a>
+
+                <!-- Bidang Pengendalian Dropdown -->
+                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('cek-pengaduan-pengendalian', 'permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('Pengendalian')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[240px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <a href="/permohonan-rekomendasi" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('permohonan-rekomendasi') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Permohonan/Rekomendasi')); ?></a>
+                        <a href="/cek-permohonan-rekomendasi" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('cek-permohonan-rekomendasi') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Cek Status Permohonan')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang Sampah LB3 -->
+                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('peta-persampahan', 'cek-pengaduan-sampah', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('Sampah & LB3')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[260px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <a href="/peta-persampahan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('peta-persampahan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Peta Persampahan')); ?></a>
+                        <a href="/registrasi-usaha-lb3" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('registrasi-usaha-lb3') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Registrasi Usaha LB3')); ?></a>
+                        <a href="/cek-registrasi-lb3" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('cek-registrasi-lb3') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Cek Registrasi LB3')); ?></a>
+                        <a href="/pengajuan-rintek-pertek" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('pengajuan-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Pengajuan RINTEK/PERTEK')); ?></a>
+                        <a href="/cek-rintek-pertek" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('cek-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Cek RINTEK/PERTEK')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang Tata Penataan Dropdown -->
+                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('tata-penataan', 'cek-pengaduan-tata-penataan', 'tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('Tata Penataan')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[240px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <a href="/tata-lingkungan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('tata-lingkungan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Tata Lingkungan')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang RTH Dropdown -->
+                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('cek-pengaduan-rth', 'pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('RTH')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[240px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <a href="/pinjam-taman" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Penyewaan Taman')); ?></a>
+                        <a href="/cek-pinjam-taman" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('cek-pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Cek Penyewaan Taman')); ?></a>
+                    </div>
+                </div>
+
+                <!-- UPTD Dropdown -->
+                <div x-data="{ open: false, labOpen: false }" @click.away="open = false; labOpen = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('uptd*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('UPTD')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 mt-3 w-max min-w-[220px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <div class="relative">
+                            <button @click="labOpen = !labOpen"
+                                class="w-full flex items-center justify-between gap-1 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none <?php echo e(request()->is('uptd/topoksi-lab', 'uptd/jurnal-lab') ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>">
+                                <span>UPTD Lab Lingkungan</span>
+                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': labOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            <div x-show="labOpen"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-x-1"
+                                x-transition:enter-end="opacity-100 translate-x-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-x-0"
+                                x-transition:leave-end="opacity-0 -translate-x-1"
+                                class="pl-4 space-y-1 mt-1" style="display: none;">
+                                <a href="/uptd/topoksi-lab" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('uptd/topoksi-lab') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>">Topoksi Lab</a>
+                                <a href="/uptd/jurnal-lab" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('uptd/jurnal-lab') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>">Jurnal Lab</a>
+                            </div>
+                        </div>
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        <a href="/uptd/tpa-kawatuna" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('uptd/tpa-kawatuna') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>">UPTD TPA Kawatuna</a>
+                    </div>
+                </div>
+
+                <!-- Informasi Dropdown -->
+                <div x-data="{ open: false, subOpen: false }" @click.away="open = false; subOpen = false" class="relative">
+                    <button @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold <?php echo e(request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60'); ?> transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        <span><?php echo e(__('Informasi')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute right-0 mt-3 w-max min-w-[240px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
+                        style="display: none;">
+                        <div class="relative">
+                            <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>">
+                                <span><?php echo e(__('Layanan Informasi Publik')); ?></span>
+                                <svg class="h-4 w-4 transition-transform duration-200 ml-2" :class="{ 'rotate-180': subOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            <div x-show="subOpen"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-x-1"
+                                x-transition:enter-end="opacity-100 translate-x-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-x-0"
+                                x-transition:leave-end="opacity-0 -translate-x-1"
+                                class="pl-4 space-y-1 mt-1" style="display: none;">
+                                <a href="/pengaduan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Pengaduan')); ?></a>
+                            </div>
+                        </div>
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        <a href="/lacak" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('lacak') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Lacak Pelaporan')); ?></a>
+                        <a href="/berita" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('berita*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Berita')); ?></a>
+                        <a href="https://skm.go.id/share/instansi/032ced20-3ad5-4b83-97fe-044abcb65bd3/1" target="_blank" rel="noopener" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap"><?php echo e(__('Survei Kepuasan (IKM)')); ?></a>
+                        <a href="/tentang" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap <?php echo e(request()->is('tentang') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : ''); ?>"><?php echo e(__('Tentang Kami')); ?></a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <?php if (isset($component)) { $__componentOriginal8fa0ff4567a942f8f752e5fec0841efd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8fa0ff4567a942f8f752e5fec0841efd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.public.dark-mode-toggle','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('public.dark-mode-toggle'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8fa0ff4567a942f8f752e5fec0841efd)): ?>
+<?php $attributes = $__attributesOriginal8fa0ff4567a942f8f752e5fec0841efd; ?>
+<?php unset($__attributesOriginal8fa0ff4567a942f8f752e5fec0841efd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8fa0ff4567a942f8f752e5fec0841efd)): ?>
+<?php $component = $__componentOriginal8fa0ff4567a942f8f752e5fec0841efd; ?>
+<?php unset($__componentOriginal8fa0ff4567a942f8f752e5fec0841efd); ?>
+<?php endif; ?>
+                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-all dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                    <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="!mobileMenuOpen"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+                    <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="mobileMenuOpen" style="display: none;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="lg:hidden absolute top-[100%] inset-x-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg" style="display: none;">
+            <div class="flex flex-col px-4 pt-2 pb-6 space-y-1.5">
+                <!-- Beranda Link (Mobile) -->
+                <a href="/" class="block px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('/') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Beranda')); ?></a>
+
+                <!-- Profile (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('profil') ? 'true' : 'false'); ?> }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('profil') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('Profil')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <a href="/profil#visi-misi" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Visi & Misi')); ?></a>
+                        <a href="/profil#struktur-organisasi" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Struktur Organisasi Dinas Lingkungan Hidup')); ?></a>
+                        <a href="/profil#tugas-fungsi" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Tugas & Fungsi Dinas Lingkungan Hidup')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Sekretariat Link (Mobile) -->
+                <a href="/sekretariat" class="block px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('sekretariat') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Sekretariat')); ?></a>
+
+                <!-- Bidang Pengendalian (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'true' : 'false'); ?> }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('Pengendalian')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <a href="/permohonan-rekomendasi" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Permohonan/Rekomendasi')); ?></a>
+                        <a href="/cek-permohonan-rekomendasi" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Cek Status Permohonan')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang Sampah LB3 (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'true' : 'false'); ?> }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('Sampah & LB3')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <a href="/peta-persampahan" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Peta Persampahan')); ?></a>
+                        <a href="/registrasi-usaha-lb3" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Registrasi Usaha LB3')); ?></a>
+                        <a href="/cek-registrasi-lb3" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Cek Registrasi LB3')); ?></a>
+                        <a href="/pengajuan-rintek-pertek" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Pengajuan RINTEK/PERTEK')); ?></a>
+                        <a href="/cek-rintek-pertek" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Cek RINTEK/PERTEK')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang Tata Penataan (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('tata-penataan', 'tata-lingkungan') ? 'true' : 'false'); ?> }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('tata-penataan', 'tata-lingkungan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('Tata Penataan')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <a href="/tata-lingkungan" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Tata Lingkungan')); ?></a>
+                    </div>
+                </div>
+
+                <!-- Bidang RTH (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'true' : 'false'); ?> }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('RTH')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <a href="/pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Penyewaan Taman')); ?></a>
+                        <a href="/cek-pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Cek Penyewaan Taman')); ?></a>
+                    </div>
+                </div>
+
+                <!-- UPTD (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('uptd*') ? 'true' : 'false'); ?>, labOpen: false }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('uptd*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('UPTD')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <div>
+                            <button @click="labOpen = !labOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer focus:outline-none">
+                                <span>UPTD Lab Lingkungan</span>
+                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': labOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div x-show="labOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0">
+                                <a href="/uptd/topoksi-lab" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Topoksi Lab</a>
+                                <a href="/uptd/jurnal-lab" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Jurnal Lab</a>
+                            </div>
+                        </div>
+                        <a href="/uptd/tpa-kawatuna" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">UPTD TPA Kawatuna</a>
+                    </div>
+                </div>
+
+                <!-- Informasi (Dropdown Mobile) -->
+                <div x-data="{ open: <?php echo e(request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'true' : 'false'); ?>, subOpen: false }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold <?php echo e(request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                        <span><?php echo e(__('Informasi')); ?></span>
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <div x-data="{ subOpen: false }">
+                            <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold <?php echo e(request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'); ?> focus:outline-none cursor-pointer">
+                                <span><?php echo e(__('Layanan Informasi Publik')); ?></span>
+                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-90': subOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            <div x-show="subOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0">
+                                <a href="/pengaduan" class="block px-3 py-2 rounded-lg text-sm font-medium <?php echo e(request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Pengaduan')); ?></a>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                        <a href="/lacak" class="block px-3 py-2 rounded-lg text-sm font-medium <?php echo e(request()->is('lacak') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Lacak Pelaporan')); ?></a>
+                        <a href="/berita" class="block px-3 py-2 rounded-lg text-sm font-medium <?php echo e(request()->is('berita*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Berita')); ?></a>
+                        <a href="https://skm.go.id/share/instansi/032ced20-3ad5-4b83-97fe-044abcb65bd3/1" target="_blank" rel="noopener" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><?php echo e(__('Survei Kepuasan')); ?></a>
+                        <a href="/tentang" class="block px-3 py-2 rounded-lg text-sm font-medium <?php echo e(request()->is('tentang') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'); ?>"><?php echo e(__('Tentang Kami')); ?></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <?php if (! empty(trim($__env->yieldContent('full_width')))): ?>
+    <main id="main-content" class="dlh-public flex-1 w-full">
+        <?php echo $__env->yieldContent('content'); ?>
+    </main>
+    <?php else: ?>
+    <main id="main-content" class="dlh-public flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <?php echo $__env->yieldContent('content'); ?>
+    </main>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+<footer class="relative mt-auto bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800/80 overflow-hidden">
+        
+        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 via-bay-500 to-brand-500" aria-hidden="true"></div>
+        <div class="absolute -top-24 right-10 size-72 rounded-full bg-brand-500/5 blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+        <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-12 gap-8 lg:gap-6 pb-10 border-b border-slate-200 dark:border-slate-800">
+
+                <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <img src="<?php echo e(asset('assets/images/logo_kota_palu.png')); ?>" alt="Logo Kota Palu" class="h-14 sm:h-16 w-auto object-contain drop-shadow-sm">
+                        <div class="min-w-0">
+                            <p class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight leading-tight">Dinas Lingkungan Hidup Kota Palu</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
+                        <?php echo e(__('Portal layanan publik digital untuk pengaduan lingkungan, pengelolaan sampah & LB3, serta pelestarian ruang terbuka hijau di Kota Palu.')); ?>
+
+                    </p>
+                    <div class="flex items-center gap-2 pt-1">
+                        <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-500 transition-all duration-300 hover:-translate-y-0.5" title="Instagram">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="https://www.facebook.com/share/18qHSySQr4/?locale=id_ID" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:-translate-y-0.5" title="Facebook">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                        </a>
+                        <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:-translate-y-0.5" title="WhatsApp">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"><?php echo e(__('Pengendalian')); ?></h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Pengaduan Pengendalian')); ?></a></li>
+                        <li><a href="/permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Permohonan')); ?></a></li>
+                        <li><a href="/cek-pengaduan-pengendalian" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Cek Status')); ?></a></li>
+                    </ul>
+                </div>
+
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"><?php echo e(__('Sampah & LB3')); ?></h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Peta Persampahan & Armada')); ?></a></li>
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Pengaduan Sampah')); ?></a></li>
+                        <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Registrasi LB3')); ?></a></li>
+                        <li><a href="/pengajuan-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Pengajuan RINTEK/PERTEK')); ?></a></li>
+                        <li><a href="/cek-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Cek RINTEK/PERTEK')); ?></a></li>
+                    </ul>
+                </div>
+
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"><?php echo e(__('RTH')); ?></h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Pengaduan RTH')); ?></a></li>
+                        <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Penyewaan Taman')); ?></a></li>
+                    </ul>
+                </div>
+
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"><?php echo e(__('Tata Penataan')); ?></h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="/tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Modul Tata Penataan')); ?></a></li>
+                        <li><a href="/pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Pengaduan Tata Penataan')); ?></a></li>
+                        <li><a href="/peta-objek-pengawasan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Peta Objek Pengawasan')); ?></a></li>
+                        <li><a href="/cek-pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200"><?php echo e(__('Cek Status')); ?></a></li>
+                    </ul>
+                </div>
+
+                <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"><?php echo e(__('Kontak')); ?></h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu
+                    </p>
+                    <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-900/20 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors whitespace-nowrap">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                        0851-9151-2076
+                    </a>
+                </div>
+            </div>
+
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <p>© <?php echo e(date('Y')); ?> Dinas Lingkungan Hidup Kota Palu. <?php echo e(__('Hak cipta dilindungi.')); ?></p>
+                <div class="flex items-center gap-4">
+                    <a href="/kebijakan-privasi" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"><?php echo e(__('Kebijakan Privasi')); ?></a>
+                    <a href="/syarat-ketentuan" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"><?php echo e(__('Syarat & Ketentuan')); ?></a>
+                    <a href="https://skm.go.id/share/instansi/032ced20-3ad5-4b83-97fe-044abcb65bd3/1" target="_blank" rel="noopener" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"><?php echo e(__('Survei IKM')); ?></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('chat-bot');
+
+$__keyOuter = $__key ?? null;
+
+$__key = null;
+$__componentSlots = [];
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-4284762854-0', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+$__key = $__keyOuter;
+unset($__keyOuter);
+unset($__name);
+unset($__params);
+unset($__componentSlots);
+unset($__split);
+?>
+    <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); ?>
+
+    <?php echo $__env->yieldContent('scripts'); ?>
+    <?php echo $__env->yieldPushContent('scripts'); ?>
+</body>
+
+</html>
+<?php /**PATH C:\xampp\htdocs\DLH - PALU\resources\views/layouts/app.blade.php ENDPATH**/ ?>

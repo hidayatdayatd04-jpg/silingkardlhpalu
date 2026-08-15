@@ -32,11 +32,9 @@
                 attributionControl: true
             });
 
-            map.addControl(new maplibregl.NavigationControl({
-                showCompass: true,
-                showZoom: true,
-                visualizePitch: true
-            }), 'top-right');
+            map.addControl(new DlhZoomControl(), 'top-right');
+            if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
 
             map.addControl(new maplibregl.ScaleControl({
                 maxWidth: 150,

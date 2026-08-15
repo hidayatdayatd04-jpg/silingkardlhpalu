@@ -24,8 +24,8 @@ Kamu adalah asisten AI resmi untuk website Dinas Lingkungan Hidup (DLH) Kota Pal
 - Nama: Dinas Lingkungan Hidup (DLH) Kota Palu
 - Portal: SILP (Sistem Layanan Publik) - Portal Operasional DLH Kota Palu
 - Kepala Dinas: Mohamad Arif, S.STP., M.Si
-- Alamat: Jl. Pipit, Tanamodindi, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111
-- Jam Kerja: Senin - Jumat (08.00 - 16.00 WITA)
+- Alamat: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu
+- Jam Kerja: Senin - Kamis (08.00 - 16.00 WITA)
 - Call Center / WhatsApp: 0851-9151-2076 (https://wa.me/6285191512076)
 - Instagram: @dlhkotapalu (https://www.instagram.com/dlhkotapalu)
 - Facebook: https://www.facebook.com/share/18qHSySQr4/?locale=id_ID
@@ -147,10 +147,6 @@ Layanan pengawasan dan penataan lingkungan hidup.
 ### 4. BIDANG RUANG TERBUKA HIJAU (RTH)
 Layanan pengelolaan ruang terbuka hijau kota.
 
-**Peta RTH:**
-- URL: https://dlh.palukota.go.id/peta-rth
-- Peta interaktif lokasi: Taman Kota, Hutan Kota, Jalur Hijau, Pohon Pelindung
-
 **Pengaduan RTH:**
 - URL: https://dlh.palukota.go.id/pengaduan
 - Untuk melapor masalah: Penebangan Pohon Liar, Taman Rusak/Vandalisme, Fasilitas Taman Mati Lampu/Rusak, Lahan RTH Beralih Fungsi
@@ -161,24 +157,14 @@ Layanan pengelolaan ruang terbuka hijau kota.
 - URL: https://dlh.palukota.go.id/cek-pengaduan-rth
 - Masukkan nomor tiket untuk melihat status
 
-**Izin Tebang Pohon:**
-- URL: https://dlh.palukota.go.id/perizinan-tebang-pohon
-- Untuk mengajukan izin penebangan pohon
-- Formulir: Data pemohon, surat permohonan (PDF), KTP/NIB, alasan tebang, foto pohon, lokasi di peta, rencana penanaman ulang
-- Mendapat nomor tiket
-
-**Cek Izin Tebang Pohon:**
-- URL: https://dlh.palukota.go.id/cek-perizinan-tebang-pohon
-- Masukkan nomor tiket untuk melihat status
-
-**Pinjam Pakai Taman:**
+**Penyewaan Taman:**
 - URL: https://dlh.palukota.go.id/pinjam-taman
 - Untuk meminjam taman kota untuk acara/acara komunitas
 - Formulir: Data pemohon, nama acara, pilihan taman, tanggal mulai/selesai, surat permohonan (PDF), jaminan kebersihan
 - Tersedia taman: berdasarkan data taman_kota di database
 - Mendapat nomor tiket
 
-**Cek Pinjam Taman:**
+**Cek Penyewaan Taman:**
 - URL: https://dlh.palukota.go.id/cek-pinjam-taman
 - Masukkan nomor tiket untuk melihat status
 
@@ -195,8 +181,8 @@ Layanan pengelolaan ruang terbuka hijau kota.
 - Berita terbaru seputar kegiatan DLH Kota Palu
 
 **Survei Kepuasan Masyarakat (IKM):**
-- URL: https://dlh.palukota.go.id/survei
-- Survei kepuasan dengan 7 indikator: Prosedur, Kecepatan, Biaya, Sarana, Kompetensi Petugas, Penanganan Pengaduan, Hasil Layanan
+- URL: https://skm.go.id/share/instansi/032ced20-3ad5-4b83-97fe-044abcb65bd3/1
+- Survei kepuasan dilayani melalui sistem eksternal (SKM) di atas, bukan di dalam website ini.
 
 **Profil DLH:**
 - URL: https://dlh.palukota.go.id/profil
@@ -259,7 +245,7 @@ Q: Bagaimana cara cek status pengaduan?
 A: Kunjungi https://dlh.palukota.go.id/lacak atau halaman cek status di masing-masing bidang, lalu masukkan nomor tiket Anda.
 
 Q: Jam kerja DLH Kota Palu?
-A: Senin - Jumat, pukul 08.00 - 16.00 WITA.
+A: Senin - Kamis, pukul 08.00 - 16.00 WITA.
 
 Q: Bagaimana menghubungi DLH?
 A: Call Center/WhatsApp: 0851-9151-2076 (https://wa.me/6285191512076)
@@ -275,7 +261,7 @@ Q: Bagaimana cara meminjam taman untuk acara?
 A: Kunjungi https://dlh.palukota.go.id/pinjam-taman, pilih taman yang tersedia, tentukan tanggal, unggah surat permohonan, dan submit.
 
 Q: Dimana lokasi DLH Kota Palu?
-A: Jl. Pipit, Tanamodindi, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111.
+A: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu.
 
 ---
 
@@ -353,22 +339,22 @@ PROMPT;
 
         // Jam kerja
         if ($has(['jam kerja', 'jam buka', 'jam operasional', 'buka jam', 'jam berapa'])) {
-            return "Jam kerja DLH Kota Palu: **Senin – Jumat, 08.00 – 16.00 WITA**.\n\nLayanan online di portal ini dapat diakses **24 jam**.";
+            return "Jam kerja DLH Kota Palu: **Senin – Kamis, 08.00 – 16.00 WITA**.\n\nLayanan online di portal ini dapat diakses **24 jam**.";
         }
 
         // Kontak
         if ($has(['kontak', 'hubungi', 'call center', 'nomor telepon', 'whatsapp', 'wa ', 'telepon', 'instagram', 'medsos'])) {
-            return "Kontak DLH Kota Palu:\n\n📞 **WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n📸 **Instagram:** @dlhkotapalu\n📍 **Alamat:** Jl. Pipit, Tanamodindi, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111";
+            return "Kontak DLH Kota Palu:\n\n📞 **WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n📸 **Instagram:** @dlhkotapalu\n📍 **Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
         }
 
         // Lokasi / alamat
         if ($has(['alamat', 'lokasi kantor', 'dimana', 'di mana', 'kantor dlh'])) {
-            return "Kantor DLH Kota Palu berada di:\n\n📍 **Jl. Pipit, Tanamodindi, Kec. Palu Selatan, Kota Palu, Sulawesi Tengah 94111**.";
+            return "Kantor DLH Kota Palu berada di:\n\n📍 **Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
         }
 
         // Layanan / bidang
         if ($has(['layanan', 'bidang', 'apa saja', 'fitur', 'menu'])) {
-            return "DLH Kota Palu memiliki 4 bidang layanan utama:\n\n1. **Pengendalian** — [Pengaduan](/pengaduan), rekomendasi, RINTEK/PERTEK\n2. **Sampah & LB3** — [Peta Sampah](/peta-persampahan), [Pengaduan](/pengaduan), registrasi LB3\n3. **Tata Penataan** — [Pengaduan](/pengaduan), peta objek pengawasan\n4. **RTH** — [Peta RTH](/peta-rth), izin tebang, [pinjam taman](/pinjam-taman)\n\nApa yang ingin Anda ketahui lebih lanjut?";
+            return "DLH Kota Palu memiliki 4 bidang layanan utama:\n\n1. **Pengendalian** — [Pengaduan](/pengaduan), rekomendasi lingkungan\n2. **Sampah & LB3** — [Peta Sampah](/peta-persampahan), [Pengaduan](/pengaduan), registrasi LB3, [RINTEK/PERTEK](/pengajuan-rintek-pertek)\n3. **Tata Penataan** — [Pengaduan](/pengaduan), peta objek pengawasan\n4. **RTH** — [penyewaan taman](/pinjam-taman)\n\nApa yang ingin Anda ketahui lebih lanjut?";
         }
 
         // RINTEK/PERTEK
@@ -383,7 +369,7 @@ PROMPT;
 
         // Pinjam taman
         if ($has(['pinjam taman', 'sewa taman', 'pakai taman', 'acara di taman'])) {
-            return "Untuk meminjam taman kota, buka [Pinjam Pakai Taman](/pinjam-taman): pilih taman, tentukan tanggal, unggah surat permohonan, lalu kirim. Anda akan menerima nomor tiket.";
+            return "Untuk menyewa taman kota, buka [Penyewaan Taman](/pinjam-taman): pilih taman, tentukan tanggal, unggah surat permohonan, lalu kirim. Anda akan menerima nomor tiket.";
         }
 
         // Sampah menumpuk / armada
@@ -394,4 +380,3 @@ PROMPT;
         return null;
     }
 }
-

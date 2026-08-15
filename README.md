@@ -44,7 +44,7 @@ Setiap laporan atau pengajuan dari masyarakat akan **otomatis mendapat nomor tik
 
 - **Masyarakat Kota Palu** — bisa mengadu, mengurus izin lingkungan, dan mendapatkan informasi tanpa harus datang ke kantor.
 - **Pegawai/Admin DLH** — mengelola seluruh layanan dari satu dashboard, sesuai bidang masing-masing.
-- **Kepala Bidang / Pimpinan** — memantau seluruh kegiatan lintas bidang dan melihat rekapitulasi data.
+- **Admin** — memantau seluruh kegiatan lintas bidang dan melihat rekapitulasi data.
 
 ---
 
@@ -108,7 +108,7 @@ Panel admin diakses melalui `/admin/login`. Setelah masuk, admin melihat **dashb
 ### Dashboard
 - Kartu ringkasan jumlah laporan/pengajuan per bidang.
 - Daftar laporan terbaru.
-- Statistik pengguna aktif & jumlah pengunjung situs (khusus Kepala Bidang/superadmin).
+- Statistik pengguna aktif & jumlah pengunjung situs (khusus Admin).
 
 ### Manajemen Data (CRUD)
 Setiap jenis data (pengaduan, permohonan, master data, dll) dapat dikelola dengan fitur seragam:
@@ -315,7 +315,7 @@ Setelah `php artisan migrate --seed`, tersedia akun berikut (dari `RolePermissio
 
 | Nama | Username | Password | Role / Jabatan | Akses |
 |------|----------|----------|----------------|-------|
-| Kepala Bidang DLH | `superadmin` | `superadmin123` | Kepala Bidang (superadmin) | **Semua bidang** |
+| Admin | `admin` | `admin123` | Admin (akses penuh) | **Semua bidang** |
 | Admin Pengendalian | `pengendalian` | `pengendalian123` | Bidang Pengendalian | Hanya Pengendalian |
 | Admin Sampah & LB3 | `sampah-lb3` | `sampah123` | Bidang Sampah & LB3 | Hanya Sampah & LB3 |
 | Admin Tata Penataan | `tata-penataan` | `tata123` | Bidang Tata Penataan | Hanya Tata Penataan |
@@ -325,9 +325,9 @@ Setelah `php artisan migrate --seed`, tersedia akun berikut (dari `RolePermissio
 
 **Cara kerja hak akses:**
 - Login menggunakan **username atau email** + password.
-- **Superadmin (Kepala Bidang)** dapat mengakses seluruh 5 kelompok menu.
+- **Admin** dapat mengakses seluruh 5 kelompok menu.
 - **Admin bidang** hanya melihat & mengelola data bidangnya (dibatasi di level controller & menu).
-- Terdapat mekanisme **hak akses tambahan** (`additional_access`) — superadmin dapat memberi seorang admin akses ke bidang lain secara khusus tanpa mengubah role utamanya.
+- Terdapat mekanisme **hak akses tambahan** (`additional_access`) — Admin dapat memberi seorang admin akses ke bidang lain secara khusus tanpa mengubah role utamanya.
 
 ---
 
@@ -394,7 +394,7 @@ File (foto bukti, dokumen) disimpan di `storage/app/public`. Pastikan `php artis
 ### Keamanan yang Sudah Diterapkan
 - Kontrol akses berlapis (middleware, otorisasi controller, policy).
 - *Rate limiting* pada halaman cek status, unduh PDF, dan chatbot.
-- Password di-*hash*, proteksi khusus agar role superadmin tidak bisa diturunkan sembarangan.
+- Password di-*hash*, proteksi khusus agar role Admin tidak bisa diturunkan sembarangan.
 - Pencatatan kunjungan & log email untuk audit.
 
 ---

@@ -2,15 +2,24 @@
 
 @php
     $allGroups = \App\Support\Admin\AdminRegistry::all();
+    $allowedGroups = $user->allowedGroups();
+    $allowedSlugs = $user->allowedSlugs();
     $menuItems = [];
     foreach ($allGroups as $groupKey => $group) {
-        if (!$user->canAccessGroup($groupKey)) continue;
+        $hasFullGroup = in_array($groupKey, $allowedGroups, true);
         foreach ($group['items'] as $item) {
+            $slug = $item['slug'] ?? null;
+            if (! $slug) {
+                continue;
+            }
+            if (! $hasFullGroup && ! in_array($slug, $allowedSlugs, true)) {
+                continue;
+            }
             $menuItems[] = [
                 'label' => $item['label'],
-                'url' => route('admin.resources.index', $item['slug']),
+                'url' => $item['link'] ?? route('admin.resources.index', $item['slug']),
                 'group' => $group['label'],
-                'icon' => $item['slug'] === 'artikel' ? 'news' : ($item['slug'] === 'user' ? 'user-check' : 'folder'),
+                'icon' => str_starts_with($slug, 'artikel') ? 'news' : ($slug === 'user' ? 'user-check' : 'folder'),
             ];
         }
     }

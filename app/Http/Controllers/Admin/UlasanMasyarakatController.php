@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Laporan;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
-use App\Models\PerizinanTebangPohon;
 use App\Models\PermohonanPinjamTaman;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
@@ -74,8 +73,7 @@ class UlasanMasyarakatController extends Controller
             PengaduanTataPenataan::class => 'Pengaduan Tata Penataan',
             PermohonanRekomendasi::class => 'Permohonan Rekomendasi',
             PengajuanRintekPertek::class => 'RINTEK/PERTEK',
-            PerizinanTebangPohon::class => 'Izin Tebang Pohon',
-            PermohonanPinjamTaman::class => 'Pinjam Taman',
+            PermohonanPinjamTaman::class => 'Penyewaan Taman',
             RegistrasiUsahaLb3::class => 'Registrasi LB3',
             default => class_basename($class),
         };
@@ -88,7 +86,6 @@ class UlasanMasyarakatController extends Controller
             PengaduanTataPenataan::class => 'tata-penataan',
             PermohonanRekomendasi::class => 'pengendalian',
             PengajuanRintekPertek::class => 'sampah-lb3',
-            PerizinanTebangPohon::class => 'rth',
             PermohonanPinjamTaman::class => 'rth',
             RegistrasiUsahaLb3::class => 'sampah-lb3',
             default => 'konten',

@@ -1,7 +1,7 @@
 @props(['user' => null])
 
 @php
-    $roleLabel = $user->role?->label() ?? 'Admin';
+    $roleLabel = $user?->roleLabel() ?? 'Admin';
     $photoUrl = $user->photoUrl();
 @endphp
 

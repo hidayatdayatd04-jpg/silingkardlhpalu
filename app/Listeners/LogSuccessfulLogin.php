@@ -12,9 +12,10 @@ class LogSuccessfulLogin
         $user = $event->user;
 
         ActivityLogger::log(
-            'login',
-            'Login: '.($user->name ?? $user->username ?? 'Pengguna'),
-            'auth',
+            event: 'login',
+            subject: 'Login: '.($user->name ?? $user->username ?? 'Pengguna'),
+            module: 'auth',
+            actor: $user,
         );
     }
 }

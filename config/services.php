@@ -49,4 +49,11 @@ return [
         'model' => env('OPENROUTER_MODEL', 'tencent/hy3:free'),
     ],
 
+    'google_drive' => [
+        'api_key' => env('GOOGLE_DRIVE_API_KEY', ''),
+        'tata_lingkungan_folder_id' => env('GOOGLE_DRIVE_TATA_LINGKUNGAN_FOLDER_ID', '14yIelP7BkmVw7bTOl-cIyNYI1jRmLvsQ'),
+        'cache_ttl' => (int) env('GOOGLE_DRIVE_CACHE_TTL', 900),
+        'max_depth' => (int) env('GOOGLE_DRIVE_MAX_DEPTH', 8),
+    ],
+
 ];

@@ -45,7 +45,7 @@ new class extends Component {
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-xs text-slate-500 uppercase">{{ __('Nomor Tiket') }}</p>
-                    <p class="text-xl font-mono font-bold">{{ $item->nomor_tiket }}</p>
+                    <x-public.copy-ticket :ticket="$item->nomor_tiket" class="text-xl font-mono font-bold" />
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-100 text-brand-800">{{ $item->status }}</span>
             </div>

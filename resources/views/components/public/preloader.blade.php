@@ -1,7 +1,7 @@
 {{-- ============================================================
-     Preloader "Penyambutan" — layar loading bermerek DLH Kota Palu.
+     Preloader "Penyambutan" - layar loading bermerek DLH Kota Palu.
      Hanya dipasang di BERANDA (welcome.blade.php), tampil SETIAP refresh,
-     durasi tetap ~3 detik, lalu memudar. Menghormati reduced-motion.
+     durasi tetap ~1,5 detik, lalu memudar. Menghormati reduced-motion.
      Critical CSS/JS inline agar tampil benar sebelum bundle Vite dimuat.
 ============================================================ --}}
 <div id="dlh-preloader" role="status" aria-live="polite" aria-label="{{ __('Memuat portal DLH Kota Palu') }}">
@@ -10,12 +10,12 @@
         <div class="dlh-pre__badge">
             <span class="dlh-pre__ring" aria-hidden="true"></span>
             <span class="dlh-pre__ring2" aria-hidden="true"></span>
-            <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="" width="92" height="92" class="dlh-pre__logo">
+            <img src="{{ asset('assets/images/logo-web.png') }}" alt="" width="120" height="120" class="dlh-pre__logo">
         </div>
         <p class="dlh-pre__title">{{ __('Dinas Lingkungan Hidup') }}</p>
         <p class="dlh-pre__subtitle">{{ __('Kota Palu') }}</p>
         <div class="dlh-pre__bar" aria-hidden="true"><span id="dlh-pre-fill"></span></div>
-        <p class="dlh-pre__hint">{{ __('Menyiapkan layanan untuk Anda…') }}</p>
+        <p class="dlh-pre__hint">{{ __('Menyiapkan layanan untuk Anda...') }}</p>
     </div>
 </div>
 
@@ -36,14 +36,14 @@
         animation:dlh-glow 3s ease-in-out infinite}
     .dlh-pre__inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:1rem}
     .dlh-pre__badge{position:relative;display:flex;align-items:center;justify-content:center;
-        width:132px;height:132px;margin-bottom:1.5rem}
+        width:156px;height:156px;margin-bottom:1.5rem}
     .dlh-pre__ring{position:absolute;inset:0;border-radius:9999px;
         border:3px solid rgba(255,255,255,.10);border-top-color:#6ee7b7;border-right-color:#28c6e8;
         animation:dlh-spin 1s linear infinite}
     .dlh-pre__ring2{position:absolute;inset:10px;border-radius:9999px;
         border:2px solid rgba(255,255,255,.08);border-bottom-color:#34d399;
         animation:dlh-spin 1.6s linear infinite reverse}
-    .dlh-pre__logo{width:92px;height:92px;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.4));
+    .dlh-pre__logo{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.4));
         animation:dlh-pop .7s cubic-bezier(.16,1,.3,1) both,dlh-float 3s ease-in-out .7s infinite}
     .dlh-pre__title{color:#fff;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.95rem;
         opacity:0;animation:dlh-rise .6s ease .25s forwards}
@@ -71,7 +71,7 @@
         if (!pre) return;
 
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var DURATION = reduced ? 500 : 6000; // tampil tetap ~6 detik tiap refresh
+        var DURATION = reduced ? 500 : 1500; // tampil tetap ~1,5 detik tiap refresh
         var fill = document.getElementById('dlh-pre-fill');
         var start = Date.now();
 

@@ -22,6 +22,7 @@
 
 <div
     {{ $attributes->whereStartsWith('wire:model') }}
+    {{ $attributes->whereStartsWith('wire:key') }}
     x-modelable="selected"
     class="fi-field"
     x-data="{
@@ -56,6 +57,7 @@
 
         init() {
             this.$watch('selected', (value) => {
+                if (value === '' && !this._initialized) return;
                 const selectedOption = this.options.find((option) => option.value === String(value));
                 this.selectedLabel = selectedOption ? selectedOption.label : '';
                 this.$refs.hiddenInput.value = value;
@@ -67,6 +69,7 @@
                     }
                 });
             });
+            this._initialized = true;
             const selectedOption = this.options.find((option) => option.value === String(this.selected));
             this.selectedLabel = selectedOption ? selectedOption.label : '';
 

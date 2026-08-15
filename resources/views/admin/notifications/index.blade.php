@@ -21,7 +21,7 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    <x-admin.card :padding="false">
+    <div><x-admin.card :padding="false">
         <div class="divide-y divide-slate-100">
             @forelse($notifications as $n)
                 @php $data = $n->data; @endphp
@@ -64,4 +64,5 @@
             </div>
         @endif
     </x-admin.card>
+</div>
 @endsection

@@ -14,7 +14,6 @@ class DataTanamPohon extends Model
         'latitude',
         'longitude',
         'foto_dokumentasi',
-        'perizinan_tebang_pohon_id',
     ];
 
     protected function casts(): array
@@ -24,10 +23,5 @@ class DataTanamPohon extends Model
             'longitude' => 'decimal:8',
             'foto_dokumentasi' => 'array',
         ];
-    }
-
-    public function perizinanTebangPohon(): BelongsTo
-    {
-        return $this->belongsTo(PerizinanTebangPohon::class);
     }
 }

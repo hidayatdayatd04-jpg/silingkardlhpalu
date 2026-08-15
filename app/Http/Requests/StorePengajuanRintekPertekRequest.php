@@ -18,8 +18,33 @@ class StorePengajuanRintekPertekRequest extends FormRequest
         $imagePdfRule = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
 
         return [
-            'registrasi_usaha_lb3_id' => ['nullable', 'integer', Rule::exists('registrasi_usaha_lb3s', 'id')],
-            'nama_perusahaan' => ['required', 'string', 'max:255'],
+            'registrasi_usaha_lb3_id' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $value !== '__lainnya__'
+                        && ! \App\Models\RegistrasiUsahaLb3::where('id', $value)->exists()) {
+                        $fail('Perusahaan terdaftar LB3 tidak valid.');
+                    }
+                },
+            ],
+            'nama_perusahaan' => [
+                function ($attribute, $value, $fail) {
+                    $registrasiId = request('registrasi_usaha_lb3_id');
+                    if ($registrasiId === '__lainnya__') {
+                        if (blank(request('nama_perusahaan_lainnya'))) {
+                            $fail('Nama perusahaan wajib diisi.');
+                        }
+
+                        return;
+                    }
+                    if (blank($value)) {
+                        $fail('Nama perusahaan wajib diisi.');
+                    }
+                },
+                'string',
+                'max:255',
+            ],
+            'nama_perusahaan_lainnya' => ['nullable', 'string', 'max:255'],
             'nama_penanggung_jawab' => ['required', 'string', 'max:255'],
             'nomor_nib' => ['required', 'string', 'max:255'],
             'npwp' => ['nullable', 'string', 'max:30'],

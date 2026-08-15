@@ -11,28 +11,28 @@
 
     {{-- Summary Cards --}}
     <section class="grid gap-5 md:grid-cols-3 mb-8">
-        <x-admin.stat-card
+        <div data-animate class="stagger-item" style="--reveal-delay: 0ms"><x-admin.stat-card
             label="Total Ulasan"
             :value="$totalFeedback"
             icon="star"
             color="amber"
-        />
-        <x-admin.stat-card
+        /></div>
+        <div data-animate class="stagger-item" style="--reveal-delay: 60ms"><x-admin.stat-card
             label="Rata-rata Rating"
             :value="number_format($avgOverall, 1)"
             icon="trending-up"
             color="emerald"
-        />
-        <x-admin.stat-card
+        /></div>
+        <div data-animate class="stagger-item" style="--reveal-delay: 120ms"><x-admin.stat-card
             label="Jenis Layanan"
             :value="$ratingPerBidang->count()"
             icon="folder"
             color="sky"
-        />
+        /></div>
     </section>
 
     {{-- Rating per Bidang --}}
-    <x-admin.card class="mb-8">
+    <div data-animate class="stagger-item mb-8"><x-admin.card class="mb-8">
         <div class="mb-4">
             <h2 class="text-h4 font-bold text-ink-900">Rating per Jenis Layanan</h2>
             <p class="text-xs text-slate-500">Rata-rata penilaian masyarakat per bidang</p>
@@ -43,7 +43,7 @@
         @else
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @foreach ($ratingPerBidang as $key => $data)
-                    <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+                    <div class="card-lift rounded-lg border border-slate-200 dark:border-slate-800 p-4">
                         <p class="text-sm font-semibold text-ink-800 mb-2">{{ $data['label'] }}</p>
                         <div class="flex items-center gap-2 mb-1">
                             <div class="flex items-center gap-0.5">
@@ -62,9 +62,10 @@
             </div>
         @endif
     </x-admin.card>
+    </div>
 
     {{-- Recent Comments --}}
-    <x-admin.card>
+    <div><x-admin.card>
         <div class="mb-4">
             <h2 class="text-h4 font-bold text-ink-900">Komentar Terbaru</h2>
             <p class="text-xs text-slate-500">Ulasan masyarakat yang menyertakan komentar</p>
@@ -97,4 +98,5 @@
             </div>
         @endif
     </x-admin.card>
+</div>
 @endsection

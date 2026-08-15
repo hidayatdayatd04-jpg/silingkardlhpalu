@@ -45,6 +45,7 @@ class ActivityLogger
      * @param  array|null   $old      nilai sebelum
      * @param  array|null   $new      nilai sesudah
      * @param  Model|null   $auditable model terkait (opsional)
+     * @param  Model|null   $actor    pelaku eksplisit (opsional; default auth()->user())
      */
     public static function log(
         string $event,
@@ -53,13 +54,14 @@ class ActivityLogger
         ?array $old = null,
         ?array $new = null,
         ?Model $auditable = null,
+        ?Model $actor = null,
     ): ?ActivityLog {
         if (! static::$enabled) {
             return null;
         }
 
         try {
-            $user = auth()->user();
+            $user = $actor ?? auth()->user();
             $request = request();
 
             $properties = [];

@@ -18,6 +18,7 @@ class PermohonanPinjamTaman extends Model
         'email',
         'nama_kegiatan',
         'taman_kota_id',
+        'nama_taman_manual',
         'tanggal_kegiatan',
         'tanggal_selesai',
         'surat_permohonan',

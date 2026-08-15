@@ -10,19 +10,18 @@ use App\Models\Laporan;
 use App\Models\LaporanFoto;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengaduanTataPenataanFoto;
-use App\Services\ImageCompressionService;
+use App\Traits\HandlesPengaduanPhotoUpload;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component {
     use WithFileUploads;
+    use HandlesPengaduanPhotoUpload;
 
     public string $bidang = 'pengendalian';
     public ?string $nama_pelapor = null;
     public ?string $nomor_hp = null;
-    public ?string $email = null;
     public ?string $jenis_pengaduan = null;
-    public ?string $jenis_pengaduan_lainnya = null;
     public ?string $nama_terlapor = null;
     public ?string $nama_perusahaan_terlapor = null;
     public ?string $alamat = null;
@@ -32,9 +31,33 @@ new class extends Component {
     public array $photos = [];
 
     public ?string $successTicket = null;
+    private string $initialBidang = 'pengendalian';
 
-    public function updatedBidang(): void
+    public function mount(): void
     {
+        $bidang = request()->query('bidang');
+        $jenis = request()->query('jenis');
+
+        $validBidang = ['pengendalian', 'sampah', 'tata-penataan', 'rth'];
+
+        if ($bidang && in_array($bidang, $validBidang, true)) {
+            $this->bidang = $bidang;
+            $this->initialBidang = $bidang;
+        }
+
+        if ($jenis) {
+            $jenisOptions = $this->jenisOptions();
+            if (array_key_exists($jenis, $jenisOptions)) {
+                $this->jenis_pengaduan = $jenis;
+            }
+        }
+    }
+
+    public function updatedBidang(string $value): void
+    {
+        if ($value === $this->initialBidang) {
+            return;
+        }
         $this->jenis_pengaduan = '';
         $this->resetValidation(['jenis_pengaduan']);
     }
@@ -47,7 +70,7 @@ new class extends Component {
         }
     }
 
-    public function submit(ImageCompressionService $compressionService): void
+    public function submit(): void
     {
         $this->validate($this->rules(), $this->messages());
 
@@ -65,8 +88,7 @@ new class extends Component {
             $pengaduan = PengaduanTataPenataan::create([
                 'nama_pelapor' => $this->nama_pelapor,
                 'no_hp' => $this->nomor_hp,
-                'email' => $this->email,
-                'jenis_pengaduan' => $this->jenis_pengaduan === '__lainnya__' ? $this->jenis_pengaduan_lainnya : $this->jenis_pengaduan,
+                'jenis_pengaduan' => $this->jenis_pengaduan,
                 'nama_terlapor' => $this->nama_terlapor ?? null,
                 'nama_perusahaan_terlapor' => $this->nama_perusahaan_terlapor ?? null,
                 'alamat' => $this->alamat,
@@ -75,15 +97,16 @@ new class extends Component {
                 'longitude' => $this->longitude,
             ]);
 
-            foreach ($this->photos as $photo) {
-                $path = $compressionService->compressAndStore($photo, 'pengaduan-tata-penataan');
-                PengaduanTataPenataanFoto::create([
-                    'pengaduan_tata_penataan_id' => $pengaduan->id,
-                    'path_foto' => $path,
-                ]);
-            }
+            $this->ticket = $pengaduan->nomor_tiket;
 
-            $this->successTicket = $pengaduan->nomor_tiket;
+            $this->queuePhotos(
+                $this->photos,
+                $pengaduan->id,
+                'pengaduan_tata_penataan_id',
+                PengaduanTataPenataanFoto::class,
+                'pengaduan-tata-penataan',
+                'tata',
+            );
         } else {
             $bidangEnum = match ($this->bidang) {
                 'pengendalian' => Bidang::PENGENDALIAN,
@@ -100,26 +123,28 @@ new class extends Component {
                 'bidang' => $bidangEnum->value,
                 'nama_pelapor' => $this->nama_pelapor,
                 'nomor_hp' => $this->nomor_hp,
-                'email' => $this->email,
-                'jenis_pengaduan' => $this->jenis_pengaduan === '__lainnya__' ? $this->jenis_pengaduan_lainnya : $this->jenis_pengaduan,
-                'kategori' => $this->jenis_pengaduan === '__lainnya__' ? $this->jenis_pengaduan_lainnya : $this->jenis_pengaduan,
+                'jenis_pengaduan' => $this->jenis_pengaduan,
+                'kategori' => $this->jenis_pengaduan,
                 'alamat' => $this->alamat,
                 'deskripsi' => $this->deskripsi,
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
-                'status' => PengaduanStatus::BELUM_DITINJAU->value,
+                'status' => PengaduanStatus::BELUM_DITINDAKLANJUTI->value,
             ]);
 
-            foreach ($this->photos as $photo) {
-                $path = $compressionService->compressAndStore($photo, $storageDir);
-                LaporanFoto::create([
-                    'laporan_id' => $laporan->id,
-                    'path_foto' => $path,
-                ]);
-            }
+            $this->ticket = $laporan->nomor_tiket;
 
-            $this->successTicket = $laporan->nomor_tiket;
+            $this->queuePhotos(
+                $this->photos,
+                $laporan->id,
+                'laporan_id',
+                LaporanFoto::class,
+                $storageDir,
+                'laporan',
+            );
         }
+
+        $this->processing = true;
 
         $this->resetForm();
     }
@@ -129,13 +154,12 @@ new class extends Component {
         $base = [
             'nama_pelapor' => ['required', 'string', 'max:255'],
             'nomor_hp' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,12}$/', 'max:15'],
-            'email' => ['required', 'email:rfc,dns', 'max:255', 'ends_with:gmail.com'],
             'alamat' => ['required', 'string', 'max:1000'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'deskripsi' => ['required', 'string', 'max:5000'],
             'photos' => ['required', 'array', 'min:1', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
 
         $jenisValues = match ($this->bidang) {
@@ -145,8 +169,7 @@ new class extends Component {
             'rth' => array_column(JenisPengaduanRth::cases(), 'value'),
         };
 
-        $base['jenis_pengaduan'] = ['required', 'string', \Illuminate\Validation\Rule::in(array_merge($jenisValues, ['__lainnya__']))];
-        $base['jenis_pengaduan_lainnya'] = ['required_if:jenis_pengaduan,__lainnya__', 'nullable', 'string', 'max:255'];
+        $base['jenis_pengaduan'] = ['required', 'string', \Illuminate\Validation\Rule::in($jenisValues)];
 
         if ($this->bidang === 'tata-penataan') {
             $base['nama_terlapor'] = ['nullable', 'string', 'max:255'];
@@ -162,16 +185,13 @@ new class extends Component {
             'nomor_hp.required' => 'Nomor telepon wajib diisi.',
             'nomor_hp.regex' => 'Format nomor telepon tidak valid. Gunakan format: 08xxx.',
             'nomor_hp.max' => 'Nomor telepon maksimal 15 digit.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.ends_with' => 'Email harus menggunakan domain @gmail.com.',
             'photos.required' => 'Foto bukti wajib diunggah minimal 1 foto.',
             'photos.array' => 'Foto bukti harus berupa array.',
             'photos.min' => 'Foto bukti minimal 1 foto.',
             'photos.max' => 'Foto bukti maksimal 5 foto.',
             'photos.*.image' => 'File harus berupa gambar.',
             'photos.*.mimes' => 'Format foto harus JPG atau PNG.',
-            'photos.*.max' => 'Ukuran foto maksimal 2MB.',
+            'photos.*.max' => 'Ukuran foto maksimal 5MB.',
             'deskripsi.required' => 'Deskripsi pengaduan wajib diisi.',
             'deskripsi.max' => 'Deskripsi maksimal 5000 karakter.',
             'alamat.required' => 'Alamat lokasi kejadian wajib diisi.',
@@ -183,7 +203,7 @@ new class extends Component {
     private function resetForm(): void
     {
         $this->reset([
-            'nama_pelapor', 'nomor_hp', 'email', 'jenis_pengaduan', 'jenis_pengaduan_lainnya', 'nama_terlapor',
+            'nama_pelapor', 'nomor_hp', 'jenis_pengaduan', 'nama_terlapor',
             'nama_perusahaan_terlapor', 'alamat', 'deskripsi', 'photos',
         ]);
         $this->latitude = -0.9;
@@ -200,7 +220,7 @@ new class extends Component {
             default => [],
         };
 
-        return array_merge($options, ['__lainnya__' => __('Lainnya...')]);
+        return $options;
     }
 
     public function getBidangOptions(): array
@@ -227,8 +247,27 @@ new class extends Component {
 
 <div
     class="fi-form-card bg-white dark:bg-slate-950 rounded-2xl p-6 md:p-8 shadow-[0_1px_3px_rgba(13,43,29,0.06),0_12px_32px_-12px_rgba(13,43,29,0.10)] max-w-4xl mx-auto">
-    @if ($successTicket)
+    @if ($processing)
+        <div class="space-y-6 text-center py-8" wire:poll.3s="checkPhotoStatus">
+            <div
+                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold animate-spin">
+                ↻
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Sedang Memproses Foto') }}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('Pengaduan Anda telah terkirim. Foto bukti sedang dioptimalkan dan diunggah ke penyimpanan cloud (maksimal beberapa menit).') }}</p>
+            </div>
+            <div
+                class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
+                <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $ticket }}</span>
+            </div>
+        </div>
+    @elseif ($ticket)
         <div class="space-y-6 text-center py-8">
+            @if ($photoError)
+                <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">{{ $photoError }}</div>
+            @endif
             <div
                 class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                 ✓
@@ -240,21 +279,91 @@ new class extends Component {
             <div
                 class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
                 <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
-                <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $successTicket }}</span>
+                <x-public.copy-ticket :ticket="$ticket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                 <a href="{{ $this->getCekUrl() }}"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-slate-200 hover:bg-slate-100 h-10 py-2 px-4 dark:border-slate-800 dark:hover:bg-slate-800">
                     {{ __('Cek Status Pengaduan') }}
                 </a>
-                <button wire:click="$set('successTicket', null)"
+                <button wire:click="resetPhotoState"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 py-2 px-4 dark:bg-slate-50 dark:text-slate-900">
                     {{ __('Buat Pengaduan Baru') }}
                 </button>
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <form wire:submit.prevent="submit" class="grid gap-8"
+            :class="located ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'"
+            x-data="{
+                located: false,
+                detecting: false,
+                geoError: null,
+                map: null,
+                marker: null,
+                detectLocation() {
+                    var self = this;
+                    this.geoError = null;
+                    if (!navigator.geolocation) {
+                        this.geoError = 'Browser Anda tidak mendukung geolokasi. Silakan isi alamat secara manual.';
+                        return;
+                    }
+                    this.detecting = true;
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            var lat = pos.coords.latitude;
+                            var lon = pos.coords.longitude;
+                            fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&accept-language=id')
+                                .then(function (r) { return r.json(); })
+                                .then(function (data) {
+                                    var addr = (data && data.display_name) ? data.display_name : '';
+                                    @this.set('alamat', addr);
+                                })
+                                .catch(function () {})
+                                .finally(function () {
+                                    @this.set('latitude', lat);
+                                    @this.set('longitude', lon);
+                                    self.detecting = false;
+                                    self.located = true;
+                                    self.$nextTick(function () { self.initMap(lat, lon); });
+                                });
+                        },
+                        function (err) {
+                            self.detecting = false;
+                            if (err.code === 1) {
+                                self.geoError = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda lalu coba lagi.';
+                            } else if (err.code === 2) {
+                                self.geoError = 'Posisi tidak dapat ditentukan saat ini. Coba lagi atau isi alamat secara manual.';
+                            } else if (err.code === 3) {
+                                self.geoError = 'Waktu permintaan lokasi habis. Silakan coba lagi.';
+                            } else {
+                                self.geoError = 'Gagal mendapatkan lokasi: ' + err.message;
+                            }
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                    );
+                },
+                initMap(lat, lon) {
+                    var self = this;
+                    if (this.map) { this.moveMarker(lat, lon); return; }
+                    window.ensureMaplibreLoaded(function () {
+                        self.map = new maplibregl.Map({ container: self.$refs.mapEl, style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', center: [lon, lat], zoom: 15, attributionControl: false });
+                        self.map.addControl(new DlhZoomControl(), 'top-left');
+                        if (window.DlhBasemapSwitcher) {
+                            var bs = new DlhBasemapSwitcher();
+                            self.map.on('load', function () { bs.onAdd(self.map); });
+                        }
+                        self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' }).setLngLat([lon, lat]).addTo(self.map);
+                        self.marker.on('dragend', function () { var ll = self.marker.getLngLat(); @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });
+                        self.map.on('click', function (e) { self.marker.setLngLat(e.lngLat); @this.set('latitude', e.lngLat.lat); @this.set('longitude', e.lngLat.lng); });
+                        setTimeout(function () { try { self.map.resize(); } catch (e) {} }, 150);
+                    });
+                },
+                moveMarker(lat, lon) {
+                    if (this.marker) this.marker.setLngLat([lon, lat]);
+                    if (this.map) this.map.flyTo({ center: [lon, lat], zoom: 15, essential: true });
+                }
+            }">
             <div class="space-y-6">
                 <x-public.input
                     wire:model="nama_pelapor"
@@ -270,6 +379,7 @@ new class extends Component {
                     name="bidang"
                     label="{{ __('Bidang Pengaduan') }}"
                     :options="$this->getBidangOptions()"
+                    :selected="$bidang"
                     :searchable="false"
                 />
 
@@ -280,21 +390,10 @@ new class extends Component {
                     name="jenis_pengaduan"
                     label="{{ __('Jenis Pengaduan') }}"
                     :options="$this->jenisOptions()"
+                    :selected="$jenis_pengaduan"
                     :searchable="true"
                     placeholder="{{ __('-- Pilih Jenis Pengaduan --') }}"
                 />
-
-                    @if($jenis_pengaduan === '__lainnya__')
-                        <div class="mt-2">
-                            <x-public.input
-                                wire:model="jenis_pengaduan_lainnya"
-                                name="jenis_pengaduan_lainnya"
-                                label="{{ __('Jenis Pengaduan Lainnya') }}"
-                                placeholder="{{ __('Tulis jenis pengaduan secara manual...') }}"
-                                required
-                            />
-                        </div>
-                    @endif
 
                 <x-public.input
                     wire:model="nomor_hp"
@@ -306,15 +405,24 @@ new class extends Component {
                     required
                 />
 
-                <x-public.input
-                    wire:model="email"
-                    name="email"
-                    type="email"
-                    label="{{ __('Email') }}"
-                    placeholder="contoh@gmail.com"
-                    required
-                    hint="{{ __('Email untuk menerima notifikasi update status pengaduan') }}"
-                />
+                <div>
+                    <button type="button" id="btn-detect-location"
+                        class="fi-detect-btn">
+                        <svg class="detect-icon-normal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+                        <svg class="detect-icon-spin hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+                        <span class="detect-label">Deteksi Lokasi Saya</span>
+                    </button>
+
+                    <p class="detect-error hidden mt-2 flex items-start gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+                        <svg class="w-4 h-4 shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <span class="detect-error-text"></span>
+                    </p>
+
+                    <p class="detect-success hidden mt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <span>{{ __('Lokasi terdeteksi — peta dan alamat terisi otomatis.') }}</span>
+                    </p>
+                </div>
 
                 @if ($bidang === 'tata-penataan')
                     <x-public.input
@@ -357,18 +465,18 @@ new class extends Component {
                 />
 
                 <div class="fi-field">
-                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG max 2MB)</span></label>
+                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG/WebP maksimal 5MB)</span></label>
                     <div class="fi-file-drop">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.fileInput.click()">{{ __('Choose Files') }}</button>
                         <span class="fi-file-status">{{ __('No file chosen') }}</span>
-                        <input wire:model="photos" x-ref="fileInput" type="file" multiple accept="image/jpeg,image/png,image/jpg" required
+                        <input wire:model="photos" x-ref="fileInput" type="file" multiple accept="image/jpeg,image/png,image/webp" required
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;"
                             x-on:change="
                                 let files = $el.files;
                                 if(files.length > 5){ alert('Maksimal 5 foto yang diizinkan!'); $el.value=''; return; }
                                 for(let f of files){
-                                    if(f.size > 2*1024*1024){ alert('Ukuran foto \"'+f.name+'\" melebihi 2MB!'); $el.value=''; return; }
-                                    if(!['image/jpeg','image/png','image/jpg'].includes(f.type)){ alert('File \"'+f.name+'\" bukan JPG/PNG!'); $el.value=''; return; }
+                                    if(f.size > 5*1024*1024){ alert('Ukuran foto ' + f.name + ' melebihi 5MB!'); $el.value=''; return; }
+                                    if(!['image/jpeg','image/png','image/webp'].includes(f.type)){ alert('File ' + f.name + ' bukan JPG/PNG/WebP!'); $el.value=''; return; }
                                 }
                             "
                         />
@@ -392,49 +500,28 @@ new class extends Component {
                         </div>
                     @endif
                 </div>
-            </div>
-
-            <div class="space-y-6 flex flex-col justify-between">
-                <div class="space-y-2.5 flex-1 flex flex-col">
-                    <label class="fi-label">
-                        <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg></span>
-                        {{ __('Tentukan Lokasi (Klik Peta)') }}
-                    </label>
-                    <div wire:ignore
-                        class="w-full flex-1 min-h-[300px] rounded-2xl overflow-hidden relative z-0"
-                        x-data="{
-                            map: null, marker: null,
-                            initMap() {
-                                var self = this;
-                                window.ensureMaplibreLoaded(function() {
-                                    self.map = new maplibregl.Map({ container: self.$el, style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', center: [@js($longitude), @js($latitude)], zoom: 13, attributionControl: false });
-                                    self.map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
-
-                                    // Basemap switcher — append langsung ke map container
-                                    if (window.DlhBasemapSwitcher) {
-                                        var bs = new DlhBasemapSwitcher();
-                                        self.map.on('load', function() { bs.onAdd(self.map); });
-                                    }
-
-                                    self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' }).setLngLat([@js($longitude), @js($latitude)]).addTo(self.map);
-                                    self.marker.on('dragend', function() { var ll = self.marker.getLngLat(); @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });
-                                    self.map.on('click', function(e) { self.marker.setLngLat(e.lngLat); @this.set('latitude', e.lngLat.lat); @this.set('longitude', e.lngLat.lng); });
-                                    dlhAddLocBtn(self.map, function(lat, lng) { self.marker.setLngLat([lng, lat]); @this.set('latitude', lat); @this.set('longitude', lng); });
-                                });
-                            }
-                        }" x-init="initMap()">
-                    </div>
-                    <div class="flex justify-between text-xs text-[#5b6b63] dark:text-slate-400 mt-2 font-medium tabular-nums">
-                        <span>Lat: {{ number_format($latitude, 6) }}</span>
-                        <span>Lng: {{ number_format($longitude, 6) }}</span>
-                    </div>
-                    @error('latitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                    @error('longitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                </div>
 
                 <button type="submit" class="fi-submit-btn">
                     {{ __('Kirim Pengaduan') }}
                 </button>
+            </div>
+
+            <div x-show="located" x-cloak class="space-y-6 flex flex-col">
+                <label class="fi-label">
+                    <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg></span>
+                    {{ __('Peta Lokasi Kejadian') }}
+                </label>
+
+                <div wire:ignore x-ref="mapEl"
+                    class="w-full flex-1 min-h-[300px] rounded-2xl overflow-hidden relative z-0">
+                </div>
+
+                <div class="flex justify-between text-xs text-[#5b6b63] dark:text-slate-400 font-medium tabular-nums">
+                    <span>Lat: {{ number_format($latitude, 6) }}</span>
+                    <span>Lng: {{ number_format($longitude, 6) }}</span>
+                </div>
+                @error('latitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                @error('longitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
             </div>
         </form>
     @endif
@@ -537,6 +624,35 @@ new class extends Component {
             background: linear-gradient(180deg, #1ea567, #178a53);
             box-shadow: 0 10px 24px -8px rgba(30, 165, 103, 0.5);
         }
+
+        .fi-detect-btn {
+            width: 100%;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #178a53, #146a44);
+            color: #fff;
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            box-shadow: 0 8px 20px -6px rgba(20,106,68,0.5);
+            transition: filter .18s ease, transform .12s ease;
+            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            cursor: pointer;
+            border: none;
+        }
+        .fi-detect-btn:hover { filter: brightness(1.1); }
+        .fi-detect-btn:active { transform: scale(0.99); }
+        .fi-detect-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .fi-detect-btn .detect-icon-normal,
+        .fi-detect-btn .detect-icon-spin {
+            width: 18px; height: 18px; flex-shrink: 0;
+        }
+        .fi-detect-btn .detect-icon-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
     <script>
@@ -553,16 +669,100 @@ new class extends Component {
             });
         }
 
-        // Email validation
-        const emailInput = document.querySelector('input[name="email"]');
-        if(emailInput) {
-            emailInput.addEventListener('blur', function() {
-                const val = this.value.trim();
-                if(val && !val.endsWith('@gmail.com')) {
-                    alert('Email harus menggunakan domain @gmail.com!');
+        // Detect location button (vanilla JS — no Alpine dependency)
+        var btnDetect = document.getElementById('btn-detect-location');
+        if (!btnDetect) return;
+
+        btnDetect.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!navigator.geolocation) {
+                var errEl = btnDetect.closest('div').querySelector('.detect-error');
+                var errText = btnDetect.closest('div').querySelector('.detect-error-text');
+                if (errEl && errText) {
+                    errText.textContent = 'Browser Anda tidak mendukung geolokasi.';
+                    errEl.classList.remove('hidden');
                 }
-            });
-        }
+                return;
+            }
+
+            btnDetect.disabled = true;
+            btnDetect.querySelector('.detect-icon-normal').classList.add('hidden');
+            btnDetect.querySelector('.detect-icon-spin').classList.remove('hidden');
+            btnDetect.querySelector('.detect-label').textContent = 'Mendeteksi Lokasi...';
+
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude;
+                var lon = pos.coords.longitude;
+
+                fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1&accept-language=id')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var addr = '';
+                        if (data && data.address) {
+                            var a = data.address;
+                            var parts = [];
+                            if (a.road) parts.push(a.road);
+                            if (a.suburb || a.village || a.hamlet) parts.push(a.suburb || a.village || a.hamlet);
+                            if (a.city || a.town || a.county) parts.push(a.city || a.town || a.county);
+                            if (a.state) parts.push(a.state);
+                            if (a.postcode) parts.push(a.postcode);
+                            if (a.country) parts.push(a.country);
+                            addr = parts.join(', ');
+                        }
+                        if (!addr && data.display_name) addr = data.display_name;
+                        var alamatEl = document.querySelector('[wire\\:model="alamat"]');
+                        if (alamatEl) {
+                            alamatEl.value = addr;
+                            alamatEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    })
+                    .catch(function() {})
+                    .finally(function() {
+                        var latEl = document.querySelector('[wire\\:model="latitude"]');
+                        var lonEl = document.querySelector('[wire\\:model="longitude"]');
+                        if (latEl) { latEl.value = lat; latEl.dispatchEvent(new Event('input', { bubbles: true })); }
+                        if (lonEl) { lonEl.value = lon; lonEl.dispatchEvent(new Event('input', { bubbles: true })); }
+
+                        var wrapper = btnDetect.closest('div');
+                        wrapper.querySelector('.detect-success').classList.remove('hidden');
+                        wrapper.querySelector('.detect-error').classList.add('hidden');
+
+                        btnDetect.disabled = false;
+                        btnDetect.querySelector('.detect-icon-normal').classList.remove('hidden');
+                        btnDetect.querySelector('.detect-icon-spin').classList.add('hidden');
+                        btnDetect.querySelector('.detect-label').textContent = 'Deteksi Lokasi Saya';
+
+                        var form = btnDetect.closest('form');
+                        if (form && window.Alpine) {
+                            var formData = Alpine.$data(form);
+                            if (formData) {
+                                formData.located = true;
+                                formData.detecting = false;
+                                setTimeout(function() { formData.initMap(lat, lon); }, 100);
+                            }
+                        }
+                    });
+            }, function(err) {
+                btnDetect.disabled = false;
+                btnDetect.querySelector('.detect-icon-normal').classList.remove('hidden');
+                btnDetect.querySelector('.detect-icon-spin').classList.add('hidden');
+                btnDetect.querySelector('.detect-label').textContent = 'Deteksi Lokasi Saya';
+
+                var wrapper = btnDetect.closest('div');
+                var errEl = wrapper.querySelector('.detect-error');
+                var errText = wrapper.querySelector('.detect-error-text');
+                var msg = 'Gagal mendapatkan lokasi.';
+                if (err.code === 1) msg = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda.';
+                else if (err.code === 2) msg = 'Posisi tidak dapat ditentukan. Coba lagi.';
+                else if (err.code === 3) msg = 'Waktu habis. Silakan coba lagi.';
+                if (errEl && errText) {
+                    errText.textContent = msg;
+                    errEl.classList.remove('hidden');
+                }
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+        });
     });
     </script>
 </div>

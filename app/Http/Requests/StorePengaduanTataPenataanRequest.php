@@ -27,7 +27,7 @@ class StorePengaduanTataPenataanRequest extends FormRequest
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'deskripsi' => ['required', 'string', 'max:5000'],
             'photos' => ['required', 'array', 'min:1', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 
@@ -35,10 +35,8 @@ class StorePengaduanTataPenataanRequest extends FormRequest
     {
         return [
             'no_hp.regex' => 'Format nomor HP tidak valid. Gunakan nomor Indonesia yang aktif.',
-            'email.required' => 'Email wajib diisi untuk menerima notifikasi.',
-            'email.email' => 'Format email tidak valid.',
             'photos.required' => 'Minimal unggah 1 foto bukti.',
-            'photos.*.max' => 'Ukuran foto maksimal 2MB.',
+            'photos.*.max' => 'Ukuran foto maksimal 5MB.',
         ];
     }
 }

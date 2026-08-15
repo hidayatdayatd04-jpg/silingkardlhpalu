@@ -52,13 +52,13 @@ class DataIO
      *
      * @param  array<int,string>  $columns
      */
-    public static function csvDownload(Builder $builder, array $columns, string $filename)
+    public static function csvDownload(Builder $builder, array $columns, string $filename, ?array $headings = null)
     {
-        return response()->streamDownload(function () use ($builder, $columns) {
+        return response()->streamDownload(function () use ($builder, $columns, $headings) {
             $handle = fopen('php://output', 'w');
             // BOM UTF-8 supaya Excel membuka karakter spesial dengan benar.
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, self::headings($columns));
+            fputcsv($handle, $headings ?? self::headings($columns));
 
             (clone $builder)->chunk(500, function ($rows) use ($handle, $columns) {
                 foreach ($rows as $row) {
@@ -79,9 +79,9 @@ class DataIO
      *
      * @param  array<int,string>  $columns
      */
-    public static function writeXlsx(Builder $builder, array $columns, string $absolutePath): void
+    public static function writeXlsx(Builder $builder, array $columns, string $absolutePath, ?array $headings = null): void
     {
-        $headings = self::headings($columns);
+        $headings = $headings ?? self::headings($columns);
 
         $zip = new \ZipArchive();
         if (! $zip->open($absolutePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
@@ -135,6 +135,74 @@ class DataIO
     /**
      * Sanitasi nilai sel (trim, newline → spasi).
      */
+    /**
+     * Tulis XLSX dari baris siap-pakai (headings + rows berupa string/angka).
+     */
+    public static function writeXlsxRows(array $headings, array $rows, string $absolutePath): void
+    {
+        $zip = new \ZipArchive();
+        if (! $zip->open($absolutePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+            throw new \RuntimeException('Tidak dapat membuat file XLSX.');
+        }
+
+        $zip->addFromString('[Content_Types].xml', self::xlsxContentTypes());
+        $zip->addFromString('_rels/.rels', self::xlsxRels());
+        $zip->addFromString('xl/workbook.xml', self::xlsxWorkbook());
+        $zip->addFromString('xl/_rels/workbook.xml.rels', self::xlsxWorkbookRels());
+        $zip->addFromString('xl/styles.xml', self::xlsxStyles());
+
+        $rowsXml = '';
+        $rowIndex = 1;
+        foreach ($rows as $row) {
+            $rowIndex++;
+            $cells = '';
+            $col = 0;
+            foreach ($row as $value) {
+                $value = self::xlsxCell((string) $value);
+                $attr = ' r="' . self::colLetter($col + 1) . $rowIndex . '"';
+                if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+                    $cells .= '<c' . $attr . '><v>' . $value . '</v></c>';
+                } else {
+                    $cells .= '<c' . $attr . ' t="inlineStr"><is><t>' . htmlspecialchars($value, ENT_QUOTES) . '</t></is></c>';
+                }
+                $col++;
+            }
+            $rowsXml .= '<row r="' . $rowIndex . '">' . $cells . '</row>';
+        }
+
+        $headRow = '<row r="1">' . collect($headings)->map(
+            fn ($h, $i) => '<c r="' . self::colLetter($i + 1) . '1" t="inlineStr" s="1"><is><t>' . htmlspecialchars((string) $h, ENT_QUOTES) . '</t></is></c>'
+        )->implode('') . '</row>';
+
+        $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<cols>'
+            . collect($headings)->map(fn ($c, $i) => '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="18" customWidth="true"/>')->implode('')
+            . '</cols>'
+            . '<sheetData>' . $headRow . $rowsXml . '</sheetData></worksheet>';
+
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+        $zip->close();
+    }
+
+    /**
+     * Stream unduh CSV dari headings + baris siap-pakai.
+     */
+    public static function csvRowsDownload(array $headings, array $rows, string $filename)
+    {
+        return response()->streamDownload(function () use ($headings, $rows) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, $headings);
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     protected static function xlsxCell(string $value): string
     {
         return trim(str_replace(["\r", "\n"], ' ', $value));

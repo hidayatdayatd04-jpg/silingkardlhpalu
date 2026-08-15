@@ -91,8 +91,7 @@ new class extends Component {
                 <span
                     class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor
                     Tiket Anda') }}</span>
-                <span
-                    class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $successTicket }}</span>
+                <x-public.copy-ticket :ticket="$successTicket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="pt-4">
                 <button wire:click="$set('successTicket', null)"
@@ -172,7 +171,8 @@ new class extends Component {
                                      var self = this;
                                      window.ensureMaplibreLoaded(function() {
                                          self.map = new maplibregl.Map({ container: self.$el, style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', center: [@js($longitude), @js($latitude)], zoom: 13, attributionControl: false });
-                                         self.map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+                                         self.map.addControl(new DlhZoomControl(), 'top-left');
+if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
                                          if (window.DlhBasemapSwitcher) self.map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
                                          self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' }).setLngLat([@js($longitude), @js($latitude)]).addTo(self.map);
                                          self.marker.on('dragend', function() { var ll = self.marker.getLngLat(); @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });

@@ -19,7 +19,6 @@ class Laporan extends Model
         'nomor_tiket',
         'nama_pelapor',
         'nomor_hp',
-        'email',
         'kategori',
         'jenis_pengaduan',
         'deskripsi',
@@ -29,7 +28,6 @@ class Laporan extends Model
         'status',
         'catatan_admin',
         'alasan_penolakan',
-        'bukti_foto_selesai',
     ];
 
     protected function casts(): array

@@ -13,6 +13,7 @@ class GisDataLayer extends Model
 
     protected $fillable = [
         'bidang',
+        'parent_id',
         'nama_layer',
         'deskripsi',
         'jenis_geometri',
@@ -31,6 +32,30 @@ class GisDataLayer extends Model
             'is_visible' => 'boolean',
             'is_public' => 'boolean',
         ];
+    }
+
+    /**
+     * Layer induk (jika ini adalah sub-layer).
+     */
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /**
+     * Sub-layer (jika ini adalah layer grup).
+     */
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * Scope: hanya layer akar (tanpa parent).
+     */
+    public function scopeRoots(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereNull('parent_id');
     }
 
     /**
@@ -65,7 +90,6 @@ class GisDataLayer extends Model
     {
         return [
             'sampah-lb3' => ['label' => 'Peta Persampahan', 'url' => '/peta-persampahan'],
-            'rth'        => ['label' => 'Peta RTH',         'url' => '/peta-rth'],
         ];
     }
 

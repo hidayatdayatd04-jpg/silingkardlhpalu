@@ -11,15 +11,6 @@
 
         {{-- ═══════════════ LEFT ═══════════════ --}}
         <div class="flex min-w-0 items-center gap-3">
-            {{-- Mobile hamburger --}}
-            <button
-                x-on:click="$dispatch('open-sidebar')"
-                class="topbar-btn lg:hidden"
-                title="Menu"
-            >
-                <x-admin.icon name="menu" :size="20" />
-            </button>
-
             {{-- Breadcrumb --}}
             <x-admin.topbar.breadcrumb :heading="$heading" />
         </div>
@@ -31,15 +22,6 @@
 
         {{-- ═══════════════ RIGHT ═══════════════ --}}
         <div class="flex items-center gap-1.5">
-            {{-- Mobile search --}}
-            <button
-                x-on:click="$dispatch('open-command-palette')"
-                class="topbar-btn lg:hidden"
-                title="Cari"
-            >
-                <x-admin.icon name="search" :size="20" />
-            </button>
-
             {{-- Quick Action --}}
             <x-admin.topbar.quick-action :user="$user" />
 

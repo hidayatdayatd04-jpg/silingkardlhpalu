@@ -17,6 +17,7 @@ class RegistrasiUsahaLb3 extends Model
         'email',
         'alamat',
         'jenis_lb3_id',
+        'jenis_lb3_lainnya',
         'status',
         'catatan',
     ];

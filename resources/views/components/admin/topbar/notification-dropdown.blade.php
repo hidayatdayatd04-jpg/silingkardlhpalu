@@ -5,6 +5,25 @@
         count: {{ (int) ($notificationCount ?? 0) }},
         items: {{ Illuminate\Support\Js::from($notifications ?? collect()) }},
         csrf: '{{ csrf_token() }}',
+        colorMap: {
+            emerald: { bg: '#ecfdf5', text: '#059669', border: '#a7f3d0' },
+            sky: { bg: '#f0f9ff', text: '#0284c7', border: '#bae6fd' },
+            amber: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
+            rose: { bg: '#fff1f2', text: '#e11d48', border: '#fecdd3' },
+            indigo: { bg: '#eef2ff', text: '#4f46e5', border: '#c7d2fe' },
+            teal: { bg: '#f0fdfa', text: '#0d9488', border: '#99f6e4' },
+            purple: { bg: '#faf5ff', text: '#7c3aed', border: '#e9d5ff' },
+            red: { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
+            blue: { bg: '#eff6ff', text: '#2563eb', border: '#bfdbfe' },
+            orange: { bg: '#fff7ed', text: '#ea580c', border: '#fed7aa' },
+            slate: { bg: '#f8fafc', text: '#475559', border: '#e2e8f0' },
+            green: { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' },
+            pink: { bg: '#fdf2f8', text: '#db2777', border: '#fbcfe8' },
+        },
+        getIconStyle(color) {
+            const c = this.colorMap[color] || this.colorMap.slate;
+            return 'background:' + c.bg + ';color:' + c.text + ';border:1px solid ' + c.border;
+        },
         async refresh() {
             try {
                 const r = await fetch('{{ route('admin.notifications.poll') }}', { headers: { 'Accept': 'application/json' } });
@@ -45,7 +64,7 @@
     x-on:keydown.escape.window="open = false"
 >
     <button
-        x-on:click="open = !open"
+        x-on:click="open = !open; if (open) refresh()"
         class="topbar-btn relative"
         title="Notifikasi"
     >
@@ -104,8 +123,8 @@
                     class="flex gap-3.5 border-b border-slate-50 px-5 py-3.5 transition-all duration-150 hover:bg-emerald-50/50 dark:border-white/[.04] dark:hover:bg-emerald-900/10"
                     :class="notif.read ? 'opacity-50' : ''"
                 >
-                    <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <x-admin.icon name="bell" :size="18" />
+                    <div class="grid size-10 shrink-0 place-items-center rounded-xl" :style="getIconStyle(notif.color)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[13px] font-semibold text-slate-800 dark:text-slate-100" x-text="notif.title"></p>

@@ -23,7 +23,23 @@ class Setting extends Model
     {
         $all = Cache::rememberForever('settings.all', fn () => static::query()->pluck('value', 'key')->all());
 
-        return array_key_exists($key, $all) ? ($all[$key]['data'] ?? $all[$key] ?? $default) : $default;
+        if (! array_key_exists($key, $all)) {
+            return $default;
+        }
+
+        $entry = $all[$key];
+
+        // Kolom 'value' bisa berupa array (sudah di-cast 'array') atau string
+        // JSON mentah tergantung cara pengambilan; normalisasi ke array.
+        if (is_string($entry)) {
+            $entry = json_decode($entry, true) ?: [];
+        }
+
+        // Struktur penyimpanan: ['data' => <nilai>]. Kembalikan nilai sebenarnya
+        // (termasuk null) agar pemanggil tidak menerima wrapper array.
+        $value = $entry['data'] ?? null;
+
+        return $value ?? $default;
     }
 
     /**

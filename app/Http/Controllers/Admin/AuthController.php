@@ -39,7 +39,19 @@ class AuthController extends Controller
             ]);
         }
 
-        return redirect()->intended(route('admin.dashboard'));
+        // Arahkan admin SELALU ke halaman panel admin. redirect()->intended()
+        // menyimpan URL asal (mis. halaman publik '/' yang sedang dalam mode
+        // pemeliharaan), sehingga tanpa pengecekan ini admin bisa terlempar
+        // ke halaman pemeliharaan setelah login. Kita validasi target-nya
+        // agar hanya URL bertipe /admin yang diperbolehkan.
+        $intended = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
+        $intendedPath = parse_url($intended, PHP_URL_PATH) ?: '/';
+
+        if (! str_starts_with($intendedPath, '/admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect($intended);
     }
 
     public function logout(Request $request)

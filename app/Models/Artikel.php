@@ -76,6 +76,6 @@ class Artikel extends Model
     {
         return $query->where('status', ArtikelStatus::PUBLISHED->value)
             ->whereNotNull('tanggal_publish')
-            ->where('tanggal_publish', '<=', now()->toDateString());
+            ->whereDate('tanggal_publish', '<=', now());
     }
 }

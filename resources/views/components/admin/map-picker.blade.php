@@ -76,7 +76,8 @@
                             zoom: cfg.zoom,
                             attributionControl: false
                         });
-                        self.map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+                        self.map.addControl(new DlhZoomControl(), 'top-left');
+if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
                         if (window.DlhBasemapSwitcher) self.map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
                         if (window.dlhAddLocBtn) dlhAddLocBtn(self.map);
                         if (hasInit) self.setMarker(cfg.initLat, cfg.initLng, false);

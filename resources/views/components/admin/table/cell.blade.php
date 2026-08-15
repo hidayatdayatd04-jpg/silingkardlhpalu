@@ -1,5 +1,5 @@
 @props(['truncate' => false])
 
-<td {{ $attributes->merge(['class' => 'px-5 py-4 font-medium text-slate-700 ' . ($truncate ? 'max-w-[260px] truncate' : '')]) }}>
+<td {{ $attributes->merge(['class' => 'px-5 py-3.5 align-middle font-medium text-ink-700 first:rounded-l-xl last:rounded-r-xl ' . ($truncate ? 'max-w-[260px] truncate' : '')]) }}>
     {{ $slot }}
 </td>

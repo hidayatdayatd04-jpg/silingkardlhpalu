@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "typecheck": "tsc --noEmit",
         "test:e2e": "npx playwright test --config=tests/playwright/playwright.config.ts",
         "test:e2e:ui": "npx playwright test --config=tests/playwright/playwright.config.ts --ui",
         "test:e2e:report": "npx playwright show-report tests/playwright/playwright-report"
@@ -16,6 +17,7 @@
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "tailwindcss": "^4.0.0",
+        "typescript": "^7.0.2",
         "vite": "^7.0.7"
     },
     "dependencies": {

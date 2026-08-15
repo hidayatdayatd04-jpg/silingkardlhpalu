@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import './admin-utilities.css';
 
@@ -16,9 +16,9 @@
 @source inline("bg-danger-50 bg-danger-100 bg-info-50 bg-info-100 bg-warning-50 bg-warning-100 bg-success-50 bg-success-100 bg-gray-50 bg-gray-100 bg-slate-50 bg-slate-100 bg-emerald-50 bg-emerald-100 bg-sky-50 bg-sky-100 bg-amber-50 bg-amber-100 bg-teal-50 bg-teal-100 bg-indigo-50 bg-indigo-100 bg-rose-50 bg-rose-100 bg-purple-50 bg-purple-100 text-danger-600 text-danger-700 text-info-600 text-info-700 text-warning-600 text-warning-700 text-success-600 text-success-700 text-gray-600 text-gray-700 text-slate-600 text-slate-700 text-emerald-600 text-emerald-700 text-sky-600 text-sky-700 text-amber-600 text-amber-700 text-teal-600 text-teal-700 text-indigo-600 text-indigo-700 text-rose-600 text-rose-700 text-purple-600 text-purple-700 ring-danger-200 ring-info-200 ring-warning-200 ring-success-200 ring-gray-200 ring-slate-200 ring-emerald-200 ring-sky-200 ring-amber-200 ring-teal-200 ring-indigo-200 ring-rose-200 ring-purple-200 hover:bg-danger-50 hover:bg-info-50 hover:bg-warning-50 hover:bg-success-50 hover:bg-gray-50 hover:bg-slate-50 hover:bg-emerald-50 hover:bg-sky-50 hover:bg-amber-50 hover:bg-teal-50 hover:bg-indigo-50 hover:bg-rose-50 hover:bg-purple-50");
 
 @theme {
-    --font-sans: 'Plus Jakarta Sans', 'Outfit', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
     --color-brand-50: #ecfdf5;
@@ -201,29 +201,29 @@
     --duration-overlay: 400ms;
 
     /* ── Typography scale (redesign) ────────────────────────────────── */
-    --text-display: 2.25rem;
-    --text-display--line-height: 2.5rem;
+    --text-display: 1.75rem;
+    --text-display--line-height: 2.1rem;
     --text-display--letter-spacing: -0.02em;
-    --text-display--font-weight: 800;
-    --text-h1: 1.75rem;
-    --text-h1--line-height: 2.15rem;
+    --text-display--font-weight: 700;
+    --text-h1: 1.375rem;
+    --text-h1--line-height: 1.75rem;
     --text-h1--letter-spacing: -0.015em;
     --text-h1--font-weight: 700;
-    --text-h2: 1.375rem;
-    --text-h2--line-height: 1.85rem;
-    --text-h2--font-weight: 700;
-    --text-h3: 1.125rem;
-    --text-h3--line-height: 1.6rem;
+    --text-h2: 1.125rem;
+    --text-h2--line-height: 1.5rem;
+    --text-h2--font-weight: 600;
+    --text-h3: 0.9375rem;
+    --text-h3--line-height: 1.35rem;
     --text-h3--font-weight: 600;
-    --text-h4: 1rem;
-    --text-h4--line-height: 1.5rem;
+    --text-h4: 0.8125rem;
+    --text-h4--line-height: 1.25rem;
     --text-h4--font-weight: 600;
-    --text-body: 0.9375rem;
-    --text-body--line-height: 1.6rem;
-    --text-caption: 0.75rem;
+    --text-body: 0.8125rem;
+    --text-body--line-height: 1.5rem;
+    --text-caption: 0.6875rem;
     --text-caption--line-height: 1rem;
     --text-caption--letter-spacing: 0.04em;
-    --text-mono: 0.875rem;
+    --text-mono: 0.8125rem;
     --text-mono--line-height: 1.25rem;
 }
 
@@ -234,6 +234,16 @@
 
     body {
         @apply font-sans text-slate-800 dark:text-slate-100;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Heading pakai font display (DM Sans) untuk karakter premium. */
+    h1, h2, h3, h4, h5, h6,
+    .text-h1, .text-h2, .text-h3, .text-h4, .text-display {
+        font-family: var(--font-display);
+        letter-spacing: -0.01em;
     }
 
     html.dark body {
@@ -249,6 +259,77 @@
 .dlh-public, .dlh-public * {
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ── Custom scrollbar — menyatu dengan tema website ── */
+.dlh-public {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-brand-300) transparent;
+}
+
+.dlh-public::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dlh-public::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dlh-public::-webkit-scrollbar-thumb {
+    background: var(--color-brand-300);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.dlh-public::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-500);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* ── Global scrollbar — halaman public menyatu dengan tema ── */
+.dlh-public-page {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-brand-300) var(--color-brand-50);
+}
+
+.dlh-public-page::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dlh-public-page::-webkit-scrollbar-track {
+    background: var(--color-brand-50);
+}
+
+.dlh-public-page::-webkit-scrollbar-thumb {
+    background: var(--color-brand-300);
+    border-radius: 9999px;
+    border: 2px solid var(--color-brand-50);
+}
+
+.dlh-public-page::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-500);
+}
+
+/* Dark mode scrollbar */
+.dark .dlh-public-page {
+    scrollbar-color: var(--color-brand-700) var(--color-brand-950);
+}
+
+.dark .dlh-public-page::-webkit-scrollbar-track {
+    background: var(--color-brand-950);
+}
+
+.dark .dlh-public-page::-webkit-scrollbar-thumb {
+    background: var(--color-brand-700);
+    border: 2px solid var(--color-brand-950);
+}
+
+.dark .dlh-public-page::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-600);
 }
 
 /* Textarea — sembunyikan scrollbar, hide resize handle */
@@ -435,7 +516,6 @@
     }
     .card-lift:hover {
         box-shadow: var(--shadow-card-hover);
-        transform: translateY(-2px);
     }
 
     /* Status dot pulse */
@@ -458,6 +538,210 @@
         from { transform: scaleX(1); }
         to { transform: scaleX(0); }
     }
+}
+
+/* ==========================================================================
+   Admin — Page Transition + Skeleton Loading + Nav entrance
+   (dikendalikan oleh resources/js/admin-common.js)
+   ========================================================================== */
+@layer utilities {
+    /* Container konten halaman — masuk dengan reveal lembut saat load/navigasi. */
+    [data-page-content] {
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+            opacity var(--duration-slow, 320ms) var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1)),
+            transform var(--duration-slow, 320ms) var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1));
+    }
+    [data-page-content].page-content-in {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Overlay transisi penuh saat navigasi antar-halaman. */
+    .page-transition-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 30% 25%, #065f46 0%, #064e3b 45%, #082f40 100%);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+            opacity var(--duration-base, 220ms) var(--ease-in-out-soft, ease),
+            visibility 0s linear var(--duration-base, 220ms);
+    }
+    .page-transition-overlay.is-active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: all;
+        transition:
+            opacity var(--duration-base, 220ms) var(--ease-in-out-soft, ease),
+            visibility 0s linear 0s;
+    }
+
+    /* Preloader card di dalam overlay. */
+    .page-transition-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .admin-preloader-glow {
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 9999px;
+        background: radial-gradient(circle, rgba(45, 212, 191, 0.3), transparent 60%);
+        filter: blur(40px);
+        animation: adminGlow 3s ease-in-out infinite;
+    }
+
+    .admin-preloader-badge {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 132px;
+        height: 132px;
+        margin-bottom: 1.5rem;
+    }
+    .admin-preloader-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        border: 3px solid rgba(255, 255, 255, 0.10);
+        border-top-color: #6ee7b7;
+        border-right-color: #28c6e8;
+        animation: cbSpin 1s linear infinite;
+    }
+    .admin-preloader-ring2 {
+        position: absolute;
+        inset: 10px;
+        border-radius: 9999px;
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-bottom-color: #34d399;
+        animation: cbSpin 1.6s linear infinite reverse;
+    }
+    .admin-preloader-logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
+        animation: adminPop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .admin-preloader-title {
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 0.95rem;
+        opacity: 0;
+        animation: adminRise 0.6s ease 0.25s forwards;
+    }
+    .admin-preloader-subtitle {
+        color: #6ee7b7;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        margin-top: 0.25rem;
+        opacity: 0;
+        animation: adminRise 0.6s ease 0.38s forwards;
+    }
+    .admin-preloader-bar {
+        width: 200px;
+        height: 4px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        margin-top: 1.5rem;
+    }
+    .admin-preloader-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, #6ee7b7, #28c6e8);
+        transition: width 0.2s linear;
+    }
+    .admin-preloader-hint {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.72rem;
+        margin-top: 1rem;
+        opacity: 0;
+        animation: adminRise 0.6s ease 0.5s forwards;
+    }
+    @keyframes adminGlow {
+        0%, 100% { opacity: 0.7; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+    @keyframes adminPop {
+        from { transform: scale(0.6); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes adminRise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .admin-preloader-ring, .admin-preloader-ring2,
+        .admin-preloader-logo, .admin-preloader-glow { animation: none; }
+        .admin-preloader-title, .admin-preloader-subtitle,
+        .admin-preloader-hint { animation: none; opacity: 1; }
+    }
+
+    /* Entrance berjenjang untuk item navigasi (sidebar/topbar). */
+    [data-nav-item] {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    [data-nav-item].nav-enter {
+        animation: navEnter 0.5s var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+        animation-delay: var(--nav-delay, 0ms);
+    }
+    @keyframes navEnter {
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /* Animasi reveal generik untuk elemen bermarka [data-animate]. */
+    [data-animate] {
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+            opacity var(--duration-section, 300ms) var(--ease-emphasize, cubic-bezier(0.2, 0, 0, 1)),
+            transform var(--duration-section, 300ms) var(--ease-emphasize, cubic-bezier(0.2, 0, 0, 1));
+        transition-delay: var(--animate-delay, 0ms);
+    }
+    [data-animate].is-in {
+        opacity: 1;
+        transform: none;
+    }
+    [data-animate="left"] { transform: translateX(-24px); }
+    [data-animate="right"] { transform: translateX(24px); }
+    [data-animate="scale"] { transform: translateY(16px) scale(0.96); }
+    [data-animate="left"].is-in,
+    [data-animate="right"].is-in,
+    [data-animate="scale"].is-in { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-page-content] {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .page-transition-overlay { display: none !important; }
+    [data-nav-item] { opacity: 1 !important; transform: none !important; animation: none !important; }
+    [data-animate] { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -735,4 +1019,27 @@
 @media (prefers-reduced-motion: reduce) {
     .dlh-public button[type="submit"],
     .dlh-public input[type="file"]::file-selector-button { transition: none !important; }
+}
+
+/* ==========================================================================
+   User resource form (edit / tambah) — reveal TANPA transform.
+   Di dalam container scroll .main-scroll, elemen dengan transform dirender ke
+   compositor layer yang di-resample ulang saat scroll -> efek "bergetar" /
+   "diperbesar-diperkecil". Halaman ini pakai fade-in (opacity) saja agar
+   konten tetap stabil & rapi saat di-scroll.
+   ========================================================================== */
+.user-resource-form[data-animate],
+.user-resource-form .stagger-item {
+    opacity: 0;
+    transform: none;
+    transition: opacity var(--duration-section, 300ms) var(--ease-emphasize, cubic-bezier(0.2, 0, 0, 1));
+}
+.user-resource-form[data-animate].is-in,
+.user-resource-form .stagger-item.is-in {
+    opacity: 1;
+}
+
+/* Pastikan bar aksi sticky tidak membawa transform (biar posisinya stabil). */
+.user-resource-form .sticky {
+    transform: none;
 }

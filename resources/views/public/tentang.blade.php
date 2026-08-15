@@ -161,7 +161,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-white font-semibold text-lg">{{ __('Alamat Kantor') }}</h3>
-                                    <p class="text-slate-400 mt-1">{{ __('Jl. Pipit, Tanamodindi, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111') }}</p>
+                                    <p class="text-slate-400 mt-1">{{ __('Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu') }}</p>
                                 </div>
                             </div>
 
@@ -171,7 +171,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-white font-semibold text-lg">{{ __('Jam Pelayanan') }}</h3>
-                                    <p class="text-slate-400 mt-1">{{ __('Senin - Jumat (08.00 - 16.00 WITA)') }}</p>
+                                    <p class="text-slate-400 mt-1">{{ __('Senin - Kamis (08.00 - 16.00 WITA)') }}</p>
                                 </div>
                             </div>
 

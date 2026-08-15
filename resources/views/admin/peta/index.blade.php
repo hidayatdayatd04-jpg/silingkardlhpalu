@@ -10,11 +10,12 @@
 
     $publicPageMap = \App\Models\GisDataLayer::publicPages();
 
-    $layersJson = $layers->map(fn($l) => [
-        'id' => $l->id,
-        'nama_layer' => $l->nama_layer,
-        'deskripsi' => $l->deskripsi,
-        'bidang' => $l->bidang,
+$layersJson = $layers->map(fn($l) => [
+    'id' => $l->id,
+    'parent_id' => $l->parent_id,
+    'nama_layer' => $l->nama_layer,
+    'deskripsi' => $l->deskripsi,
+    'bidang' => $l->bidang,
         'jenis_geometri' => $l->jenis_geometri,
         'metadata' => $l->metadata,
         'is_visible' => $l->is_visible,
@@ -26,7 +27,7 @@
 
 @extends('layouts.admin')
 
-@section('title', 'Peta — Admin DLH')
+@section('title', 'Peta - Admin DLH')
 @section('full_width', 'w-full')
 
     @push('styles')
@@ -36,7 +37,7 @@
         .map-container { position: absolute; inset: 0; overflow: hidden; }
         .map-container .maplibregl-map { width: 100%; height: 100%; }
 
-        /* ═══ Sidebar ═══ */
+        /* â•â•â• Sidebar â•â•â• */
         .map-sidebar {
             position: absolute; top: 0; right: 0; height: 100%; width: 400px; z-index: 10;
             overflow-y: auto; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
@@ -52,7 +53,7 @@
 
         .sidebar-toggle-btn {
             position: absolute;
-            top: 10px;
+            top: 260px;
             z-index: 99;
             background: white;
             border-radius: 12px;
@@ -71,7 +72,7 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         }
 
-        /* ═══ Layer Card ═══ */
+        /* â•â•â• Layer Card â•â•â• */
         .layer-card {
             transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
             border: 1px solid rgba(0,0,0,0.04);
@@ -82,7 +83,7 @@
         .layer-card:hover { border-color: rgba(16,185,129,0.15); box-shadow: 0 2px 12px rgba(16,185,129,0.06); }
         .layer-card.expanded { border-color: rgba(16,185,129,0.2); box-shadow: 0 4px 20px rgba(16,185,129,0.08); }
 
-        /* ═══ Marker List ═══ */
+        /* â•â•â• Marker List â•â•â• */
         .marker-list { max-height: 320px; overflow-y: auto; }
         .marker-list::-webkit-scrollbar { width: 3px; }
         .marker-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 3px; }
@@ -95,7 +96,7 @@
         .marker-row .marker-actions { opacity: 0; transition: opacity 0.15s; }
         .marker-row:hover .marker-actions { opacity: 1; }
 
-        /* ═══ Action Buttons ═══ */
+        /* â•â•â• Action Buttons â•â•â• */
         .action-icon {
             width: 28px; height: 28px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
@@ -106,7 +107,7 @@
         .action-icon.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
         .action-icon.edit:hover { background: rgba(16,185,129,0.08); color: #10b981; }
 
-        /* ═══ Search Box ═══ */
+        /* â•â•â• Search Box â•â•â• */
         .marker-search {
             width: 100%; padding: 7px 10px 7px 32px;
             border: 1px solid rgba(0,0,0,0.08); border-radius: 10px;
@@ -115,7 +116,7 @@
         }
         .marker-search:focus { border-color: #10b981; background: white; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
 
-        /* ═══ Draw Toolbar ═══ */
+        /* â•â•â• Draw Toolbar â•â•â• */
         .draw-btn {
             width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
             border-radius: 10px; cursor: pointer; transition: all 0.2s;
@@ -125,11 +126,11 @@
         .draw-btn:hover { background: #f9fafb; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transform: translateY(-1px); }
         .draw-btn.active { background: #ecfdf5; color: #059669; border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
 
-        /* ═══ Map Controls ═══ */
+        /* â•â•â• Map Controls â•â•â• */
         .maplibregl-ctrl-group { border-radius: 10px !important; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1) !important; }
         .maplibregl-ctrl { margin: 12px !important; }
 
-        /* ═══ Chips ═══ */
+        /* â•â•â• Chips â•â•â• */
         .bidang-chip {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -139,11 +140,11 @@
         .bidang-chip:not(.active) { background: #f3f4f6; color: #6b7280; }
         .bidang-chip:not(.active):hover { background: #e5e7eb; color: #374151; }
 
-        /* ═══ Import Zone ═══ */
+        /* â•â•â• Import Zone â•â•â• */
         .import-zone { border: 2px dashed #d1d5db; border-radius: 16px; padding: 28px; text-align: center; transition: all 0.2s; cursor: pointer; background: #fafafa; }
         .import-zone:hover, .import-zone.dragover { border-color: #10b981; background: #f0fdf4; }
 
-        /* ═══ Modal ═══ */
+        /* â•â•â• Modal â•â•â• */
         .peta-modal-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
         .peta-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .peta-modal {
@@ -154,7 +155,7 @@
         .peta-modal::-webkit-scrollbar { width: 4px; }
         .peta-modal::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 
-        /* ═══ Popup ═══ */
+        /* â•â•â• Popup â•â•â• */
         .pp-popup .maplibregl-popup-content { padding: 0 !important; border-radius: 12px !important; box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important; border: 1px solid rgba(0,0,0,0.06) !important; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
         .pp-popup .maplibregl-popup-tip { border-top-color: #fff !important; }
         .pp-popup .maplibregl-popup-close-button { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; font-size: 14px; color: #94a3b8; display: flex; align-items: center; justify-content: center; top: 8px; right: 8px; transition: all 0.15s; }
@@ -176,13 +177,13 @@
         .dlh-popup-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
         .dlh-popup-edit-btn:hover{background:rgba(16,185,129,0.2) !important}
 
-        /* ═══ Expand/Collapse animation ═══ */
+        /* â•â•â• Expand/Collapse animation â•â•â• */
         .expand-enter { animation: expandIn 0.25s ease-out; }
         .expand-leave { animation: expandOut 0.2s ease-in; }
         @keyframes expandIn { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
         @keyframes expandOut { from { opacity: 1; max-height: 500px; } to { opacity: 0; max-height: 0; } }
 
-        /* ═══ Badge ═══ */
+        /* â•â•â• Badge â•â•â• */
         .count-badge {
             display: inline-flex; align-items: center; justify-content: center;
             min-width: 20px; height: 20px; padding: 0 6px;
@@ -190,14 +191,14 @@
             background: rgba(16,185,129,0.1); color: #059669;
         }
 
-        /* ═══ Field Input ═══ */
+        /* â•â•â• Field Input â•â•â• */
         .field-input {
             width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0;
             border-radius: 10px; font-size: 13px; outline: none; transition: all 0.15s;
         }
         .field-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
 
-        /* ═══ Public Visibility Toggle ═══ */
+        /* â•â•â• Public Visibility Toggle â•â•â• */
         .public-toggle {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
@@ -215,7 +216,7 @@
         }
         .public-toggle.is-hidden:hover { background: rgba(34,197,94,0.08); color: #16a34a; border-color: rgba(34,197,94,0.25); }
 
-        /* ═══ Page Badge ═══ */
+        /* â•â•â• Page Badge â•â•â• */
         .page-badge {
             display: inline-flex; align-items: center; gap: 3px;
             padding: 2px 7px; border-radius: 20px; font-size: 9.5px; font-weight: 700;
@@ -255,26 +256,20 @@
         <div x-show="drawMode === 'point' && tempMarker" x-transition
             class="absolute top-16 left-1/2 -translate-x-1/2 z-10 bg-emerald-700/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none"
             style="display:none;">
-            Titik siap — klik ✓ untuk simpan
+            Titik siap - klik untuk simpan
         </div>
 
-        <!-- ═══ Floating Sidebar Toggle Button ═══ -->
-        <button @click="sidebarOpen = !sidebarOpen"
+        <!-- â•â•â• Floating Hamburger (only when panel collapsed) â•â•â• -->
+        <button x-show="!sidebarOpen" @click="sidebarOpen = true"
             class="sidebar-toggle-btn"
-            :style="{ right: sidebarOpen ? '408px' : '12px' }"
-            :title="sidebarOpen ? 'Sembunyikan panel' : 'Tampilkan panel'"
-        >
-            <!-- Hamburger icon (shown when panel is closed) -->
-            <svg :class="sidebarOpen ? 'hidden' : 'block'" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            :style="{ right: '22px' }"
+            title="Tampilkan panel">
+            <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-            <!-- X icon (shown when panel is open) -->
-            <svg :class="sidebarOpen ? 'block' : 'hidden'" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
 
-        <!-- ═══════════════ REDESIGNED SIDEBAR ═══════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REDESIGNED SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <div class="map-sidebar" :class="sidebarOpen ? '' : 'collapsed'" x-show="sidebarOpen">
             <!-- Header -->
             <div class="px-5 pt-5 pb-4 border-b border-slate-100">
@@ -288,52 +283,68 @@
                             <p class="text-[11px] text-slate-400 font-medium"><span x-text="layers.length"></span> layer</p>
                         </div>
                     </div>
-                    <!-- Toggle All Layers -->
-                    <button @click="toggleAllLayers()"
-                        class="text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all"
-                        :class="allLayersVisible() ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
-                        :title="allLayersVisible() ? 'Sembunyikan semua layer' : 'Tampilkan semua layer'">
-                        <span x-text="allLayersVisible() ? 'Semua On' : 'Semua Off'"></span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <!-- Toggle All Layers -->
+                        <button @click="toggleAllLayers()"
+                            class="text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all"
+                            :class="allLayersVisible() ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                            :title="allLayersVisible() ? 'Sembunyikan semua layer' : 'Tampilkan semua layer'">
+                            <span x-text="allLayersVisible() ? 'Semua On' : 'Semua Off'"></span>
+                        </button>
+                        <!-- Close panel -->
+                        <button @click="sidebarOpen = false" type="button"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                            title="Tutup panel">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Bidang Filter Chips -->
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('admin.peta.index') }}"
-                       class="bidang-chip {{ !$activeBidang ? 'active' : '' }}">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        Semua
-                    </a>
-                    @foreach($accessibleBidang as $b)
-                    <a href="{{ route('admin.peta.index', ['bidang' => $b]) }}"
-                       class="bidang-chip {{ $activeBidang === $b ? 'active' : '' }}">
-                        @if($b === 'sampah-lb3')<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        @else<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
-                        @endif
-                        {{ $bidangLabels[$b] ?? $b }}
-                    </a>
-                    @endforeach
+                <!-- Bidang Filter -->
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wide text-slate-400 px-0.5">Filter Bidang</span>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all {{ !$activeBidang ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50' }}">
+                            <input type="checkbox" @change="window.location.href='{{ route('admin.peta.index') }}'" {{ !$activeBidang ? 'checked' : '' }}
+                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer">
+                            <span class="text-[12px] font-semibold {{ !$activeBidang ? 'text-emerald-700' : 'text-slate-600' }}">Semua</span>
+                        </label>
+                        @foreach($accessibleBidang as $b)
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all {{ $activeBidang === $b ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50' }}">
+                            <input type="checkbox" @change="window.location.href='{{ route('admin.peta.index', ['bidang' => $b]) }}'" {{ $activeBidang === $b ? 'checked' : '' }}
+                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer">
+                            <span class="text-[12px] font-semibold {{ $activeBidang === $b ? 'text-emerald-700' : 'text-slate-600' }}">{{ $bidangLabels[$b] ?? $b }}</span>
+                        </label>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
             <!-- Action Bar -->
             <div class="px-5 py-3 border-b border-slate-100">
-                <div class="flex gap-2">
-                    <button @click="showImport = true" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
-                        Import
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- Buat Layer -->
+                    <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong"
+                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                        <span class="text-[10.5px] font-semibold text-slate-700 leading-none">Buat Layer</span>
                     </button>
-                    <button @click="showDrawToolbar = !showDrawToolbar; if(!showDrawToolbar) cancelDraw()" :class="showDrawToolbar ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-200 transition-all" title="Tambah Titik">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Titik
+                    <!-- Titik -->
+                    <button @click="showDrawToolbar = !showDrawToolbar; if(!showDrawToolbar) cancelDraw()" type="button"
+                        :class="showDrawToolbar ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:border-slate-300'"
+                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Tambah Titik">
+                        <svg class="w-5 h-5" :class="showDrawToolbar ? 'text-emerald-600' : 'text-slate-500 group-hover:text-slate-700'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><path d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+                        <span class="text-[10.5px] font-semibold leading-none" :class="showDrawToolbar ? 'text-emerald-700' : 'text-slate-700'">Titik</span>
                     </button>
-                    <button @click="isSelectionMode = !isSelectionMode; selectedLayers = []" :class="isSelectionMode ? 'bg-red-100 text-red-700 font-bold' : 'bg-slate-100 text-slate-600'" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-200 transition-all" title="Pilih Layer untuk Hapus Massal">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Hapus Massal
+                    <!-- Hapus Massal -->
+                    <button @click="isSelectionMode = !isSelectionMode; selectedLayers = []" type="button"
+                        :class="isSelectionMode ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'"
+                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Pilih Layer untuk Hapus Massal">
+                        <svg class="w-5 h-5" :class="isSelectionMode ? 'text-red-600' : 'text-slate-500 group-hover:text-slate-700'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"/></svg>
+                        <span class="text-[10.5px] font-semibold leading-none" :class="isSelectionMode ? 'text-red-700' : 'text-slate-700'">Hapus Massal</span>
                     </button>
                 </div>
             </div>
-
             <!-- Bulk Action Panel (Visible in Selection Mode) -->
             <div x-show="isSelectionMode" x-transition class="px-5 py-2.5 bg-slate-50 border-b border-slate-200/60 flex items-center justify-between" style="display: none;">
                 <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
@@ -351,10 +362,10 @@
                 </div>
             </div>
 
-            <!-- ═══ Layer List (REDESIGNED) ═══ -->
+            <!-- â•â•â• Layer List (REDESIGNED) â•â•â• -->
             <div class="flex-1 overflow-y-auto p-4 space-y-2.5" style="max-height: calc(100vh - 260px);">
-                <template x-for="(layer, idx) in layers" :key="layer.id">
-                    <div class="layer-card" :class="{ 'expanded': expandedLayer === layer.id, 'opacity-50': !layer.is_visible && !isSelectionMode }">
+<template x-for="(layer, idx) in visibleLayers()" :key="layer.id">
+<div class="layer-card" :class="{ 'expanded': isExpanded(layer), 'opacity-50': !layer.is_visible && !isSelectionMode }" :style="'margin-left:' + (depth(layer) * 16) + 'px'">
                         <!-- Layer Header -->
                         <div class="p-3.5">
                             <div class="flex items-start gap-3">
@@ -409,7 +420,7 @@
 
                                         <!-- No public page -->
                                         <template x-if="!layer.public_page">
-                                            <span class="text-[9.5px] text-slate-400 font-medium italic">— tidak ada halaman publik</span>
+                                            <span class="text-[9.5px] text-slate-400 font-medium italic">Tidak ada halaman publik</span>
                                         </template>
                                     </div>
 
@@ -419,9 +430,9 @@
                                 </div>
                                 <div class="flex items-center gap-0.5" x-show="!isSelectionMode">
                                     <!-- Expand/Collapse -->
-                                    <button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker">
-                                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="expandedLayer === layer.id ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </button>
+<button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker">
+<svg class="w-3.5 h-3.5 transition-transform duration-200" :class="isExpanded(layer) ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+</button>
                                     <!-- Edit Layer -->
                                     <button @click="editLayer(layer)" class="action-icon edit" title="Edit layer">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -434,23 +445,37 @@
                             </div>
                         </div>
 
-                        <!-- ═══ Expanded: Marker List ═══ -->
-                        <template x-if="expandedLayer === layer.id">
-                            <div class="border-t border-slate-100 bg-gradient-to-b from-slate-50/50 to-white">
-                                <!-- Export Actions -->
+                        <!-- â•â•â• Expanded: Marker List â•â•â• -->
+<template x-if="isExpanded(layer)">
+<div class="border-t border-slate-100 bg-gradient-to-b from-slate-50/50 to-white">
+                                <!-- Export & Actions (ikon berbeda, ukuran seragam, 1 baris) -->
                                 <div class="px-3.5 pt-3 pb-1.5 flex gap-2 border-b border-slate-100/50">
-                                    <button @click="exportLayer(layer, 'geojson')" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[11px] font-bold rounded-lg transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        Export GeoJSON
+                                    <button @click="exportLayer(layer, 'geojson')" type="button" title="Export GeoJSON"
+                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-slate-100 text-slate-600 text-[9px] font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        GeoJSON
                                     </button>
-                                    <button @click="exportLayer(layer, 'csv')" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[11px] font-bold rounded-lg transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        Export CSV
+                                    <button @click="exportLayer(layer, 'csv')" type="button" title="Export CSV"
+                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-slate-100 text-slate-600 text-[9px] font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        CSV
+                                    </button>
+                                    <button @click="importToLayer(layer)" type="button" title="Import data ke layer ini"
+                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold transition-colors hover:from-emerald-600 hover:to-teal-600">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0-12L8 8m4-4l4 4"/></svg>
+                                        Import
+                                    </button>
+                                    <button @click="createSubLayer(layer)" type="button" title="Buat sub-layer di dalam layer ini"
+                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-white border border-emerald-300 text-emerald-700 text-[9px] font-bold transition-colors hover:bg-emerald-50">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7zm9 0v6m-3-3h6"/></svg>
+                                        Sub-Layer
                                     </button>
                                 </div>
 
-                                <!-- Search -->
-                                <div class="px-3.5 pt-3 pb-2 relative">
+<!-- Marker list hanya untuk layer daun (tanpa sub-layer) -->
+<template x-if="childrenOf(layer).length === 0">
+<!-- Search -->
+<div class="px-3.5 pt-3 pb-2 relative">
                                     <svg class="w-3.5 h-3.5 text-slate-400 absolute left-6 top-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                                     <input type="text" class="marker-search" placeholder="Cari marker..." x-model="markerSearch" />
                                 </div>
@@ -478,6 +503,10 @@
                                                 <button @click="showMarkerDetail(layer, item)" class="action-icon" title="Detail">
                                                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                 </button>
+                                                <!-- Ubah Ikon -->
+                                                <button @click="showMarkerIconEdit(layer, item)" class="action-icon edit" title="Ubah Ikon Marker">
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 2v4m0 12v4m-8-8h4m8 0h4"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </button>
                                                 <!-- Edit -->
                                                 <button @click="showMarkerEdit(layer, item)" class="action-icon edit" title="Edit">
                                                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -489,14 +518,20 @@
                                             </div>
                                         </div>
                                     </template>
-                                    <!-- Empty state -->
-                                    <template x-if="getFilteredMarkers(layer).length === 0">
-                                        <div class="py-6 text-center">
-                                            <p class="text-xs text-slate-400">Tidak ada marker ditemukan</p>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
+<!-- Empty state -->
+<template x-if="getFilteredMarkers(layer).length === 0">
+<div class="py-6 text-center">
+<p class="text-xs text-slate-400">Tidak ada marker ditemukan</p>
+</div>
+</template>
+</div>
+</template>
+<template x-if="childrenOf(layer).length > 0">
+<div class="px-3.5 py-3 text-[11px] text-slate-400">
+Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
+</div>
+</template>
+</div>
                         </template>
                     </div>
                 </template>
@@ -545,16 +580,8 @@
                 </div>
             </div>
         </div>
-        <!-- Toggle Sidebar Button -->
-        <button @click="sidebarOpen = !sidebarOpen"
-            :style="sidebarOpen ? 'right: 412px;' : 'right: 16px;'"
-            class="sidebar-toggle-btn">
-            <svg x-show="!sidebarOpen" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <svg x-show="sidebarOpen" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-    </div>
 
-    <!-- ═══════════════ DETAIL MODAL ═══════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DETAIL MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <template x-if="detailModal.show">
         <div class="peta-modal-backdrop" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
             <div class="peta-modal-overlay" @click="detailModal.show = false"></div>
@@ -581,7 +608,7 @@
                     <template x-for="(val, key) in detailModal.properties" :key="key">
                         <div class="flex items-start gap-3 py-2 border-b border-slate-50" x-show="!key.startsWith('_')">
                             <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide min-w-[100px] pt-0.5" x-text="humanizeKey(key)"></span>
-                            <span class="text-[13px] text-slate-700 font-medium flex-1" x-text="val || '—'"></span>
+                            <span class="text-[13px] text-slate-700 font-medium flex-1" x-text="val || '-'"></span>
                         </div>
                     </template>
                     <!-- Coordinates -->
@@ -602,7 +629,7 @@
         </div>
     </template>
 
-    <!-- ═══════════════ EDIT MODAL ═══════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EDIT MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <template x-if="editModal.show">
         <div class="peta-modal-backdrop" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
             <div class="peta-modal-overlay" @click="editModal.show = false"></div>
@@ -642,7 +669,7 @@
                     </div>
 
                     <!-- Marker Type (Custom Dropdown with Icon Preview) -->
-                    <div x-data="{ markerDropOpen: false }" class="relative">
+                    <div x-data="{ markerDropOpen: false }" x-init="$nextTick(() => { if (editModal.focusMarkerType) markerDropOpen = true; })" class="relative">
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Tipe Icon Marker</label>
                         <!-- Toggle Button -->
                         <button type="button" @click="markerDropOpen = !markerDropOpen"
@@ -732,48 +759,70 @@
         </div>
     </template>
 
-    <!-- ═══════════════ IMPORT MODAL ═══════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IMPORT MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div x-show="showImport" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showImport = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6" @click.away="showImport = false">
-            <h3 class="text-lg font-bold text-slate-900 mb-4">Import Data GIS</h3>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="showImport = false">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Import Data GIS</h3>
+                    <p class="text-[12px] text-slate-400">Tambah fitur dari file ke layer</p>
+                </div>
+                <button @click="showImport = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
 
             <form @submit.prevent="submitImport()">
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Bidang</label>
-                        <select x-model="importForm.bidang"
-                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                            @foreach($accessibleBidang as $b)
-                            <option value="{{ $b }}">{{ $bidangLabels[$b] ?? $b }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <template x-if="!importForm.layer_id">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Bidang</label>
+                                <select x-model="importForm.bidang"
+                                    class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
+                                    @foreach($accessibleBidang as $b)
+                                    <option value="{{ $b }}">{{ $bidangLabels[$b] ?? $b }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
+                                <input type="text" x-model="importForm.nama_layer" required
+                                    class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+                                    placeholder="Contoh: Titik TPA Palu" />
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Deskripsi <span class="font-normal text-slate-400">(opsional)</span></label>
+                                <input type="text" x-model="importForm.deskripsi"
+                                    class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+                                    placeholder="Deskripsi singkat layer" />
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Warna <span class="font-normal text-slate-400">(opsional)</span></label>
+                                <input type="color" x-model="importForm.color" class="h-10 w-20 rounded-lg border border-slate-200 bg-white px-1 cursor-pointer" />
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="importForm.layer_id">
+                        <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-2 text-sm text-emerald-800 font-medium">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            <span>Import ke layer: <span class="font-bold" x-text="getLayerName(importForm.layer_id)"></span></span>
+                        </div>
+                    </template>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Layer</label>
-                        <input type="text" x-model="importForm.nama_layer" required
-                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                            placeholder="Contoh: Titik TPA Palu" />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi (opsional)</label>
-                        <input type="text" x-model="importForm.deskripsi"
-                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                            placeholder="Deskripsi singkat layer" />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Warna</label>
-                        <input type="color" x-model="importForm.color" class="h-10 w-20 rounded-lg border border-slate-300 cursor-pointer" />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">File GIS</label>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">File GIS</label>
                         <div class="import-zone" @click="$refs.fileInput.click()"
                             @dragover.prevent="dragover = true" @dragleave="dragover = false"
                             @drop.prevent="dragover = false; handleFileDrop($event)"
@@ -804,9 +853,9 @@
                 </div>
 
                 <div class="flex gap-3 mt-6">
-                    <button type="button" @click="showImport = false" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="button" @click="showImport = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
                     <button type="submit" :disabled="importing"
-                        class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                        class="flex-1 h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2">
                         <template x-if="importing">
                             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         </template>
@@ -817,19 +866,188 @@
         </div>
     </div>
 
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         BUAT LAYER MODAL
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div x-show="showCreateLayer" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showCreateLayer = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="showCreateLayer = false">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Buat Layer Baru</h3>
+                    <p class="text-[12px] text-slate-400">Layer kosong &mdash; impor data nanti</p>
+                </div>
+                <button @click="showCreateLayer = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
+                    <input type="text" x-model="createForm.nama_layer" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Titik TPA Palu" />
+                </div>
+                @php
+                    $bidangOptions = collect($accessibleBidang)->mapWithKeys(fn($b) => [$b => $bidangLabels[$b] ?? $b])->all();
+                @endphp
+                <div x-show="!createForm.parent_id">
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Bidang</label>
+                    <x-admin.select name="bidang" :options="$bidangOptions"
+                        selected="{{ $accessibleBidang[0] ?? 'rth' }}"
+                        x-model="createForm.bidang" />
+                </div>
+                <template x-if="createForm.parent_id">
+                    <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3">
+                        <p class="text-[12px] text-emerald-700 font-semibold">Sub-layer dari: <span x-text="getLayerName(createForm.parent_id)"></span></p>
+                        <p class="text-[11px] text-emerald-600/80 mt-0.5">Bidang &amp; warna diwarisi dari layer induk.</p>
+                    </div>
+                </template>
+                <div>
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Warna</label>
+                    <div class="flex items-center gap-3">
+                        <!-- Swatch yang membuka native color picker saat diklik -->
+                        <div class="relative h-11 w-11 shrink-0">
+                            <div class="pointer-events-none absolute inset-0 rounded-xl border border-slate-200 shadow-sm ring-1 ring-black/5"
+                                :style="'background-color:' + createForm.color"></div>
+                            <input type="color" x-model="createForm.color"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                        </div>
+                        <!-- Readout hex -->
+                        <div class="flex h-11 flex-1 items-center rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-mono uppercase tracking-wide text-slate-700">
+                            <span x-text="createForm.color"></span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Deskripsi <span class="font-normal text-slate-400">(opsional)</span></label>
+                    <input type="text" x-model="createForm.deskripsi" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Deskripsi singkat layer" />
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" @click="showCreateLayer = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
+                <button type="button" @click="createLayer()" :disabled="creating"
+                    class="flex-1 h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <template x-if="creating">
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </template>
+                    <span x-text="creating ? 'Membuat...' : 'Buat Layer'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Layer (nama + warna) -->
+    <div x-show="layerEditModal.show" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="layerEditModal.show = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="layerEditModal.show = false">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Edit Layer</h3>
+                    <p class="text-[12px] text-slate-400">Ubah nama &amp; warna layer</p>
+                </div>
+                <button @click="layerEditModal.show = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
+                    <input type="text" x-model="layerEditModal.nama_layer" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Nama layer" />
+                </div>
+                <div>
+                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Warna</label>
+                    <div class="flex items-center gap-3">
+                        <div class="relative h-11 w-11 shrink-0">
+                            <div class="pointer-events-none absolute inset-0 rounded-xl border border-slate-200 shadow-sm ring-1 ring-black/5"
+                                :style="'background-color:' + layerEditModal.warna"></div>
+                            <input type="color" x-model="layerEditModal.warna"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                        </div>
+                        <div class="flex h-11 flex-1 items-center rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-mono uppercase tracking-wide text-slate-700">
+                            <span x-text="layerEditModal.warna"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" @click="layerEditModal.show = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
+                <button type="button" @click="saveLayerEdit()" :disabled="layerEditModal.saving"
+                    class="flex-1 h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <template x-if="layerEditModal.saving">
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </template>
+                    <span x-text="layerEditModal.saving ? 'Menyimpan...' : 'Simpan'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Layer -->
+    <div x-show="deleteModal.show" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display:none;">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="deleteModal.show = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 shrink-0 rounded-full bg-red-50 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Hapus Layer?</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">
+                        Layer <span class="font-semibold text-slate-700" x-text="deleteModal.layer?.nama_layer"></span> akan dihapus<span x-show="deleteModal.layer && childrenOf(deleteModal.layer).length > 0"> beserta seluruh sub-layer di dalamnya</span>. Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" @click="deleteModal.show = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
+                <button type="button" @click="confirmDelete()" :disabled="deleteModal.deleting"
+                    class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-all shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <template x-if="deleteModal.deleting">
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </template>
+                    <span x-text="deleteModal.deleting ? 'Menghapus...' : 'Ya, Hapus'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div x-show="toast.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4"
         x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-3 backdrop-blur-md"
-        :class="toast.type === 'success' ? 'bg-slate-900/90 text-white border border-slate-700/50' : 'bg-red-600 text-white'"
-        style="display:none;">
-        <span x-text="toast.message"></span>
-        <template x-if="toast.hasAction">
-            <button @click.stop="triggerToastAction()" class="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-bold text-white transition-colors duration-150">
-                Urungkan
-            </button>
-        </template>
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4" style="display:none;">
+        <div class="flex items-center gap-3 rounded-2xl bg-white shadow-xl shadow-slate-900/10 ring-1 ring-black/5 px-4 py-3 border-l-4"
+            :class="toast.type === 'success' ? 'border-emerald-500' : 'border-red-500'">
+            <!-- Icon -->
+            <span class="shrink-0 flex items-center justify-center w-6 h-6 rounded-full"
+                :class="toast.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
+                <template x-if="toast.type === 'success'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </template>
+                <template x-if="toast.type !== 'success'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </template>
+            </span>
+            <span x-text="toast.message" class="flex-1 text-sm font-medium text-slate-700 leading-snug"></span>
+            <template x-if="toast.hasAction">
+                <button @click.stop="triggerToastAction()" class="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[11px] font-bold text-white transition-colors duration-150">
+                    Urungkan
+                </button>
+            </template>
+        </div>
     </div>
 </div>
 
@@ -862,28 +1080,50 @@
             showDrawToolbar: false,
             importing: false,
             dragover: false,
-            // ═══ Draw state (titik saja) ═══
+            // â•â•â• Draw state (titik saja) â•â•â•
             drawMode: 'simple_select',
             tempMarker: null,
-            importForm: { nama_layer: '', deskripsi: '', bidang: '{{ $accessibleBidang[0] ?? "rth" }}', color: '#22c55e', file: null },
+            importForm: { nama_layer: '', deskripsi: '', bidang: '{{ $accessibleBidang[0] ?? "rth" }}', color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "rth") }}', file: null, layer_id: null },
             currentBasemap: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
             toast: { show: false, message: '', type: 'success', hasAction: false },
             toastActionCallback: null,
 
-            // ═══ Panel state ═══
+            // â•â•â• Panel state â•â•â•
             expandedLayer: null,
+            // Id parent yang sedang dibuka (menampilkan sub-layer di bawahnya).
+            expandedParents: [],
             markerSearch: '',
             markerTypes: [],
 
-            // ═══ Detail Modal ═══
+            // --- Buat Layer state ---
+            showCreateLayer: false,
+            creating: false,
+            createForm: {
+                nama_layer: '',
+                bidang: '{{ $accessibleBidang[0] ?? "rth" }}',
+                deskripsi: '',
+                color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "rth") }}',
+                parent_id: null, // jika diset, buat sub-layer di dalam layer ini
+            },
+
+            // Registry handler per-layer (rebuild tanpa duplikasi listener)
+            _layerHandlers: {},
+
+            // â•â•â• Detail Modal â•â•â•
             detailModal: { show: false, name: '', layerName: '', properties: {}, coords: '', color: '', layerRef: null, itemRef: null },
 
-            // ═══ Edit Modal ═══
-            editModal: { show: false, layerName: '', layerId: null, featureIndex: null, properties: {}, lat: 0, lng: 0, markerType: '', saving: false },
+            // â•â•â• Edit Modal â•â•â•
+            editModal: { show: false, layerName: '', layerId: null, featureIndex: null, properties: {}, lat: 0, lng: 0, markerType: '', saving: false, focusMarkerType: false },
             newFieldKey: '',
             newFieldValue: '',
 
-            // ═══════════════ INIT ═══════════════
+            // Edit layer sederhana: hanya nama + warna.
+            layerEditModal: { show: false, layerId: null, nama_layer: '', warna: '#22c55e', saving: false },
+
+            // Konfirmasi hapus layer (pengganti window.confirm).
+            deleteModal: { show: false, layer: null, deleting: false },
+
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             init() {
                 var self = this;
 
@@ -891,6 +1131,9 @@
                 if (typeof window.DlhMarkers !== 'undefined' && DlhMarkers.getTypes) {
                     this.markerTypes = DlhMarkers.getTypes().filter(t => t !== 'default');
                 }
+
+                // Reset warna ke default bidang saat bidang berubah di modal Buat Layer
+                this.$watch('createForm.bidang', (v) => { this.createForm.color = this.defaultColorFor(v); });
 
                 this.map = new maplibregl.Map({
                     container: 'peta-map',
@@ -907,9 +1150,15 @@
                     }
                 });
 
-                this.map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false, showZoom: true }), 'top-left');
+                this.map.addControl(new DlhZoomControl(), 'top-right');
                 if (window.DlhBasemapSwitcher) {
                     this.map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+                }
+                if (window.DlhFullscreenControl) {
+                    this.map.addControl(new DlhFullscreenControl(), 'top-left');
+                }
+                if (window.DlhWeatherControl) {
+                    this.map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
                 }
                 if (window.dlhAddLocBtn) dlhAddLocBtn(this.map);
 
@@ -937,7 +1186,7 @@
                             this.markerTypes = DlhMarkers.getTypes().filter(t => t !== 'default');
                         }
 
-                        // Click handler — hanya mode titik
+                        // Click handler - hanya mode titik
                         this.map.on('click', (e) => {
                             if (this.drawMode !== 'point') return;
                             if (this.tempMarker) this.tempMarker.remove();
@@ -989,7 +1238,7 @@
                     this.updateClusteringVisibility();
                 });
 
-                // ═══ Fase 4: Event delegation for popup edit button ═══
+                // â•â•â• Fase 4: Event delegation for popup edit button â•â•â•
                 document.addEventListener('click', (e) => {
                     var btn = e.target.closest('.dlh-popup-edit-btn');
                     if (!btn) return;
@@ -1008,7 +1257,7 @@
                 });
             },
 
-            // ═══════════════ CLUSTERING VISIBILITY ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CLUSTERING VISIBILITY â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             updateClusteringVisibility() {
                 const zoom = this.map.getZoom();
                 this.layers.forEach(layer => {
@@ -1058,18 +1307,30 @@
                 });
             },
 
-            // ═══════════════ ADD LAYER TO MAP ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ADD LAYER TO MAP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             addLayerToMap(layer) {
                 const id = 'layer-' + layer.id;
                 const color = layer.metadata?.color || '#6b7280';
 
-                if (this.map.getSource(id)) return;
+                // Idempotent: bersihkan handler & source/layer lama sebelum menambahkan ulang
+                // (dipanggil ulang saat rebuild, mis. setelah import per-layer / ubah ikon / ganti basemap).
+                this._offLayerHandlers(id);
+                if (this.map.getSource(id)) {
+                    const suffixes = ['-clusters', '-cluster-count', '-point-glow', '-point', '-line', '-fill', '-outline'];
+                    suffixes.forEach(s => {
+                        if (this.map.getLayer(id + s)) {
+                            try { this.map.removeLayer(id + s); } catch (e) {}
+                        }
+                    });
+                    try { this.map.removeSource(id); } catch (e) {}
+                }
+                delete this.layerSources[layer.id];
 
                 const features = (layer.geojson && layer.geojson.features) || [];
                 // Clustering HANYA untuk layer murni point (MapLibre cluster hanya handle Point)
                 const isClusterable = features.length >= 10 && layer.jenis_geometri === 'point';
 
-                // Buat salinan bersih GeoJSON — strip CRS field (MapLibre tidak support)
+                // Buat salinan bersih GeoJSON - strip CRS field (MapLibre tidak support)
                 // Dibuat baru tanpa copy crs dari layer.geojson
                 const geojsonData = { type: 'FeatureCollection', features: features };
 
@@ -1147,7 +1408,7 @@
                             }
                         });
 
-                        this.map.on('click', id + '-clusters', (e) => {
+                        const clusterClickHandler = (e) => {
                             var features = this.map.queryRenderedFeatures(e.point, { layers: [id + '-clusters'] });
                             if (!features.length) return;
                             var clusterId = features[0].properties.cluster_id;
@@ -1158,10 +1419,16 @@
                                     zoom: zoom + 0.5
                                 });
                             });
-                        });
+                        };
+                        this.map.on('click', id + '-clusters', clusterClickHandler);
+                        this._trackHandler(id, 'click', id + '-clusters', clusterClickHandler);
 
-                        this.map.on('mouseenter', id + '-clusters', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-                        this.map.on('mouseleave', id + '-clusters', () => { this.map.getCanvas().style.cursor = ''; });
+                        const clusterEnter = () => { this.map.getCanvas().style.cursor = 'pointer'; };
+                        const clusterLeave = () => { this.map.getCanvas().style.cursor = ''; };
+                        this.map.on('mouseenter', id + '-clusters', clusterEnter);
+                        this.map.on('mouseleave', id + '-clusters', clusterLeave);
+                        this._trackHandler(id, 'mouseenter', id + '-clusters', clusterEnter);
+                        this._trackHandler(id, 'mouseleave', id + '-clusters', clusterLeave);
 
                         // Add native circle layers for unclustered points at low zoom
                         this.map.addLayer({ id: id + '-point-glow', type: 'circle', source: id, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 16, 'circle-color': color, 'circle-opacity': 0.15, 'circle-blur': 0.8 } });
@@ -1185,8 +1452,13 @@
                                 .addTo(this.map);
                         };
                         this.map.on('click', id + '-point', fallbackClickHandler);
-                        this.map.on('mouseenter', id + '-point', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-                        this.map.on('mouseleave', id + '-point', () => { this.map.getCanvas().style.cursor = ''; });
+                        this._trackHandler(id, 'click', id + '-point', fallbackClickHandler);
+                        const pointEnter = () => { this.map.getCanvas().style.cursor = 'pointer'; };
+                        const pointLeave = () => { this.map.getCanvas().style.cursor = ''; };
+                        this.map.on('mouseenter', id + '-point', pointEnter);
+                        this.map.on('mouseleave', id + '-point', pointLeave);
+                        this._trackHandler(id, 'mouseenter', id + '-point', pointEnter);
+                        this._trackHandler(id, 'mouseleave', id + '-point', pointLeave);
                     }
 
                     if (useDlh) {
@@ -1250,7 +1522,7 @@
                             this.map.addLayer({ id: id + '-point-glow', type: 'circle', source: id, paint: { 'circle-radius': 18, 'circle-color': color, 'circle-opacity': 0.15, 'circle-blur': 0.8 } });
                             this.map.addLayer({ id: id + '-point', type: 'circle', source: id, paint: { 'circle-radius': 9, 'circle-color': color, 'circle-stroke-color': '#fff', 'circle-stroke-width': 3, 'circle-opacity': 0.9 } });
 
-                        this.map.on('click', id + '-point', (e) => {
+                        const fallbackClickHandler2 = (e) => {
                             if (!e.features || !e.features[0]) return;
                             var f = e.features[0];
                             var props = f.properties || {};
@@ -1265,16 +1537,22 @@
                                 .setLngLat(e.lngLat)
                                 .setHTML('<div style="padding:12px;"><p style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:6px;">' + name + '</p>' + rows + '</div>')
                                 .addTo(this.map);
-                        });
-                        this.map.on('mouseenter', id + '-point', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-                        this.map.on('mouseleave', id + '-point', () => { this.map.getCanvas().style.cursor = ''; });
+                        };
+                        this.map.on('click', id + '-point', fallbackClickHandler2);
+                        this._trackHandler(id, 'click', id + '-point', fallbackClickHandler2);
+                        const pointEnter2 = () => { this.map.getCanvas().style.cursor = 'pointer'; };
+                        const pointLeave2 = () => { this.map.getCanvas().style.cursor = ''; };
+                        this.map.on('mouseenter', id + '-point', pointEnter2);
+                        this.map.on('mouseleave', id + '-point', pointLeave2);
+                        this._trackHandler(id, 'mouseenter', id + '-point', pointEnter2);
+                        this._trackHandler(id, 'mouseleave', id + '-point', pointLeave2);
                         } catch (e) {
                             console.error('[DLH Peta] Gagal addLayer point fallback untuk', layer.nama_layer, ':', e.message);
                         }
                     }
                 }
 
-                // Lines — tanpa filter $type (MapLibre v4 hanya support Point/LineString/Polygon,
+                // Lines - tanpa filter $type (MapLibre v4 hanya support Point/LineString/Polygon,
                 // tidak support MultiLineString/MultiPolygon di filter. Line layer otomatis render line geometry)
                 if (['line', 'mixed'].includes(layer.jenis_geometri)) {
                     try {
@@ -1287,7 +1565,7 @@
                     }
                 }
 
-                // Polygons — tanpa filter $type (sama alasanannya)
+                // Polygons - tanpa filter $type (sama alasanannya)
                 if (['polygon', 'mixed'].includes(layer.jenis_geometri)) {
                     try {
                         this.map.addLayer({
@@ -1310,7 +1588,7 @@
                 }
             },
 
-            // ═══════════════ LAYER VISIBILITY ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LAYER VISIBILITY â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             hideLayer(layerId) {
                 const sourceId = this.layerSources[layerId];
                 if (!sourceId) return;
@@ -1381,13 +1659,73 @@
                 });
             },
 
-            // ═══════════════ PANEL: EXPAND / COLLAPSE ═══════════════
-            toggleExpand(layerId) {
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PANEL: EXPAND / COLLAPSE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        toggleExpand(layerId) {
+            const layer = this.layers.find(l => l.id == layerId);
+            if (layer && this.childrenOf(layer).length > 0) {
+                // Parent: buka/tutup sub-layer, dan fokuskan agar marker section ikut tampil.
+                const i = this.expandedParents.indexOf(layerId);
+                if (i >= 0) {
+                    this.expandedParents.splice(i, 1);
+                    this.expandedLayer = null;
+                } else {
+                    this.expandedParents.push(layerId);
+                    this.expandedLayer = layerId;
+                }
+            } else {
+                // Leaf: buka/tutup daftar marker.
                 this.expandedLayer = this.expandedLayer === layerId ? null : layerId;
-                this.markerSearch = '';
-            },
+            }
+            this.markerSearch = '';
+        },
 
-            // ═══════════════ TOGGLE ALL LAYERS ═══════════════
+        // Layer sedang "expanded" (baik parent yang membuka sub-layer maupun leaf marker).
+        isExpanded(layer) {
+            if (this.childrenOf(layer).length > 0) return this.expandedParents.includes(layer.id);
+            return this.expandedLayer === layer.id;
+        },
+
+        // Sub-layer langsung dari sebuah layer.
+        childrenOf(layer) {
+            return this.layers.filter(l => l.parent_id === layer.id);
+        },
+
+        // Kedalaman hierarki (root = 0).
+        depth(layer) {
+            let d = 0;
+            let p = layer.parent_id;
+            const byId = {};
+            this.layers.forEach(l => { byId[l.id] = l; });
+            while (p) {
+                d++;
+                p = byId[p] ? byId[p].parent_id : null;
+            }
+            return d;
+        },
+
+        // Layer yang boleh ditampilkan: hanya jika semua ancestor ikut dibuka.
+        visibleLayers() {
+            const self = this;
+            const byId = {};
+            this.layers.forEach(l => { byId[l.id] = l; });
+            const visible = (l) => {
+                let p = l.parent_id;
+                while (p) {
+                    if (!self.expandedParents.includes(p)) return false;
+                    p = byId[p] ? byId[p].parent_id : null;
+                }
+                return true;
+            };
+            const sortKey = (l) => {
+                const parts = [];
+                let cur = l;
+                while (cur) { parts.unshift(cur.id); cur = cur.parent_id ? byId[cur.parent_id] : null; }
+                return parts.join('.');
+            };
+            return this.layers.filter(visible).slice().sort((a, b) => sortKey(a) < sortKey(b) ? -1 : 1);
+        },
+
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TOGGLE ALL LAYERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             allLayersVisible() {
                 return this.layers.length > 0 && this.layers.every(l => l.is_visible);
             },
@@ -1406,9 +1744,12 @@
                 });
             },
 
-            getFeatureCount(layer) {
-                return (layer.geojson && layer.geojson.features) ? layer.geojson.features.length : 0;
-            },
+        getFeatureCount(layer) {
+            // Untuk parent, hitung total fitur seluruh sub-layer juga.
+            let count = (layer.geojson && layer.geojson.features) ? layer.geojson.features.length : 0;
+            this.childrenOf(layer).forEach(c => { count += this.getFeatureCount(c); });
+            return count;
+        },
 
             getFilteredMarkers(layer) {
                 var features = (layer.geojson && layer.geojson.features) || [];
@@ -1437,14 +1778,14 @@
                 return '';
             },
 
-            // ═══════════════ FLY TO MARKER ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FLY TO MARKER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             flyToMarker(item) {
                 if (item.coords) {
                     this.map.flyTo({ center: [item.coords[0], item.coords[1]], zoom: 16, duration: 800 });
                 }
             },
 
-            // ═══════════════ FIT BOUNDS TO LAYER ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FIT BOUNDS TO LAYER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             fitLayerBounds(layer) {
                 const features = (layer.geojson && layer.geojson.features) || [];
                 if (features.length === 0) return;
@@ -1464,21 +1805,21 @@
                 }
             },
 
-            // ═══════════════ DETAIL MODAL ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DETAIL MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             showMarkerDetail(layer, item) {
                 this.detailModal = {
                     show: true,
                     name: item.properties.NAMA || item.properties.name || layer.nama_layer,
                     layerName: layer.nama_layer,
                     properties: { ...item.properties },
-                    coords: item.coords ? (item.coords[1]?.toFixed(6) + ', ' + item.coords[0]?.toFixed(6)) : '—',
+                    coords: item.coords ? (item.coords[1]?.toFixed(6) + ', ' + item.coords[0]?.toFixed(6)) : '-',
                     color: layer.metadata?.color || '#6b7280',
                     layerRef: layer,
                     itemRef: item,
                 };
             },
 
-            // ═══════════════ EDIT MODAL ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EDIT MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             showMarkerEdit(layer, item) {
                 var props = { ...item.properties };
                 // Remove internal keys from display
@@ -1544,7 +1885,7 @@
                 }
             },
 
-            // ═══════════════ DELETE FEATURE ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DELETE FEATURE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             async deleteFeature(layer, item) {
                 if (!confirm('Hapus marker "' + this.getMarkerName(item, layer) + '"?')) return;
                 try {
@@ -1575,71 +1916,48 @@
                 }
             },
 
-            // ═══════════════ REFRESH LAYER MARKERS ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REFRESH LAYER MARKERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             refreshLayerMarkers(layer) {
-                // Remove old markers
+                // Remove old HTML markers
                 if (this.layerMarkers[layer.id]) {
                     this.layerMarkers[layer.id].forEach(item => item.marker.remove());
                     delete this.layerMarkers[layer.id];
                 }
-                // Remove old source
-                const sourceId = this.layerSources[layer.id];
-                if (sourceId && this.map.getSource(sourceId)) {
-                    // Update source data instead of re-adding
-                    this.map.getSource(sourceId).setData(layer.geojson);
-                }
-                // Re-add markers (only DlhMarkers, not MapLibre layers)
-                if (['point', 'mixed'].includes(layer.jenis_geometri) && typeof window.DlhMarkers !== 'undefined') {
-                    const features = (layer.geojson && layer.geojson.features) || [];
-                    const LAYER_MARKER_MAP = {
-                        'taman kota': 'taman', 'taman': 'taman', 'hutan kota': 'hutan', 'hutan': 'hutan',
-                        'pohon pelindung': 'pohon', 'pohon': 'pohon', 'jalur hijau': 'jalur_hijau', 'jalur': 'jalur_hijau',
-                        'aset rth': 'aset_rth', 'aset': 'aset_rth', 'bank sampah': 'bank_sampah',
-                        'tpst': 'tpst', 'tpa': 'tpa', 'tps': 'tps', 'armada': 'armada',
-                        'objek pengawasan': 'objek_pengawasan', 'pengaduan': 'pengaduan',
-                    };
-                    function getMarkerType(n) { var name = (n||'').toLowerCase().trim(); for (var k in LAYER_MARKER_MAP) { if (name === k || name.indexOf(k) !== -1) return LAYER_MARKER_MAP[k]; } return 'default'; }
-                    const markerType = getMarkerType(layer.nama_layer);
-                    const pointMarkers = [];
-                    features.forEach((f, featureIndex) => {
-                        if (!f.geometry || f.geometry.type !== 'Point') return;
-                        const coords = f.geometry.coordinates;
-                        if (!coords || !coords[0] || !coords[1]) return;
-                        const props = f.properties || {};
-                        const lngLat = [coords[0], coords[1]];
-                        const featureMarkerType = props._marker_type || markerType;
-
-                        const detailRows = [];
-                        ['ALAMAT', 'KECAMATAN', 'KELURAHAN'].forEach(key => { if (props[key]) detailRows.push({ icon: 'lokasi', value: props[key] }); });
-                        detailRows.push({ icon: 'lokasi', value: coords[1].toFixed(6) + ', ' + coords[0].toFixed(6) });
-                        const skipKeys = new Set(['NAMA', '_record', '_marker_type', 'ALAMAT', 'KECAMATAN', 'KELURAHAN']);
-                        Object.keys(props).forEach(key => {
-                            if (skipKeys.has(key) || key.startsWith('_')) return;
-                            if (props[key] === null || props[key] === '') return;
-                            detailRows.push({ icon: 'doc', value: this.humanizeKey(key) + ': ' + props[key] });
-                        });
-
-                        const popupHtml = DlhMarkers.popup({
-                            nama: props.NAMA || layer.nama_layer, kategori: layer.nama_layer,
-                            type: featureMarkerType, layerId: layer.id, featureIndex: featureIndex,
-                            status: props.STATUS ? { text: props.STATUS, color: props.STATUS === 'Aktif' ? '#22c55e' : '#f59e0b' } : null,
-                            details: detailRows,
-                        });
-                        const mk = DlhMarkers.addToMap(this.map, featureMarkerType, lngLat, popupHtml);
-                        
-                        const isClusterable = features.length >= 10;
-                        const currentZoom = this.map.getZoom();
-                        const isVisibleInitially = layer.is_visible && (!isClusterable || currentZoom >= 14);
-                        if (!isVisibleInitially) mk.remove();
-                        
-                        pointMarkers.push({ marker: mk, coords: lngLat, featureIndex: featureIndex, properties: props });
+                // Rebuild total (source + native layers + marker HTML) agar perubahan
+                // - ikon marker, jumlah fitur, jenis geometri - langsung terlihat di semua level zoom.
+                const id = 'layer-' + layer.id;
+                this._offLayerHandlers(id);
+                if (this.map.getSource(id)) {
+                    const suffixes = ['-clusters', '-cluster-count', '-point-glow', '-point', '-line', '-fill', '-outline'];
+                    suffixes.forEach(s => {
+                        if (this.map.getLayer(id + s)) {
+                            try { this.map.removeLayer(id + s); } catch (e) {}
+                        }
                     });
-                    this.layerMarkers[layer.id] = pointMarkers;
+                    try { this.map.removeSource(id); } catch (e) {}
                 }
+                delete this.layerSources[layer.id];
+                this.addLayerToMap(layer);
                 this.updateClusteringVisibility();
             },
 
-            // ═══════════════ DRAW TOOLS (Titik saja) ═══════════════
+            // Hapus handler yang terkait layer (cegah duplikasi listener saat rebuild)
+            _offLayerHandlers(id) {
+                const handlers = this._layerHandlers[id];
+                if (!handlers) return;
+                handlers.forEach(h => {
+                    try { this.map.off(h.type, h.layer, h.fn); } catch (e) {}
+                });
+                delete this._layerHandlers[id];
+            },
+
+            // Simpan referensi handler agar bisa di-off saat rebuild
+            _trackHandler(id, type, layer, fn) {
+                this._layerHandlers[id] = this._layerHandlers[id] || [];
+                this._layerHandlers[id].push({ type, layer, fn });
+            },
+
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DRAW TOOLS (Titik saja) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             startPointDraw() {
                 this.drawMode = 'point';
                 this.map.getCanvas().style.cursor = 'crosshair';
@@ -1688,17 +2006,25 @@
                 }
             },
 
-            // ═══════════════ IMPORT ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IMPORT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             async submitImport() {
-                if (!this.importForm.file || !this.importForm.nama_layer) return;
+                if (!this.importForm.file) return;
+                // Untuk import baru (tanpa layer_id) nama_layer wajib.
+                if (!this.importForm.layer_id && !this.importForm.nama_layer) return;
 
                 this.importing = true;
                 const formData = new FormData();
                 formData.append('file', this.importForm.file);
-                formData.append('nama_layer', this.importForm.nama_layer);
-                formData.append('deskripsi', this.importForm.deskripsi || '');
-                formData.append('bidang', this.importForm.bidang);
-                formData.append('color', this.importForm.color);
+                if (this.importForm.layer_id) {
+                    formData.append('layer_id', this.importForm.layer_id);
+                } else {
+                    formData.append('nama_layer', this.importForm.nama_layer);
+                    formData.append('deskripsi', this.importForm.deskripsi || '');
+                    formData.append('bidang', this.importForm.bidang);
+                    formData.append('color', this.importForm.color);
+                }
+
+                const targetLayerId = this.importForm.layer_id;
 
                 try {
                     const res = await fetch(`/admin/peta/import`, {
@@ -1708,14 +2034,36 @@
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
-                        this.showToast(data.message, 'success');
-                        this.showImport = false;
-                        this.importForm = { nama_layer: '', deskripsi: '', color: this.importForm.color, file: null };
-                        // Store layer ID for auto-fit bounds after page reload
-                        if (data.layer && data.layer.id) {
-                            sessionStorage.setItem('peta_import_fit_layer', data.layer.id);
+        this.showToast(data.message, 'success');
+        this.showImport = false;
+        if (targetLayerId && data.layers && data.layers.length) {
+            // Import ke dalam parent → tambahkan sub-layer ke UI tanpa reload.
+            if (!this.expandedParents.includes(targetLayerId)) this.expandedParents.push(targetLayerId);
+            this.expandedLayer = targetLayerId;
+            data.layers.forEach(child => {
+                this.layers.push(child);
+                this.addLayerToMap(child);
+            });
+            this.showToast(data.message, 'success');
+            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
+        } else if (targetLayerId && data.layer) {
+            // Soft refresh: perbarui data layer & rebuild marker tanpa reload.
+            const layer = this.layers.find(l => l.id == targetLayerId);
+            if (layer) {
+                layer.geojson = data.layer.geojson;
+                layer.jenis_geometri = data.layer.jenis_geometri;
+                layer.metadata = data.layer.metadata || layer.metadata;
+                this.refreshLayerMarkers(layer);
+            }
+            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
+                        } else {
+                            // Import baru: reload agar auto-fit bounds bekerja.
+                            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
+                            if (data.layer && data.layer.id) {
+                                sessionStorage.setItem('peta_import_fit_layer', data.layer.id);
+                            }
+                            location.reload();
                         }
-                        location.reload();
                     } else {
                         const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal import');
                         this.showToast(msg, 'error');
@@ -1727,20 +2075,163 @@
                 }
             },
 
-            // ═══════════════ LAYER MANAGEMENT ═══════════════
-            editLayer(layer) {
-                const newName = prompt('Nama layer:', layer.nama_layer);
-                if (newName && newName !== layer.nama_layer) {
-                    fetch(`/admin/peta/layer/${layer.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ nama_layer: newName }),
-                    }).then(() => location.reload());
+            // â•â•â• Buka modal import (reset layer_id saat dibuka dari action bar) â•â•â•
+            openImport() {
+                this.importForm.layer_id = null;
+                this.showImport = true;
+            },
+
+            // â•â•â• Import per-layer: set target lalu buka modal â•â•â•
+            importToLayer(layer) {
+                this.importForm.layer_id = layer.id;
+                this.showImport = true;
+            },
+
+            // â•â•â• Ambil nama layer dari id (untuk label import per-layer) â•â•â•
+            getLayerName(id) {
+                const l = this.layers.find(x => x.id == id);
+                return l ? l.nama_layer : '';
+            },
+
+            // â•â•â• BUAT LAYER (layer kosong) â•â•â•
+            async createLayer() {
+                if (!this.createForm.nama_layer.trim()) {
+                    this.showToast('Nama layer wajib diisi', 'error');
+                    return;
+                }
+                if (this.createForm.parent_id && !this.expandedParents.includes(this.createForm.parent_id)) {
+                    this.expandedParents.push(this.createForm.parent_id);
+                }
+                this.creating = true;
+                try {
+                    const res = await fetch('/admin/peta/layers', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            bidang: this.createForm.bidang,
+                            nama_layer: this.createForm.nama_layer,
+                            deskripsi: this.createForm.deskripsi || '',
+                            color: this.createForm.color,
+                            parent_id: this.createForm.parent_id || null,
+                        }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.showToast(data.message || 'Layer berhasil dibuat', 'success');
+                        this.showCreateLayer = false;
+                        // Push layer baru & tambahkan source kosong ke peta.
+                        this.layers.push(data.layer);
+                        this.addLayerToMap(data.layer);
+                        // Reset form (pertahankan bidang).
+                        this.createForm = {
+                            nama_layer: '',
+                            bidang: this.createForm.bidang,
+                            deskripsi: '',
+                            color: this.defaultColorFor(this.createForm.bidang),
+                            parent_id: null,
+                        };
+                    } else {
+                        this.showToast(data.message || 'Gagal membuat layer', 'error');
+                    }
+                } catch (e) {
+                    this.showToast('Gagal membuat layer: ' + e.message, 'error');
+                } finally {
+                    this.creating = false;
                 }
             },
 
-            async deleteLayer(layer) {
-                if (!confirm(`Hapus layer "${layer.nama_layer}"?`)) return;
+            // Buka modal "Buat Layer" dengan parent sudah dipilih (sub-layer).
+            createSubLayer(layer) {
+                const parentColor = (layer.metadata && layer.metadata.color) || this.defaultColorFor(layer.bidang);
+                this.createForm = {
+                    nama_layer: '',
+                    bidang: layer.bidang,
+                    deskripsi: '',
+                    color: parentColor,
+                    parent_id: layer.id,
+                };
+                if (!this.expandedParents.includes(layer.id)) this.expandedParents.push(layer.id);
+                this.showCreateLayer = true;
+            },
+
+            // â•â•â• Default warna per bidang (JS mirror dari GisDataLayer::defaultColor) â•â•â•
+            defaultColorFor(bidang) {
+                const map = {
+                    'rth': '#22c55e',
+                    'sampah-lb3': '#f59e0b',
+                    'tata-penataan': '#3b82f6',
+                    'pengendalian': '#ef4444',
+                };
+                return map[bidang] || '#6b7280';
+            },
+
+            // â•â•â• Ubah ikon marker via aksi per-baris (buka modal + fokus dropdown) â•â•â•
+            showMarkerIconEdit(layer, item) {
+                this.showMarkerEdit(layer, item);
+                this.editModal.focusMarkerType = true;
+            },
+
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LAYER MANAGEMENT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        editLayer(layer) {
+            this.layerEditModal = {
+                show: true,
+                layerId: layer.id,
+                nama_layer: layer.nama_layer,
+                warna: layer.metadata?.color || '#22c55e',
+                saving: false,
+            };
+        },
+
+        async saveLayerEdit() {
+            const m = this.layerEditModal;
+            if (!m.nama_layer || !m.nama_layer.trim()) {
+                this.showToast('Nama layer wajib diisi', 'error');
+                return;
+            }
+            m.saving = true;
+            try {
+                const res = await fetch(`/admin/peta/layer/${m.layerId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({
+                        nama_layer: m.nama_layer.trim(),
+                        color: m.warna,
+                    }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const layer = this.layers.find(l => l.id == m.layerId);
+                    if (layer) {
+                        layer.nama_layer = m.nama_layer.trim();
+                        layer.metadata = layer.metadata || {};
+                        layer.metadata.color = m.warna;
+                        this.refreshLayerMarkers(layer);
+                    }
+                    m.show = false;
+                    this.showToast('Layer berhasil diperbarui', 'success');
+                } else {
+                    this.showToast(data.message || 'Gagal menyimpan', 'error');
+                }
+            } catch (e) {
+                this.showToast('Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                m.saving = false;
+            }
+        },
+
+            // Buka modal konfirmasi hapus (bukan window.confirm).
+            deleteLayer(layer) {
+                this.deleteModal = { show: true, layer: layer, deleting: false };
+            },
+
+            // Eksekusi penghapusan setelah dikonfirmasi dari modal.
+            async confirmDelete() {
+                const layer = this.deleteModal.layer;
+                if (!layer) return;
+                this.deleteModal.deleting = true;
                 try {
                     const res = await fetch(`/admin/peta/layer/${layer.id}`, {
                         method: 'DELETE',
@@ -1748,16 +2239,29 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        // Hapus layer dari data lokal Alpine
-                        const layerIndex = this.layers.findIndex(l => l.id === layer.id);
-                        if (layerIndex !== -1) {
-                            this.layers.splice(layerIndex, 1);
+                        // Kumpulkan layer + seluruh turunan (sub-layer) untuk dihapus dari UI.
+                        const removeIds = new Set([layer.id]);
+                        const stack = [layer.id];
+                        while (stack.length) {
+                            const pid = stack.pop();
+                            this.layers.forEach(l => {
+                                if (l.parent_id === pid && !removeIds.has(l.id)) {
+                                    removeIds.add(l.id);
+                                    stack.push(l.id);
+                                }
+                            });
                         }
 
-                        // Sembunyikan layer dari peta
-                        this.hideLayer(layer.id);
+                        // Hapus dari data lokal Alpine & sembunyikan dari peta
+                        this.layers = this.layers.filter(l => !removeIds.has(l.id));
+                        removeIds.forEach(id => this.hideLayer(id));
+                        this.expandedParents = this.expandedParents.filter(id => !removeIds.has(id));
+                        if (removeIds.has(this.expandedLayer)) this.expandedLayer = null;
 
-                        // Tampilkan toast sukses dengan opsi Urungkan (Undo)
+                        // Tutup modal lalu tampilkan toast sukses dengan opsi Urungkan (Undo)
+                        this.deleteModal.show = false;
+                        this.deleteModal.layer = null;
+                        this.deleteModal.deleting = false;
                         this.showToast(`Layer "${layer.nama_layer}" berhasil dihapus`, 'success', async () => {
                             try {
                                 const restoreRes = await fetch(`/admin/peta/layer/${data.layer_id}/restore`, {
@@ -1766,9 +2270,7 @@
                                 });
                                 const restoreData = await restoreRes.json();
                                 if (restoreData.success) {
-                                    // Masukkan kembali ke data lokal Alpine
                                     this.layers.push(restoreData.layer);
-                                    // Tampilkan kembali di peta
                                     this.addLayerToMap(restoreData.layer);
                                     this.showToast(`Layer "${restoreData.layer.nama_layer}" berhasil dipulihkan`, 'success');
                                 } else {
@@ -1778,8 +2280,12 @@
                                 this.showToast('Gagal memulihkan layer: ' + err.message, 'error');
                             }
                         });
+                    } else {
+                        this.deleteModal.deleting = false;
+                        this.showToast(data.message || 'Gagal menghapus layer', 'error');
                     }
                 } catch (e) {
+                    this.deleteModal.deleting = false;
                     this.showToast('Gagal menghapus layer', 'error');
                 }
             },
@@ -1939,7 +2445,7 @@
                 }
             },
 
-            // ═══════════════ HELPERS ═══════════════
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HELPERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             handleFileDrop(e) {
                 const file = e.dataTransfer.files[0];
                 if (file) this.importForm.file = file;

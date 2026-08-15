@@ -7,10 +7,10 @@ require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-$user = User::where('username', 'superadmin')->first();
+$user = User::where('username', 'admin')->first();
 
 if (! $user) {
-    echo "superadmin user not found\n";
+    echo "admin user not found\n";
     exit(1);
 }
 

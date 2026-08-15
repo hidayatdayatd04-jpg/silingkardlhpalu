@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum AdminRole: string
 {
-    case SUPERADMIN = 'superadmin';
+    case ADMIN = 'admin';
     case BIDANG_PENGENDALIAN = 'bidang-pengendalian';
     case BIDANG_SAMPAH_LB3 = 'bidang-sampah-lb3';
     case BIDANG_TATA_PENATAAN = 'bidang-tata-penataan';
@@ -13,7 +13,7 @@ enum AdminRole: string
     public function label(): string
     {
         return match ($this) {
-            self::SUPERADMIN => 'Kepala Bidang',
+            self::ADMIN => 'Admin',
             self::BIDANG_PENGENDALIAN => 'Bidang Pengendalian Dampak Lingkungan',
             self::BIDANG_SAMPAH_LB3 => 'Bidang Pengelolaan Sampah & LB3',
             self::BIDANG_TATA_PENATAAN => 'Bidang Tata Penataan',
@@ -24,7 +24,7 @@ enum AdminRole: string
     public function color(): string
     {
         return match ($this) {
-            self::SUPERADMIN => 'danger',
+            self::ADMIN => 'info',
             self::BIDANG_PENGENDALIAN => 'info',
             self::BIDANG_SAMPAH_LB3 => 'warning',
             self::BIDANG_TATA_PENATAAN => 'gray',
@@ -53,7 +53,7 @@ enum AdminRole: string
     public function allowedGroups(): array
     {
         return match ($this) {
-            self::SUPERADMIN => ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan', 'konten'],
+            self::ADMIN => ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan', 'konten'],
             self::BIDANG_PENGENDALIAN => ['pengendalian'],
             self::BIDANG_SAMPAH_LB3 => ['sampah-lb3'],
             self::BIDANG_TATA_PENATAAN => ['tata-penataan'],
@@ -62,11 +62,11 @@ enum AdminRole: string
     }
 
     /**
-     * Cek apakah role ini adalah superadmin
+     * Cek apakah role ini memiliki akses penuh (Admin)
      */
     public function isSuperadmin(): bool
     {
-        return $this === self::SUPERADMIN;
+        return $this === self::ADMIN;
     }
 
     /**
@@ -75,7 +75,7 @@ enum AdminRole: string
     public function icon(): string
     {
         return match ($this) {
-            self::SUPERADMIN => 'users',
+            self::ADMIN => 'user-check',
             self::BIDANG_PENGENDALIAN => 'alert-circle',
             self::BIDANG_SAMPAH_LB3 => 'recycle',
             self::BIDANG_TATA_PENATAAN => 'building',

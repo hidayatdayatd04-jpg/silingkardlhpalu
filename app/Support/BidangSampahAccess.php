@@ -12,7 +12,7 @@ class BidangSampahAccess
         $user ??= auth()->user();
 
         return $user?->hasAnyRole([
-            AdminRole::SUPERADMIN->value,
+            AdminRole::ADMIN->value,
             AdminRole::BIDANG_SAMPAH_LB3->value,
         ]) ?? false;
     }

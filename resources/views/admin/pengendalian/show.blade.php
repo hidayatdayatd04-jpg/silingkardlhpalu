@@ -30,7 +30,6 @@
     };
 
     $regularFields = collect($fields)->reject(fn($f) => in_array($f['type'], ['file', 'textarea', 'section', 'photos']))->values()->all();
-    $fileFieldList = collect($fields)->filter(fn($f) => $f['type'] === 'file')->values()->all();
     $textareaFieldList = collect($fields)->filter(fn($f) => $f['type'] === 'textarea')->values()->all();
 
     $iconFor = function ($fieldName) {
@@ -134,28 +133,6 @@
                 </div>
             @endif
 
-            {{-- File / dokumen --}}
-            @if($fileFieldList)
-                <div class="stagger-item">
-                    <x-admin.section-card title="Lampiran & Dokumen" icon="folder">
-                        <div class="space-y-3">
-                            @foreach ($fileFieldList as $field)
-                                @php $value = $record->{$field['name']} ?? null; @endphp
-                                <div class="flex items-center justify-between gap-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
-                                    <span class="text-sm font-semibold text-ink-700">{{ $field['label'] }}</span>
-                                    @if (filled($value))
-                                        <a href="{{ Storage::url($value) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-info-50 px-3 py-1.5 text-xs font-bold text-info-700 transition hover:bg-info-100">
-                                            <x-admin.icon name="file-text" :size="14" /> Lihat Dokumen
-                                        </a>
-                                    @else
-                                        <span class="text-xs text-slate-400">Tidak ada file</span>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </x-admin.section-card>
-                </div>
-            @endif
         </div>
 
         {{-- Side --}}
@@ -188,7 +165,9 @@
                                 zoom: 15,
                                 attributionControl: false
                             });
-                            map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+                            map.addControl(new DlhZoomControl(), 'top-left');
+
+                            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
                             if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
                             if (window.dlhAddLocBtn) dlhAddLocBtn(map);
                             var el = document.createElement('div');

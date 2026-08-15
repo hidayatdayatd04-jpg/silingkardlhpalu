@@ -3,9 +3,16 @@
 @section('title', $resource['label'].' - Admin DLH')
 @section('heading', $resource['label'])
 
+@php
+    $isUser = $resource['slug'] === 'user';
+@endphp
+
 @section('content')
     @php
         $format = function ($value, $column = null) {
+            if ($column === 'jenis_kegiatan' && filled($value)) {
+                return $value === 'monitoring-evaluasi' ? 'Monitoring & Evaluasi' : 'Sosialisasi';
+            }
             if ($value instanceof BackedEnum) {
                 return method_exists($value, 'label') ? $value->label() : $value->value;
             }
@@ -23,7 +30,8 @@
 
         $recordIds = $records->pluck('id')->toArray();
 
-        // Peta status → variant status-pill
+        $filterKeys = collect($resource['filters'])->pluck('key')->all();
+
         $statusVariant = function ($status) {
             $map = [
                 'Belum Ditinjau' => 'warning',
@@ -38,7 +46,6 @@
             return $map[$status] ?? 'neutral';
         };
 
-        // Kolom pertama yg mengandung 'nama' / 'pelapor' → tampil avatar
         $avatarColumn = collect($resource['columns'])->first(fn ($c) => str_contains($c, 'nama') || str_contains($c, 'pelapor'));
     @endphp
 
@@ -47,116 +54,192 @@
             selected: [],
             selectAll: false,
             items: {{ json_encode($recordIds) }},
-            bulkExport() {
+            filterKeys: {{ json_encode($filterKeys) }},
+            bulkExport(format = 'xlsx') {
                 const params = new URLSearchParams();
                 this.selected.forEach(id => params.append('ids[]', id));
-                params.append('format', 'xlsx');
+                params.append('format', format);
                 window.location.href = '{{ route('admin.resources.bulk-export', $resource['slug']) }}?' + params.toString();
+            },
+            exportHref(format) {
+                if (this.selected.length > 0) {
+                    const params = new URLSearchParams();
+                    this.selected.forEach(id => params.append('ids[]', id));
+                    params.append('format', format);
+                    return '{{ route('admin.resources.bulk-export', $resource['slug']) }}?' + params.toString();
+                }
+                const url = new URL(window.location.href);
+                const params = new URLSearchParams(url.search);
+                params.delete('page');
+                params.set('format', format);
+                return '{{ route('admin.resources.export', $resource['slug']) }}?' + params.toString();
+            },
+            exportScopeLabel() {
+                if (this.selected.length > 0) {
+                    return 'Terpilih (' + this.selected.length + ')';
+                }
+                const q = new URLSearchParams(window.location.search);
+                const tracked = ['q', 'status', 'date_from', 'date_to'].concat(this.filterKeys || []);
+                const hasFilter = tracked.some(k => {
+                    const v = q.get(k);
+                    return v !== null && v !== '';
+                });
+                return hasFilter ? 'Hasil Filter' : 'Semua Data';
             }
         }"
         x-on:bulk-export.window="bulkExport()"
     >
 
-    <x-admin.card :padding="false">
-        <x-admin.bulk-actions-bar :resource="$resource" />
-
-        <div class="border-b border-slate-200 bg-white">
-            {{-- Header --}}
-            <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="grid size-9 place-items-center rounded-lg text-white shadow-[var(--shadow-brand-glow)]" style="background: var(--gradient-brand);">
-                        <x-admin.icon name="folder" :size="16" />
-                    </div>
-                    <div>
-                        <h2 class="text-h4 font-bold text-ink-900">{{ $resource['label'] }}</h2>
-                        <p class="text-xs text-slate-500">Total {{ $records->total() }} data</p>
+    {{-- Page Header --}}
+    <x-admin.page-header
+        :title="$resource['label']"
+        :subtitle="$records->total() . ' data terdaftar'"
+        icon="{{ $isUser ? 'users' : 'folder' }}"
+    >
+        <x-slot:actions>
+            @if($isUser)
+                <div class="hidden items-center gap-2 sm:flex">
+                    <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-100">
+                        <span class="relative flex size-2">
+                            <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-bold text-emerald-700">{{ collect($records->items())->where('is_active', true)->count() }} Aktif</span>
                     </div>
                 </div>
-            </div>
-
-            {{-- Toolbar --}}
-            <div class="flex flex-wrap items-center gap-2 px-4 py-3">
-                <form method="GET" class="flex flex-1 items-center gap-2 lg:max-w-sm">
-                    @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
-                    @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
-                    @foreach((array) request('status', []) as $status)
-                        <input type="hidden" name="status[]" value="{{ $status }}">
-                    @endforeach
-                    @if(request('date_from'))<input type="hidden" name="date_from" value="{{ request('date_from') }}">@endif
-                    @if(request('date_to'))<input type="hidden" name="date_to" value="{{ request('date_to') }}">@endif
-
-                    <div class="relative flex-1">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <x-admin.icon name="search" class="text-slate-400" :size="16" />
-                        </div>
-                        <input name="q" value="{{ $search }}" placeholder="Cari data..."
-                            class="h-9 w-full rounded-pill border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-ink-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
-                    </div>
-                    <x-admin.button variant="primary" type="submit" icon="search" size="sm">Cari</x-admin.button>
-                </form>
-
-                <div class="hidden flex-1 lg:block"></div>
-
-                @php
-                    $hasFilters = request()->hasAny(['status', 'date_from', 'date_to']);
-                    $filterCount = collect(request()->only(['status', 'date_from', 'date_to']))->filter()->count();
-                @endphp
-
-                <form method="GET" class="contents">
-                    @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
-                    @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
-                    @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
-
-                    <x-admin.filter-dropdown label="Filter" :active="$hasFilters" :count="$filterCount">
-                        <x-admin.filter-section title="Status">
-                            @if(isset($resource['filters']['status']))
-                                @foreach($resource['filters']['status'] as $value => $label)
-                                    <x-admin.filter-checkbox name="status[]" :label="$label" :value="$value"
-                                        :checked="in_array($value, (array) request('status', []))" />
-                                @endforeach
-                            @endif
-                        </x-admin.filter-section>
-                        <x-admin.filter-section title="Tanggal">
-                            <div class="space-y-3 px-3">
-                                <x-admin.input type="date" name="date_from" label="Dari" :value="request('date_from')" />
-                                <x-admin.input type="date" name="date_to" label="Sampai" :value="request('date_to')" />
-                            </div>
-                        </x-admin.filter-section>
-                        <x-admin.filter-actions :resetUrl="route('admin.resources.index', $resource['slug'])" />
-                    </x-admin.filter-dropdown>
-                </form>
-
-                <x-admin.data-io :resource="$resource" :selectedCount="count($recordIds)" />
-
+            @endif
+            @if(($resource['can_create'] ?? true))
                 <x-admin.button variant="primary" icon="plus" size="sm" :href="route('admin.resources.create', $resource['slug'])">
                     Tambah
                 </x-admin.button>
-            </div>
+            @endif
+        </x-slot:actions>
+    </x-admin.page-header>
+
+    <x-admin.card :padding="false" style="opacity: 1 !important; transform: none !important;">
+        <x-admin.bulk-actions-bar :resource="$resource" />
+
+        {{-- Toolbar --}}
+        @php
+            $hasFilters = collect($resource['filters'])->contains(fn ($f) =>
+                $f['type'] === 'daterange'
+                    ? (request()->filled($f['key'].'_from') || request()->filled($f['key'].'_to'))
+                    : filled(request($f['key']))
+            );
+            $filterCount = collect($resource['filters'])->filter(function ($f) {
+                if ($f['type'] === 'daterange') {
+                    return request()->filled($f['key'].'_from') || request()->filled($f['key'].'_to');
+                }
+                $v = request($f['key']);
+                return is_array($v) ? count(array_filter($v)) > 0 : filled($v);
+            })->count();
+        @endphp
+        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50/50 px-6 py-3">
+            <form method="GET" class="flex flex-1 items-center gap-2 lg:max-w-sm">
+                @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+                @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
+                @foreach($resource['filters'] as $f)
+                    @if($f['type'] === 'multiselect')
+                        @foreach((array) request($f['key'], []) as $val)
+                            @if(filled($val))<input type="hidden" name="{{ $f['key'] }}[]" value="{{ $val }}">@endif
+                        @endforeach
+                    @elseif($f['type'] === 'select')
+                        @if(filled(request($f['key'])))<input type="hidden" name="{{ $f['key'] }}" value="{{ request($f['key']) }}">@endif
+                    @elseif($f['type'] === 'daterange')
+                        @if(request($f['key'].'_from'))<input type="hidden" name="{{ $f['key'] }}_from" value="{{ request($f['key'].'_from') }}">@endif
+                        @if(request($f['key'].'_to'))<input type="hidden" name="{{ $f['key'] }}_to" value="{{ request($f['key'].'_to') }}">@endif
+                    @endif
+                @endforeach
+
+<div class="relative flex-1">
+                    <input name="q" value="{{ $search }}" placeholder="Cari {{ Str::lower($resource['label']) }}..."
+                        class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10">
+                </div>
+            </form>
+
+            <div class="hidden flex-1 lg:block"></div>
+
+            <form method="GET" class="contents">
+                @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
+                @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+                @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
+
+                <x-admin.filter-dropdown label="Filter" :active="$hasFilters" :count="$filterCount">
+                    @foreach($resource['filters'] as $f)
+                        @if($f['type'] === 'multiselect')
+                            <x-admin.filter-section :title="$f['label']">
+                                @foreach($f['options'] as $value => $label)
+                                    <x-admin.filter-checkbox name="{{ $f['key'] }}[]" :label="$label" :value="$value"
+                                        :checked="in_array((string) $value, array_map('strval', (array) request($f['key'], [])), true)" />
+                                @endforeach
+                            </x-admin.filter-section>
+                        @elseif($f['type'] === 'select')
+                            <x-admin.filter-section :title="$f['label']">
+                                <div class="px-1">
+                                    <x-admin.select
+                                        name="{{ $f['key'] }}"
+                                        :options="$f['options']"
+                                        :selected="request($f['key'])"
+                                        placeholder="Semua"
+                                    />
+                                </div>
+                            </x-admin.filter-section>
+                        @elseif($f['type'] === 'daterange')
+                            <x-admin.filter-section :title="$f['label']">
+                                <div class="space-y-3 px-3">
+                                    <x-admin.input type="date" name="{{ $f['key'] }}_from" label="Dari" :value="request($f['key'].'_from')" />
+                                    <x-admin.input type="date" name="{{ $f['key'] }}_to" label="Sampai" :value="request($f['key'].'_to')" />
+                                </div>
+                            </x-admin.filter-section>
+                        @endif
+                    @endforeach
+                    <x-admin.filter-actions :resetUrl="route('admin.resources.index', $resource['slug'])" />
+                </x-admin.filter-dropdown>
+            </form>
+
+            <x-admin.export-icons :resource="$resource['slug']" :selectedCount="count($recordIds)" :filter-keys="$filterKeys" />
         </div>
 
         {{-- Active filters --}}
         @php
             $activeFilters = collect();
-            if (request()->has('status') && is_array(request('status'))) {
-                foreach (request('status') as $statusValue) {
-                    if ($statusValue && isset($resource['filters']['status'][$statusValue])) {
+            foreach ($resource['filters'] as $f) {
+                if ($f['type'] === 'daterange') {
+                    if (request()->filled($f['key'].'_from')) {
                         $activeFilters->push([
-                            'label' => 'Status: ' . $resource['filters']['status'][$statusValue],
-                            'removeUrl' => request()->fullUrlWithQuery(['status' => array_values(array_diff((array) request('status'), [$statusValue]))]),
+                            'label' => $f['label'].': '.\Carbon\Carbon::parse(request($f['key'].'_from'))->format('d M Y'),
+                            'removeUrl' => request()->fullUrlWithQuery([$f['key'].'_from' => null]),
+                        ]);
+                    }
+                    if (request()->filled($f['key'].'_to')) {
+                        $activeFilters->push([
+                            'label' => $f['label'].': s/d '.\Carbon\Carbon::parse(request($f['key'].'_to'))->format('d M Y'),
+                            'removeUrl' => request()->fullUrlWithQuery([$f['key'].'_to' => null]),
+                        ]);
+                    }
+                } elseif ($f['type'] === 'multiselect') {
+                    foreach ((array) request($f['key'], []) as $val) {
+                        if (filled($val) && isset($f['options'][$val])) {
+                            $activeFilters->push([
+                                'label' => $f['label'].': '.$f['options'][$val],
+                                'removeUrl' => request()->fullUrlWithQuery([$f['key'] => array_values(array_diff((array) request($f['key']), [$val]))]),
+                            ]);
+                        }
+                    }
+                } elseif ($f['type'] === 'select') {
+                    $val = request($f['key']);
+                    if (filled($val) && isset($f['options'][$val])) {
+                        $activeFilters->push([
+                            'label' => $f['label'].': '.$f['options'][$val],
+                            'removeUrl' => request()->fullUrlWithQuery([$f['key'] => null]),
                         ]);
                     }
                 }
             }
-            if (request()->filled('date_from')) {
-                $activeFilters->push(['label' => 'Dari: ' . \Carbon\Carbon::parse(request('date_from'))->format('d M Y'), 'removeUrl' => request()->fullUrlWithQuery(['date_from' => null])]);
-            }
-            if (request()->filled('date_to')) {
-                $activeFilters->push(['label' => 'Sampai: ' . \Carbon\Carbon::parse(request('date_to'))->format('d M Y'), 'removeUrl' => request()->fullUrlWithQuery(['date_to' => null])]);
-            }
         @endphp
 
         @if($activeFilters->isNotEmpty())
-            <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 px-6 py-4">
+            <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-emerald-50/30 px-6 py-3">
                 <span class="text-sm font-semibold text-slate-600">Filter aktif:</span>
                 @foreach($activeFilters as $filter)
                     <x-admin.filter-badge :label="$filter['label']" :removeUrl="$filter['removeUrl']" />
@@ -167,6 +250,8 @@
             </div>
         @endif
 
+        {{-- Data table --}}
+        <div style="opacity: 1 !important; transform: none !important; display: block !important;">
         <x-admin.table>
             <thead class="bg-slate-50">
                 <tr>
@@ -182,11 +267,63 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse ($records as $record)
-                    <x-admin.table.row class="transition hover:bg-brand-50/40">
+                    <x-admin.table.row class="transition hover:bg-emerald-50/30">
                         <x-admin.table.checkbox-cell :value="$record->id" />
                         @foreach ($resource['columns'] as $column)
                             <x-admin.table.cell>
-                                @if($column === 'status')
+                                @if($isUser && $column === 'name')
+                                    <span class="inline-flex items-center gap-3">
+                                    <span class="relative shrink-0">
+                                        <x-admin.avatar :name="$format($record->{$column} ?? null, $column)" :src="$record->photoUrl()" size="sm" />
+                                        @if($record->is_active)
+                                            <span class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-success-500"></span>
+                                        @endif
+                                    </span>
+                                        <span class="flex min-w-0 flex-col">
+                                            <span class="truncate text-sm font-semibold text-slate-900">{{ $format($record->{$column} ?? null, $column) }}</span>
+                                            @if($record->primaryRoleName())
+                                                <span class="text-xs text-slate-500">{{ $record->primaryRoleName() }}</span>
+                                            @endif
+                                        </span>
+                                    </span>
+                                @elseif($isUser && $column === 'is_active')
+                                    @if($record->is_active)
+                                        <x-admin.status-pill variant="success" label="Aktif" pulse />
+                                    @else
+                                        <x-admin.status-pill variant="neutral" label="Nonaktif" />
+                                    @endif
+                                @elseif($isUser && $column === 'role')
+                                    @php
+                                        $roleName = $record->primaryRoleName();
+                                        $roleEnum = \App\Enums\AdminRole::tryFrom($roleName);
+                                    @endphp
+                                    @if($roleEnum)
+                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold
+                                            {{ match($roleEnum) {
+                                                \App\Enums\AdminRole::ADMIN => 'bg-indigo-50 text-indigo-700 border border-indigo-100',
+                                                \App\Enums\AdminRole::BIDANG_PENGENDALIAN => 'bg-blue-50 text-blue-700 border border-blue-100',
+                                                \App\Enums\AdminRole::BIDANG_SAMPAH_LB3 => 'bg-amber-50 text-amber-700 border border-amber-100',
+                                                \App\Enums\AdminRole::BIDANG_TATA_PENATAAN => 'bg-slate-100 text-slate-700 border border-slate-200',
+                                                \App\Enums\AdminRole::BIDANG_RTH => 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                                                default => 'bg-slate-100 text-slate-600 border border-slate-200',
+                                            } }}">
+                                            <x-admin.icon :name="$roleEnum->icon()" :size="12" />
+                                            {{ $roleEnum->label() }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-slate-400">-</span>
+                                    @endif
+                                @elseif($isUser && $column === 'email')
+                                    <span class="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                                        <x-admin.icon name="mail" :size="14" class="text-slate-400" />
+                                        {{ $format($record->{$column}, $column) }}
+                                    </span>
+                                @elseif($isUser && $column === 'username')
+                                    <span class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-slate-700">
+                                        <x-admin.icon name="user" :size="14" class="text-slate-400" />
+                                        {{ $format($record->{$column}, $column) }}
+                                    </span>
+                                @elseif($column === 'status')
                                     @php
                                         $statusText = $format($record->{$column} ?? null, $column);
                                     @endphp
@@ -194,14 +331,14 @@
                                         <x-admin.status-pill :variant="$statusVariant($statusText)" :label="$statusText" />
                                     </span>
                                 @elseif($column === 'nomor_tiket' || str_contains($column, 'nomor'))
-                                    <span class="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-ink-900">
+                                    <span class="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-slate-900">
                                         <x-admin.icon name="file-text" :size="14" class="text-slate-400" />
                                         {{ $format($record->{$column}, $column) }}
                                     </span>
                                 @elseif($column === $avatarColumn)
                                     <span class="inline-flex items-center gap-2.5">
                                         <x-admin.avatar :name="$format($record->{$column} ?? null, $column)" size="sm" />
-                                        <span class="text-sm font-semibold text-ink-800">{{ $format($record->{$column} ?? null, $column) }}</span>
+                                        <span class="text-sm font-semibold text-slate-900">{{ $format($record->{$column} ?? null, $column) }}</span>
                                     </span>
                                 @elseif(str_contains($column, 'created_at') || str_contains($column, 'updated_at') || str_contains($column, 'tanggal'))
                                     <span class="inline-flex items-center gap-1.5 text-sm text-slate-600">
@@ -209,24 +346,24 @@
                                         {{ $format($record->{$column}, $column) }}
                                     </span>
                                 @else
-                                    <span class="text-sm font-medium text-ink-700">{{ $format($record->{$column} ?? null, $column) }}</span>
+                                    <span class="text-sm font-medium text-slate-700">{{ $format($record->{$column} ?? null, $column) }}</span>
                                 @endif
                             </x-admin.table.cell>
                         @endforeach
                         <x-admin.table.cell class="text-center">
                             <div class="flex items-center justify-center gap-1">
                                 <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                   class="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-info-50 hover:text-info-600" title="Detail" aria-label="Detail">
-                                    <x-admin.icon name="eye" :size="16" />
+                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm" title="Detail" aria-label="Detail">
+                                    <x-admin.icon name="eye" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
                                 </a>
                                 <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
-                                   class="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-brand-50 hover:text-brand-600" title="Edit" aria-label="Edit">
-                                    <x-admin.icon name="edit" :size="16" />
+                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 hover:shadow-sm" title="Edit" aria-label="Edit">
+                                    <x-admin.icon name="edit" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
                                 </a>
                                 <button type="button"
                                     x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
-                                    class="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-danger-50 hover:text-danger-600" title="Hapus" aria-label="Hapus">
-                                    <x-admin.icon name="trash" :size="16" />
+                                    class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-sm" title="Hapus" aria-label="Hapus">
+                                    <x-admin.icon name="trash" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
                                 </button>
                             </div>
 
@@ -244,19 +381,21 @@
                             <x-admin.empty-state
                                 icon="folder"
                                 title="Belum ada data"
-                                description="Data akan muncul di sini. Tambahkan data baru atau ubah kata kunci pencarian."
-                                actionText="Tambah Data Pertama"
-                                :actionUrl="route('admin.resources.create', $resource['slug'])"
+                                description="Data akan muncul di sini. Ubah kata kunci pencarian jika diperlukan."
+                                @if(($resource['can_create'] ?? true))
+                                    actionText="Tambah Data Pertama"
+                                    :actionUrl="route('admin.resources.create', $resource['slug'])"
+                                @endif
                             />
                         </td>
                     </tr>
                 @endforelse
             </tbody>
         </x-admin.table>
+        </div>
 
-        <div class="border-t border-slate-200 px-6 py-4">
+        <div class="border-t border-slate-100 px-6 py-4">
             {{ $records->links() }}
         </div>
     </x-admin.card>
-    </div>
 @endsection

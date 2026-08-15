@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use App\Notifications\AdminNotification;
+use App\Support\Admin\AdminRegistry;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
@@ -26,7 +27,7 @@ class AdminNotifier
             'sampah-lb3'   => ['bidang-sampah-lb3'],
             'rth'          => ['bidang-rth'],
             'tata-penataan' => ['bidang-tata-penataan'],
-            'konten'       => ['superadmin'],
+            'konten'       => ['admin'],
             default        => [$group],
         };
     }
@@ -36,12 +37,27 @@ class AdminNotifier
         try {
             $roleNames = static::groupToRoleNames($group);
 
+            // Slug menu yang termasuk grup ini, untuk mencocokkan additional_access
+            // yang kini menyimpan slug menu spesifik (bukan key grup).
+            $groupSlugs = collect(AdminRegistry::all()[$group]['items'] ?? [])
+                ->pluck('slug')
+                ->filter()
+                ->values()
+                ->all();
+
             $users = User::where('is_active', true)
-                ->where(function ($query) use ($group, $roleNames) {
+                ->where(function ($query) use ($group, $roleNames, $groupSlugs) {
                     $query->whereHas('roles', function ($q) use ($roleNames) {
                         $q->whereIn('name', $roleNames);
-                    })
-                    ->orWhereJsonContains('additional_access', $group);
+                    });
+
+                    // Akses tambahan per-menu (slug spesifik).
+                    foreach ($groupSlugs as $slug) {
+                        $query->orWhereJsonContains('additional_access', $slug);
+                    }
+
+                    // Backward-compat: jika masih menyimpan key grup.
+                    $query->orWhereJsonContains('additional_access', $group);
                 })
                 ->get();
 

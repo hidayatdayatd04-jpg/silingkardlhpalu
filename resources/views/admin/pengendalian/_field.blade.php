@@ -15,6 +15,9 @@
     if ($value instanceof BackedEnum) $value = $value->value;
     if ($value instanceof DateTimeInterface) $value = $value->format('Y-m-d');
     $isReadonly = $field['readonly'] ?? false;
+    if (! $isReadonly && ($field['readonly_on_edit'] ?? false) && $record->exists) {
+        $isReadonly = true;
+    }
     $isRequired = $field['required'] ?? false;
     $fieldStep = $field['step'] ?? 'any';
     $fieldAccept = $field['accept'] ?? null;
@@ -25,16 +28,34 @@
 @endphp
 
 @if ($field['type'] === 'select')
+    @php
+        $hasLainnya = $field['has_lainnya'] ?? false;
+        $lainnyaName = $name . '_lainnya';
+        $lainnyaValue = old($lainnyaName, $record->{$lainnyaName} ?? null);
+        $selectOptions = $field['options'] ?? [];
+        if ($hasLainnya) {
+            $selectOptions['__lainnya__'] = 'Lainnya...';
+        }
+        $showLainnyaOnLoad = $hasLainnya && $record->exists && filled($lainnyaName) && blank($value);
+    @endphp
     <div class="{{ $isWide ? 'sm:col-span-2' : '' }}" {!! $xShowAttr !!}>
         <x-admin.select
             :label="$field['label']"
             name="{{ $name }}"
             :error="$err"
-            :options="$field['options']"
+            :options="$selectOptions"
             :selected="$value"
             placeholder="Pilih {{ $field['label'] }}"
             :required="$isRequired"
+            :disabled="$isReadonly"
         />
+        @if($hasLainnya)
+            <div id="lainnya_{{ $name }}" class="mt-2" style="display: {{ $showLainnyaOnLoad ? 'block' : 'none' }};">
+                <x-admin.form-input id="field-{{ $lainnyaName }}" type="text" name="{{ $lainnyaName }}"
+                    label="" :value="$lainnyaValue" :error="$errors->first($lainnyaName)"
+                    placeholder="Tulis {{ strtolower($field['label']) }} secara manual..." />
+            </div>
+        @endif
     </div>
 @elseif ($field['type'] === 'checkbox')
     <div {!! $xShowAttr !!}>
@@ -56,23 +77,17 @@
     </div>
 @elseif ($field['type'] === 'textarea')
     <div class="sm:col-span-2" {!! $xShowAttr !!}>
-        <label for="peng-{{ $name }}" class="mb-1.5 block text-sm font-semibold text-ink-800">
-            {{ $field['label'] }}@if($isRequired)<span class="text-danger-500"> *</span>@endif
-        </label>
-        <textarea
+        <x-admin.textarea
             id="peng-{{ $name }}"
             name="{{ $name }}"
-            rows="{{ $name === 'deskripsi' ? 4 : 3 }}"
-            @if($isRequired) required @endif
-            @if($isReadonly) readonly @endif
-            @if($err) aria-invalid="true" @endif
-            class="block w-full rounded-lg border px-3.5 py-2.5 text-sm text-ink-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-slate-400 focus:ring-4 {{ $err ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100' : 'border-slate-300 hover:border-slate-400 focus:border-brand-500 focus:ring-brand-100' }} {{ $isReadonly ? 'bg-slate-50' : 'bg-white' }}"
-        >{{ $value }}</textarea>
-        @if($err)
-            <p class="mt-1.5 flex items-center gap-1 text-xs font-semibold text-danger-600">
-                <x-admin.icon name="alert-circle" :size="14" /> {{ $err }}
-            </p>
-        @endif
+            :label="$field['label']"
+            :value="$value"
+            :error="$err"
+            :required="$isRequired"
+            :readonly="$isReadonly"
+            :rows="$name === 'deskripsi' ? 4 : 3"
+            :placeholder="$field['placeholder'] ?? ''"
+        />
     </div>
 @elseif ($field['type'] === 'file')
     @php $currentFile = $record->{$name} ?? null; @endphp
@@ -94,25 +109,38 @@
             :accept="$fieldAccept" multiple />
     </div>
 @elseif ($field['type'] === 'photos')
+    @php
+        $allowAddNew = $field['add_new_on_edit'] ?? true;
+        $canAddNew = $allowAddNew ? true : ! $record->exists;
+    @endphp
     <div class="sm:col-span-2">
-        @if($record->exists)
-            {{-- Edit mode: hanya tampilkan foto yang sudah ada, tidak bisa tambah --}}
-            @if($record instanceof \App\Models\Laporan && $record->fotos && $record->fotos->isNotEmpty())
-                <label class="mb-1.5 block text-sm font-semibold text-ink-800">{{ $field['label'] }}</label>
-                <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat (tidak dapat diubah).</p>
-                <div class="grid grid-cols-3 gap-3 sm:grid-cols-5">
-                    @foreach($record->fotos as $foto)
-                        <a href="{{ Storage::url($foto->path_foto) }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                            <img src="{{ Storage::url($foto->path_foto) }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
-                        </a>
-                    @endforeach
-                </div>
+        @if($record->exists && $record instanceof \App\Models\Laporan && $record->fotos && $record->fotos->isNotEmpty())
+            <label class="mb-1.5 block text-sm font-semibold text-ink-800">{{ $field['label'] }}</label>
+            @if($canAddNew)
+                <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat (untuk menambah foto baru, gunakan unggahan di bawah).</p>
             @else
-                <label class="mb-1.5 block text-sm font-semibold text-ink-800">{{ $field['label'] }}</label>
-                <p class="text-xs text-slate-400 italic">Tidak ada foto lampiran.</p>
+                <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat. Admin tidak dapat menambah foto baru.</p>
             @endif
-        @else
-            {{-- Create mode: tampilkan dropzone untuk upload --}}
+            <div class="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                @foreach($record->fotos as $foto)
+                    <a href="{{ Storage::url($foto->path_foto) }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                        <img src="{{ Storage::url($foto->path_foto) }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
+                    </a>
+                @endforeach
+            </div>
+            @if($canAddNew)
+                <div class="mt-4">
+                    <x-admin.dropzone
+                        name="{{ $name }}"
+                        :label="'Tambah Foto Baru'"
+                        :max="5"
+                        :max-size-mb="2"
+                        :accept="$fieldAccept ?: 'image/jpeg,image/png'"
+                        hint="Maksimal 5 foto, JPG/PNG, 2MB per foto."
+                    />
+                </div>
+            @endif
+        @elseif($canAddNew)
             <x-admin.dropzone
                 name="{{ $name }}"
                 :label="$field['label']"
@@ -122,13 +150,13 @@
                 :required="$isRequired"
                 hint="Maksimal 5 foto, JPG/PNG, 2MB per foto."
             />
+        @else
+            <p class="text-xs text-slate-500">Belum ada foto lampiran dari masyarakat.</p>
         @endif
     </div>
 @else
     @php
         $isLatLng = in_array($name, ['latitude', 'longitude'], true);
-        // Koordinat hanya bisa diubah saat create, tidak saat edit
-        if ($isLatLng && $record->exists) $isReadonly = true;
     @endphp
     <div class="{{ $isWide ? 'sm:col-span-2' : '' }}" {!! $xShowAttr !!}>
         <x-admin.form-input

@@ -32,7 +32,14 @@
     $currentStatus = old('status', $record->status instanceof \BackedEnum ? $record->status->value : ($record->status ?? 'Belum Ditindaklanjuti'));
 @endphp
 
-<div class="mx-auto max-w-4xl space-y-6">
+<div class="mx-auto max-w-4xl space-y-6" @select-lainnya.window="
+    if ($event.detail.name && $event.detail.value === '__lainnya__') {
+        document.getElementById('lainnya_' + $event.detail.name).style.display = 'block';
+    } else if ($event.detail.name) {
+        var el = document.getElementById('lainnya_' + $event.detail.name);
+        if (el) el.style.display = 'none';
+    }
+">
 
     {{-- Page header --}}
     <x-admin.page-header
@@ -70,7 +77,6 @@
                                 lng-input="peng-longitude"
                                 :lat="old('latitude', $record->latitude ?? null)"
                                 :lng="old('longitude', $record->longitude ?? null)"
-                                :readonly="$record->exists"
                             />
                         </div>
                     @endif
@@ -80,7 +86,7 @@
                             @include('admin.pengendalian._field', ['field' => $field, 'record' => $record, 'resource' => $resource])
                             @if ($field['name'] === 'role' && $resource['slug'] === 'user')
                                 <div class="sm:col-span-2">
-                                    <x-admin.group-access-selector :user="$record" :allGroups="\App\Support\Admin\AdminRegistry::availableGroups()" />
+                                    <x-admin.group-access-selector :user="$record" :allGroups="\App\Support\Admin\AdminRegistry::all()" />
                                 </div>
                             @endif
                         @endforeach

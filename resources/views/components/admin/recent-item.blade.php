@@ -21,7 +21,17 @@
     ];
     $iconClass = $iconColorClasses[$iconColor] ?? $iconColorClasses['emerald'];
 
-    $badgeLower = mb_strtolower($badge ?? '');
+    $badgeText = null;
+    if ($badge !== null) {
+        if (is_object($badge) && method_exists($badge, 'label')) {
+            $badgeText = $badge->label();
+        } elseif (is_object($badge) && method_exists($badge, 'value')) {
+            $badgeText = $badge->value;
+        } else {
+            $badgeText = (string) $badge;
+        }
+    }
+    $badgeLower = mb_strtolower($badgeText ?? '');
     $pillVariant = match(true) {
         in_array($badgeVariant, ['success','warning','danger','info','neutral']) => $badgeVariant,
         str_contains($badgeLower, 'ditinjau') && !str_contains($badgeLower, 'belum') => 'success',
@@ -50,7 +60,7 @@
         <div class="flex items-start justify-between gap-2">
             <p class="truncate font-mono text-sm font-bold text-ink-900">{{ $title }}</p>
             @if($badge)
-                <x-admin.status-pill :variant="$pillVariant" :label="$badge" class="relative z-30 shrink-0" />
+                <x-admin.status-pill :variant="$pillVariant" :label="$badgeText" class="relative z-30 shrink-0" />
             @endif
         </div>
         @if($subtitle)

@@ -30,6 +30,6 @@ class UserPolicy
 
     public function delete(User $user, User $model): bool
     {
-        return AdminAccess::isSuperadmin($user) && ! $model->hasRole(AdminRole::SUPERADMIN->value);
+        return AdminAccess::isSuperadmin($user) && ! $model->hasRole(AdminRole::ADMIN->value);
     }
 }

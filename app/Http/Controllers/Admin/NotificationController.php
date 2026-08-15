@@ -13,9 +13,31 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $allowedGroups = $user->accessibleGroups();
+
+        $notifications = $user->notifications()->latest()->paginate(20);
+
+        // Filter notifikasi berdasarkan module/akses role di pagination.
+        $moduleGroupMap = [
+            'pengendalian' => 'pengendalian',
+            'sampah-lb3' => 'sampah-lb3',
+            'rth' => 'rth',
+            'tata-penataan' => 'tata-penataan',
+        ];
+
+        $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
+            return $moduleGroupMap[$g] ?? $g;
+        })->push('system')->push('global')->all();
+
+        $filteredNotifications = $notifications->filter(function ($n) use ($allowedModules) {
+            $module = $n->data['module'] ?? 'system';
+            return in_array($module, $allowedModules);
+        });
+
+        $notifications->setCollection($filteredNotifications);
 
         return view('admin.notifications.index', [
-            'notifications' => $user->notifications()->paginate(20),
+            'notifications' => $notifications,
             'unreadCount'   => $user->unreadNotifications()->count(),
         ]);
     }
@@ -26,8 +48,9 @@ class NotificationController extends Controller
     public function poll(Request $request)
     {
         $user = auth()->user();
+        $allowedGroups = $user->accessibleGroups();
 
-        $recent = $user->notifications()->latest()->take(10)->get()->map(function ($n) {
+        $recent = $user->notifications()->latest()->take(20)->get()->map(function ($n) {
             $data = $n->data;
 
             return [
@@ -38,13 +61,29 @@ class NotificationController extends Controller
                 'color'    => $data['color'] ?? 'emerald',
                 'href'     => $data['href'] ?? null,
                 'read'     => $n->read_at !== null,
-                'time'     => $n->created_at?->diffForHumans(),
+                'module'   => $data['module'] ?? 'system',
             ];
+        });
+
+        // Filter berdasarkan module/akses role.
+        $moduleGroupMap = [
+            'pengendalian' => 'pengendalian',
+            'sampah-lb3' => 'sampah-lb3',
+            'rth' => 'rth',
+            'tata-penataan' => 'tata-penataan',
+        ];
+
+        $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
+            return $moduleGroupMap[$g] ?? $g;
+        })->push('system')->push('global')->all();
+
+        $filtered = $recent->filter(function ($n) use ($allowedModules) {
+            return in_array($n['module'], $allowedModules);
         });
 
         return response()->json([
             'unread'        => $user->unreadNotifications()->count(),
-            'notifications' => $recent,
+            'notifications' => $filtered->values(),
         ]);
     }
 

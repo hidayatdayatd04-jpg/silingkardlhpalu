@@ -14,7 +14,7 @@ class BackupController extends Controller
     protected function authorizeSuperadmin(): void
     {
         if (! auth()->user()?->isSuperadmin()) {
-            throw new AccessDeniedHttpException('Hanya Kepala Bidang (superadmin) yang dapat mengakses backup database.');
+            throw new AccessDeniedHttpException('Hanya Admin yang dapat mengakses backup database.');
         }
     }
 
@@ -31,6 +31,7 @@ class BackupController extends Controller
     public function store()
     {
         $this->authorizeSuperadmin();
+        set_time_limit(600);
 
         try {
             $path = app(DatabaseBackup::class)->dump();
@@ -53,35 +54,64 @@ class BackupController extends Controller
         $path = DatabaseBackup::safePath($file);
         abort_if($path === null, 404, 'File backup tidak ditemukan.');
 
-        return response()->download($path);
+        $name = basename($path);
+        $headers = [];
+        if (str_ends_with($name, '.zip')) {
+            $headers['Content-Type'] = 'application/zip';
+        }
+
+        return response()->download($path, $name, $headers);
     }
 
     public function restore(Request $request)
     {
         $this->authorizeSuperadmin();
 
+        // Backup/restore butuh waktu — naikkan timeout.
+        set_time_limit(600);
+
         $request->validate([
-            'file'         => ['nullable', 'file', 'mimes:sql,txt', 'max:51200'],
+            'file'         => ['nullable', 'file', 'max:102400'],
             'existing'     => ['nullable', 'string'],
             'confirmation' => ['required', 'in:RESTORE'],
         ], [
             'confirmation.required' => 'Ketik RESTORE untuk konfirmasi.',
             'confirmation.in'       => 'Konfirmasi tidak valid. Ketik RESTORE persis.',
+            'file.max'              => 'Ukuran file terlalu besar (maks 100MB).',
         ]);
 
         try {
             $service = app(DatabaseBackup::class);
 
             if ($request->hasFile('file')) {
+                $uploadedFile = $request->file('file');
+
+                if (! $uploadedFile->isValid()) {
+                    return back()->with('error', 'File gagal diunggah. Silakan coba lagi.');
+                }
+
+                $originalName = $uploadedFile->getClientOriginalName();
+                $extension = strtolower($uploadedFile->getClientOriginalExtension());
+
+                if (! in_array($extension, ['zip', 'sql', 'txt'])) {
+                    return back()->with('error', 'Format file tidak valid. Hanya file .zip atau .sql yang diterima.');
+                }
+
                 // Amankan backup saat ini dulu sebelum overwrite.
-                $service->dump('pre-restore-'.now()->format('Ymd-His').'.sql');
-                $fullPath = $request->file('file')->getRealPath();
+                $service->dump('pre-restore-'.now()->format('Ymd-His').'.zip');
+
+                $fullPath = $uploadedFile->getRealPath();
+
+                if (! is_file($fullPath)) {
+                    return back()->with('error', 'File temporary tidak ditemukan. Silakan unggah ulang.');
+                }
+
                 $count = $service->restore($fullPath);
-                $source = $request->file('file')->getClientOriginalName();
+                $source = $originalName;
             } elseif ($request->filled('existing')) {
                 $fullPath = DatabaseBackup::safePath($request->input('existing'));
                 abort_if($fullPath === null, 404, 'File backup tidak ditemukan.');
-                $service->dump('pre-restore-'.now()->format('Ymd-His').'.sql');
+                $service->dump('pre-restore-'.now()->format('Ymd-His').'.zip');
                 $count = $service->restore($fullPath);
                 $source = basename($request->input('existing'));
             } else {

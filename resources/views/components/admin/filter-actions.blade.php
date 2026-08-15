@@ -1,18 +1,18 @@
 @props(['resetUrl' => null])
 
-<div class="flex items-center gap-2 bg-slate-50 p-4">
+<div class="flex items-center gap-2 bg-slate-50 p-2.5">
     @if($resetUrl)
-        <a 
+        <a
             href="{{ $resetUrl }}"
-            class="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50"
         >
             Reset
         </a>
     @endif
-    <button 
+    <button
         type="submit"
-        class="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+        class="flex-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-center text-sm font-bold text-white transition hover:bg-emerald-700"
     >
-        Terapkan Filter
+        Terapkan
     </button>
 </div>

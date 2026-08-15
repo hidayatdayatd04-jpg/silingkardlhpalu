@@ -4,12 +4,27 @@
 @section('heading', 'Log Aktivitas')
 
 @section('content')
+    @php
+        $logFilters = ['user_id', 'event', 'module', 'date_from', 'date_to', 'q'];
+        $logParams = fn (string $fmt) => array_merge(request()->only($logFilters), ['format' => $fmt]);
+        $logExcelUrl = route('admin.activity-log.export', $logParams('xlsx'));
+        $logCsvUrl   = route('admin.activity-log.export', $logParams('csv'));
+        $logHasFilter = request()->hasAny($logFilters);
+        $logScope = $logHasFilter ? 'Hasil Filter' : 'Semua Data';
+    @endphp
+
     <x-admin.page-header
         title="Log Aktivitas Sistem"
         subtitle="Catatan seluruh aktivitas pengguna: tambah, ubah, hapus, login, ekspor, dan backup."
         icon="clock"
-    />
+    >
+        <x-slot:actions>
+            <x-admin.export-icons :excelUrl="$logExcelUrl" :csvUrl="$logCsvUrl" scopeLabel="$logScope" />
+        </x-slot:actions>
+    </x-admin.page-header>
 
+    <div x-data="{ loading: false }">
+    <div>
     <x-admin.card :padding="false">
         {{-- Filter bar --}}
         <form method="GET" class="border-b border-slate-200 p-4">
@@ -65,6 +80,10 @@
             </div>
         </form>
 
+        <div x-show="loading" class="p-6">
+            <x-admin.table-skeleton :rows="6" :columns="7" :checkbox="false" />
+        </div>
+        <div x-show="!loading">
         <x-admin.table>
             <thead class="bg-slate-50">
                 <tr>
@@ -87,7 +106,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center gap-2">
-                                <x-admin.avatar :name="$log->user_name ?? 'System'" size="sm" />
+                                <x-admin.avatar :name="$log->user_name ?? 'System'" :src="$log->user?->photoUrl()" size="sm" />
                                 <span class="text-sm font-semibold text-ink-800">{{ $log->user_name ?? 'System' }}</span>
                             </span>
                         </td>
@@ -162,9 +181,12 @@
                 @endforelse
             </tbody>
         </x-admin.table>
+        </div>
 
         <div class="border-t border-slate-200 px-6 py-4">
             {{ $logs->links() }}
         </div>
     </x-admin.card>
+    </div>
+    </div>
 @endsection

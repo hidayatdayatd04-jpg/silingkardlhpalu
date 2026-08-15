@@ -14,7 +14,7 @@
 
 <body class="min-h-screen text-ink-900 antialiased">
     <main class="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-        {{-- ══════════ Brand panel (kiri) ══════════ --}}
+        {{-- â•â•â•â•â•â•â•â•â•â• Brand panel (kiri) â•â•â•â•â•â•â•â•â•â• --}}
         <section class="relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between" style="background: var(--gradient-header-hero);">
             <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.05]"></div>
 
@@ -26,7 +26,7 @@
             </div>
 
             <div class="relative flex items-center gap-3">
-                <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo Kota Palu" class="h-14 w-auto">
+                <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo Kota Palu" class="h-20 w-auto">
                 <div>
                     <p class="text-sm font-bold uppercase tracking-[0.2em] text-brand-200">DLH Kota Palu</p>
                     <p class="text-xl font-bold">Ruang Kendali Operasional</p>
@@ -66,12 +66,12 @@
             <p class="relative text-sm text-white/60">&copy; {{ date('Y') }} Dinas Lingkungan Hidup Kota Palu</p>
         </section>
 
-        {{-- ══════════ Form panel (kanan) ══════════ --}}
+        {{-- â•â•â•â•â•â•â•â•â•â• Form panel (kanan) â•â•â•â•â•â•â•â•â•â• --}}
         <section class="flex items-center justify-center px-5 py-10" style="background: var(--gradient-page);">
             <div class="login-card w-full max-w-md">
                 {{-- Mobile brand --}}
                 <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                    <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo Kota Palu" class="h-12 w-auto">
+                    <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo Kota Palu" class="h-16 w-auto">
                     <div>
                         <p class="text-sm font-bold text-brand-700">DLH Kota Palu</p>
                         <p class="text-xs text-slate-500">Ruang Kendali Admin</p>
@@ -91,6 +91,13 @@
                         <div class="mb-5 flex items-start gap-3 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm font-semibold text-danger-800">
                             <x-admin.icon name="alert-circle" :size="18" class="mt-px shrink-0" />
                             <span>{{ session('error') }}</span>
+                        </div>
+                    @endif
+
+                    @if (session('success'))
+                        <div class="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                            <x-admin.icon name="check-circle" :size="18" class="mt-px shrink-0" />
+                            <span>{{ session('success') }}</span>
                         </div>
                     @endif
 

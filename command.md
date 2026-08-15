@@ -2,6 +2,9 @@
 
 Dokumen ini menjelaskan semua perintah yang perlu dijalankan saat pertama kali setup project ini di komputer/server baru, dan perintah apa saja yang harus terus berjalan selama development supaya semua fitur (email, GPS tracking, jadwal otomatis) berfungsi.
 
+
+analisa terlebih dahulu seluruh project lalu kerjakan agar kamu paham dengan benar dulu dan jika ada pertanyaan mohon tanyakan aja dan tolong berbahasa indonesia
+
 ---
 
 ## 1. Setup Awal (Baru Clone Project / Server Baru)
@@ -39,7 +42,7 @@ Setelah `dlh:setup-seeder` (atau `db:seed`) berhasil, akun berikut otomatis ters
 
 | Username | Password | Role |
 |----------|----------|------|
-| `superadmin` | `superadmin123` | Superadmin (akses penuh semua bidang) |
+| `admin` | `admin123` | Admin (akses penuh semua bidang) |
 | `pengendalian` | `pengendalian123` | Admin Pengendalian |
 | `sampah-lb3` | `sampah123` | Admin Sampah & LB3 |
 | `tata-penataan` | `tata123` | Admin Tata Penataan |
@@ -55,6 +58,7 @@ Ini penjelasan lengkap untuk 4 perintah yang ada di `perintah.md` sebelumnya. Id
 
 | Perintah | Fungsi | Kapan wajib dipakai | Catatan |
 |----------|--------|----------------------|---------|
+php artisan queue:work
 | `php artisan queue:listen --tries=3` | Menjalankan worker antrian (queue) yang otomatis reload kalau ada perubahan kode, memproses job seperti `SendEmailNotificationJob` (pengiriman email notifikasi tiket secara async/di background) | **Dipakai saat development**, karena kode masih sering berubah | Sedikit lebih lambat dari `queue:work` karena boot ulang tiap job, tapi aman dipakai sambil coding karena selalu baca kode terbaru |
 | `php artisan queue:work --tries=3 --timeout=60` | Sama-sama menjalankan worker antrian, tapi **tidak** otomatis reload kode — proses PHP tetap sama sampai di-restart manual | **Dipakai di server production**, lebih cepat & hemat resource dibanding `queue:listen` | Kalau ada deploy/update kode di production, wajib `php artisan queue:restart` supaya worker baca kode baru |
 | `php artisan schedule:work` | Menjalankan scheduler Laravel secara terus-menerus di lokal (mensimulasikan cron job tiap menit) — ini yang **men-trigger `gps:fetch` otomatis setiap 30 detik** sesuai jadwal di `routes/console.php` | **Wajib jalan** kalau mau data GPS armada ter-update otomatis tanpa perlu jalankan `gps:fetch` manual berulang-ulang | Di server production biasanya tidak pakai ini, tapi daftarkan 1 baris cron job (`* * * * * php artisan schedule:run`) di crontab server |
@@ -125,7 +129,7 @@ Dipakai kalau aplikasi terasa aneh/error setelah update kode, atau sebelum deplo
 | `php artisan view:clear` | Hapus cache Blade — dipakai kalau perubahan tampilan tidak muncul-muncul padahal sudah disimpan |
 | `php artisan migrate:status` | Cek migrasi mana saja yang sudah/belum jalan — berguna untuk debug kalau ada error "table not found" |
 | `php artisan queue:restart` | **Wajib** dijalankan setiap habis deploy/update kode di production yang pakai `queue:work` — supaya worker baca ulang kode terbaru (`queue:work` tidak auto-reload seperti `queue:listen`) |
-| `php artisan tinker` | Buka REPL/interactive shell Laravel — berguna untuk cek/ubah data langsung lewat kode tanpa bikin halaman baru (misal `User::where('username','superadmin')->first()`) |
+| `php artisan tinker` | Buka REPL/interactive shell Laravel — berguna untuk cek/ubah data langsung lewat kode tanpa bikin halaman baru (misal `User::where('username','admin')->first()`) |
 
 > **Penting:** `config:cache`/`route:cache`/`view:cache` **hanya untuk production**. Kalau dijalankan pas development, perubahan kode/`.env` bisa jadi tidak kelihatan karena masih baca versi cache lama — kalau ini terjadi, jalankan versi `:clear`-nya masing-masing.
 

@@ -75,6 +75,15 @@
                 <img :src="images[idx]?.url" :alt="images[idx]?.caption" class="mx-auto max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl">
                 <figcaption x-show="images[idx]?.caption" x-text="images[idx]?.caption" class="mt-3 text-center text-sm text-white/80"></figcaption>
                 <p class="mt-2 text-center text-xs font-semibold text-white/50"><span x-text="idx + 1"></span> / <span x-text="images.length"></span></p>
+                <a
+                    x-show="images[idx]?.url"
+                    x-bind:href="images[idx]?.url"
+                    download
+                    class="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                    aria-label="Unduh foto"
+                >
+                    <x-admin.icon name="download" :size="16" /> Unduh
+                </a>
             </figure>
 
             <button type="button" x-show="images.length > 1" x-on:click.stop="next()" class="absolute right-4 grid size-11 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Berikutnya">

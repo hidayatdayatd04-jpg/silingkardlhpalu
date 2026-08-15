@@ -11,7 +11,7 @@ class AdminAccess
     {
         $user ??= auth()->user();
 
-        return $user?->hasRole(AdminRole::SUPERADMIN->value) ?? false;
+        return $user?->hasRole(AdminRole::ADMIN->value) ?? false;
     }
 
     public static function hasAnyPanelRole(?User $user = null): bool

@@ -64,7 +64,7 @@ new class extends Component
             <div class="flex flex-wrap justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div>
                     <div class="text-xs text-slate-500 uppercase tracking-wider">{{ __('Nomor Tiket') }}</div>
-                    <div class="text-xl font-bold font-mono">{{ $laporan->nomor_tiket }}</div>
+                    <x-public.copy-ticket :ticket="$laporan->nomor_tiket" class="text-xl font-bold font-mono" />
                 </div>
                 <span class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold">{{ $laporan->status }}</span>
             </div>

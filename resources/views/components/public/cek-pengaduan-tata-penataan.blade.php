@@ -73,7 +73,7 @@ new class extends Component
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div>
                     <span class="text-xs text-slate-500 font-medium tracking-wider uppercase">{{ __('Nomor Tiket') }}</span>
-                    <h2 class="text-2xl font-bold font-mono mt-1">{{ $pengaduan->nomor_tiket }}</h2>
+                    <x-public.copy-ticket :ticket="$pengaduan->nomor_tiket" class="text-2xl font-bold font-mono mt-1" />
                 </div>
                 @php
                     $statusColor = $pengaduan->status?->color() ?? 'gray';
@@ -101,7 +101,7 @@ new class extends Component
                         </div>
                         <div>
                             <span class="block text-slate-500 font-medium">{{ __('Jenis Pengaduan') }}</span>
-                            <span class="font-semibold">{{ $pengaduan->jenis_pengaduan?->label() ?? $pengaduan->jenis_pengaduan }}</span>
+                            <span class="font-semibold">{{ \App\Enums\JenisPengaduanTataPenataan::tryFrom($pengaduan->jenis_pengaduan)?->label() ?? $pengaduan->jenis_pengaduan }}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 font-medium">{{ __('Tanggal Lapor') }}</span>
@@ -138,7 +138,7 @@ new class extends Component
                         <div class="grid grid-cols-3 gap-2">
                             @foreach ($pengaduan->fotos as $foto)
                                 <div class="aspect-square rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                    <img src="/storage/{{ $foto->path_foto }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                    <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
                                 </div>
                             @endforeach
                         </div>

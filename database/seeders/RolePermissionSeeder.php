@@ -16,13 +16,21 @@ class RolePermissionSeeder extends Seeder
             Role::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
         }
 
+        // Bersihkan user & role superadmin lama (sudah digabung ke admin)
+        $oldSuperadmin = User::where('username', 'superadmin')->first();
+        if ($oldSuperadmin) {
+            $oldSuperadmin->syncRoles([]);
+            $oldSuperadmin->delete();
+        }
+        Role::where('name', 'superadmin')->delete();
+
         $users = [
             [
-                'name' => 'Kepala Bidang DLH',
-                'username' => 'superadmin',
-                'email' => 'superadmin@dlhpalu.go.id',
-                'password' => 'superadmin123',
-                'role' => AdminRole::SUPERADMIN->value,
+                'name' => 'Admin',
+                'username' => 'admin',
+                'email' => 'admin@dlhpalu.go.id',
+                'password' => 'admin123',
+                'role' => AdminRole::ADMIN->value,
             ],
             [
                 'name' => 'Admin Pengendalian',
@@ -61,6 +69,7 @@ class RolePermissionSeeder extends Seeder
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'password' => Hash::make($data['password']),
+                    'password_hint' => $data['password'],
                     'is_active' => true,
                 ]
             );

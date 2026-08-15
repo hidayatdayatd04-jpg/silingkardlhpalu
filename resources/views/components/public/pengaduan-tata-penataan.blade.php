@@ -4,18 +4,17 @@ use App\Enums\JenisPengaduanTataPenataan;
 use App\Http\Requests\StorePengaduanTataPenataanRequest;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengaduanTataPenataanFoto;
-use App\Services\ImageCompressionService;
+use App\Traits\HandlesPengaduanPhotoUpload;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component {
     use WithFileUploads;
+    use HandlesPengaduanPhotoUpload;
 
     public ?string $nama_pelapor = null;
     public ?string $no_hp = null;
-    public ?string $email = null;
     public ?string $jenis_pengaduan = null;
-    public ?string $jenis_pengaduan_lainnya = null;
     public ?string $nama_terlapor = null;
     public ?string $nama_perusahaan_terlapor = null;
     public ?string $alamat = null;
@@ -24,9 +23,7 @@ new class extends Component {
     public ?string $deskripsi = null;
     public array $photos = [];
 
-    public ?string $successTicket = null;
-
-    public function submit(ImageCompressionService $compressionService)
+    public function submit()
     {
         $validated = $this->validate((new StorePengaduanTataPenataanRequest())->rules());
 
@@ -39,12 +36,11 @@ new class extends Component {
 
         \Illuminate\Support\Facades\RateLimiter::hit('pengaduan-tata-penataan:'.$ip, 3600);
 
-        $jenisPengaduan = $validated['jenis_pengaduan'] === '__lainnya__' ? ($this->jenis_pengaduan_lainnya ?? $validated['jenis_pengaduan']) : $validated['jenis_pengaduan'];
+        $jenisPengaduan = $validated['jenis_pengaduan'];
 
         $pengaduan = PengaduanTataPenataan::create([
             'nama_pelapor' => $validated['nama_pelapor'],
             'no_hp' => $validated['no_hp'],
-            'email' => $validated['email'],
             'jenis_pengaduan' => $jenisPengaduan,
             'nama_terlapor' => $validated['nama_terlapor'] ?? null,
             'nama_perusahaan_terlapor' => $validated['nama_perusahaan_terlapor'] ?? null,
@@ -54,18 +50,20 @@ new class extends Component {
             'longitude' => $validated['longitude'],
         ]);
 
-        foreach ($this->photos as $photo) {
-            $path = $compressionService->compressAndStore($photo, 'pengaduan-tata-penataan');
-            PengaduanTataPenataanFoto::create([
-                'pengaduan_tata_penataan_id' => $pengaduan->id,
-                'path_foto' => $path,
-            ]);
-        }
+        $this->queuePhotos(
+            $this->photos,
+            $pengaduan->id,
+            'pengaduan_tata_penataan_id',
+            PengaduanTataPenataanFoto::class,
+            'pengaduan-tata-penataan',
+            'tata',
+        );
 
-        $this->successTicket = $pengaduan->nomor_tiket;
+        $this->ticket = $pengaduan->nomor_tiket;
+        $this->processing = true;
 
         $this->reset([
-            'nama_pelapor', 'no_hp', 'email', 'jenis_pengaduan', 'nama_terlapor',
+            'nama_pelapor', 'no_hp', 'jenis_pengaduan', 'nama_terlapor',
             'nama_perusahaan_terlapor', 'alamat', 'deskripsi', 'photos',
         ]);
         $this->latitude = -0.9;
@@ -74,15 +72,34 @@ new class extends Component {
 
     public function jenisOptions(): array
     {
-        return array_merge(JenisPengaduanTataPenataan::options(), ['__lainnya__' => __('Lainnya...')]);
+        return JenisPengaduanTataPenataan::options();
     }
 };
 ?>
 
 <div
     class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 shadow-sm max-w-4xl mx-auto">
-    @if ($successTicket)
+    @if ($processing)
+        <div class="space-y-6 text-center py-8" wire:poll.3s="checkPhotoStatus">
+            <div
+                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold animate-spin">
+                ↻
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Sedang Memproses Foto') }}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('Pengaduan Anda telah terkirim. Foto bukti sedang dioptimalkan dan diunggah ke penyimpanan cloud (maksimal beberapa menit).') }}</p>
+            </div>
+            <div
+                class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
+                <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $ticket }}</span>
+            </div>
+        </div>
+    @elseif ($ticket)
         <div class="space-y-6 text-center py-8">
+            @if ($photoError)
+                <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">{{ $photoError }}</div>
+            @endif
             <div
                 class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                 ✓
@@ -94,14 +111,14 @@ new class extends Component {
             <div
                 class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
                 <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
-                <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $successTicket }}</span>
+                <x-public.copy-ticket :ticket="$ticket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                 <a href="{{ url('/cek-pengaduan-tata-penataan') }}"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-slate-200 hover:bg-slate-100 h-10 py-2 px-4 dark:border-slate-800 dark:hover:bg-slate-800">
                     {{ __('Cek Status Pengaduan') }}
                 </a>
-                <button wire:click="$set('successTicket', null)"
+                <button wire:click="resetPhotoState"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 py-2 px-4 dark:bg-slate-50 dark:text-slate-900">
                     {{ __('Buat Pengaduan Baru') }}
                 </button>
@@ -125,16 +142,6 @@ new class extends Component {
                     placeholder="{{ __('Contoh: 08123456789') }}"
                 />
 
-                <x-public.input
-                    wire:model="email"
-                    name="email"
-                    type="email"
-                    label="{{ __('Email') }}"
-                    placeholder="contoh@email.com"
-                    required
-                    hint="{{ __('Email untuk menerima notifikasi update status pengaduan') }}"
-                />
-
                 <div class="space-y-2.5">
                     <label for="jenis_pengaduan" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Jenis Pengaduan') }}</label>
                     <x-admin.select
@@ -147,17 +154,6 @@ new class extends Component {
                     />
                     @error('jenis_pengaduan') <span class="text-[0.8rem] font-medium text-danger-500">{{ $message }}</span> @enderror
 
-                    @if($jenis_pengaduan === '__lainnya__')
-                        <div class="mt-2">
-                            <x-public.input
-                                wire:model="jenis_pengaduan_lainnya"
-                                name="jenis_pengaduan_lainnya"
-                                label="{{ __('Jenis Pengaduan Lainnya') }}"
-                                placeholder="{{ __('Tulis jenis pengaduan secara manual...') }}"
-                                required
-                            />
-                        </div>
-                    @endif
                 </div>
 
                 <x-public.input
@@ -197,8 +193,8 @@ new class extends Component {
                 />
 
                 <div class="space-y-2.5">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti (min 1, max 5, JPG/PNG max 2MB)') }}</label>
-                    <input wire:model="photos" type="file" multiple accept="image/jpeg,image/png,image/jpg"
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti (min 1, max 5, JPG/PNG/WebP maksimal 5MB)') }}</label>
+                    <input wire:model="photos" type="file" multiple accept="image/jpeg,image/png,image/webp"
                         class="flex h-10 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1.5 text-sm dark:border-slate-800" />
                     @error('photos') <span class="text-[0.8rem] font-medium text-danger-500">{{ $message }}</span> @enderror
                     @error('photos.*') <span class="text-[0.8rem] font-medium text-danger-500">{{ $message }}</span> @enderror
@@ -226,7 +222,8 @@ new class extends Component {
                                 var self = this;
                                 window.ensureMaplibreLoaded(function() {
                                     self.map = new maplibregl.Map({ container: self.$el, style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', center: [@js($longitude), @js($latitude)], zoom: 13, attributionControl: false });
-                                    self.map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), 'top-left');
+                                    self.map.addControl(new DlhZoomControl(), 'top-left');
+if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
                                     if (window.DlhBasemapSwitcher) { var bs = new DlhBasemapSwitcher(); self.map.on('load', function() { bs.onAdd(self.map); }); }
                                     self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' }).setLngLat([@js($longitude), @js($latitude)]).addTo(self.map);
                                     self.marker.on('dragend', function() { var ll = self.marker.getLngLat(); @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });

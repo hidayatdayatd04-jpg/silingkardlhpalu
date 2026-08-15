@@ -15,7 +15,6 @@ class PengaduanTataPenataan extends Model
         'nomor_tiket',
         'nama_pelapor',
         'no_hp',
-        'email',
         'jenis_pengaduan',
         'nama_terlapor',
         'nama_perusahaan_terlapor',
@@ -31,7 +30,6 @@ class PengaduanTataPenataan extends Model
     protected function casts(): array
     {
         return [
-            'jenis_pengaduan' => JenisPengaduanTataPenataan::class,
             'status' => StatusPengaduanTataPenataan::class,
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',

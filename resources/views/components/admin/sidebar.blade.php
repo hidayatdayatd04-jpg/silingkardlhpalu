@@ -10,49 +10,64 @@
         'permohonan-rekomendasi' => 'clipboard-check',
         'pengajuan-rintek-pertek' => 'factory',
         'registrasi-usaha-lb3' => 'clipboard-list',
-        'jadwal-armada' => 'truck',
         'statistik-sampah' => 'chart-bar',
-        'perizinan-tebang-pohon' => 'axe',
         'pinjam-taman' => 'park-bench',
         'data-tanam-pohon' => 'seedling',
         'pengaduan-tata-penataan' => 'building',
-        'objek-pengawasan' => 'eye',
-        'sidak' => 'clipboard-check',
         'pelanggaran' => 'alert-triangle',
-        'sanksi' => 'shield',
         'sosialisasi' => 'presentation',
-        'sosialisasi-peserta' => 'users',
-        'pengajuan-rintek-pertek-lb3' => 'factory',
         'artikel' => 'news',
-        'ikm-response' => 'star',
-        'email-notification-log' => 'send',
+        'artikel-pengendalian' => 'news',
+        'artikel-sampah-lb3' => 'news',
+        'artikel-tata-penataan' => 'news',
+        'artikel-rth' => 'news',
+        'sekretariat' => 'building',
         'user' => 'user-check',
         'website-settings' => 'settings',
+        'peta' => 'map',
+        'whatsapp' => 'whatsapp',
     ];
 
-    $lockedGroups = collect($allGroups)->filter(fn($g, $k) => !$user->canAccessGroup($k));
     $roleName = $user->role?->label() ?? 'Admin';
 
-    // Peta access per role
+    // Peta access per role (hanya Sampah & LB3)
     $hasPetaAccess = false;
     $adminRole = $user->adminRole();
     if ($adminRole) {
         $allowedGroups = $adminRole->allowedGroups();
-        $hasPetaAccess = ! empty(array_intersect(['sampah-lb3', 'tata-penataan', 'rth'], $allowedGroups));
+        $hasPetaAccess = in_array('sampah-lb3', $allowedGroups);
+    }
+
+    // Peta menu dipindahkan ke dalam grup Sampah & LB3
+    if ($hasPetaAccess && isset($groups['sampah-lb3'])) {
+        $groups['sampah-lb3']['items'][] = ['slug' => 'peta', 'label' => 'Peta'];
     }
 @endphp
 
-{{-- ═══════════════ MOBILE SIDEBAR ═══════════════ --}}
-<div x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:open-sidebar.window="open = true" class="lg:hidden">
-    <button x-on:click="open = true" class="fixed bottom-6 right-6 z-50 size-14 rounded-2xl bg-emerald-600 text-white shadow-xl shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center">
-        <x-admin.icon name="menu" :size="22" />
-    </button>
+{{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MOBILE SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
+<div x-data="{ open: false, touchStartX: 0, touchStartY: 0 }" x-on:keydown.escape.window="open = false" x-on:open-sidebar.window="open = true"
+    x-on:touchstart.window="
+        if ($event.touches[0].clientX < 30 && Math.abs($event.touches[0].clientY) < window.innerHeight) {
+            touchStartX = $event.touches[0].clientX;
+            touchStartY = $event.touches[0].clientY;
+        }
+    "
+    x-on:touchend.window="
+        if (touchStartX > 0) {
+            const dx = $event.changedTouches[0].clientX - touchStartX;
+            const dy = Math.abs($event.changedTouches[0].clientY - touchStartY);
+            if (dx > 60 && dy < 80) { open = true; }
+            touchStartX = 0;
+            touchStartY = 0;
+        }
+    "
+    class="lg:hidden">
     <div x-show="open" x-transition.opacity x-on:click="open = false" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"></div>
     <aside x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-[300px] flex flex-col overflow-hidden text-white" style="background: linear-gradient(180deg, #0B3A2A 0%, #06291F 40%, #041B14 100%);">
         <div class="px-6 pt-6 pb-4">
             <div class="flex items-center justify-between">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo" class="h-11 w-auto" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
+                    <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo" class="h-14 w-auto" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
                     <div>
                         <p class="text-[15px] font-bold text-white tracking-tight">DLH Kota Palu</p>
                         <p class="text-[10px] text-emerald-400/50 tracking-widest uppercase mt-0.5">Ruang Kendali Admin</p>
@@ -77,52 +92,37 @@
                     </div>
                     <div class="space-y-1">
                         @foreach ($group['items'] as $item)
-                            @php $url = route('admin.resources.index', ['resource' => $item['slug']]); $isActive = $activeResource === $item['slug']; @endphp
-                            <a href="{{ $url }}" class="group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent' }}">
+                            @php
+                                $isPetaItem = $item['slug'] === 'peta';
+                                $isLink = !empty($item['link']);
+                                $isExternalLink = $isLink && !\Illuminate\Support\Str::startsWith($item['link'], '/admin');
+                                $url = $isPetaItem ? route('admin.peta.index') : ($isLink ? $item['link'] : route('admin.resources.index', ['resource' => $item['slug']]));
+                                $isActive = $isPetaItem ? request()->routeIs('admin.peta.*') : ($isLink ? (request()->path() === ltrim($item['link'], '/')) : $activeResource === $item['slug']);
+                            @endphp
+                            <a href="{{ $url }}"{{ $isExternalLink ? ' target="_blank" rel="noopener"' : '' }} class="group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent' }}">
                                 @if($isActive)<span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
                                 <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35' }}"><x-admin.icon :name="$iconMap[$item['slug']] ?? 'folder'" :size="20" /></span>
                                 <span class="text-[13px] font-medium truncate flex-1">{{ $item['label'] }}</span>
                             </a>
                         @endforeach
-                        {{-- Standalone links for Tata Penataan (mobile) --}}
-                        @if($groupKey === 'tata-penataan')
-                            @php
-                                $standaloneLinks = [
-                                    ['label' => 'Kalender Sidak', 'url' => route('admin.kalender-sidak.index'), 'icon' => 'calendar'],
-                                    ['label' => 'Kalender Sosialisasi', 'url' => route('admin.kalender-sosialisasi.index'), 'icon' => 'presentation'],
-                                    ['label' => 'Monitoring Sanksi', 'url' => route('admin.monitoring-sanksi.index'), 'icon' => 'shield'],
-                                    ['label' => 'Laporan & Statistik', 'url' => route('admin.laporan-tata-penataan.index'), 'icon' => 'bar-chart'],
-                                    ['label' => 'Laporan Sosialisasi', 'url' => route('admin.laporan-sosialisasi.index'), 'icon' => 'file-text'],
-                                    ['label' => 'Laporan Ketaatan', 'url' => route('admin.laporan-ketaatan.index'), 'icon' => 'check-circle'],
-                                ];
-                            @endphp
-                            @foreach($standaloneLinks as $link)
-                                @php $isActive = request()->routeIs($link['url']); @endphp
-                                <a href="{{ $link['url'] }}" class="group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent' }}">
-                                    @if($isActive)<span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
-                                    <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35' }}"><x-admin.icon :name="$link['icon']" :size="20" /></span>
-                                    <span class="text-[13px] font-medium truncate flex-1">{{ $link['label'] }}</span>
-                                </a>
-                            @endforeach
-                        @endif
                     </div>
                 </div>
             @endforeach
 
-            {{-- Peta Group (Mobile) --}}
-            @if($hasPetaAccess)
+            {{-- Backup Database (Mobile, Superadmin only) --}}
+            @if($user->isSuperadmin())
             <div class="pt-3">
                 <div class="flex items-center gap-3 px-2 mb-2.5">
                     <div class="h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent"></div>
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 shrink-0">Peta</p>
+                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 shrink-0">Sistem</p>
                     <div class="h-px flex-1 bg-gradient-to-l from-white/[0.08] to-transparent"></div>
                 </div>
                 <div class="space-y-1">
-                    @php $isActive = request()->routeIs('admin.peta.*'); @endphp
-                    <a href="{{ route('admin.peta.index') }}" class="group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent' }}">
+                    @php $isActive = request()->routeIs('admin.backup.*'); @endphp
+                    <a href="{{ route('admin.backup.index') }}" class="group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent' }}">
                         @if($isActive)<span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
-                        <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35' }}"><x-admin.icon name="map" :size="20" /></span>
-                        <span class="text-[13px] font-medium truncate flex-1">Peta</span>
+                        <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35' }}"><x-admin.icon name="database" :size="20" /></span>
+                        <span class="text-[13px] font-medium truncate flex-1">Backup Database</span>
                     </a>
                 </div>
             </div>
@@ -143,7 +143,7 @@
     </aside>
 </div>
 
-{{-- ═══════════════ DESKTOP SIDEBAR ═══════════════ --}}
+{{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DESKTOP SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
 <aside
     x-data="{ profileOpen: false, searchQuery: '', openSections: {} }"
     x-on:click.away="profileOpen = false"
@@ -157,7 +157,7 @@
     <div class="relative z-10 px-6 pt-6 pb-4" x-bind:class="$store.sidebar.collapsed ? 'px-3 pt-5 pb-3' : ''">
         <div class="flex items-center gap-3" x-bind:class="$store.sidebar.collapsed ? 'justify-center' : ''">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 shrink-0">
-                <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo" class="h-11 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
+                <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo" class="h-14 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
                 <div x-show="!$store.sidebar.collapsed" x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="min-w-0">
                     <p class="text-[15px] font-bold text-white tracking-tight leading-tight">DLH Kota Palu</p>
                     <p class="text-[10px] text-emerald-400/50 tracking-widest uppercase mt-0.5">Ruang Kendali Admin</p>
@@ -172,7 +172,7 @@
         </div>
     </div>
 
-    {{-- SEARCH (removed — search is in navbar) --}}
+    {{-- SEARCH (removed - search is in navbar) --}}
 
     {{-- NAVIGATION --}}
     <nav class="sidebar-nav relative z-10 flex-1 overflow-y-auto py-3 space-y-1" x-bind:class="$store.sidebar.collapsed ? 'px-2.5' : 'px-3.5'">
@@ -196,68 +196,35 @@
                 </div>
                 <div x-show="openSections['{{ $groupKey }}'] !== false" x-collapse class="space-y-0.5">
                     @foreach ($group['items'] as $item)
-                        @php $url = route('admin.resources.index', ['resource' => $item['slug']]); $isActive = $activeResource === $item['slug']; @endphp
-                        <a href="{{ $url }}" class="group relative flex items-center gap-3.5 rounded-2xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/90 border border-transparent hover:border-white/[0.05]' }}" x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'" title="{{ $item['label'] }}">
+                        @php
+                            $isPetaItem = $item['slug'] === 'peta';
+                            $isLink = !empty($item['link']);
+                            $isExternalLink = $isLink && !\Illuminate\Support\Str::startsWith($item['link'], '/admin');
+                            $url = $isPetaItem ? route('admin.peta.index') : ($isLink ? $item['link'] : route('admin.resources.index', ['resource' => $item['slug']]));
+                                $isActive = $isPetaItem ? request()->routeIs('admin.peta.*') : ($isLink ? (request()->path() === ltrim($item['link'], '/')) : $activeResource === $item['slug']);
+                        @endphp
+                        <a href="{{ $url }}"{{ $isExternalLink ? ' target="_blank" rel="noopener"' : '' }} class="group relative flex items-center gap-3.5 rounded-2xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/90 border border-transparent hover:border-white/[0.05]' }}" x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'" title="{{ $item['label'] }}">
                             @if($isActive)<span x-show="!$store.sidebar.collapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
                             <span class="grid size-10 shrink-0 place-items-center rounded-xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35 group-hover:bg-white/[0.07] group-hover:text-white/55' }}"><x-admin.icon :name="$iconMap[$item['slug']] ?? 'folder'" :size="20" /></span>
                             <span x-show="!$store.sidebar.collapsed" x-transition class="text-[13px] font-medium truncate flex-1">{{ $item['label'] }}</span>
                             @if($isActive)<span x-show="!$store.sidebar.collapsed" class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></span>@endif
                         </a>
                     @endforeach
-                    {{-- Standalone links for Tata Penataan --}}
-                    @if($groupKey === 'tata-penataan')
-                        @php
-                            $standaloneLinks = [
-                                ['label' => 'Kalender Sidak', 'url' => route('admin.kalender-sidak.index'), 'icon' => 'calendar', 'route' => 'admin.kalender-sidak.*'],
-                                ['label' => 'Kalender Sosialisasi', 'url' => route('admin.kalender-sosialisasi.index'), 'icon' => 'presentation', 'route' => 'admin.kalender-sosialisasi.*'],
-                                ['label' => 'Monitoring Sanksi', 'url' => route('admin.monitoring-sanksi.index'), 'icon' => 'shield', 'route' => 'admin.monitoring-sanksi.*'],
-                                ['label' => 'Laporan & Statistik', 'url' => route('admin.laporan-tata-penataan.index'), 'icon' => 'bar-chart', 'route' => 'admin.laporan-tata-penataan.*'],
-                                ['label' => 'Laporan Sosialisasi', 'url' => route('admin.laporan-sosialisasi.index'), 'icon' => 'file-text', 'route' => 'admin.laporan-sosialisasi.*'],
-                                ['label' => 'Laporan Ketaatan', 'url' => route('admin.laporan-ketaatan.index'), 'icon' => 'check-circle', 'route' => 'admin.laporan-ketaatan.*'],
-                            ];
-                        @endphp
-                        @foreach($standaloneLinks as $link)
-                            @php $isActive = request()->routeIs($link['route']); @endphp
-                            <a href="{{ $link['url'] }}" class="group relative flex items-center gap-3.5 rounded-2xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/90 border border-transparent hover:border-white/[0.05]' }}" x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'" title="{{ $link['label'] }}">
-                                @if($isActive)<span x-show="!$store.sidebar.collapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
-                                <span class="grid size-10 shrink-0 place-items-center rounded-xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35 group-hover:bg-white/[0.07] group-hover:text-white/55' }}"><x-admin.icon :name="$link['icon']" :size="20" /></span>
-                                <span x-show="!$store.sidebar.collapsed" x-transition class="text-[13px] font-medium truncate flex-1">{{ $link['label'] }}</span>
-                                @if($isActive)<span x-show="!$store.sidebar.collapsed" class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></span>@endif
-                            </a>
-                        @endforeach
-                    @endif
                 </div>
             </div>
         @endforeach
 
-        {{-- Peta Group (GIS Maps) --}}
-        @if($hasPetaAccess)
+        {{-- Backup Database (Superadmin only) --}}
+        @if($user->isSuperadmin())
         <div class="pt-3" x-bind:class="$store.sidebar.collapsed ? 'pt-2' : ''">
-            @php $isActive = request()->routeIs('admin.peta.*'); @endphp
-            <a href="{{ route('admin.peta.index') }}" class="group relative flex items-center gap-3.5 rounded-2xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/90 border border-transparent hover:border-white/[0.05]' }}" x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'" title="Peta">
+            @php $isActive = request()->routeIs('admin.backup.*'); @endphp
+            <a href="{{ route('admin.backup.index') }}" class="group relative flex items-center gap-3.5 rounded-2xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/15' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/90 border border-transparent hover:border-white/[0.05]' }}" x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'" title="Backup Database">
                 @if($isActive)<span x-show="!$store.sidebar.collapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>@endif
-                <span class="grid size-10 shrink-0 place-items-center rounded-xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35 group-hover:bg-white/[0.07] group-hover:text-white/55' }}"><x-admin.icon name="map" :size="20" /></span>
-                <span x-show="!$store.sidebar.collapsed" x-transition class="text-[13px] font-medium truncate flex-1">Peta</span>
+                <span class="grid size-10 shrink-0 place-items-center rounded-xl transition-all duration-300 {{ $isActive ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/[0.03] text-white/35 group-hover:bg-white/[0.07] group-hover:text-white/55' }}"><x-admin.icon name="database" :size="20" /></span>
+                <span x-show="!$store.sidebar.collapsed" x-transition class="text-[13px] font-medium truncate flex-1">Backup Database</span>
                 @if($isActive)<span x-show="!$store.sidebar.collapsed" class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></span>@endif
             </a>
         </div>
-        @endif
-
-        {{-- Locked Groups --}}
-        @if($lockedGroups->isNotEmpty())
-            <div class="pt-4" x-show="!$store.sidebar.collapsed">
-                <div class="flex items-center gap-3 px-2 mb-2.5"><div class="h-px flex-1 bg-white/[0.06]"></div><p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 shrink-0">Terkunci</p><div class="h-px flex-1 bg-white/[0.06]"></div></div>
-                <div class="space-y-1 opacity-25">
-                    @foreach ($lockedGroups->take(2) as $group)
-                        @foreach (array_slice($group['items'], 0, 2) as $item)
-                            <div class="flex items-center gap-3.5 rounded-2xl px-4 py-3 text-white/30 cursor-not-allowed border border-transparent">
-                                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white/[0.03]"><x-admin.icon name="lock" :size="18" /></span>
-                                <span class="text-[13px] font-medium truncate">{{ $item['label'] }}</span>
-                            </div>
-                        @endforeach
-                    @endforeach
-                </div>
-            </div>
         @endif
     </nav>
 

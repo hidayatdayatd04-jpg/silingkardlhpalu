@@ -81,7 +81,7 @@ new class extends Component
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div>
                     <span class="text-xs text-slate-500 font-medium tracking-wider uppercase">{{ __('Nomor Tiket') }}</span>
-                    <h2 class="text-2xl font-bold font-mono mt-1">{{ $laporan->nomor_tiket }}</h2>
+                    <x-public.copy-ticket :ticket="$laporan->nomor_tiket" class="text-2xl font-bold font-mono mt-1" />
                 </div>
                 @php
                     $statusColor = $laporan->status_color ?? 'gray';
@@ -130,19 +130,11 @@ new class extends Component
                             <p class="text-sm mt-1">{{ $laporan->catatan_admin }}</p>
                         </div>
                     @endif
-                    @if ($laporan->status === 'Selesai' && $laporan->bukti_foto_selesai)
-                        <div class="space-y-2">
-                            <span class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Bukti Foto Selesai') }}</span>
-                            <div class="rounded-md overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video relative">
-                                <img src="/storage/{{ $laporan->bukti_foto_selesai }}" alt="{{ __('Foto bukti penyelesaian laporan oleh petugas') }}" class="w-full h-full object-cover" />
-                            </div>
-                        </div>
-                    @endif
                     @if ($laporan->fotos->isNotEmpty())
                         <div class="grid grid-cols-3 gap-2">
                             @foreach ($laporan->fotos as $foto)
                                 <div class="aspect-square rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                    <img src="/storage/{{ $foto->path_foto }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                        <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
                                 </div>
                             @endforeach
                         </div>
@@ -173,7 +165,7 @@ new class extends Component
                     <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
                         <div>
                             <span class="text-xs text-slate-500 font-medium tracking-wider uppercase">{{ __('Nomor Tiket') }}</span>
-                            <h3 class="text-xl font-bold font-mono mt-1">{{ $item->nomor_tiket }}</h3>
+                            <x-public.copy-ticket :ticket="$item->nomor_tiket" class="text-xl font-bold font-mono mt-1" />
                         </div>
                         @php
                             $statusColor = $item->status_color ?? 'gray';
@@ -229,7 +221,7 @@ new class extends Component
                             <div class="grid grid-cols-3 md:grid-cols-4 gap-2">
                                 @foreach ($item->fotos as $foto)
                                     <div class="aspect-square rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                        <img src="/storage/{{ $foto->path_foto }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                    <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
                                     </div>
                                 @endforeach
                             </div>

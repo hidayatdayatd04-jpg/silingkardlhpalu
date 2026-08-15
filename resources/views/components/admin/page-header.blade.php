@@ -13,9 +13,14 @@
         : 'relative';
 @endphp
 
-<div {{ $attributes->merge(['class' => $wrap]) }} @if($isHero) style="background: var(--gradient-header-hero);" @endif>
+<div {{ $attributes->merge(['class' => $wrap]) }} @if($isHero) style="background: var(--gradient-header-hero);" @endif
+    x-data x-intersect:enter="$el.classList.add('is-in')" >
     @if($isHero)
         <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.04]"></div>
+        <div class="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-brand-400/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-20 right-24 size-48 rounded-full bg-bay-400/20 blur-3xl"></div>
+    @else
+        <div class="pointer-events-none absolute inset-0 -z-10 rounded-xl bg-gradient-to-br from-brand-50/60 via-transparent to-bay-50/40"></div>
     @endif
 
     <div class="relative">

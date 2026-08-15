@@ -12,7 +12,7 @@ enum JenisPengaduanTataPenataan: string
     {
         return match ($this) {
             self::LIMBAH => 'Limbah',
-            self::ASAP => 'Asap',
+            self::ASAP => 'Asap Pembakaran Sampah (Polusi Udara)',
             self::KEBISINGAN => 'Kebisingan',
         };
     }

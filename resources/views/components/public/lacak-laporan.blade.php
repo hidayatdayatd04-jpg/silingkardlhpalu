@@ -44,125 +44,148 @@ new class extends Component
 };
 ?>
 
-<div class="space-y-6">
-    <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-end gap-4 max-w-4xl mx-auto">
-        <div class="flex-1 w-full space-y-2">
-            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-slate-300">{{ __('Nomor Tiket Laporan') }}</label>
-            <input wire:model="searchTicket" type="text" placeholder="{{ __('Contoh: TK-XXXXXX atau TTP-XXXX-XXXX') }}" class="flex h-10 w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:ring-offset-slate-950 dark:focus-visible:ring-brand-500 font-mono tracking-widest uppercase" />
-            @error('searchTicket') <span class="text-[0.8rem] font-medium text-red-500 block">{{ $message }}</span> @enderror
+<div class="space-y-6 lc-wrap">
+    {{-- Search Bar --}}
+    <div class="lc-search-card max-w-4xl mx-auto">
+        <div class="lc-search-head">
+            <span class="lc-search-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <div class="flex-1">
+                <h3 class="lc-search-title">{{ __('Lacak Laporan') }}</h3>
+                <p class="lc-search-desc">{{ __('Masukkan nomor tiket untuk memantau status verifikasi dan tindak lanjut petugas.') }}</p>
+            </div>
         </div>
-        <button wire:click="search" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 py-2 px-6 w-full md:w-auto dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90 dark:ring-offset-slate-950 whitespace-nowrap">
-            {{ __('Cari Laporan') }}
-        </button>
+        <form wire:submit.prevent="search" class="flex flex-col md:flex-row items-stretch md:items-end gap-3">
+            <div class="flex-1">
+                <x-public.input
+                    wire:model="searchTicket"
+                    name="searchTicket"
+                    placeholder="{{ __('Contoh: TK-XXXXXX atau TTP-XXXX-XXXX') }}"
+                    required
+                />
+            </div>
+            <button type="submit" class="lc-search-btn">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                {{ __('Cari Laporan') }}
+            </button>
+        </form>
     </div>
 
     @if ($laporan)
-        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 shadow-sm space-y-8 max-w-4xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-                <div>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">{{ __('Nomor Tiket') }}</span>
-                    <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-mono mt-1">{{ $laporan->nomor_tiket }}</h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    @php
-                        $badgeColors = [
-                            'Belum Ditinjau' => 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100',
-                            'Ditinjau' => 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
-                            'Selesai' => 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
-                            'Ditolak' => 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-                            'Belum Ditindaklanjuti' => 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100',
-                            'Ditindaklanjuti' => 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
-                        ];
-                    @endphp
-                    <span class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:border-slate-800 dark:focus:ring-slate-300 {{ $badgeColors[$laporan->status_label] ?? 'bg-slate-100 text-slate-900 border-slate-200' }}">
-                        {{ $laporan->status_label }}
+        <div class="lc-result-card max-w-4xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="lc-result-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                     </span>
+                    <div>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                        <x-public.copy-ticket :ticket="$laporan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
+                    </div>
                 </div>
+                @php
+                    $badgeColors = [
+                        'Belum Ditinjau' => 'lc-status--pending',
+                        'Ditinjau' => 'lc-status--info',
+                        'Selesai' => 'lc-status--done',
+                        'Ditolak' => 'lc-status--rejected',
+                        'Belum Ditindaklanjuti' => 'lc-status--pending',
+                        'Ditindaklanjuti' => 'lc-status--info',
+                    ];
+                    $isDone = in_array($laporan->status, ['Selesai']);
+                    $isRejected = $laporan->status === 'Ditolak';
+                @endphp
+                <span class="lc-status-badge {{ $badgeColors[$laporan->status_label] ?? 'lc-status--pending' }}">
+                    @if ($isDone)
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    @elseif ($isRejected)
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    @else
+                        <span class="lc-status-dot"></span>
+                    @endif
+                    {{ $laporan->status_label }}
+                </span>
             </div>
 
-            <div class="flex w-full relative z-0 mt-4">
+            {{-- Mini Stepper --}}
+            <div class="lc-stepper-wrap">
                 @php
                     $statusStr = $laporan->status;
-                    $steps = [__('Menunggu'), __('Diproses'), __('Selesai')];
+                    $steps = [__('Menunggu'), __('Selesai')];
                     $statusToStep = [
                         'Belum Ditinjau' => 0,
-                        'Ditinjau' => 1,
-                        'Selesai' => 2,
+                        'Ditinjau' => 0,
+                        'Selesai' => 1,
                         'Ditolak' => 1,
                         'Belum Ditindaklanjuti' => 0,
                         'Ditindaklanjuti' => 1,
                     ];
                     $currentIdx = $statusToStep[$statusStr] ?? 0;
                     $isRejected = $statusStr === 'Ditolak';
-                    if ($isRejected) {
-                        $steps = [__('Menunggu'), __('Ditolak')];
-                    }
+                    if ($isRejected) { $steps = [__('Menunggu'), __('Ditolak')]; }
                 @endphp
                 @foreach ($steps as $idx => $step)
-                    <div class="relative flex-1 text-center">
+                    <div class="lc-step">
                         @if ($idx < count($steps) - 1)
-                            <div class="absolute top-4 left-1/2 w-full h-[2px] bg-slate-200 dark:bg-slate-800 -z-10"></div>
+                            <div class="lc-step-line lc-step-line--bg"></div>
                             @if ($idx < $currentIdx)
-                                <div class="absolute top-4 left-1/2 w-full h-[2px] -z-10 {{ $isRejected ? 'bg-red-500' : 'bg-brand-500' }}"></div>
+                                <div class="lc-step-line {{ $isRejected ? 'lc-step-line--rejected' : 'lc-step-line--done' }}"></div>
                             @endif
                         @endif
-
-                        <div class="mx-auto h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ring-8 ring-white dark:ring-slate-950
-                            {{ $idx <= $currentIdx 
-                                ? ($isRejected ? 'bg-red-500 text-white shadow shadow-red-500/20' : 'bg-brand-500 text-white shadow shadow-brand-500/20')
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400' }}">
-                            {{ $idx + 1 }}
-                        </div>
-                        <span class="text-xs font-bold uppercase tracking-wider block mt-4">{{ $step }}</span>
+                        <div @class([
+                            'lc-step-dot',
+                            'lc-step-dot--done' => $idx <= $currentIdx && !$isRejected,
+                            'lc-step-dot--rejected' => $idx <= $currentIdx && $isRejected,
+                            'lc-step-dot--pending' => $idx > $currentIdx,
+                        ])>{{ $idx + 1 }}</div>
+                        <span class="lc-step-label">{{ $step }}</span>
                     </div>
                 @endforeach
             </div>
 
             <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($laporan)" />
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-slate-200 dark:border-slate-800 pt-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-slate-100 dark:border-slate-800 pt-8">
                 <div class="space-y-6">
                     <div class="space-y-4">
-                        <h3 class="text-lg font-semibold tracking-tight">{{ __('Rincian Aduan') }}</h3>
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span class="block text-slate-500 dark:text-slate-400 font-medium">{{ __('Kategori') }}</span>
-                                <span class="text-slate-900 dark:text-slate-100 font-semibold">{{ $laporan->kategori }}</span>
+                        <h3 class="lc-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h3"/></svg>
+                            {{ __('Rincian Aduan') }}
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="lc-info-tile">
+                                <span class="lc-info-label">{{ __('Kategori') }}</span>
+                                <span class="lc-info-value">{{ $laporan->kategori }}</span>
                             </div>
-                            <div>
-                                <span class="block text-slate-500 dark:text-slate-400 font-medium">{{ __('Tanggal Masuk') }}</span>
-                                <span class="text-slate-900 dark:text-slate-100 font-semibold">{{ $laporan->created_at->format('d M Y H:i') }}</span>
+                            <div class="lc-info-tile">
+                                <span class="lc-info-label">{{ __('Tanggal Masuk') }}</span>
+                                <span class="lc-info-value">{{ $laporan->created_at->format('d M Y H:i') }}</span>
                             </div>
                         </div>
-                        <div>
-                            <span class="block text-sm text-slate-500 dark:text-slate-400 font-medium">{{ __('Deskripsi') }}</span>
-                            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mt-1">{{ $laporan->deskripsi }}</p>
+                        <div class="lc-desc-box">
+                            <span class="lc-info-label">{{ __('Deskripsi') }}</span>
+                            <p class="lc-desc-text">{{ $laporan->deskripsi }}</p>
                         </div>
                     </div>
 
                     @if ($statusStr === 'Ditolak')
-                        <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg">
-                            <span class="block text-sm font-semibold text-red-800 dark:text-red-400">{{ __('Alasan Penolakan') }}</span>
-                            <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ $laporan->alasan_penolakan ?? __('Tidak ada alasan penolakan yang ditulis.') }}</p>
-                        </div>
-                    @endif
-
-                    @if ($statusStr === 'Selesai' && $laporan->bukti_foto_selesai)
-                        <div class="space-y-2">
-                            <span class="block text-sm text-slate-500 dark:text-slate-400 font-medium">{{ __('Bukti Foto Selesai') }}</span>
-                            <div class="rounded-md overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video relative">
-                                <img src="/storage/{{ $laporan->bukti_foto_selesai }}" alt="{{ __('Foto bukti penyelesaian laporan oleh petugas') }}" class="w-full h-full object-cover" />
-                            </div>
+                        <div class="lc-reject-box">
+                            <span class="lc-reject-label">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                {{ __('Alasan Penolakan') }}
+                            </span>
+                            <p class="text-sm mt-1.5">{{ $laporan->alasan_penolakan ?? __('Tidak ada alasan penolakan yang ditulis.') }}</p>
                         </div>
                     @endif
 
                     @if ($laporan->fotos->isNotEmpty())
                         <div class="space-y-2">
-                            <span class="block text-sm text-slate-500 dark:text-slate-400 font-medium">{{ __('Foto Lampiran Pengaduan') }}</span>
+                            <span class="lc-info-label">{{ __('Foto Lampiran Pengaduan') }}</span>
                             <div class="grid grid-cols-3 gap-2">
                                 @foreach ($laporan->fotos as $foto)
-                                    <div class="aspect-square rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                        <img src="/storage/{{ $foto->path_foto }}" alt="{{ __('Foto lampiran pengaduan kondisi pohon') }}" class="w-full h-full object-cover" />
+                                    <div class="lc-photo-thumb">
+                                        <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto lampiran pengaduan') }}" class="w-full h-full object-cover" />
                                     </div>
                                 @endforeach
                             </div>
@@ -171,10 +194,13 @@ new class extends Component
                 </div>
 
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold tracking-tight">{{ __('Lokasi Peta') }}</h3>
+                    <h3 class="lc-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>
+                        {{ __('Lokasi Peta') }}
+                    </h3>
                     <div wire:ignore wire:key="map-{{ $laporan->nomor_tiket }}"
                          x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-laporan-{{ $laporan->nomor_tiket }}',{lat:@js($laporan->latitude),lng:@js($laporan->longitude),zoom:14,popupText:'{{ __('Lokasi Laporan') }}'})},100)">
-                        <div id="cek-map-laporan-{{ $laporan->nomor_tiket }}" class="w-full h-[300px] border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden z-0 relative"></div>
+                        <div id="cek-map-laporan-{{ $laporan->nomor_tiket }}" class="lc-map"></div>
                     </div>
                 </div>
             </div>
@@ -185,18 +211,29 @@ new class extends Component
         @php
             $statusColor = $pengaduanTataPenataan->status?->color() ?? 'gray';
             $badgeMap = [
-                'gray' => 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100',
-                'warning' => 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400',
-                'success' => 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400',
+                'gray' => 'lc-status--pending',
+                'warning' => 'lc-status--info',
+                'success' => 'lc-status--done',
             ];
+            $isDone = in_array($statusColor, ['success']);
         @endphp
-        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 shadow-sm space-y-8 max-w-4xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-                <div>
-                    <span class="text-xs text-slate-500 font-medium tracking-wider uppercase">{{ __('Nomor Tiket') }}</span>
-                    <h2 class="text-2xl font-bold font-mono mt-1">{{ $pengaduanTataPenataan->nomor_tiket }}</h2>
+        <div class="lc-result-card max-w-4xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="lc-result-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                    </span>
+                    <div>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                        <x-public.copy-ticket :ticket="$pengaduanTataPenataan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
+                    </div>
                 </div>
-                <span class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold {{ $badgeMap[$statusColor] ?? $badgeMap['gray'] }}">
+                <span class="lc-status-badge {{ $badgeMap[$statusColor] ?? 'lc-status--pending' }}">
+                    @if ($isDone)
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    @else
+                        <span class="lc-status-dot"></span>
+                    @endif
                     {{ $pengaduanTataPenataan->status?->label() ?? $pengaduanTataPenataan->status }}
                 </span>
             </div>
@@ -205,65 +242,233 @@ new class extends Component
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="block text-slate-500 font-medium">{{ __('Nama Pelapor') }}</span>
-                            <span class="font-semibold">{{ $pengaduanTataPenataan->nama_pelapor }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-slate-500 font-medium">{{ __('Jenis Pengaduan') }}</span>
-                            <span class="font-semibold">{{ $pengaduanTataPenataan->jenis_pengaduan?->label() ?? $pengaduanTataPenataan->jenis_pengaduan }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-slate-500 font-medium">{{ __('Tanggal Lapor') }}</span>
-                            <span class="font-semibold">{{ $pengaduanTataPenataan->created_at->format('d M Y H:i') }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-slate-500 font-medium">{{ __('Alamat') }}</span>
-                            <span class="font-semibold">{{ $pengaduanTataPenataan->alamat }}</span>
-                        </div>
-                        @if ($pengaduanTataPenataan->nama_terlapor)
-                            <div>
-                                <span class="block text-slate-500 font-medium">{{ __('Nama Terlapor') }}</span>
-                                <span class="font-semibold">{{ $pengaduanTataPenataan->nama_terlapor }}</span>
+                    <div class="grid grid-cols-2 gap-4">
+                        @php
+                            $items = [
+                                __('Nama Pelapor') => $pengaduanTataPenataan->nama_pelapor,
+                                __('Jenis Pengaduan') => \App\Enums\JenisPengaduanTataPenataan::tryFrom($pengaduanTataPenataan->jenis_pengaduan)?->label() ?? $pengaduanTataPenataan->jenis_pengaduan,
+                                __('Tanggal Lapor') => $pengaduanTataPenataan->created_at->format('d M Y H:i'),
+                                __('Alamat') => $pengaduanTataPenataan->alamat,
+                            ];
+                            if ($pengaduanTataPenataan->nama_terlapor) $items[__('Nama Terlapor')] = $pengaduanTataPenataan->nama_terlapor;
+                            if ($pengaduanTataPenataan->nama_perusahaan_terlapor) $items[__('Perusahaan Terlapor')] = $pengaduanTataPenataan->nama_perusahaan_terlapor;
+                        @endphp
+                        @foreach ($items as $label => $value)
+                            <div class="lc-info-tile">
+                                <span class="lc-info-label">{{ $label }}</span>
+                                <span class="lc-info-value">{{ $value }}</span>
                             </div>
-                        @endif
-                        @if ($pengaduanTataPenataan->nama_perusahaan_terlapor)
-                            <div>
-                                <span class="block text-slate-500 font-medium">{{ __('Perusahaan Terlapor') }}</span>
-                                <span class="font-semibold">{{ $pengaduanTataPenataan->nama_perusahaan_terlapor }}</span>
-                            </div>
-                        @endif
+                        @endforeach
                     </div>
-                    <div>
-                        <span class="block text-sm text-slate-500 font-medium">{{ __('Deskripsi') }}</span>
-                        <p class="text-sm text-slate-700 dark:text-slate-300 mt-1">{{ $pengaduanTataPenataan->deskripsi }}</p>
+                    <div class="lc-desc-box">
+                        <span class="lc-info-label">{{ __('Deskripsi') }}</span>
+                        <p class="lc-desc-text">{{ $pengaduanTataPenataan->deskripsi }}</p>
                     </div>
                     @if ($pengaduanTataPenataan->catatan_admin)
-                        <div class="p-4 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-lg">
-                            <span class="block text-sm font-semibold text-brand-800 dark:text-brand-400">{{ __('Catatan Admin') }}</span>
-                            <p class="text-sm mt-1">{{ $pengaduanTataPenataan->catatan_admin }}</p>
+                        <div class="lc-note-box">
+                            <span class="lc-note-label">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                {{ __('Catatan Admin') }}
+                            </span>
+                            <p class="text-sm mt-1.5">{{ $pengaduanTataPenataan->catatan_admin }}</p>
                         </div>
                     @endif
                     @if ($pengaduanTataPenataan->fotos->isNotEmpty())
-                        <div class="grid grid-cols-3 gap-2">
-                            @foreach ($pengaduanTataPenataan->fotos as $foto)
-                                <div class="aspect-square rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                    <img src="/storage/{{ $foto->path_foto }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
-                                </div>
-                            @endforeach
+                        <div class="space-y-2">
+                            <span class="lc-info-label">{{ __('Foto Bukti Pengaduan') }}</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                @foreach ($pengaduanTataPenataan->fotos as $foto)
+                                    <div class="lc-photo-thumb">
+                                        <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
 
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold">{{ __('Lokasi Peta') }}</h3>
+                    <h3 class="lc-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>
+                        {{ __('Lokasi Peta') }}
+                    </h3>
                     <div wire:ignore wire:key="map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}"
                          x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}',{lat:@js($pengaduanTataPenataan->latitude),lng:@js($pengaduanTataPenataan->longitude),zoom:14,popupText:'{{ __('Lokasi Pengaduan') }}'})},100)">
-                        <div id="cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}" class="w-full h-[300px] border border-slate-200 dark:border-slate-800 rounded-md z-0"></div>
+                        <div id="cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}" class="lc-map"></div>
                     </div>
                 </div>
             </div>
         </div>
     @endif
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+        .lc-wrap { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+
+        /* ── Search Card ── */
+        .lc-search-card {
+            background: #fff; border: 1px solid #e8efe9; border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(13,43,29,0.04), 0 12px 32px -12px rgba(13,43,29,0.1);
+        }
+        .lc-search-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+        .lc-search-icon {
+            flex-shrink: 0; width: 44px; height: 44px; border-radius: 13px;
+            background: linear-gradient(135deg, #178a53, #146a44); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 14px -2px rgba(20, 106, 68, 0.35);
+        }
+        .lc-search-icon svg { width: 20px; height: 20px; }
+        .lc-search-title { font-size: 17px; font-weight: 700; color: #12201a; letter-spacing: -0.01em; }
+        .lc-search-desc { font-size: 13px; color: #5b6b63; margin-top: 4px; line-height: 1.55; }
+
+        .lc-search-btn {
+            height: 48px; padding: 0 24px; border: none; border-radius: 9999px;
+            background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
+            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
+            transition: transform .12s ease, box-shadow .12s ease;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .lc-search-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -6px rgba(20, 106, 68, 0.55); }
+
+        /* ── Result Card ── */
+        .lc-result-card {
+            background: #fff; border: 1px solid #e8efe9; border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(13,43,29,0.04), 0 12px 32px -12px rgba(13,43,29,0.1);
+        }
+        .lc-result-icon {
+            flex-shrink: 0; width: 44px; height: 44px; border-radius: 13px;
+            background: #e6f5ec; color: #146a44;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lc-result-icon svg { width: 20px; height: 20px; }
+
+        /* ── Status Badge ── */
+        .lc-status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 9999px;
+            font-size: 12px; font-weight: 700; border: 1px solid transparent;
+        }
+        .lc-status--done { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .lc-status--pending { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .lc-status--info { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+        .lc-status--rejected { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .lc-status-dot {
+            display: inline-block; width: 6px; height: 6px; border-radius: 9999px;
+            background: currentColor; animation: lc-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes lc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* ── Stepper ── */
+        .lc-stepper-wrap {
+            display: flex; width: 100%; position: relative; z-index: 0; margin: 20px 0;
+        }
+        .lc-step { position: relative; flex: 1; text-align: center; }
+        .lc-step-line {
+            position: absolute; top: 16px; left: 50%; width: 100%; height: 2px; z-index: -1;
+        }
+        .lc-step-line--bg { background: #e8efe9; }
+        .lc-step-line--done { background: #1ea567; }
+        .lc-step-line--rejected { background: #ef4444; }
+        .lc-step-dot {
+            width: 32px; height: 32px; margin: 0 auto; border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+            box-shadow: 0 0 0 6px #fff;
+        }
+        .lc-step-dot--done { background: linear-gradient(135deg, #1ea567, #146a44); color: #fff; box-shadow: 0 0 0 6px #fff, 0 4px 10px -2px rgba(20, 106, 68, 0.4); }
+        .lc-step-dot--rejected { background: #ef4444; color: #fff; box-shadow: 0 0 0 6px #fff, 0 4px 10px -2px rgba(239, 68, 68, 0.4); }
+        .lc-step-dot--pending { background: #f1f5f3; color: #94a3b8; }
+        .lc-step-label {
+            display: block; margin-top: 12px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #5b6b63;
+        }
+
+        /* ── Section title ── */
+        .lc-section-title {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 16px; font-weight: 700; color: #12201a;
+        }
+        .lc-section-title svg { width: 18px; height: 18px; color: #146a44; }
+
+        /* ── Info tile ── */
+        .lc-info-tile {
+            background: #f8faf9; border: 1px solid #e8efe9; border-radius: 12px; padding: 12px 14px;
+        }
+        .lc-info-label {
+            display: block; font-size: 11px; font-weight: 600; color: #5b6b63;
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+        }
+        .lc-info-value { display: block; font-size: 14px; font-weight: 600; color: #12201a; line-height: 1.4; }
+
+        .lc-desc-box {
+            background: #f8faf9; border: 1px solid #e8efe9; border-radius: 12px; padding: 14px;
+        }
+        .lc-desc-text { font-size: 13.5px; color: #475569; line-height: 1.6; margin-top: 6px; }
+
+        .lc-reject-box {
+            padding: 14px 16px; background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 14px; border-left: 3px solid #ef4444;
+        }
+        .lc-reject-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 700; color: #991b1b;
+        }
+
+        .lc-note-box {
+            padding: 14px 16px; background: #f4faf6; border: 1px solid #d1e7da;
+            border-radius: 14px; border-left: 3px solid #1ea567;
+        }
+        .lc-note-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 700; color: #146a44;
+        }
+
+        .lc-photo-thumb {
+            aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+            border: 1px solid #e8efe9;
+            transition: transform .15s ease;
+        }
+        .lc-photo-thumb:hover { transform: scale(1.04); }
+
+        .lc-map {
+            width: 100%; height: 300px; border-radius: 16px; overflow: hidden;
+            border: 1px solid #e8efe9; position: relative; z-index: 0;
+        }
+
+        /* ── Dark mode ── */
+        .dark .lc-search-card { background: #1e293b; border-color: #334155; }
+        .dark .lc-search-title { color: #e2e8f0; }
+        .dark .lc-search-desc { color: #94a3b8; }
+        .dark .lc-result-card { background: #1e293b; border-color: #334155; }
+        .dark .lc-result-icon { background: rgba(30,165,103,0.15); color: #1ea567; }
+        .dark .lc-status--done { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+        .dark .lc-status--pending { background: rgba(245,158,11,0.15); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+        .dark .lc-status--info { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+        .dark .lc-status--rejected { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+        .dark .lc-step-line--bg { background: #334155; }
+        .dark .lc-step-dot--done { box-shadow: 0 0 0 6px #1e293b, 0 4px 10px -2px rgba(20, 106, 68, 0.4); }
+        .dark .lc-step-dot--rejected { box-shadow: 0 0 0 6px #1e293b, 0 4px 10px -2px rgba(239, 68, 68, 0.4); }
+        .dark .lc-step-dot--pending { background: #0f172a; color: #64748b; }
+        .dark .lc-step-label { color: #94a3b8; }
+        .dark .lc-section-title { color: #e2e8f0; }
+        .dark .lc-section-title svg { color: #6ee7b7; }
+        .dark .lc-info-tile { background: #0f172a; border-color: #334155; }
+        .dark .lc-info-label { color: #94a3b8; }
+        .dark .lc-info-value { color: #e2e8f0; }
+        .dark .lc-desc-box { background: #0f172a; border-color: #334155; }
+        .dark .lc-desc-text { color: #cbd5e1; }
+        .dark .lc-reject-box { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+        .dark .lc-reject-label { color: #fca5a5; }
+        .dark .lc-note-box { background: rgba(30,165,103,0.08); border-color: rgba(30,165,103,0.25); }
+        .dark .lc-note-label { color: #6ee7b7; }
+        .dark .lc-photo-thumb { border-color: #334155; }
+        .dark .lc-map { border-color: #334155; }
+        .dark .lc-search-btn { background: linear-gradient(180deg, #1ea567, #178a53); }
+    </style>
 </div>

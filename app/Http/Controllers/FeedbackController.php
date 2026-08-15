@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Laporan;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
-use App\Models\PerizinanTebangPohon;
 use App\Models\PermohonanPinjamTaman;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
@@ -20,7 +19,6 @@ class FeedbackController extends Controller
         PengaduanTataPenataan::class,
         PermohonanRekomendasi::class,
         PengajuanRintekPertek::class,
-        PerizinanTebangPohon::class,
         PermohonanPinjamTaman::class,
         RegistrasiUsahaLb3::class,
     ];

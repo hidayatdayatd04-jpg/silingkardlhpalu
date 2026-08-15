@@ -13,7 +13,7 @@ class UploadController extends Controller
     public function uploadImage(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
+            'file' => 'required|file|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
         ]);
 
         $file = $request->file('file');

@@ -7,7 +7,6 @@ use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
 use App\Models\PermohonanRekomendasi;
-use App\Models\PerizinanTebangPohon;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\WebsiteVisit;
 use Carbon\Carbon;
@@ -61,10 +60,6 @@ class StatistikService
             $total += PengajuanRintekPertek::query()->count();
         }
 
-        if (Schema::hasTable('perizinan_tebang_pohons')) {
-            $total += PerizinanTebangPohon::query()->count();
-        }
-
         if (Schema::hasTable('permohonan_pinjam_tamans')) {
             $total += PermohonanPinjamTaman::query()->count();
         }
@@ -115,37 +110,4 @@ class StatistikService
         return ['labels' => $labels, 'datasets' => $datasets];
     }
 
-    /**
-     * Complaint locations for map overlay.
-     */
-    public function lokasiPengaduan(array $allowedGroups = []): array
-    {
-        $bidangMap = [
-            'pengendalian' => 'pengendalian',
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
-        ];
-
-        $bidangFilters = [];
-        foreach ($allowedGroups as $group) {
-            if (isset($bidangMap[$group])) {
-                $bidangFilters[] = $bidangMap[$group];
-            }
-        }
-
-        $query = Laporan::query()
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude');
-
-        if (! empty($bidangFilters)) {
-            $query->whereIn('bidang', $bidangFilters);
-        }
-
-        return $query->select('nomor_tiket', 'bidang', 'jenis_pengaduan', 'status', 'latitude', 'longitude', 'alamat')
-            ->latest()
-            ->take(200)
-            ->get()
-            ->toArray();
-    }
 }

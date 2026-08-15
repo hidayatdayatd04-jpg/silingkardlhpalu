@@ -7,7 +7,7 @@
 @section('content')
 <div class="max-w-3xl mx-auto space-y-6">
     <x-public.page-hero
-        badge="{{ __('Informasi Layanan Public') }}"
+        badge="{{ __('Layanan Informasi Publik') }}"
         title="{{ __('Pengaduan Masyarakat') }}"
         description="{{ __('Pilih bidang terkait dan sampaikan pengaduan Anda melalui formulir di bawah ini.') }}"
     />

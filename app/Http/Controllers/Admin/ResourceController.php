@@ -610,7 +610,7 @@ class ResourceController extends Controller
         // Validasi foto profil untuk resource 'user' (tambah / ubah / hapus).
         if ($meta['slug'] === 'user') {
             $request->validate([
-                'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+                'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
                 'photo_remove' => ['nullable', 'boolean'],
             ], [
                 'photo.image' => 'File foto profil harus berupa gambar.',
@@ -655,7 +655,7 @@ class ResourceController extends Controller
             'catatan_admin' => ['nullable', 'string'],
             'alasan_penolakan' => $meta['slug'] === 'pengaduan-rth' ? [$isDitolak ? 'required' : 'nullable', 'string'] : ['nullable', 'string'],
             'photos' => [$updating ? 'nullable' : 'required', 'array', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ], [
             'nama_pelapor.required' => 'Nama lengkap wajib diisi.',
             'nomor_hp.required' => 'Nomor telepon wajib diisi.',

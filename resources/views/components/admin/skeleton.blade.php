@@ -6,7 +6,7 @@
         'circle' => 'rounded-full',
         'rect' => 'rounded-lg',
     ];
-    
+
     $widthClasses = [
         'full' => 'w-full',
         '3/4' => 'w-3/4',
@@ -14,7 +14,7 @@
         '1/3' => 'w-1/3',
         '1/4' => 'w-1/4',
     ];
-    
+
     $heightClasses = [
         'sm' => 'h-3',
         'base' => 'h-4',
@@ -23,12 +23,12 @@
         'button' => 'h-10',
         'card' => 'h-32',
     ];
-    
+
     $classes = implode(' ', [
         $typeClasses[$type] ?? $typeClasses['line'],
         $widthClasses[$width] ?? $widthClasses['full'],
         $heightClasses[$height] ?? $heightClasses['base'],
-        'animate-pulse bg-slate-200'
+        'animate-pulse bg-gradient-to-r from-emerald-200/60 via-teal-200/60 to-cyan-200/60'
     ]);
 @endphp
 
