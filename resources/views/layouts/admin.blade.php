@@ -4,9 +4,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <meta name="theme-color" content="#0a2f24">
     <title>@yield('title', 'Admin DLH Kota Palu')</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">

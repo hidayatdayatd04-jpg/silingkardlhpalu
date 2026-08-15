@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.access' => EnsureAdminPanelAccess::class,
             'track.visit' => TrackWebsiteVisit::class,
+            'no-store' => \App\Http\Middleware\NoStoreCacheHeaders::class,
         ]);
 
         $middleware->appendToGroup('web', TrackWebsiteVisit::class);
