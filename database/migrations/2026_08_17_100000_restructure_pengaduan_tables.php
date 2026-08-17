@@ -27,7 +27,9 @@ use Illuminate\Support\Facades\Storage;
  *    aset_rths, titik_tpsts, titik_tps, titik_tpas, titik_bank_sampahs,
  *    pohon_pelindungs, jalur_hijaus, hutan_kotas, password_reset_tokens.
  *
- * Backup data sebelum eksekusi: storage/tmp/backup-pengaduan-20260817.json.
+ * Backup data sebelum eksekusi sempat disimpan di
+ * storage/tmp/backup-pengaduan-20260817.json (sudah dihapus setelah migrasi
+ * sukses; data lama kini hidup di tabel-tabel baru).
  */
 return new class extends Migration
 {
@@ -50,7 +52,6 @@ return new class extends Migration
     public function down(): void
     {
         // No-op: migrasi data bersifat final (tabel lama ikut dihapus).
-        // Pulihkan dari storage/tmp/backup-pengaduan-20260817.json bila perlu.
     }
 
     // ─── Fase 1: buat 8 tabel baru ────────────────────────────────────────────
