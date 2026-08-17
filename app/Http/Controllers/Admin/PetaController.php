@@ -369,7 +369,11 @@ $collections = $layers->map(fn ($layer) => [
             Storage::disk('local')->delete($tempPath);
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']',
+                // Detail teknis (file:line) hanya di mode debug agar tidak
+                // membocorkan struktur internal ke pengguna produksi.
+                'message' => app()->hasDebugModeEnabled()
+                    ? 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']'
+                    : 'Gagal import file. Periksa format file lalu coba lagi.',
             ], 422);
         }
     }

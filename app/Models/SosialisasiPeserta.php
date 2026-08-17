@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class SosialisasiPeserta extends Model
 {
@@ -18,6 +19,7 @@ class SosialisasiPeserta extends Model
         'tanggal',
         'lokasi',
         'tim_survey',
+        'token',
     ];
 
     protected function casts(): array
@@ -25,6 +27,17 @@ class SosialisasiPeserta extends Model
         return [
             'tanggal' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Token acak untuk URL sertifikat (anti-IDOR). Di-generate di event
+        // 'creating' agar semua jalur pembuatan (form, import massal) ter-cover.
+        static::creating(function (self $peserta) {
+            if (empty($peserta->token)) {
+                $peserta->token = Str::random(32);
+            }
+        });
     }
 
     public function sosialisasi(): BelongsTo

@@ -46,7 +46,16 @@ class DashboardController extends Controller
                 'pendingTasks' => $this->buildPendingTasks($allowedGroups, $agg),
                 'charts'       => $this->buildCharts($allowedGroups, $agg),
                 'recent'       => $this->buildRecent($allowedGroups),
-                'activity'     => ActivityLog::with('user')->latest()->take(10)->get(),
+                // Feed aktivitas difilter per role: superadmin melihat semua,
+                // selain itu hanya module yang diizinkan + aktivitas sendiri.
+                'activity'     => $isSuperadmin
+                    ? ActivityLog::with('user')->latest()->take(10)->get()
+                    : ActivityLog::with('user')->latest()
+                        ->where(function ($q) use ($allowedGroups, $user) {
+                            $q->whereIn('module', AdminRegistry::allowedNotificationModules($allowedGroups))
+                                ->orWhere('user_id', $user->id);
+                        })
+                        ->take(10)->get(),
                 'summary'      => $isSuperadmin ? $statistik->summary() : null,
                 'mapReports'   => (new \App\Http\Controllers\PetaLaporanController)->reports(
                     now()->startOfMonth()->toDateString(),

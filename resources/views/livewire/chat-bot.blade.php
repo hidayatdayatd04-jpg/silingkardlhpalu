@@ -7,7 +7,7 @@
     $cityLogo     = asset('assets/images/logo-web.webp');
 @endphp
 
-<div id="chatbot-wrapper" class="fixed inset-0 pointer-events-none z-[9999]">
+<div id="chatbot-wrapper" class="fixed inset-0 pointer-events-none z-[9999]" data-pending-token="{{ $pendingToken }}">
     {{-- FAB Button --}}
     <button
         id="chatbot-fab"
@@ -343,7 +343,13 @@
         if (!dup) _history.push({ role: 'assistant', content: text });
 
         setTimeout(function () {
-            try { wire()?.call('saveAssistantMessage', text); } catch (e) {}
+            try {
+                // Token one-time dari server: mencegah caller asing menitipkan
+                // pesan assistant palsu ke riwayat chat (plan.md #8).
+                var token = document.getElementById('chatbot-wrapper')
+                    ?.getAttribute('data-pending-token') || '';
+                wire()?.call('saveAssistantMessage', text, token);
+            } catch (e) {}
         }, 400);
 
         var p = panel();

@@ -181,8 +181,11 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
     Route::delete('/{resource}/{record}', [ResourceController::class, 'destroy'])->name('resources.destroy');
 });
 
-Route::get('/sosialisasi/{sosialisasi}/sertifikat/{peserta}.pdf', function (Sosialisasi $sosialisasi, SosialisasiPeserta $peserta) {
-    abort_unless($peserta->sosialisasi_id === $sosialisasi->id, 404);
+// Akses sertifikat via token acak (bukan ID) agar tidak bisa dienumerasi (IDOR).
+Route::get('/sosialisasi/{sosialisasi}/sertifikat/{token}.pdf', function (Sosialisasi $sosialisasi, string $token) {
+    $peserta = SosialisasiPeserta::where('sosialisasi_id', $sosialisasi->id)
+        ->where('token', $token)
+        ->firstOrFail();
     $peserta->load('objekPengawasan');
     $pdf = Pdf::loadView('pdf.sertifikat-sosialisasi', compact('sosialisasi', 'peserta'));
 
@@ -254,7 +257,8 @@ Route::get('/api/armada-aktif', function () {
     return response()->json([
         'status' => true,
         'message' => 'Daftar armada berhasil diambil.',
-        'data' => \App\Models\GpsVehicleCache::all(),
+        // Hanya kolom publik — 'raw_data' tidak boleh bocor ke pengunjung.
+        'data' => \App\Models\GpsVehicleCache::select(\App\Models\GpsVehicleCache::PUBLIC_COLUMNS)->get(),
     ]);
 })->middleware('throttle:60,1');
 

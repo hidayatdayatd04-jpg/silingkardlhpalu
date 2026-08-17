@@ -63,7 +63,7 @@ class DataIO
             (clone $builder)->chunk(500, function ($rows) use ($handle, $columns) {
                 foreach ($rows as $row) {
                     fputcsv($handle, collect($columns)
-                        ->map(fn ($c) => self::displayValue($row->{$c} ?? null))
+                        ->map(fn ($c) => self::sanitizeCell(self::displayValue($row->{$c} ?? null)))
                         ->all());
                 }
             });
@@ -94,7 +94,7 @@ class DataIO
         (clone $builder)->chunk(500, function ($rows) use ($handle, $columns) {
             foreach ($rows as $row) {
                 fputcsv($handle, collect($columns)
-                    ->map(fn ($c) => self::displayValue($row->{$c} ?? null))
+                    ->map(fn ($c) => self::sanitizeCell(self::displayValue($row->{$c} ?? null)))
                     ->all());
             }
         });
@@ -228,9 +228,9 @@ class DataIO
         return response()->streamDownload(function () use ($headings, $rows) {
             $handle = fopen('php://output', 'w');
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, $headings);
+            fputcsv($handle, array_map(fn ($h) => self::sanitizeCell((string) $h), $headings));
             foreach ($rows as $row) {
-                fputcsv($handle, $row);
+                fputcsv($handle, array_map(fn ($cell) => self::sanitizeCell((string) $cell), $row));
             }
             fclose($handle);
         }, $filename, [
@@ -240,7 +240,27 @@ class DataIO
 
     protected static function xlsxCell(string $value): string
     {
-        return trim(str_replace(["\r", "\n"], ' ', $value));
+        return self::sanitizeCell(trim(str_replace(["\r", "\n"], ' ', $value)));
+    }
+
+    /**
+     * Netralkan formula injection pada sel export (CSV/XLSX).
+     *
+     * Sel yang diawali karakter pemicu formula (= + - @ \t \r) diberi prefix
+     * apostrof agar Excel/LibreOffice memperlakukannya sebagai teks. Angka
+     * murni (termasuk negatif) dilewatkan apa adanya supaya tetap numerik.
+     */
+    public static function sanitizeCell(string $value): string
+    {
+        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+            return $value;
+        }
+
+        if ($value !== '' && str_contains('=+-@' . "\t\r", $value[0])) {
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
     /**

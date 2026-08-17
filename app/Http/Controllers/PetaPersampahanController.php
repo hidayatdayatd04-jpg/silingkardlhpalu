@@ -138,7 +138,8 @@ class PetaPersampahanController extends Controller
         }
 
         $stats = StatistikSampah::query()->orderBy('tanggal')->limit(12)->get();
-        $armada = GpsVehicleCache::all();
+        // Hanya kolom publik — 'raw_data' tidak boleh bocor ke pengunjung.
+        $armada = GpsVehicleCache::select(GpsVehicleCache::PUBLIC_COLUMNS)->get();
 
         return view('public.peta-persampahan', [
             'layers' => $layers,

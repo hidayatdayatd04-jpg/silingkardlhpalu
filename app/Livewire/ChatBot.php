@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class ChatBot extends Component
@@ -9,6 +10,13 @@ class ChatBot extends Component
     public bool $isOpen = false;
     public string $message = '';
     public array $messages = [];
+
+    /**
+     * Token sekali pakai untuk memvalidasi saveAssistantMessage. Di-generate
+     * saat addUserMessage, divalidasi saat balasan AI disimpan — mencegah
+     * penyuntikan pesan "assistant" palsu via panggilan Livewire langsung.
+     */
+    public string $pendingToken = '';
 
     public function mount(): void
     {
@@ -34,6 +42,7 @@ class ChatBot extends Component
     public function clearChat(): void
     {
         $this->messages = [];
+        $this->pendingToken = '';
         session()->forget('chatbot_messages');
 
         // Kembalikan ke kondisi "chat pertama kali": simpan pesan sambutan.
@@ -49,12 +58,20 @@ class ChatBot extends Component
 
     /**
      * Called by JS after the stream completes: saves AI reply to session.
+     * Token harus cocok dengan yang diterbitkan addUserMessage — tanpa itu
+     * panggilan dianggap spoofing dan balasan tidak disimpan.
      */
-    public function saveAssistantMessage(string $content): void
+    public function saveAssistantMessage(string $content, string $token = ''): void
     {
         if (empty(trim($content))) {
             return;
         }
+
+        if ($this->pendingToken === '' || ! hash_equals($this->pendingToken, $token)) {
+            return;
+        }
+
+        $this->pendingToken = '';
 
         $this->messages[] = [
             'role'      => 'assistant',
@@ -80,6 +97,9 @@ class ChatBot extends Component
             'timestamp' => now()->toIso8601String(),
         ];
         $this->saveMessages();
+
+        // Terbitkan token untuk balasan AI yang akan disimpan setelah stream.
+        $this->pendingToken = Str::random(32);
     }
 
     public function sendSuggestion(string $text): void

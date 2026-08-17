@@ -10,6 +10,23 @@ class GpsVehicleCache extends Model
 
     protected $primaryKey = 'imei';
 
+    /**
+     * Kolom yang aman dipublikasikan (endpoint /api/armada-aktif & peta
+     * persampahan). 'raw_data' sengaja dikecualikan agar payload mentah
+     * GPS tracker tidak bocor ke pengunjung.
+     */
+    public const PUBLIC_COLUMNS = [
+        'imei',
+        'title',
+        'veh_type',
+        'latitude',
+        'longitude',
+        'speed',
+        'angle',
+        'acc',
+        'server_time',
+    ];
+
     public $incrementing = false;
 
     protected $keyType = 'string';
