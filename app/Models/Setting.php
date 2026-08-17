@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
+    protected $table = 'setting';
+
     protected $fillable = ['key', 'value', 'group'];
 
     protected function casts(): array

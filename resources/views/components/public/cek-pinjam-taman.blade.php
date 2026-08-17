@@ -13,7 +13,7 @@ new class extends Component
     {
         $this->validate(['searchTicket' => 'required|string']);
 
-        $this->permohonan = PermohonanPinjamTaman::with('tamanKota')
+        $this->permohonan = PermohonanPinjamTaman::query()
             ->where('nomor_tiket', trim($this->searchTicket))
             ->first();
 
@@ -28,7 +28,7 @@ new class extends Component
     {
         $this->validate(['searchNama' => 'required|string|min:3']);
 
-        $this->permohonan = PermohonanPinjamTaman::with('tamanKota')
+        $this->permohonan = PermohonanPinjamTaman::query()
             ->where('nama_pemohon', 'like', '%'.trim($this->searchNama).'%')
             ->latest()
             ->first();
@@ -103,7 +103,7 @@ new class extends Component
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                     </span>
                     <div>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
                         <x-public.copy-ticket :ticket="$permohonan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
                     </div>
                 </div>
@@ -135,7 +135,7 @@ new class extends Component
                     $infoItems = [
                         __('Nama Pemohon') => $permohonan->nama_pemohon,
                         __('Nama Kegiatan') => $permohonan->nama_kegiatan,
-                        __('Taman') => $permohonan->nama_taman_manual ?? $permohonan->tamanKota?->nama ?? '-',
+                        __('Taman') => $permohonan->nama_taman ?? '-',
                         __('Tanggal Pengajuan') => $permohonan->created_at->format('d M Y H:i'),
                         __('Tanggal Kegiatan') => $permohonan->tanggal_kegiatan->format('d M Y H:i'),
                         __('Tanggal Selesai') => $permohonan->tanggal_selesai?->format('d M Y H:i') ?? '-',
@@ -162,9 +162,8 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-        .ck-wrap { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .ck-wrap { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         .ck-card {
             background: #fff; border: 1px solid #e8efe9; border-radius: 20px; padding: 24px;
@@ -187,7 +186,7 @@ new class extends Component
         .ck-search-btn {
             width: 100%; height: 46px; border: none; border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px; font-weight: 700; cursor: pointer;
             box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
             transition: transform .12s ease, box-shadow .12s ease;

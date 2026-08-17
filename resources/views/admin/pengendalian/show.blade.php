@@ -31,6 +31,7 @@
 
     $regularFields = collect($fields)->reject(fn($f) => in_array($f['type'], ['file', 'textarea', 'section', 'photos']))->values()->all();
     $textareaFieldList = collect($fields)->filter(fn($f) => $f['type'] === 'textarea')->values()->all();
+    $fileFieldList = collect($fields)->filter(fn($f) => $f['type'] === 'file')->values()->all();
 
     $iconFor = function ($fieldName) {
         return match(true) {
@@ -52,7 +53,7 @@
     $hasMap = $mapLat !== null && $mapLng !== null && $mapLat != 0 && $mapLng != 0;
 
     $fotos = ($record instanceof \App\Models\Laporan && $record->fotos && $record->fotos->isNotEmpty())
-        ? $record->fotos->map(fn($f) => ['url' => Storage::url($f->path_foto), 'caption' => ''])->all()
+        ? $record->fotos->map(fn($f) => ['url' => $f->fullUrl(), 'caption' => ''])->all()
         : [];
 @endphp
 
@@ -115,13 +116,38 @@
                             @foreach ($textareaFieldList as $field)
                                 @php $value = $record->{$field['name']} ?? null; @endphp
                                 <div>
-                                    <p class="mb-1.5 text-caption font-bold uppercase tracking-[0.1em] text-slate-500">{{ $field['label'] }}</p>
+                                    <p class="mb-1.5 text-caption font-semibold uppercase tracking-[0.08em] text-slate-500">{{ $field['label'] }}</p>
                                     <p class="whitespace-pre-line text-sm leading-relaxed text-ink-700">{{ filled($value) ? $value : '-' }}</p>
                                 </div>
                             @endforeach
                         </div>
                     </x-admin.section-card>
                 </div>
+            @endif
+
+            {{-- Dokumen & lampiran (field file) --}}
+            @if($fileFieldList)
+                @php $fileFieldsWithData = collect($fileFieldList)->filter(fn ($field) => filled($record->{$field['name']} ?? null))->values(); @endphp
+                @if($fileFieldsWithData->isNotEmpty())
+                    <div class="stagger-item">
+                        <x-admin.section-card title="Dokumen & Lampiran" icon="download" :subtitle="$fileFieldsWithData->count() . ' file'">
+                            <div class="space-y-3">
+                                @foreach($fileFieldsWithData as $field)
+                                    @php
+                                        $docPath = $record->{$field['name']} ?? null;
+                                        $docExt = $docPath ? pathinfo($docPath, PATHINFO_EXTENSION) : '';
+                                        $docName = $docExt ? $field['label'].'.'.$docExt : $field['label'];
+                                    @endphp
+                                    <x-admin.file-preview
+                                        :label="$field['label']"
+                                        :path="$docPath"
+                                        :downloadName="$docName"
+                                    />
+                                @endforeach
+                            </div>
+                        </x-admin.section-card>
+                    </div>
+                @endif
             @endif
 
             {{-- Foto bukti --}}
@@ -144,18 +170,17 @@
                         <div id="admin-pengendalian-map" style="height:280px" class="w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100"></div>
                         <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
                             <div class="rounded-lg bg-slate-50 px-3 py-2">
-                                <p class="font-bold uppercase tracking-wide text-slate-400">Latitude</p>
+                                <p class="font-semibold uppercase tracking-wide text-slate-400">Latitude</p>
                                 <p class="mt-0.5 font-mono font-semibold text-ink-800">{{ $mapLat }}</p>
                             </div>
                             <div class="rounded-lg bg-slate-50 px-3 py-2">
-                                <p class="font-bold uppercase tracking-wide text-slate-400">Longitude</p>
+                                <p class="font-semibold uppercase tracking-wide text-slate-400">Longitude</p>
                                 <p class="mt-0.5 font-mono font-semibold text-ink-800">{{ $mapLng }}</p>
                             </div>
                         </div>
                     </x-admin.section-card>
                 </div>
                 @push('scripts')
-                @vite('resources/js/map-bundle.js')
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         window.ensureMaplibreLoaded(function () {

@@ -10,7 +10,7 @@
         <div class="dlh-pre__badge">
             <span class="dlh-pre__ring" aria-hidden="true"></span>
             <span class="dlh-pre__ring2" aria-hidden="true"></span>
-            <img src="{{ asset('assets/images/logo-web.png') }}" alt="" width="120" height="120" class="dlh-pre__logo">
+            <img src="{{ asset('assets/images/logo-web.webp') }}" alt="" width="120" height="120" class="dlh-pre__logo">
         </div>
         <p class="dlh-pre__title">{{ __('Dinas Lingkungan Hidup') }}</p>
         <p class="dlh-pre__subtitle">{{ __('Kota Palu') }}</p>
@@ -29,7 +29,7 @@
 <style>
     #dlh-preloader{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
         background:radial-gradient(circle at 30% 25%,#065f46 0%,#064e3b 45%,#082f40 100%);
-        opacity:1;transition:opacity .6s ease,visibility .6s ease;overflow:hidden}
+        opacity:1;transition:opacity .3s ease,visibility .3s ease;overflow:hidden}
     #dlh-preloader.dlh-pre--hide{opacity:0;visibility:hidden;pointer-events:none}
     .dlh-pre__glow{position:absolute;width:520px;height:520px;border-radius:9999px;
         background:radial-gradient(circle,rgba(45,212,191,.35),transparent 60%);filter:blur(40px);
@@ -71,7 +71,13 @@
         if (!pre) return;
 
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var DURATION = reduced ? 500 : 1500; // tampil tetap ~1,5 detik tiap refresh
+        // Hanya tampilkan preloader pada kunjungan PERTAMA per sesi tab —
+        // refresh/navigasi balik tidak perlu menunggu layar bermerek lagi.
+        // Durasi dipangkas (250ms) agar tidak menahan LCP terlalu lama,
+        // tetap cukup memberi FCP instan & menunda JS berat sejenak.
+        var seen = false;
+        try { seen = sessionStorage.getItem('dlh-pre-seen') === '1'; sessionStorage.setItem('dlh-pre-seen', '1'); } catch (e) {}
+        var DURATION = reduced ? 150 : (seen ? 200 : 250);
         var fill = document.getElementById('dlh-pre-fill');
         var start = Date.now();
 

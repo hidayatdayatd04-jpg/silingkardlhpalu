@@ -46,7 +46,7 @@ function initPageTransition() {
             <div class="admin-preloader-badge">
                 <span class="admin-preloader-ring"></span>
                 <span class="admin-preloader-ring2"></span>
-                <img src="/assets/images/logo-web.png" alt="" width="120" height="120" class="admin-preloader-logo">
+                <img src="/assets/images/logo-web.webp" alt="" width="120" height="120" class="admin-preloader-logo">
             </div>
             <p class="admin-preloader-title">Dinas Lingkungan Hidup</p>
             <p class="admin-preloader-subtitle">Kota Palu</p>

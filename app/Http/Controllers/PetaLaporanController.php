@@ -8,7 +8,9 @@ use App\Enums\JenisPengaduanRth;
 use App\Enums\JenisPengaduanSampah;
 use App\Enums\JenisPengaduanTataPenataan;
 use App\Enums\StatusPengaduanTataPenataan;
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -60,47 +62,41 @@ class PetaLaporanController extends Controller
     }
 
     /**
-     * Kumpulkan semua laporan berkoordinat dari keempat bidang
-     * (Pengendalian, Sampah & LB3, RTH via tabel `laporans`;
-     * Tata Penataan via tabel `pengaduan_tata_penataans`) dalam rentang tanggal,
-     * dibatasi pada bidang yang diizinkan (`$allowedGroups`).
+     * Kumpulkan semua pengaduan berkoordinat dari keempat tabel per bidang
+     * (pengaduan_pengendalian, pengaduan_sampah, pengaduan_rth,
+     * pengaduan_tata_penataan) dalam rentang tanggal, dibatasi pada bidang
+     * yang diizinkan (`$allowedGroups`).
      */
     private function query(string $from, string $to, array $allowedGroups = []): array
     {
-        $laporanBidangs = array_values(array_intersect(
-            [Bidang::PENGENDALIAN->value, Bidang::SAMPAH_LB3->value, Bidang::RTH->value],
-            $allowedGroups,
-        ));
+        $items = Collection::make();
 
-        $laporanItems = Collection::make();
-        if (! empty($laporanBidangs)) {
-            $laporanItems = Laporan::query()
-                ->whereIn('bidang', $laporanBidangs)
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->whereDate('created_at', '>=', $from)
-                ->whereDate('created_at', '<=', $to)
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->filter(fn (Laporan $l) => ! ((float) $l->latitude === 0.0 && (float) $l->longitude === 0.0))
-                ->map(fn (Laporan $l) => $this->fromLaporan($l));
+        $sources = [
+            Bidang::PENGENDALIAN->value => [PengaduanPengendalian::class, 'P', fn ($l, $idPrefix) => $this->fromPengaduan($l, 'pengendalian', JenisPengaduanPengendalian::options(), $idPrefix)],
+            Bidang::SAMPAH_LB3->value => [PengaduanSampah::class, 'S', fn ($l, $idPrefix) => $this->fromPengaduan($l, 'sampah-lb3', JenisPengaduanSampah::options(), $idPrefix)],
+            Bidang::RTH->value => [PengaduanRth::class, 'R', fn ($l, $idPrefix) => $this->fromPengaduan($l, 'rth', JenisPengaduanRth::options(), $idPrefix)],
+            Bidang::TATA_PENATAAN->value => [PengaduanTataPenataan::class, 'T', fn ($l, $idPrefix) => $this->fromTtp($l, $idPrefix)],
+        ];
+
+        foreach ($sources as $group => [$modelClass, $idPrefix, $mapper]) {
+            if (! in_array($group, $allowedGroups, true)) {
+                continue;
+            }
+
+            $items = $items->concat(
+                $modelClass::query()
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->whereDate('created_at', '>=', $from)
+                    ->whereDate('created_at', '<=', $to)
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->filter(fn ($l) => ! ((float) $l->latitude === 0.0 && (float) $l->longitude === 0.0))
+                    ->map(fn ($l) => $mapper($l, $idPrefix))
+            );
         }
 
-        $ttpItems = Collection::make();
-        if (in_array(Bidang::TATA_PENATAAN->value, $allowedGroups, true)) {
-            $ttpItems = PengaduanTataPenataan::query()
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->whereDate('created_at', '>=', $from)
-                ->whereDate('created_at', '<=', $to)
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->filter(fn (PengaduanTataPenataan $l) => ! ((float) $l->latitude === 0.0 && (float) $l->longitude === 0.0))
-                ->map(fn (PengaduanTataPenataan $l) => $this->fromTtp($l));
-        }
-
-        return $laporanItems
-            ->concat($ttpItems)
+        return $items
             ->sortByDesc('waktu')
             ->map(fn (array $item) => collect($item)->except('waktu')->all())
             ->values()
@@ -108,28 +104,21 @@ class PetaLaporanController extends Controller
     }
 
     /**
-     * Normalisasi laporan dari tabel `laporans` (pengendalian / sampah-lb3 / rth).
-     * TIDAK menyertakan data pribadi pelapor (nama_pelapor, nomor_hp, email).
+     * Normalisasi pengaduan dari tabel pengaduan_pengendalian /
+     * pengaduan_sampah / pengaduan_rth. TIDAK menyertakan data pribadi
+     * pelapor (nama_pelapor, nomor_hp).
      */
-    private function fromLaporan(Laporan $l): array
+    private function fromPengaduan($l, string $bidang, array $jenisOptions, string $idPrefix = ''): array
     {
-        $bidang = $l->bidang?->value ?? 'pengendalian';
-        $statusRaw = (string) $l->status;
-
-        $jenisLabel = match ($bidang) {
-            'pengendalian' => JenisPengaduanPengendalian::options()[$l->jenis_pengaduan] ?? $l->jenis_pengaduan,
-            'sampah-lb3'   => JenisPengaduanSampah::options()[$l->jenis_pengaduan] ?? $l->jenis_pengaduan,
-            'rth'          => JenisPengaduanRth::options()[$l->jenis_pengaduan] ?? $l->jenis_pengaduan,
-            default        => $l->jenis_pengaduan,
-        };
+        $statusRaw = $l->status instanceof \BackedEnum ? $l->status->value : (string) $l->status;
 
         return [
-            'id' => 'L'.$l->id,
+            'id' => $idPrefix.$l->id,
             'bidang' => $bidang,
             'bidang_label' => self::BIDANG_LABELS[$bidang] ?? $bidang,
             'bidang_color' => self::BIDANG_COLORS[$bidang] ?? '#6b7280',
             'nomor_tiket' => $l->nomor_tiket,
-            'jenis_label' => $jenisLabel,
+            'jenis_label' => $jenisOptions[$l->jenis_pengaduan] ?? $l->jenis_pengaduan,
             'alamat' => $l->alamat,
             'deskripsi' => $l->deskripsi,
             'status' => $statusRaw,
@@ -144,17 +133,17 @@ class PetaLaporanController extends Controller
     }
 
     /**
-     * Normalisasi pengaduan Tata Penataan dari tabel `pengaduan_tata_penataans`.
-     * TIDAK menyertakan data pribadi pelapor (nama_pelapor, no_hp, email).
+     * Normalisasi pengaduan Tata Penataan dari tabel `pengaduan_tata_penataan`.
+     * TIDAK menyertakan data pribadi pelapor (nama_pelapor, nomor_hp).
      */
-    private function fromTtp(PengaduanTataPenataan $l): array
+    private function fromTtp(PengaduanTataPenataan $l, string $idPrefix = 'T'): array
     {
         $statusEnum = $l->status;
         $statusRaw = $statusEnum instanceof StatusPengaduanTataPenataan ? $statusEnum->value : (string) $l->status;
         $statusLabel = $statusEnum instanceof StatusPengaduanTataPenataan ? $statusEnum->label() : $statusRaw;
 
         return [
-            'id' => 'T'.$l->id,
+            'id' => $idPrefix.$l->id,
             'bidang' => 'tata-penataan',
             'bidang_label' => self::BIDANG_LABELS['tata-penataan'],
             'bidang_color' => self::BIDANG_COLORS['tata-penataan'],

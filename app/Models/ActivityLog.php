@@ -9,6 +9,8 @@ class ActivityLog extends Model
 {
     public const UPDATED_AT = null;
 
+    protected $table = 'activity_log';
+
     protected $fillable = [
         'user_id',
         'user_name',

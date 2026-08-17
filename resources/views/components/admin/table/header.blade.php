@@ -6,7 +6,7 @@
     $sortUrl = $sortable && $column ? request()->fullUrlWithQuery(['sort' => $column, 'direction' => $nextDirection]) : null;
 @endphp
 
-<th {{ $attributes->merge(['class' => 'sticky top-0 z-10 bg-slate-50/95 px-5 py-3.5 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 backdrop-blur-sm first:rounded-tl-xl last:rounded-tr-xl']) }}>
+<th {{ $attributes->merge(['class' => 'sticky top-0 z-10 bg-slate-50/95 px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 backdrop-blur-sm first:rounded-tl-xl last:rounded-tr-xl']) }}>
     @if($sortable && $column)
         <a
             href="{{ $sortUrl }}"

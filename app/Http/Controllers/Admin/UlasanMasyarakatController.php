@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
@@ -69,7 +71,9 @@ class UlasanMasyarakatController extends Controller
     private function modelLabel(string $class): string
     {
         return match ($class) {
-            Laporan::class => 'Pengaduan Masyarakat',
+            PengaduanPengendalian::class => 'Pengaduan Pengendalian',
+            PengaduanSampah::class => 'Pengaduan Sampah & LB3',
+            PengaduanRth::class => 'Pengaduan RTH',
             PengaduanTataPenataan::class => 'Pengaduan Tata Penataan',
             PermohonanRekomendasi::class => 'Permohonan Rekomendasi',
             PengajuanRintekPertek::class => 'RINTEK/PERTEK',
@@ -82,7 +86,9 @@ class UlasanMasyarakatController extends Controller
     private function modelBidang(string $class): string
     {
         return match ($class) {
-            Laporan::class => 'pengendalian',
+            PengaduanPengendalian::class => 'pengendalian',
+            PengaduanSampah::class => 'sampah-lb3',
+            PengaduanRth::class => 'rth',
             PengaduanTataPenataan::class => 'tata-penataan',
             PermohonanRekomendasi::class => 'pengendalian',
             PengajuanRintekPertek::class => 'sampah-lb3',

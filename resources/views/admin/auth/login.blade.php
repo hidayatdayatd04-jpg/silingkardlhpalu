@@ -5,7 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk Admin DLH Kota Palu</title>
+    <meta name="description" content="Masuk ke panel admin SILINGKAR — Sistem Informasi Lingkungan Hidup Dinas Lingkungan Hidup Kota Palu.">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    @include('partials.web-fonts')
     {{-- Vite bundle memuat Alpine self-hosted (resources/js/alpine.js) — tanpa CDN. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -24,16 +26,16 @@
             </div>
 
             <div class="relative flex items-center gap-3">
-                <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo Kota Palu" class="h-20 w-auto">
+                <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-20 w-auto">
                 <div>
-                    <p class="text-sm font-bold uppercase tracking-[0.2em] text-brand-200">DLH Kota Palu</p>
+                    <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">DLH Kota Palu</p>
                     <p class="text-xl font-bold">Ruang Kendali Operasional</p>
                 </div>
             </div>
 
             <div class="relative max-w-xl">
-                <p class="mb-5 text-sm font-bold uppercase tracking-[0.22em] text-brand-200">Portal Admin</p>
-                <h1 class="text-4xl font-extrabold leading-tight xl:text-5xl">Dinas Lingkungan Hidup Kota Palu</h1>
+                <p class="mb-5 text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">Portal Admin</p>
+                <h1 class="text-3xl font-bold leading-tight xl:text-4xl">Dinas Lingkungan Hidup Kota Palu</h1>
                 <p class="mt-5 text-lg leading-8 text-white/80">Kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna dalam satu panel yang cepat &amp; rapi.</p>
 
                 <div class="mt-10 grid grid-cols-3 gap-4">
@@ -41,21 +43,21 @@
                         <div class="grid size-8 place-items-center rounded-lg bg-brand-500/20 text-brand-300">
                             <x-admin.icon name="dashboard" :size="18" />
                         </div>
-                        <p class="mt-3 text-2xl font-extrabold">20+</p>
+                        <p class="mt-3 text-xl font-bold">20+</p>
                         <p class="text-xs text-white/50">Modul Data</p>
                     </div>
                     <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                         <div class="grid size-8 place-items-center rounded-lg bg-info-500/20 text-info-300">
                             <x-admin.icon name="eye" :size="18" />
                         </div>
-                        <p class="mt-3 text-2xl font-extrabold">Real-time</p>
+                        <p class="mt-3 text-xl font-bold">Real-time</p>
                         <p class="text-xs text-white/50">Monitoring</p>
                     </div>
                     <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                         <div class="grid size-8 place-items-center rounded-lg bg-warning-500/20 text-warning-300">
                             <x-admin.icon name="circle-check" :size="18" />
                         </div>
-                        <p class="mt-3 text-2xl font-extrabold">Akurat</p>
+                        <p class="mt-3 text-xl font-bold">Akurat</p>
                         <p class="text-xs text-white/50">Pelaporan</p>
                     </div>
                 </div>
@@ -69,7 +71,7 @@
             <div class="login-card w-full max-w-md">
                 {{-- Mobile brand --}}
                 <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                    <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo Kota Palu" class="h-16 w-auto">
+                    <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-16 w-auto">
                     <div>
                         <p class="text-sm font-bold text-brand-700">DLH Kota Palu</p>
                         <p class="text-xs text-slate-500">Ruang Kendali Admin</p>
@@ -81,7 +83,7 @@
                         <div class="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-600">
                             <x-admin.icon name="lock" :size="24" />
                         </div>
-                        <h1 class="mt-4 text-h1 font-extrabold tracking-tight text-ink-950">Selamat Datang</h1>
+                        <h1 class="mt-4 text-h1 font-bold tracking-tight text-ink-950">Selamat Datang</h1>
                         <p class="mt-2 text-sm text-slate-500">Masuk untuk mengakses ruang kendali admin DLH Kota Palu.</p>
                     </div>
 
@@ -128,7 +130,7 @@
                                     @if($errors->has('password')) aria-invalid="true" @endif
                                     class="peer block w-full rounded-lg border pl-11 pr-11 pt-5 pb-2 text-sm font-medium text-ink-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-slate-400 focus:ring-4 {{ $errors->has('password') ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100' : 'border-slate-300 hover:border-slate-400 focus:border-brand-500 focus:ring-brand-100' }} bg-white"
                                 >
-                                <label for="password" class="pointer-events-none absolute left-11 top-1.5 origin-left text-xs font-semibold text-slate-400 transition-all duration-150 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-brand-600">
+                                <label for="password" class="pointer-events-none absolute left-11 top-1.5 origin-left text-xs font-semibold text-slate-500 transition-all duration-150 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-brand-700">
                                     Password
                                 </label>
                                 <button type="button" x-on:click="showPassword = !showPassword" class="absolute inset-y-0 right-0 grid w-11 place-items-center text-slate-400 transition hover:text-slate-600" :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'">
@@ -148,10 +150,10 @@
                                 <input type="checkbox" name="remember" class="rounded border-slate-300 text-brand-600 transition focus:ring-brand-500">
                                 Ingat saya
                             </label>
-                            <span class="text-sm font-semibold text-slate-400" title="Hubungi administrator untuk reset password">Lupa password?</span>
+                            <span class="text-sm font-semibold text-slate-500" title="Hubungi administrator untuk reset password">Lupa password?</span>
                         </div>
 
-                        <button type="submit" :disabled="submitting" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-brand-glow)] transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-100 active:scale-[0.99] disabled:opacity-70">
+                        <button type="submit" :disabled="submitting" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-brand-glow)] transition hover:bg-brand-800 focus:outline-none focus:ring-4 focus:ring-brand-100 active:scale-[0.99] disabled:opacity-70">
                             <svg x-show="submitting" x-cloak class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -174,8 +176,8 @@
             animation: loginCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         @keyframes loginCardIn {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: none; }
+            from { transform: translateY(12px); }
+            to { transform: none; }
         }
         .login-float { animation: loginFloat 8s ease-in-out infinite; }
         .login-float--2 { animation-duration: 11s; animation-delay: -3s; }

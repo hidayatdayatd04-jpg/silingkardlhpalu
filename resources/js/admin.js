@@ -264,6 +264,14 @@ document.addEventListener('alpine:init', () => {
 });
 
 /**
+ * Catatan: komponen Alpine 'backupProgressWidget' (widget progres backup/restore)
+ * telah dipindahkan ke resources/js/alpine.js — didaftarkan LANGSUNG di dalam
+ * bootstrapAlpine() SEBELUM Alpine.start() agar registrasi terjamin terjadi
+ * sebelum DOM dipindai. JANGAN mendaftarkannya kembali di sini (risiko race
+ * dengan Alpine.start) dan JANGAN pakai <script> inline di blade.
+ */
+
+/**
  * staggerReveal — animasi berjenjang untuk section/list.
  * Menambah .is-in ke tiap elemen selector dgn delay bertahap.
  * Respect prefers-reduced-motion → langsung final tanpa delay.

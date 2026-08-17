@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
@@ -15,7 +17,9 @@ use Illuminate\Validation\Rule;
 class FeedbackController extends Controller
 {
     private const TICKET_MODELS = [
-        Laporan::class,
+        PengaduanPengendalian::class,
+        PengaduanSampah::class,
+        PengaduanRth::class,
         PengaduanTataPenataan::class,
         PermohonanRekomendasi::class,
         PengajuanRintekPertek::class,

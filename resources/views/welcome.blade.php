@@ -4,6 +4,16 @@
 @section('description', 'Selamat datang di Portal SILP Dinas Lingkungan Hidup Kota Palu. Akses layanan multi-bidang: pengaduan lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan.')
 @section('full_width', '')
 
+@push('styles')
+    {{-- LCP = foto hero: preload dengan prioritas tinggi agar mulai diunduh
+         paralel dengan CSS, tidak menunggu parse HTML sampai <img>.
+         Varian mobile (800px, ~55KB) dipakai di layar < 768px — Lighthouse
+         mobile (412px @ DPR 1.75 = 721px fisik) mengunduh file yang jauh
+         lebih kecil; desktop tetap memakai hero.webp (1200px). --}}
+    <link rel="preload" as="image" href="{{ asset('assets/images/hero-mobile.webp') }}" media="(max-width: 767px)" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ asset('assets/images/hero.webp') }}" media="(min-width: 768px)" fetchpriority="high">
+@endpush
+
 @section('content')
 {{-- Preloader penyambutan — HANYA di beranda, tampil ~3 detik setiap refresh. --}}
 <x-public.preloader />
@@ -15,8 +25,11 @@
     <section class="relative isolate overflow-hidden">
         {{-- Foto latar lingkungan/Kota Palu --}}
         <div class="absolute inset-0 -z-10">
-            <img src="{{ asset('assets/images/hero.jpg') }}" alt="" aria-hidden="true"
-                 class="h-full w-full object-cover object-center scale-105">
+            <picture class="block h-full w-full">
+                <source srcset="{{ asset('assets/images/hero-mobile.webp') }}" media="(max-width: 767px)">
+                <img src="{{ asset('assets/images/hero.webp') }}" alt="" aria-hidden="true" fetchpriority="high"
+                     class="h-full w-full object-cover object-center scale-105">
+            </picture>
             {{-- Lapisan gradien untuk kontras teks (WCAG AA) + nuansa teluk --}}
             <div class="absolute inset-0 bg-gradient-to-br from-brand-950/95 via-brand-800/85 to-bay-900/80"></div>
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(45,212,191,0.22),transparent_46%),radial-gradient(circle_at_82%_78%,rgba(13,171,206,0.20),transparent_44%)]"></div>
@@ -34,7 +47,7 @@
                     {{ __('Sistem Layanan Publik Digital Terpadu') }}
                 </span>
 
-                <h1 class="hero-enter mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.05]"
+                <h1 class="hero-enter mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-white leading-[1.05]"
                     style="--hero-delay:90ms">
                     {{ __('Menjaga Palu Tetap') }}
                     <span class="block bg-gradient-to-r from-brand-200 via-emerald-200 to-bay-200 bg-clip-text text-transparent">
@@ -83,7 +96,7 @@
                                 <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $card['icon'] }}"/></svg>
                             </div>
                             <div class="min-w-0">
-                                <p class="text-2xl font-extrabold text-slate-900 dark:text-white truncate tracking-tight" data-countup data-count="{{ (int) $card['value'] }}">{{ number_format($card['value']) }}</p>
+                                <p class="text-2xl font-bold text-slate-900 dark:text-white truncate tracking-tight" data-countup data-count="{{ (int) $card['value'] }}">{{ number_format($card['value']) }}</p>
                                 <p class="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">{{ $card['label'] }}</p>
                             </div>
                         </div>
@@ -94,15 +107,15 @@
     </section>
 
     {{-- Konten selanjutnya dengan ritme vertikal yang disengaja --}}
-    <div class="space-y-24 sm:space-y-32 pt-24 sm:pt-32 pb-24">
+    <div class="space-y-28 sm:space-y-40 pt-24 sm:pt-32 pb-24">
 
         {{-- ========================================================= --}}
         {{-- PILIH BIDANG LAYANAN — kartu premium, ikon konsisten       --}}
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal max-w-2xl mb-12">
-                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Layanan Terpadu') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Pilih Bidang Layanan Anda') }}</h2>
+                <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Layanan Terpadu') }}</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Pilih Bidang Layanan Anda') }}</h2>
                 <p class="mt-3 text-base text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Empat bidang utama DLH Kota Palu, dirancang untuk mengarahkan Anda ke layanan yang tepat dalam sekali klik.') }}</p>
             </div>
 
@@ -112,10 +125,10 @@
                     'title' => __('Pengendalian'),
                     'desc' => __('Pengaduan dampak lingkungan, permohonan rekomendasi lingkungan.'),
                     'accent' => 'clay',
-                    'icon' => 'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Zm9-5v5l3 2',
+                    'icon' => 'pengendalian',
                     'links' => [
                         [__('Pengaduan'), '/pengaduan'],
-                        [__('Cek Status'), '/cek-pengaduan-pengendalian'],
+                        [__('Cek Status'), '/lacak'],
                         [__('Permohonan'), '/permohonan-rekomendasi'],
                     ],
                 ],
@@ -123,7 +136,7 @@
                     'title' => __('Sampah & LB3'),
                     'desc' => __('Peta persampahan, pengaduan, registrasi LB3, & RINTEK/PERTEK.'),
                     'accent' => 'amber',
-                    'icon' => 'M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6',
+                    'icon' => 'sampah',
                     'links' => [
                         [__('Peta Sampah'), '/peta-persampahan'],
                         [__('Pengaduan'), '/pengaduan'],
@@ -136,10 +149,10 @@
                     'title' => __('Tata Penataan'),
                     'desc' => __('Pengaduan limbah/asap/kebisingan, peta objek pengawasan & sidak.'),
                     'accent' => 'bay',
-                    'icon' => 'M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7',
+                    'icon' => 'tata-penataan',
                     'links' => [
                         [__('Pengaduan'), '/pengaduan'],
-                        [__('Cek Status'), '/cek-pengaduan-tata-penataan'],
+                        [__('Cek Status'), '/lacak'],
                         [__('Peta Objek'), '/peta-objek-pengawasan'],
                     ],
                 ],
@@ -147,7 +160,7 @@
                     'title' => __('Ruang Terbuka Hijau'),
                     'desc' => __('Pengaduan dan penyewaan taman.'),
                     'accent' => 'brand',
-                    'icon' => 'M12 22V12m0 0c0-3 2-5 5-5 0 3-2 5-5 5Zm0 0C9 12 7 9.5 7 6c3 0 5 2.5 5 6Z',
+                    'icon' => 'rth',
                     'links' => [
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Penyewaan Taman'), '/pinjam-taman'],
@@ -155,10 +168,10 @@
                 ],
             ];
             $accentMap = [
-                'brand' => ['grad' => 'from-brand-500 to-emerald-400', 'chip' => 'bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-300', 'hover' => 'hover:border-brand-300 dark:hover:border-brand-700', 'linkHover' => 'hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/20 dark:hover:text-brand-300'],
-                'bay'   => ['grad' => 'from-bay-500 to-bay-400', 'chip' => 'bg-bay-50 text-bay-600 dark:bg-bay-900/25 dark:text-bay-300', 'hover' => 'hover:border-bay-300 dark:hover:border-bay-700', 'linkHover' => 'hover:border-bay-300 hover:bg-bay-50 hover:text-bay-700 dark:hover:bg-bay-900/20 dark:hover:text-bay-300'],
-                'clay'  => ['grad' => 'from-clay-500 to-clay-400', 'chip' => 'bg-clay-50 text-clay-600 dark:bg-clay-900/25 dark:text-clay-300', 'hover' => 'hover:border-clay-300 dark:hover:border-clay-700', 'linkHover' => 'hover:border-clay-300 hover:bg-clay-50 hover:text-clay-700 dark:hover:bg-clay-900/20 dark:hover:text-clay-300'],
-                'amber' => ['grad' => 'from-amber-500 to-amber-400', 'chip' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/25 dark:text-amber-300', 'hover' => 'hover:border-amber-300 dark:hover:border-amber-700', 'linkHover' => 'hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-900/20 dark:hover:text-amber-300'],
+                'brand' => ['grad' => 'from-brand-500 to-emerald-400', 'chip' => 'bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-300', 'hover' => 'hover:border-brand-300 dark:hover:border-brand-700', 'linkHover' => 'hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/20 dark:hover:text-brand-300', 'accentVar' => 'var(--color-brand-500)'],
+                'bay'   => ['grad' => 'from-bay-500 to-bay-400', 'chip' => 'bg-bay-50 text-bay-600 dark:bg-bay-900/25 dark:text-bay-300', 'hover' => 'hover:border-bay-300 dark:hover:border-bay-700', 'linkHover' => 'hover:border-bay-300 hover:bg-bay-50 hover:text-bay-700 dark:hover:bg-bay-900/20 dark:hover:text-bay-300', 'accentVar' => 'var(--color-bay-500)'],
+                'clay'  => ['grad' => 'from-clay-500 to-clay-400', 'chip' => 'bg-clay-50 text-clay-600 dark:bg-clay-900/25 dark:text-clay-300', 'hover' => 'hover:border-clay-300 dark:hover:border-clay-700', 'linkHover' => 'hover:border-clay-300 hover:bg-clay-50 hover:text-clay-700 dark:hover:bg-clay-900/20 dark:hover:text-clay-300', 'accentVar' => 'var(--color-clay-500)'],
+                'amber' => ['grad' => 'from-amber-500 to-amber-400', 'chip' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/25 dark:text-amber-300', 'hover' => 'hover:border-amber-300 dark:hover:border-amber-700', 'linkHover' => 'hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-900/20 dark:hover:text-amber-300', 'accentVar' => 'var(--color-amber-500)'],
             ];
             @endphp
 
@@ -166,12 +179,12 @@
                 @foreach ($bidangs as $i => $bidang)
                     @php $a = $accentMap[$bidang['accent']]; @endphp
                     <div class="reveal group relative flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.28)] {{ $a['hover'] }}"
-                         style="--reveal-delay: {{ $i * 90 }}ms">
+                         style="--reveal-delay: {{ $i * 90 }}ms; --icon-accent: {{ $a['accentVar'] }}">
                         {{-- Aksen atas kartu --}}
                         <span class="absolute inset-x-6 top-0 h-1 rounded-full bg-gradient-to-r {{ $a['grad'] }} opacity-70 transition-opacity duration-300 group-hover:opacity-100"></span>
 
-                        <div class="size-12 rounded-2xl {{ $a['chip'] }} flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                            <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $bidang['icon'] }}"/></svg>
+                        <div class="size-12 rounded-2xl {{ $a['chip'] }} flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                            <x-dynamic-component :component="'icons.'.$bidang['icon']" class="size-6" />
                         </div>
 
                         <h3 class="font-bold text-lg text-slate-900 dark:text-white">{{ $bidang['title'] }}</h3>
@@ -194,8 +207,8 @@
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal text-center max-w-2xl mx-auto mb-14">
-                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Alur Sederhana') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Cara Melapor Tanpa Ribet') }}</h2>
+                <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Alur Sederhana') }}</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Cara Melapor Tanpa Ribet') }}</h2>
                 <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Tiga langkah berurutan — tanpa perlu mendaftar akun.') }}</p>
             </div>
 
@@ -204,17 +217,17 @@
                 <div class="hidden md:block absolute top-9 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-brand-200 via-bay-300 to-brand-200 dark:from-brand-800 dark:via-bay-800 dark:to-brand-800" aria-hidden="true"></div>
 
                 @foreach ([
-                    ['step' => '01', 'title' => __('Pilih Layanan'), 'desc' => __('Buka menu bidang terkait dan pilih jenis pengaduan atau permohonan.'), 'icon' => 'M4 6h16M4 12h16M4 18h10'],
-                    ['step' => '02', 'title' => __('Isi Formulir'), 'desc' => __('Lengkapi data, lokasi, deskripsi, dan lampirkan foto atau dokumen pendukung.'), 'icon' => 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21.036 3 22l.964-3.5 12.732-12.804Z'],
-                    ['step' => '03', 'title' => __('Pantau Status'), 'desc' => __('Simpan nomor tiket untuk melacak progres penanganan kapan saja.'), 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+                    ['step' => '01', 'title' => __('Pilih Layanan'), 'desc' => __('Buka menu bidang terkait dan pilih jenis pengaduan atau permohonan.'), 'icon' => 'pilih-layanan'],
+                    ['step' => '02', 'title' => __('Isi Formulir'), 'desc' => __('Lengkapi data, lokasi, deskripsi, dan lampirkan foto atau dokumen pendukung.'), 'icon' => 'isi-formulir'],
+                    ['step' => '03', 'title' => __('Pantau Status'), 'desc' => __('Simpan nomor tiket untuk melacak progres penanganan kapan saja.'), 'icon' => 'pantau-status'],
                 ] as $i => $item)
                 <div class="reveal relative text-center" style="--reveal-delay: {{ $i * 140 }}ms">
                     <div class="relative z-10 mx-auto mb-6 flex size-[4.5rem] items-center justify-center">
                         <div class="absolute inset-0 rounded-full bg-white dark:bg-slate-900 shadow-[0_10px_30px_-8px_rgba(5,150,105,0.35)] ring-1 ring-brand-100 dark:ring-brand-900/50"></div>
                         <div class="relative flex size-[4.5rem] flex-col items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-emerald-400 text-white">
-                            <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $item['icon'] }}"/></svg>
+                            <x-dynamic-component :component="'icons.'.$item['icon']" class="size-7" />
                         </div>
-                        <span class="absolute -top-2 -right-1 z-20 flex size-7 items-center justify-center rounded-full bg-slate-900 dark:bg-white text-[11px] font-extrabold text-white dark:text-slate-900 ring-4 ring-slate-50 dark:ring-slate-950">{{ $item['step'] }}</span>
+                        <span class="absolute -top-2 -right-1 z-20 flex size-7 items-center justify-center rounded-full bg-slate-900 dark:bg-white text-[11px] font-bold text-white dark:text-slate-900 ring-4 ring-slate-50 dark:ring-slate-950">{{ $item['step'] }}</span>
                     </div>
                     <h3 class="font-bold text-lg text-slate-900 dark:text-white">{{ $item['title'] }}</h3>
                     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">{{ $item['desc'] }}</p>
@@ -232,7 +245,7 @@
                 <div class="grid lg:grid-cols-5 gap-0 items-stretch">
                     {{-- Foto --}}
                     <div class="lg:col-span-2 relative min-h-[320px] lg:min-h-full">
-                        <img class="absolute inset-0 h-full w-full object-cover object-top" src="{{ asset('assets/images/foto_kadis.jpeg') }}" alt="Kepala Dinas Lingkungan Hidup Kota Palu">
+                        <img class="absolute inset-0 h-full w-full object-cover object-top" src="{{ asset('assets/images/foto_kadis.webp') }}" alt="Kepala Dinas Lingkungan Hidup Kota Palu" loading="lazy" decoding="async">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/10 to-transparent"></div>
                         <div class="absolute inset-x-0 bottom-0 p-6">
                             <p class="text-white font-bold text-lg leading-tight">Mohamad Arif, S.STP., M.Si</p>
@@ -242,8 +255,8 @@
 
                     {{-- Narasi --}}
                     <div class="lg:col-span-3 p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
-                        <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-4">{{ __('Komitmen Kami') }}</span>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-snug tracking-tight">
+                        <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400 mb-4">{{ __('Komitmen Kami') }}</span>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-snug tracking-tight">
                             {{ __('Pelayanan Publik yang Transparan & Cepat') }}
                         </h2>
                         <p class="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -251,20 +264,20 @@
                         </p>
                         <div class="mt-7 grid sm:grid-cols-3 gap-3">
                             @foreach ([
-                                ['t' => __('Terintegrasi'), 's' => __('Satu pintu layanan'), 'c' => 'brand', 'icon' => 'M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5ZM4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-4Z'],
-                                ['t' => __('Real-time'), 's' => __('Pelacakan via GPS'), 'icon' => 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 'c' => 'bay'],
-                                ['t' => __('Terbuka'), 's' => __('Status dapat dipantau'), 'icon' => 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'c' => 'clay'],
+                                ['t' => __('Terintegrasi'), 's' => __('Satu pintu layanan'), 'c' => 'brand', 'icon' => 'terintegrasi'],
+                                ['t' => __('Real-time'), 's' => __('Pelacakan via GPS'), 'icon' => 'real-time', 'c' => 'bay'],
+                                ['t' => __('Terbuka'), 's' => __('Status dapat dipantau'), 'icon' => 'terbuka', 'c' => 'clay'],
                             ] as $feat)
                             @php
                                 $fc = [
-                                    'brand' => 'bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-300',
-                                    'bay'   => 'bg-bay-50 text-bay-600 dark:bg-bay-900/25 dark:text-bay-300',
-                                    'clay'  => 'bg-clay-50 text-clay-600 dark:bg-clay-900/25 dark:text-clay-300',
+                                    'brand' => ['chip' => 'bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-300', 'accentVar' => 'var(--color-brand-500)'],
+                                    'bay'   => ['chip' => 'bg-bay-50 text-bay-600 dark:bg-bay-900/25 dark:text-bay-300', 'accentVar' => 'var(--color-bay-500)'],
+                                    'clay'  => ['chip' => 'bg-clay-50 text-clay-600 dark:bg-clay-900/25 dark:text-clay-300', 'accentVar' => 'var(--color-clay-500)'],
                                 ][$feat['c']];
                             @endphp
                             <div class="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-4">
-                                <div class="size-9 rounded-xl {{ $fc }} flex items-center justify-center mb-3">
-                                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $feat['icon'] }}"/></svg>
+                                <div class="size-9 rounded-xl {{ $fc['chip'] }} flex items-center justify-center mb-3" style="--icon-accent: {{ $fc['accentVar'] }}">
+                                    <x-dynamic-component :component="'icons.'.$feat['icon']" class="size-5" />
                                 </div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ $feat['t'] }}</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ $feat['s'] }}</p>
@@ -289,28 +302,28 @@
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Dampak Nyata') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Kerja Nyata untuk Lingkungan Palu') }}</h2>
+                <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Dampak Nyata') }}</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Kerja Nyata untuk Lingkungan Palu') }}</h2>
                 <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Capaian layanan dan operasional DLH Kota Palu yang terus berjalan setiap hari.') }}</p>
             </div>
 
             @php
             $capaian = [
-                ['value' => 180, 'suffix' => ' ton', 'label' => __('Sampah Terangkut / Hari'), 'grad' => 'from-amber-500 to-orange-500', 'soft' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6'],
-                ['value' => 68, 'suffix' => ' Ha', 'label' => __('Ruang Terbuka Hijau Dikelola'), 'grad' => 'from-brand-500 to-emerald-500', 'soft' => 'bg-brand-50 dark:bg-brand-900/20', 'text' => 'text-brand-600 dark:text-brand-400', 'icon' => 'M12 22V12m0 0c0-3 2-5 5-5 0 3-2 5-5 5Zm0 0C9 12 7 9.5 7 6c3 0 5 2.5 5 6Z'],
-                ['value' => 45, 'suffix' => ' Titik', 'label' => __('TPS & Kontainer Aktif'), 'grad' => 'from-bay-500 to-bay-600', 'soft' => 'bg-bay-50 dark:bg-bay-900/20', 'text' => 'text-bay-600 dark:text-bay-400', 'icon' => 'M12 21s-8-4.5-8-11a8 8 0 1 1 16 0c0 6.5-8 11-8 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
-                ['value' => 24, 'suffix' => ' Jam', 'label' => __('Respons Aduan Mendesak'), 'grad' => 'from-clay-500 to-clay-600', 'soft' => 'bg-clay-50 dark:bg-clay-900/20', 'text' => 'text-clay-600 dark:text-clay-400', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+                ['value' => 180, 'suffix' => ' ton', 'label' => __('Sampah Terangkut / Hari'), 'grad' => 'from-amber-500 to-orange-500', 'soft' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'ton-sampah', 'accentVar' => 'var(--color-amber-500)'],
+                ['value' => 68, 'suffix' => ' Ha', 'label' => __('Ruang Terbuka Hijau Dikelola'), 'grad' => 'from-brand-500 to-emerald-500', 'soft' => 'bg-brand-50 dark:bg-brand-900/20', 'text' => 'text-brand-600 dark:text-brand-400', 'icon' => 'rth-ha', 'accentVar' => 'var(--color-brand-500)'],
+                ['value' => 45, 'suffix' => ' Titik', 'label' => __('TPS & Kontainer Aktif'), 'grad' => 'from-bay-500 to-bay-600', 'soft' => 'bg-bay-50 dark:bg-bay-900/20', 'text' => 'text-bay-600 dark:text-bay-400', 'icon' => 'titik-tps', 'accentVar' => 'var(--color-bay-500)'],
+                ['value' => 24, 'suffix' => ' Jam', 'label' => __('Respons Aduan Mendesak'), 'grad' => 'from-clay-500 to-clay-600', 'soft' => 'bg-clay-50 dark:bg-clay-900/20', 'text' => 'text-clay-600 dark:text-clay-400', 'icon' => 'jam-respons', 'accentVar' => 'var(--color-clay-500)'],
             ];
             @endphp
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 @foreach ($capaian as $i => $c)
                 <div class="reveal group relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 text-center shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.25)]"
-                     style="--reveal-delay: {{ $i * 90 }}ms">
+                     style="--reveal-delay: {{ $i * 90 }}ms; --icon-accent: {{ $c['accentVar'] }}">
                     <div class="absolute inset-x-0 -top-16 h-32 bg-gradient-to-b {{ $c['grad'] }} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-10" aria-hidden="true"></div>
                     <div class="relative mx-auto mb-4 size-14 rounded-2xl {{ $c['soft'] }} {{ $c['text'] }} flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                        <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $c['icon'] }}"/></svg>
+                        <x-dynamic-component :component="'icons.'.$c['icon']" class="size-7" />
                     </div>
-                    <p class="relative text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-br {{ $c['grad'] }} bg-clip-text text-transparent"
+                    <p class="relative text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-br {{ $c['grad'] }} bg-clip-text text-transparent"
                        data-countup data-count="{{ $c['value'] }}" data-suffix="{{ $c['suffix'] }}">0{{ $c['suffix'] }}</p>
                     <p class="relative mt-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-tight">{!! $c['label'] !!}</p>
                 </div>
@@ -324,8 +337,8 @@
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
                 <div class="max-w-xl">
-                    <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Informasi Terkini') }}</span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Berita & Artikel') }}</h2>
+                    <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Informasi Terkini') }}</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Berita & Artikel') }}</h2>
                     <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Update kegiatan, edukasi lingkungan, dan informasi layanan DLH Kota Palu.') }}</p>
                 </div>
                 <a href="/berita" class="group inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-3 text-sm font-bold text-brand-600 dark:text-brand-400 shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 shrink-0">
@@ -377,7 +390,6 @@
         {{-- ========================================================= --}}
         {{-- VISI & MISI — panel editorial gelap, premium & dramatis    --}}
         {{-- ========================================================= --}}
-        @if(!empty($profil?->visi) || !empty($profil?->misi))
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-950 via-brand-900 to-bay-950 p-8 sm:p-12 lg:p-16 ring-1 ring-white/10 shadow-[0_30px_80px_-30px_rgba(4,120,87,0.6)]">
                 {{-- Aksen cahaya & motif --}}
@@ -390,11 +402,11 @@
                 <div class="relative grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
                     {{-- Kolom judul --}}
                     <div class="lg:col-span-4 reveal" style="--reveal-delay:80ms">
-                        <span class="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-inset ring-white/20 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-200 mb-5">
+                        <span class="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-inset ring-white/20 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-200 mb-5">
                             <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
                             {{ __('Arah & Tujuan') }}
                         </span>
-                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.05]">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-[1.05]">
                             {{ __('Visi &') }}<br class="hidden lg:block">
                             <span class="bg-gradient-to-r from-brand-200 via-emerald-200 to-bay-200 bg-clip-text text-transparent">{{ __('Misi Kami') }}</span>
                         </h2>
@@ -409,47 +421,42 @@
 
                     {{-- Kolom konten --}}
                     <div class="lg:col-span-8 space-y-5">
-                        @if($profil->visi)
                         <div class="reveal group relative overflow-hidden rounded-3xl bg-white/[0.07] backdrop-blur-md ring-1 ring-white/15 p-6 sm:p-8 transition-all duration-300 hover:bg-white/[0.1] hover:ring-white/25" style="--reveal-delay:160ms">
                             <span class="absolute left-0 top-8 bottom-8 w-1 rounded-full bg-gradient-to-b from-brand-300 to-emerald-400"></span>
                             <div class="flex items-start gap-4">
                                 <div class="flex-shrink-0 size-12 rounded-2xl bg-gradient-to-br from-brand-400 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-brand-900/50 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                                    <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                                    <x-icons.visi class="size-6" />
                                 </div>
                                 <div class="min-w-0">
-                                    <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-brand-300 mb-2">{{ __('Visi') }}</h3>
-                                    <div class="text-lg sm:text-xl font-semibold text-white leading-snug line-clamp-4">{!! e(strip_tags($profil->visi_translated)) !!}</div>
+                                    <h3 class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300 mb-2">{{ __('Visi') }}</h3>
+                                    <div class="text-lg sm:text-xl font-semibold text-white leading-snug line-clamp-4">Terwujudnya Kota Palu Mantap Berkelanjutan yang Akseleratif, Inovatif dan Kolaboratif</div>
                                 </div>
                             </div>
                         </div>
-                        @endif
-                        @if($profil->misi)
                         <div class="reveal group relative overflow-hidden rounded-3xl bg-white/[0.07] backdrop-blur-md ring-1 ring-white/15 p-6 sm:p-8 transition-all duration-300 hover:bg-white/[0.1] hover:ring-white/25" style="--reveal-delay:240ms">
                             <span class="absolute left-0 top-8 bottom-8 w-1 rounded-full bg-gradient-to-b from-bay-300 to-bay-500"></span>
                             <div class="flex items-start gap-4">
                                 <div class="flex-shrink-0 size-12 rounded-2xl bg-gradient-to-br from-bay-400 to-bay-600 text-white flex items-center justify-center shadow-lg shadow-bay-900/50 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                                    <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Zm-6 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-4 0h.01"/></svg>
+                                    <x-icons.misi class="size-6" />
                                 </div>
                                 <div class="min-w-0">
-                                    <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-bay-300 mb-2">{{ __('Misi') }}</h3>
-                                    <div class="text-sm sm:text-base text-brand-50/85 leading-relaxed line-clamp-5">{!! e(strip_tags($profil->misi_translated)) !!}</div>
+                                    <h3 class="text-xs font-semibold uppercase tracking-[0.14em] text-bay-300 mb-2">{{ __('Misi') }}</h3>
+                                    <div class="text-sm sm:text-base text-brand-50/85 leading-relaxed line-clamp-5">Meningkatkan akselerasi pengelolaan lingkungan dan penataan kota yang layak huni. Bersinergi dengan Rencana Strategis Kementerian Lingkungan Hidup dan Kehutanan tahun 2025 - 2029. Rencana Strategis Dinas Lingkungan Hidup Pemerintah Provinsi Sulawesi Tengah Tahun 2025-2029.</div>
                                 </div>
                             </div>
                         </div>
-                        @endif
                     </div>
                 </div>
             </div>
         </section>
-        @endif
 
         {{-- ========================================================= --}}
         {{-- FAQ — akordeon pertanyaan umum (Alpine)                    --}}
         {{-- ========================================================= --}}
         <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal text-center max-w-2xl mx-auto mb-10">
-                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Pertanyaan Umum') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Hal yang Sering Ditanyakan') }}</h2>
+                <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Pertanyaan Umum') }}</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Hal yang Sering Ditanyakan') }}</h2>
                 <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Belum menemukan jawaban? Hubungi call center kami di bagian bawah halaman.') }}</p>
             </div>
 
@@ -495,14 +502,14 @@
             <div class="reveal grid lg:grid-cols-2 gap-0 overflow-hidden rounded-[2rem] border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.22)]">
                 {{-- Info --}}
                 <div class="p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
-                    <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Kunjungi Kami') }}</span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Lokasi & Jam Layanan') }}</h2>
+                    <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-bay-600 dark:text-bay-400 mb-3">{{ __('Kunjungi Kami') }}</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Lokasi & Jam Layanan') }}</h2>
                     <p class="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed">{{ __('Datang langsung ke kantor kami pada jam kerja, atau akses seluruh layanan secara daring 24 jam.') }}</p>
 
                     <div class="mt-7 space-y-4">
                         <div class="flex items-start gap-3.5">
-                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-brand-50 dark:bg-brand-900/25 text-brand-600 dark:text-brand-300 flex items-center justify-center">
-                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11a8 8 0 1 1 16 0c0 6.5-8 11-8 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-brand-50 dark:bg-brand-900/25 text-brand-600 dark:text-brand-300 flex items-center justify-center" style="--icon-accent: var(--color-brand-500)">
+                                <x-icons.alamat class="size-5" />
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Alamat Kantor') }}</p>
@@ -510,8 +517,8 @@
                             </div>
                         </div>
                         <div class="flex items-start gap-3.5">
-                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-bay-50 dark:bg-bay-900/25 text-bay-600 dark:text-bay-300 flex items-center justify-center">
-                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-bay-50 dark:bg-bay-900/25 text-bay-600 dark:text-bay-300 flex items-center justify-center" style="--icon-accent: var(--color-bay-500)">
+                                <x-icons.jam-kerja class="size-5" />
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Jam Kerja') }}</p>
@@ -519,8 +526,8 @@
                             </div>
                         </div>
                         <div class="flex items-start gap-3.5">
-                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-clay-50 dark:bg-clay-900/25 text-clay-600 dark:text-clay-300 flex items-center justify-center">
-                                <svg class="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                            <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-clay-50 dark:bg-clay-900/25 text-clay-600 dark:text-clay-300 flex items-center justify-center" style="--icon-accent: var(--color-clay-500)">
+                                <x-icons.whatsapp class="size-5" />
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Call Center / WhatsApp') }}</p>
@@ -531,7 +538,7 @@
 
                     <a href="https://www.google.com/maps/search/?api=1&query=Dinas+Lingkungan+Hidup+Kota+Palu" target="_blank" rel="noopener noreferrer"
                        class="group mt-8 inline-flex w-fit items-center gap-2 rounded-2xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-700">
-                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        <x-icons.alamat class="size-4" />
                         {{ __('Buka di Google Maps') }}
                     </a>
                 </div>

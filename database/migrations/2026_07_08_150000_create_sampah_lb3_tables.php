@@ -8,47 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('titik_tpas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->string('kapasitas')->nullable();
-            $table->string('foto')->nullable();
-            $table->text('keterangan')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('titik_tpsts', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->string('kapasitas')->nullable();
-            $table->string('foto')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('titik_bank_sampahs', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->string('jam_operasional')->nullable();
-            $table->string('kontak')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('titik_tps', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('jadwal_armadas', function (Blueprint $table) {
+        Schema::create('jadwal_armada', function (Blueprint $table) {
             $table->id();
             $table->string('nama_rute');
             $table->string('hari');
@@ -57,7 +17,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('statistik_sampahs', function (Blueprint $table) {
+        Schema::create('statistik_sampah', function (Blueprint $table) {
             $table->id();
             $table->date('tanggal');
             $table->decimal('volume_ton', 10, 2);
@@ -65,23 +25,21 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Tabel jenis_lb3s sudah dibuat di migration 2026_07_08_130000_create_master_data_tables.php
-
-        Schema::create('registrasi_usaha_lb3s', function (Blueprint $table) {
+        Schema::create('registrasi_usaha_lb3', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_registrasi')->unique();
             $table->string('nama_perusahaan');
             $table->text('alamat');
-            $table->foreignId('jenis_lb3_id')->constrained('jenis_lb3s')->cascadeOnDelete();
+            $table->string('jenis_lb3')->nullable();
             $table->string('status')->default('Diajukan');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('pengajuan_rintek_perteks', function (Blueprint $table) {
+        Schema::create('pengajuan_rintek_pertek', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_pengajuan')->unique();
-            $table->foreignId('registrasi_usaha_lb3_id')->nullable()->constrained('registrasi_usaha_lb3s')->nullOnDelete();
+            $table->foreignId('registrasi_usaha_lb3_id')->nullable()->constrained('registrasi_usaha_lb3')->nullOnDelete();
             $table->string('nama_perusahaan');
             $table->string('surat_permohonan');
             $table->string('dplh_ukl_upl');
@@ -98,14 +56,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('pengajuan_rintek_perteks');
-        Schema::dropIfExists('registrasi_usaha_lb3s');
-        // jenis_lb3s akan di-drop di migration 2026_07_08_130000_create_master_data_tables.php
-        Schema::dropIfExists('statistik_sampahs');
-        Schema::dropIfExists('jadwal_armadas');
-        Schema::dropIfExists('titik_tps');
-        Schema::dropIfExists('titik_bank_sampahs');
-        Schema::dropIfExists('titik_tpsts');
-        Schema::dropIfExists('titik_tpas');
+        Schema::dropIfExists('pengajuan_rintek_pertek');
+        Schema::dropIfExists('registrasi_usaha_lb3');
+        Schema::dropIfExists('statistik_sampah');
+        Schema::dropIfExists('jadwal_armada');
     }
 };

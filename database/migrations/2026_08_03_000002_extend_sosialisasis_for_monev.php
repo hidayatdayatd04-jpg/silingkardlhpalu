@@ -8,16 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('sosialisasis', function (Blueprint $table) {
+        Schema::table('sosialisasi', function (Blueprint $table) {
             // Kolom ini sempat terpasang di MySQL oleh migrasi parsial yang gagal,
             // jadi tambah hanya bila belum ada (aman untuk refresh SQLite).
-            if (! Schema::hasColumn('sosialisasis', 'jenis_kegiatan')) {
+            if (! Schema::hasColumn('sosialisasi', 'jenis_kegiatan')) {
                 $table->string('jenis_kegiatan')->default('sosialisasi');
             }
-            if (! Schema::hasColumn('sosialisasis', 'periode_tw')) {
+            if (! Schema::hasColumn('sosialisasi', 'periode_tw')) {
                 $table->string('periode_tw')->nullable();
             }
-            if (! Schema::hasColumn('sosialisasis', 'tahun')) {
+            if (! Schema::hasColumn('sosialisasi', 'tahun')) {
                 $table->string('tahun')->nullable();
             }
 
@@ -25,15 +25,15 @@ return new class extends Migration
             $table->text('materi')->nullable()->change();
         });
 
-        Schema::table('sosialisasi_pesertas', function (Blueprint $table) {
+        Schema::table('sosialisasi_peserta', function (Blueprint $table) {
             $driver = Schema::getConnection()->getDriverName();
 
             // Lepas FK & indeks unik sebelum struktur diubah & dibangun ulang.
             // MySQL: drop berdasarkan nama (FK objek memang tidak ada di MySQL).
             // SQLite: drop berdasarkan kolom (dipecahkan saat rebuild tabel).
             if ($driver === 'mysql') {
-                try { $table->dropForeign('sosialisasi_pesertas_sosialisasi_id_foreign'); } catch (\Throwable $e) {}
-                try { $table->dropForeign('sosialisasi_pesertas_objek_pengawasan_id_foreign'); } catch (\Throwable $e) {}
+                try { $table->dropForeign('sosialisasi_peserta_sosialisasi_id_foreign'); } catch (\Throwable $e) {}
+                try { $table->dropForeign('sosialisasi_peserta_objek_pengawasan_id_foreign'); } catch (\Throwable $e) {}
             } else {
                 $table->dropForeign(['sosialisasi_id']);
                 $table->dropForeign(['objek_pengawasan_id']);
@@ -51,23 +51,23 @@ return new class extends Migration
 
             $table->foreign('sosialisasi_id')
                 ->references('id')
-                ->on('sosialisasis')
+                ->on('sosialisasi')
                 ->cascadeOnDelete();
             $table->foreign('objek_pengawasan_id')
                 ->references('id')
-                ->on('objek_pengawasans')
+                ->on('objek_pengawasan')
                 ->cascadeOnDelete();
         });
     }
 
     public function down(): void
     {
-        Schema::table('sosialisasi_pesertas', function (Blueprint $table) {
+        Schema::table('sosialisasi_peserta', function (Blueprint $table) {
             $driver = Schema::getConnection()->getDriverName();
 
             if ($driver === 'mysql') {
-                $table->dropForeign('sosialisasi_pesertas_sosialisasi_id_foreign');
-                $table->dropForeign('sosialisasi_pesertas_objek_pengawasan_id_foreign');
+                $table->dropForeign('sosialisasi_peserta_sosialisasi_id_foreign');
+                $table->dropForeign('sosialisasi_peserta_objek_pengawasan_id_foreign');
             } else {
                 $table->dropForeign(['sosialisasi_id']);
                 $table->dropForeign(['objek_pengawasan_id']);
@@ -80,15 +80,15 @@ return new class extends Migration
 
             $table->foreign('sosialisasi_id')
                 ->references('id')
-                ->on('sosialisasis')
+                ->on('sosialisasi')
                 ->cascadeOnDelete();
             $table->foreign('objek_pengawasan_id')
                 ->references('id')
-                ->on('objek_pengawasans')
+                ->on('objek_pengawasan')
                 ->cascadeOnDelete();
         });
 
-        Schema::table('sosialisasis', function (Blueprint $table) {
+        Schema::table('sosialisasi', function (Blueprint $table) {
             $table->dropColumn(['jenis_kegiatan', 'periode_tw', 'tahun']);
         });
     }

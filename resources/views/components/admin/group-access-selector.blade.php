@@ -46,7 +46,7 @@
         @else
             {{-- Default Access Info --}}
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3" x-show="defaultGroups.length > 0">
-                <p class="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
                     <x-admin.icon name="check" :size="12" class="inline" />
                     Akses Default (dari Role)
                 </p>
@@ -62,7 +62,7 @@
             
             {{-- Additional Access: per sub-menu --}}
             <div>
-                <p class="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-600">
                     <x-admin.icon name="plus" :size="12" class="inline" />
                     Akses Tambahan (Opsional)
                 </p>

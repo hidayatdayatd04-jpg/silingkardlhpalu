@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\PermohonanStatus;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PermohonanRekomendasi extends Model
@@ -16,7 +15,6 @@ class PermohonanRekomendasi extends Model
         'nama_pemilik',
         'npwp',
         'jenis_usaha',
-        'jenis_usaha_id',
         'alamat_lengkap',
         'nomor_telepon',
         'email',
@@ -52,11 +50,6 @@ class PermohonanRekomendasi extends Model
                 );
             }
         });
-    }
-
-    public function jenisUsaha(): BelongsTo
-    {
-        return $this->belongsTo(JenisUsaha::class, 'jenis_usaha_id');
     }
 
     public function dokumens(): HasMany

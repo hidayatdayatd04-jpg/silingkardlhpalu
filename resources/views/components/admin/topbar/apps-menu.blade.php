@@ -38,7 +38,7 @@
         class="glass-dropdown absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl p-2"
         style="display: none;"
     >
-        <p class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aplikasi</p>
+        <p class="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aplikasi</p>
 
         <div class="grid grid-cols-2 gap-1">
             @foreach($apps as $app)

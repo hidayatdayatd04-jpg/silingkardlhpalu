@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PermohonanDokumen extends Model
 {
+    protected $table = 'permohonan_dokumen';
+
     protected $fillable = [
         'permohonan_rekomendasi_id',
         'path_dokumen',

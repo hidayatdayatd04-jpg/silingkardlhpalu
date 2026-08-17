@@ -14,7 +14,7 @@
         'info' => 'border-blue-200 bg-blue-50 text-blue-700',
     ];
     
-    $classes = 'inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-extrabold leading-none ' . ($variantClasses[$variant] ?? $variantClasses['default']);
+    $classes = 'inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none ' . ($variantClasses[$variant] ?? $variantClasses['default']);
 @endphp
 
 <span {{ $attributes->merge(['class' => $classes]) }}>

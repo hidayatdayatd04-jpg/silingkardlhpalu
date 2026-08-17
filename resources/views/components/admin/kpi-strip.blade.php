@@ -21,7 +21,7 @@
     $numeric = is_numeric($value);
 @endphp
 
-<div class="stagger-item" style="--reveal-delay: 0ms;">
+<div>
     <x-admin.card :padding="false" class="card-lift overflow-hidden">
         <div class="flex items-center gap-4 p-5">
             <div class="grid size-12 shrink-0 place-items-center rounded-xl {{ $c['bg'] }} {{ $c['text'] }}">
@@ -29,7 +29,7 @@
             </div>
             <div class="min-w-0 flex-1">
                 <p class="truncate text-xs font-semibold uppercase tracking-[0.06em] text-ink-500">{{ $label }}</p>
-                <p class="mt-1 text-2xl font-extrabold tracking-tight text-ink-900">
+                <p class="mt-1 text-xl font-bold tracking-tight text-ink-900">
                     @if($numeric)
                         <x-admin.count-up :value="(int) $value" />
                     @else

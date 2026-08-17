@@ -123,7 +123,7 @@
                             <span class="absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-[3px] border-white bg-success-500 shadow-sm"></span>
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="text-xs font-bold uppercase tracking-[0.1em] text-slate-400">Pratinjau Profil</p>
+                            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Pratinjau Profil</p>
                             <p class="mt-1 truncate font-display text-xl font-bold text-slate-900" x-text="name || 'Nama Admin'"></p>
                             <p class="mt-0.5 text-sm text-slate-500">{{ $record->exists ? 'Memperbarui pengguna' : 'Pengguna baru akan ditambahkan' }}</p>
 
@@ -132,7 +132,7 @@
                                     <span class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10">
                                         <x-admin.icon name="upload" :size="16" /> Pilih Foto
                                     </span>
-                                    <input type="file" name="photo" form="admin-resource-form" accept="image/jpg,image/jpeg,image/png,image/webp" class="hidden" x-ref="photoInput"
+                                    <input type="file" name="photo" form="admin-resource-form" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" class="hidden" x-ref="photoInput"
                                         x-on:change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''; photoName = $event.target.files[0] ? $event.target.files[0].name : ''; removePhoto = false;">
                                 </label>
 
@@ -143,7 +143,7 @@
                                 <input type="hidden" name="photo_remove" form="admin-resource-form" :value="removePhoto ? 1 : 0">
                             </div>
 
-                            <p class="mt-2 text-xs text-slate-400 dark:text-slate-500" x-text="photoName || 'JPG, PNG, atau WEBP. Maksimal 2MB.'"></p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400" x-text="photoName || 'JPG, PNG, atau WEBP. Maksimal 5MB.'"></p>
                             @error('photo')
                                 <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
                             @enderror
@@ -257,7 +257,7 @@
                                         <p class="mt-0.5 text-xs text-slate-500">Akun dapat login &amp; mengakses menu yang diizinkan</p>
                                     </div>
                                     <label class="relative inline-flex shrink-0 cursor-pointer items-center" title="Aktif / Nonaktif">
-                                        <input type="checkbox" name="{{ $name }}" value="1" {{ (bool) $value ? 'checked' : '' }} class="peer sr-only">
+                                        <input type="checkbox" name="{{ $name }}" value="1" {{ (bool) $value ? 'checked' : '' }} class="peer sr-only" aria-label="{{ $field['label'] }}">
                                         <span class="h-7 w-12 rounded-full bg-slate-200 shadow-inner transition-colors duration-300 ease-in-out peer-checked:bg-emerald-500 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300/70"></span>
                                         <span class="pointer-events-none absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow-md transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] peer-checked:translate-x-5"></span>
                                     </label>
@@ -299,33 +299,16 @@
                                 @php $currentFile = $record->{$name} ?? null; @endphp
                                 <div class="{{ $fullClass }}" {!! $xShowAttr !!}>
                                     @if($isReadonly)
-                                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ $field['label'] }}</label>
                                         @if($currentFile)
-                                            <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition hover:bg-slate-50">
-                                                <div class="flex min-w-0 items-center gap-3">
-                                                    <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
-                                                        <x-admin.icon name="file-text" :size="18" />
-                                                    </span>
-                                                    <div class="min-w-0">
-                                                        <p class="truncate text-sm font-semibold text-slate-700">{{ $field['label'] }}</p>
-                                                        <p class="truncate text-xs text-slate-400">{{ basename((string) $currentFile) }}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="flex shrink-0 items-center gap-2">
-                                                    <a href="{{ Storage::url($currentFile) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
-                                                        <x-admin.icon name="eye" :size="14" /> Lihat
-                                                    </a>
-                                                    <a href="{{ route('admin.file.download', ['path' => $currentFile, 'name' => basename((string) $currentFile)]) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700">
-                                                        <x-admin.icon name="download" :size="14" /> Unduh
-                                                    </a>
-                                                </div>
-                                            </div>
+                                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ $field['label'] }}</label>
+                                            <x-admin.file-preview :path="$currentFile" />
                                         @else
+                                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ $field['label'] }}</label>
                                             <p class="text-xs text-slate-400">Belum ada file diunggah.</p>
                                         @endif
                                     @else
                                         <x-admin.file-upload name="{{ $name }}" :label="$field['label']" :error="$error" :currentFile="$currentFile"
-                                            :hint="$record->exists ? 'Unggah file baru hanya jika ingin mengganti file lama.' : 'Max: 2MB'"
+                                            :hint="$record->exists ? 'Unggah file baru hanya jika ingin mengganti file lama.' : 'Max: 5MB'"
                                             :accept="$accept" :required="!$record->exists && $isRequired" />
                                     @endif
                                 </div>
@@ -342,13 +325,38 @@
                                     @if($record->exists && isset($field['relation']) && method_exists($record, $field['relation']))
                                         @php $items = $record->{$field['relation']} ?? collect(); @endphp
                                         @if($items->isNotEmpty())
-                                            <div class="mt-3 flex flex-wrap gap-2">
+                                            <div class="mt-3 space-y-2">
                                                 @foreach($items as $item)
-                                                    @php $path = $item->{$field['path_field']} ?? null; $label = $item->{$field['name_field'] ?? 'nama'} ?? basename((string) $path); @endphp
+                                                    @php
+                                                        $path = $item->{$field['path_field']} ?? null;
+                                                        $label = $item->{$field['name_field'] ?? 'nama'} ?? basename((string) $path);
+                                                        $itemExt = $path ? strtolower(pathinfo((string) $path, PATHINFO_EXTENSION)) : '';
+                                                        $itemIsImage = in_array($itemExt, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'bmp'], true);
+                                                        $itemSrc = null;
+                                                        if ($path && $itemIsImage) {
+                                                            try {
+                                                                $itemSrc = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
+                                                            } catch (\Throwable $e) {
+                                                                $itemSrc = Storage::url($path);
+                                                            }
+                                                        }
+                                                    @endphp
                                                     @if($path)
-                                                        <a href="{{ Storage::url($path) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 transition hover:bg-blue-100">
-                                                            <x-admin.icon name="file-text" :size="14" /> {{ $label ?: 'Lihat lampiran' }}
-                                                        </a>
+                                                        <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition hover:bg-slate-50">
+                                                            @if($itemIsImage)
+                                                                <img src="{{ $itemSrc }}" alt="{{ $label }}" loading="lazy"
+                                                                    class="size-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
+                                                            @else
+                                                                <span class="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
+                                                                    <x-admin.icon name="file-text" :size="18" />
+                                                                </span>
+                                                            @endif
+                                                            <p class="min-w-0 flex-1 truncate text-xs font-semibold text-slate-600" title="{{ $label }}">{{ $label ?: 'Lampiran' }}</p>
+                                                            <a href="{{ route('admin.file.download', ['path' => $path, 'name' => $label ?: basename((string) $path)]) }}" target="_blank"
+                                                                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-blue-600 ring-1 ring-slate-200 transition hover:bg-blue-50">
+                                                                <x-admin.icon name="eye" :size="14" /> Lihat
+                                                            </a>
+                                                        </div>
                                                     @endif
                                                 @endforeach
                                             </div>
@@ -365,15 +373,15 @@
                                 @endphp
                                 <div class="sm:col-span-2">
                                     @if($canAddNew)
-                                        <x-admin.dropzone name="{{ $name }}" :label="$field['label']" :max="5" :max-size-mb="2"
-                                            :accept="$accept ?: 'image/jpeg,image/png'" :required="!$record->exists && $isRequired" />
+                                        <x-admin.dropzone name="{{ $name }}" :label="$field['label']" :max="5" :max-size-mb="5"
+                                            :accept="$accept ?: 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif'" :required="!$record->exists && $isRequired" />
                                     @elseif($existingFotos->isNotEmpty())
                                         <label class="mb-1.5 block text-sm font-semibold text-ink-800">{{ $field['label'] }}</label>
                                         <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat. Admin tidak dapat menambah foto baru.</p>
                                         <div class="grid grid-cols-3 gap-3 sm:grid-cols-5">
                                             @foreach($existingFotos as $foto)
-                                                <a href="{{ Storage::url($foto->path_foto) }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                                                    <img src="{{ Storage::url($foto->path_foto) }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
+                                                <a href="{{ $foto->fullUrl() }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                                    <img src="{{ $foto->fullUrl() }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
                                                 </a>
                                             @endforeach
                                         </div>
@@ -399,7 +407,7 @@
                                         <div class="overflow-x-auto">
                                             <table class="w-full min-w-[760px] text-left text-sm">
                                                 <thead>
-                                                    <tr class="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
+                                                    <tr class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
                                                         <th class="w-12 px-3 py-3 text-center">No</th>
                                                         <th class="px-3 py-3">Nama Perusahaan</th>
                                                         <th class="px-3 py-3">Jenis Usaha</th>

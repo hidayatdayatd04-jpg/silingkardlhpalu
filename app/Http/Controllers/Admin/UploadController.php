@@ -3,22 +3,31 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class UploadController extends Controller
 {
     public function uploadImage(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+            'file' => 'required|file|mimes:jpeg,jpg,png,webp,avif,heic,heif|max:5120',
         ]);
 
         $file = $request->file('file');
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('artikel-images', $filename, 'public');
+
+        // Gambar otomatis dikompres & dikonversi ke WebP (URL signed tidak
+        // bergantung pada ekstensi, sehingga konten artikel tetap tampil).
+        $path = app(FileUploadService::class)->store($file, 'artikel-images', 'public');
+
+        if ($path === false) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gambar gagal diunggah. Silakan coba lagi.',
+            ], 500);
+        }
 
         $url = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
 

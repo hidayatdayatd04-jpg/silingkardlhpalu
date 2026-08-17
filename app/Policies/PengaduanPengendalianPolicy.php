@@ -3,8 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\AdminRole;
-use App\Enums\Bidang;
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
 use App\Models\User;
 use App\Support\AdminAccess;
 
@@ -15,16 +14,9 @@ class PengaduanPengendalianPolicy
         return $this->canAccess($user);
     }
 
-    protected function isPengendalian(Laporan $laporan): bool
+    public function view(User $user, PengaduanPengendalian $pengaduan): bool
     {
-        $bidang = $laporan->bidang;
-
-        return ($bidang instanceof Bidang ? $bidang->value : $bidang) === Bidang::PENGENDALIAN->value;
-    }
-
-    public function view(User $user, Laporan $laporan): bool
-    {
-        return $this->canAccess($user) && $this->isPengendalian($laporan);
+        return $this->canAccess($user);
     }
 
     public function create(User $user): bool
@@ -32,14 +24,14 @@ class PengaduanPengendalianPolicy
         return false;
     }
 
-    public function update(User $user, Laporan $laporan): bool
+    public function update(User $user, PengaduanPengendalian $pengaduan): bool
     {
-        return $this->canAccess($user) && $this->isPengendalian($laporan);
+        return $this->canAccess($user);
     }
 
-    public function delete(User $user, Laporan $laporan): bool
+    public function delete(User $user, PengaduanPengendalian $pengaduan): bool
     {
-        return AdminAccess::isSuperadmin($user) && $this->isPengendalian($laporan);
+        return AdminAccess::isSuperadmin($user);
     }
 
     protected function canAccess(User $user): bool

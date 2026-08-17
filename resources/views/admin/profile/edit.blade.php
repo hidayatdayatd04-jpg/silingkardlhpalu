@@ -48,15 +48,21 @@
 
         <div class="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center">
             <div class="group relative shrink-0">
-                <template x-if="preview">
-                    <img :src="preview" alt="{{ $user->name }}"
+                @if($user->photoUrl())
+                    <img x-show="preview" src="{{ $user->photoUrl() }}" x-bind:src="preview || undefined" alt="{{ $user->name }}"
                         class="size-24 rounded-3xl object-cover ring-4 ring-white/40 shadow-xl transition duration-300 group-hover:scale-[1.03] sm:size-28">
-                </template>
-                <template x-if="!preview">
-                    <div class="grid size-24 place-items-center rounded-3xl bg-white/20 text-3xl font-bold ring-4 ring-white/40 shadow-xl backdrop-blur-sm transition duration-300 sm:size-28">
+                    <div x-show="!preview" x-cloak
+                        class="grid size-24 place-items-center rounded-3xl bg-white/20 text-3xl font-bold ring-4 ring-white/40 shadow-xl backdrop-blur-sm transition duration-300 sm:size-28">
                         {{ $initials }}
                     </div>
-                </template>
+                @else
+                    <img x-show="preview" x-cloak x-bind:src="preview || undefined" alt="{{ $user->name }}"
+                        class="size-24 rounded-3xl object-cover ring-4 ring-white/40 shadow-xl transition duration-300 group-hover:scale-[1.03] sm:size-28">
+                    <div x-show="!preview"
+                        class="grid size-24 place-items-center rounded-3xl bg-white/20 text-3xl font-bold ring-4 ring-white/40 shadow-xl backdrop-blur-sm transition duration-300 sm:size-28">
+                        {{ $initials }}
+                    </div>
+                @endif
                 <div class="absolute -bottom-1 -right-1 grid size-9 place-items-center rounded-full bg-white text-brand-600 shadow-lg ring-2 ring-brand-500">
                     <x-admin.icon name="user" :size="16" />
                 </div>
@@ -132,21 +138,27 @@
 
                     {{-- Photo Upload --}}
                     <div class="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5 transition hover:border-brand-400 hover:bg-brand-50/40 sm:flex-row dark:border-white/15 dark:bg-white/5 dark:hover:border-brand-400/60">
-                        <template x-if="preview">
-                            <img :src="preview" alt="Foto profil"
+                        @if($user->photoUrl())
+                            <img x-show="preview" src="{{ $user->photoUrl() }}" x-bind:src="preview || undefined" alt="Foto profil"
                                 class="size-20 rounded-2xl object-cover ring-2 ring-white shadow-md">
-                        </template>
-                        <template x-if="!preview">
-                            <div class="grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-100 to-emerald-100 text-xl font-bold text-brand-600">
+                            <div x-show="!preview" x-cloak
+                                class="grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-100 to-emerald-100 text-xl font-bold text-brand-600">
                                 {{ $initials }}
                             </div>
-                        </template>
+                        @else
+                            <img x-show="preview" x-cloak x-bind:src="preview || undefined" alt="Foto profil"
+                                class="size-20 rounded-2xl object-cover ring-2 ring-white shadow-md">
+                            <div x-show="!preview"
+                                class="grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-100 to-emerald-100 text-xl font-bold text-brand-600">
+                                {{ $initials }}
+                            </div>
+                        @endif
                         <div class="flex-1 text-center sm:text-left">
                             <label class="inline-flex cursor-pointer">
                                 <span class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10">
                                     <x-admin.icon name="upload" :size="16" /> Pilih Foto Baru
                                 </span>
-                                <input type="file" name="photo" accept="image/jpg,image/jpeg,image/png,image/webp" class="hidden" x-ref="photoInput"
+                                <input type="file" name="photo" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" class="hidden" x-ref="photoInput"
                                     x-on:change="preview = URL.createObjectURL($event.target.files[0]); fileName = $event.target.files[0].name; removePhoto = false">
                             </label>
                             <button type="button" x-show="preview" @click="removePhoto = true; preview = ''; fileName = ''; if ($refs.photoInput) $refs.photoInput.value = ''"
@@ -154,8 +166,8 @@
                                 <x-admin.icon name="trash" :size="16" /> Hapus Foto
                             </button>
                             <input type="hidden" name="photo_remove" :value="removePhoto ? 1 : 0">
-                            <p class="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                                <span x-text="fileName || 'JPG, PNG, atau WEBP. Maksimal 2MB.'"></span>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                <span x-text="fileName || 'JPG, PNG, WEBP, AVIF, atau HEIC. Maksimal 5MB.'"></span>
                             </p>
                             @error('photo')
                                 <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>

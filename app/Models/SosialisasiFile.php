@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SosialisasiFile extends Model
 {
+    protected $table = 'sosialisasi_file';
+
     protected $fillable = [
         'sosialisasi_id',
         'path',

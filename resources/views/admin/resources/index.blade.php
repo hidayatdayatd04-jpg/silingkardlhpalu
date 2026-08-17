@@ -382,10 +382,8 @@
                                 icon="folder"
                                 title="Belum ada data"
                                 description="Data akan muncul di sini. Ubah kata kunci pencarian jika diperlukan."
-                                @if(($resource['can_create'] ?? true))
-                                    actionText="Tambah Data Pertama"
-                                    :actionUrl="route('admin.resources.create', $resource['slug'])"
-                                @endif
+                                :actionText="($resource['can_create'] ?? true) ? 'Tambah Data Pertama' : null"
+                                :actionUrl="($resource['can_create'] ?? true) ? route('admin.resources.create', $resource['slug']) : null"
                             />
                         </td>
                     </tr>

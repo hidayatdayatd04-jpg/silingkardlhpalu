@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Font dilayani LOKAL (self-hosted via @fontsource) agar siap di first paint:
+   menghilangkan layout shift (CLS) dari swap font eksternal & request jaringan. */
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono';
 @import 'tailwindcss';
 @import './admin-utilities.css';
 
@@ -16,9 +17,9 @@
 @source inline("bg-danger-50 bg-danger-100 bg-info-50 bg-info-100 bg-warning-50 bg-warning-100 bg-success-50 bg-success-100 bg-gray-50 bg-gray-100 bg-slate-50 bg-slate-100 bg-emerald-50 bg-emerald-100 bg-sky-50 bg-sky-100 bg-amber-50 bg-amber-100 bg-teal-50 bg-teal-100 bg-indigo-50 bg-indigo-100 bg-rose-50 bg-rose-100 bg-purple-50 bg-purple-100 text-danger-600 text-danger-700 text-info-600 text-info-700 text-warning-600 text-warning-700 text-success-600 text-success-700 text-gray-600 text-gray-700 text-slate-600 text-slate-700 text-emerald-600 text-emerald-700 text-sky-600 text-sky-700 text-amber-600 text-amber-700 text-teal-600 text-teal-700 text-indigo-600 text-indigo-700 text-rose-600 text-rose-700 text-purple-600 text-purple-700 ring-danger-200 ring-info-200 ring-warning-200 ring-success-200 ring-gray-200 ring-slate-200 ring-emerald-200 ring-sky-200 ring-amber-200 ring-teal-200 ring-indigo-200 ring-rose-200 ring-purple-200 hover:bg-danger-50 hover:bg-info-50 hover:bg-warning-50 hover:bg-success-50 hover:bg-gray-50 hover:bg-slate-50 hover:bg-emerald-50 hover:bg-sky-50 hover:bg-amber-50 hover:bg-teal-50 hover:bg-indigo-50 hover:bg-rose-50 hover:bg-purple-50");
 
 @theme {
-    --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji',
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
     --color-brand-50: #ecfdf5;
@@ -239,7 +240,7 @@
         text-rendering: optimizeLegibility;
     }
 
-    /* Heading pakai font display (DM Sans) untuk karakter premium. */
+    /* Heading memakai Inter (variable) dengan tracking ketat agar modern & tegas. */
     h1, h2, h3, h4, h5, h6,
     .text-h1, .text-h2, .text-h3, .text-h4, .text-display {
         font-family: var(--font-display);
@@ -255,9 +256,9 @@
     }
 }
 
-/* Public pages — override font to Inter */
+/* Public pages — override font ke Inter Variable */
 .dlh-public, .dlh-public * {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
@@ -364,8 +365,10 @@
 @layer utilities {
     /* Elemen menunggu masuk viewport; JS menambahkan .is-revealed via IntersectionObserver.
        Bidirectional: animasi MASUK saat elemen memasuki viewport, dan animasi KELUAR
-       (kembali ke state awal) saat elemen meninggalkan viewport. */
-    .reveal {
+       (kembali ke state awal) saat elemen meninggalkan viewport.
+       State tersembunyi hanya aktif bila JS tersedia (html.js) — tanpa JS konten
+       tetap tampil normal, tidak pernah terkunci invisible. */
+    html.js .reveal {
         opacity: 0;
         transform: translateY(30px);
         transition:
@@ -376,12 +379,12 @@
     }
 
     /* Varian arah — set lewat class di HTML (opsional). */
-    .reveal-left  { transform: translateX(-40px); }
-    .reveal-right { transform: translateX(40px); }
-    .reveal-scale { transform: translateY(24px) scale(0.94); }
-    .reveal-zoom  { transform: scale(0.9); }
+    html.js .reveal-left  { transform: translateX(-40px); }
+    html.js .reveal-right { transform: translateX(40px); }
+    html.js .reveal-scale { transform: translateY(24px) scale(0.94); }
+    html.js .reveal-zoom  { transform: scale(0.9); }
 
-    .reveal.is-revealed {
+    html.js .reveal.is-revealed {
         opacity: 1;
         transform: none;
     }
@@ -406,6 +409,16 @@
             opacity: 1;
             transform: none;
         }
+    }
+
+    /* Entrance page-hero untuk sub-halaman publik (badge → judul → deskripsi
+       berjenjang). Murni CSS animation tanpa dependensi JS: mulai berjalan
+       otomatis saat stylesheet ter-parse. Hanya transform + opacity
+       (compositor-only) dan hanya bila JS aktif (html.js) — tanpa JS konten
+       tampil statis, tidak pernah tersembunyi. */
+    html.js .page-hero-enter {
+        animation: heroEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: var(--hero-delay, 0ms);
     }
 
     /* Indikator "Online" armada — denyut lembut agar terasa real-time. */
@@ -472,6 +485,59 @@
         0%, 100% { transform: scale(0.88); opacity: 0.85; }
         50% { transform: scale(1.06); opacity: 1; }
     }
+
+    /* Render markdown output chatbot — rapi, berjarak, mudah dibaca. */
+    .cb-md-heading {
+        font-weight: 700;
+    }
+    .cb-md-ul,
+    .cb-md-ol {
+        padding-left: 1.25em;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3em;
+    }
+    .cb-md-ul { list-style: disc; }
+    .cb-md-ol { list-style: decimal; }
+    .cb-md-ul li::marker,
+    .cb-md-ol li::marker {
+        color: #10b981;
+        font-weight: 600;
+    }
+    .cb-md-pre {
+        padding: 0.6em 0.8em;
+        border-radius: 0.6rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 0.8em;
+        line-height: 1.5;
+        overflow-x: auto;
+        white-space: pre;
+    }
+    .cb-md-code {
+        padding: 0.1em 0.35em;
+        border-radius: 0.35rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        font-size: 0.85em;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    .dark .cb-md-code {
+        background: rgba(16, 185, 129, 0.16);
+        color: #6ee7b7;
+    }
+    /* Jarak antar blok (paragraf/list/kode) di dalam gelembung chat. */
+    #chatbot-messages p + p,
+    #chatbot-messages p + ul,
+    #chatbot-messages p + ol,
+    #chatbot-messages p + pre,
+    #chatbot-messages ul + p,
+    #chatbot-messages ol + p,
+    #chatbot-messages pre + p,
+    #chatbot-messages ul + ol,
+    #chatbot-messages ol + ul {
+        margin-top: 0.55em;
+    }
 }
 
 /* ==========================================================================
@@ -503,9 +569,16 @@
         40%, 60% { transform: translateX(4px); }
     }
 
-    /* Grain overlay halus untuk sidebar/hero (dipakai via ::before di komponen) */
+    /* Grain overlay halus untuk sidebar/hero.
+       Menggunakan PNG noise statis yang di-inline sebagai data-URI sehingga
+       tidak ada request jaringan tambahan — elemen ini kerap menjadi LCP
+       candidate, jadi memastikannya langsung tersedia (tanpa network) membuat
+       LCP selesai di first paint. Pengganti SVG feTurbulence (biaya paint mahal
+       yang merusak LCP/TBT). */
     .bg-grain {
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAGFBMVEUEAgR3d3e2tbZJSUmbm5vQ0NBkZGSGhoZAsnAIAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACzklEQVRIx3VVy24VMQz1JJlkOwvEOlQVbI1QxTYgLmyDilhH0O4joYrfJ37kMbdl1M6dcRwfH/s4AwDfk4cCwP98JYAKcNDj1m2ebntfb67oAHJfhSi7D/Dutu2NyeeiCztcXf7aQICA/aXFBevhQs+22c1Ebj6GbA5ihW72Iw+UzdjuhBGeVqTDdaQgEG1naXf32F4eAO6PwQ+b2yYFKCMyQfM2jGJ3ULU6VdMmYPihlAZ2mDRTynAY9q0cL+6SMvttszYOe6V2OylQYZulB8zSILtWMmrfTqW1VkDeLq2wUVkpfA5QT42xri1ZYhq1Wh1gJPOnF0h6JGZmJEBUpCkRYU0kYx5ayyFLZVNDOLAsCYRJiXgas8qnNva7lsCEY6gn6e+bgIC7do564WEhS/EksfSKqB1p2LOEQoHlWnOBQ+HNTjCCmZDIoKkr9yDUJ6q5Yn6mxQxLn2IPOjWfoNb+8iES94d4mpW01D4/q9EY002qGU9+vwpr9+sQcYv6sT38nsVGWSKSUUDjMjqt1D1VYzpWG3A25keprOZSWd9401w3kEmUzqHtGb63exOpQbiFSPNs7mn0PHe5Y5rBIOig80SZ3mEH2bGKZJDu3p2HgDjak2AKS3rMuBwdQRXxVzsS0iKktiOGdfhaU320lFU6T52FpTN0MP5kCnha61G8bQlawt8lt7os85mDI+xeQ0UdpWpWCfvLIub4mFNCVEXsM2FtovsWl1GKLx3BqyULjJ2HG6yDyesbjPyn3YSogrkmLW20+oeng8TA86vQWGsnHIygN13S9/l0woE3cMdB2wnre5JuTa/0AUkZJXccvcnr0UG+ZRTFc9p0/7ROnRut5Tk/9PDv3C3TSydKUZL5ImjYJW751+SX+pHVR5Mn247EUr1N0u9ageXzPD+jUMbctr2XocYE/7uctGubqmRQMHuG14Ejbj3AcXjY/wGryUtscM8/lwAAAABJRU5ErkJggg==");
+        background-repeat: repeat;
+        background-size: 160px 160px;
     }
 
     /* Card lift micro-interaction */
@@ -538,6 +611,28 @@
         from { transform: scaleX(1); }
         to { transform: scaleX(0); }
     }
+
+    /* ==========================================================================
+       Custom icon set DLH — gaya "duotone line" konsisten:
+       stroke utama mengikuti currentColor (tebal seragam, ujung membulat),
+       satu layer aksen di-fill dengan warna yang bisa di-override lewat
+       CSS variable --icon-accent (default: currentColor). Semua ikon di
+       resources/views/components/icons/*.blade.php memakai kontrak ini,
+       jadi mengganti warna ikon cukup dengan mengubah --icon-accent atau
+       text color container — tanpa menyentuh markup SVG.
+       ========================================================================== */
+    .icon-duo {
+        stroke: currentColor;
+        stroke-width: 1.75;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+    }
+    .icon-duo .icon-accent {
+        fill: var(--icon-accent, currentColor);
+        stroke: none;
+        opacity: 0.22;
+    }
 }
 
 /* ==========================================================================
@@ -545,17 +640,17 @@
    (dikendalikan oleh resources/js/admin-common.js)
    ========================================================================== */
 @layer utilities {
-    /* Container konten halaman — masuk dengan reveal lembut saat load/navigasi. */
-    [data-page-content] {
-        opacity: 0;
-        transform: translateY(10px);
-        transition:
-            opacity var(--duration-slow, 320ms) var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1)),
-            transform var(--duration-slow, 320ms) var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1));
+    /* Container konten halaman — reveal lembut saat load/navigasi.
+       Pakai ANIMASI CSS (bukan transition yang menunggu event JS) agar konten
+       langsung tampil di first paint dan LCP tidak tertunda oleh eksekusi
+       JavaScript. Hanya animasikan transform (bukan opacity) supaya elemen
+       tetap full-opacity sejak frame pertama — aman untuk LCP. */
+    html.js [data-page-content] {
+        animation: pageContentIn var(--duration-slow, 320ms) var(--ease-out-soft, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
     }
-    [data-page-content].page-content-in {
-        opacity: 1;
-        transform: none;
+    @keyframes pageContentIn {
+        from { transform: translateY(8px); }
+        to   { transform: none; }
     }
 
     /* Overlay transisi penuh saat navigasi antar-halaman. */
@@ -637,7 +732,7 @@
     }
     .admin-preloader-title {
         color: #fff;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         font-size: 0.95rem;
@@ -733,12 +828,12 @@
     [data-animate="scale"].is-in { transform: none; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    [data-page-content] {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-    }
+    @media (prefers-reduced-motion: reduce) {
+        [data-page-content] {
+            opacity: 1 !important;
+            transform: none !important;
+            animation: none !important;
+        }
     .page-transition-overlay { display: none !important; }
     [data-nav-item] { opacity: 1 !important; transform: none !important; animation: none !important; }
     [data-animate] { opacity: 1 !important; transform: none !important; transition: none !important; }
@@ -750,7 +845,8 @@
     .reveal-right,
     .reveal-scale,
     .reveal-zoom,
-    .hero-enter {
+    .hero-enter,
+    .page-hero-enter {
         opacity: 1 !important;
         transform: none !important;
         transition: none !important;
@@ -848,8 +944,10 @@
    ========================================================================== */
 .topbar-glass {
     background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    /* blur dikurangi dari 24px → 12px: jauh lebih murah untuk paint (LCP),
+       nyaris tak terlihat bedanya pada opacity 0.92. */
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 .dark .topbar-glass {
@@ -860,17 +958,19 @@
 .topbar-noise {
     position: relative;
 }
+/* Tekstur noise feTurbulence SVG dihapus: rasterisasi filter SVG per-tile
+   memperlambat paint topbar (elemen LCP). Diganti sheen gradient tipis
+   yang secara visual setara pada opacity rendah dan sangat murah. */
 .topbar-noise::before {
     content: '';
     position: absolute;
     inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    background-size: 128px 128px;
+    opacity: 0.5;
+    background-image: linear-gradient(90deg, rgba(16, 185, 129, 0.02) 0%, transparent 30%, transparent 70%, rgba(13, 171, 206, 0.02) 100%);
     pointer-events: none;
     z-index: 0;
 }
-.dark .topbar-noise::before { opacity: 0.04; }
+.dark .topbar-noise::before { opacity: 0.6; }
 
 .topbar-btn {
     position: relative;

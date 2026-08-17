@@ -20,6 +20,7 @@ $layersJson = $layers->map(fn($l) => [
         'metadata' => $l->metadata,
         'is_visible' => $l->is_visible,
         'is_public' => $l->is_public,
+        'show_in_filter' => $l->show_in_filter,
         'public_page' => $publicPageMap[$l->bidang] ?? null,
         'geojson' => $l->toGeoJson(),
     ])->toJson();
@@ -31,7 +32,6 @@ $layersJson = $layers->map(fn($l) => [
 @section('full_width', 'w-full')
 
     @push('styles')
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css" />
     <style>
         .map-wrapper { flex: 1; min-height: 0; position: relative; }
         .map-container { position: absolute; inset: 0; overflow: hidden; }
@@ -216,6 +216,24 @@ $layersJson = $layers->map(fn($l) => [
         }
         .public-toggle.is-hidden:hover { background: rgba(34,197,94,0.08); color: #16a34a; border-color: rgba(34,197,94,0.25); }
 
+        /* â•â•â• Filter Visibility Toggle â•â•â• */
+        .filter-toggle {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            border: 1.5px solid transparent; cursor: pointer; transition: all 0.2s;
+            white-space: nowrap; user-select: none;
+        }
+        .filter-toggle.in-filter {
+            background: rgba(59,130,246,0.08); color: #2563eb;
+            border-color: rgba(59,130,246,0.25);
+        }
+        .filter-toggle.in-filter:hover { background: rgba(239,68,68,0.08); color: #dc2626; border-color: rgba(239,68,68,0.25); }
+        .filter-toggle.out-filter {
+            background: rgba(100,116,139,0.08); color: #64748b;
+            border-color: rgba(100,116,139,0.22);
+        }
+        .filter-toggle.out-filter:hover { background: rgba(59,130,246,0.08); color: #2563eb; border-color: rgba(59,130,246,0.25); }
+
         /* â•â•â• Page Badge â•â•â• */
         .page-badge {
             display: inline-flex; align-items: center; gap: 3px;
@@ -297,25 +315,6 @@ $layersJson = $layers->map(fn($l) => [
                             title="Tutup panel">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
-                    </div>
-                </div>
-
-                <!-- Bidang Filter -->
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-[11px] font-bold uppercase tracking-wide text-slate-400 px-0.5">Filter Bidang</span>
-                    <div class="flex flex-wrap gap-2">
-                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all {{ !$activeBidang ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50' }}">
-                            <input type="checkbox" @change="window.location.href='{{ route('admin.peta.index') }}'" {{ !$activeBidang ? 'checked' : '' }}
-                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer">
-                            <span class="text-[12px] font-semibold {{ !$activeBidang ? 'text-emerald-700' : 'text-slate-600' }}">Semua</span>
-                        </label>
-                        @foreach($accessibleBidang as $b)
-                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all {{ $activeBidang === $b ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50' }}">
-                            <input type="checkbox" @change="window.location.href='{{ route('admin.peta.index', ['bidang' => $b]) }}'" {{ $activeBidang === $b ? 'checked' : '' }}
-                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer">
-                            <span class="text-[12px] font-semibold {{ $activeBidang === $b ? 'text-emerald-700' : 'text-slate-600' }}">{{ $bidangLabels[$b] ?? $b }}</span>
-                        </label>
-                        @endforeach
                     </div>
                 </div>
             </div>
@@ -408,6 +407,14 @@ $layersJson = $layers->map(fn($l) => [
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
                                             </template>
                                             <span x-text="layer.is_public ? 'Publik' : 'Disembunyikan'"></span>
+                                        </button>
+
+                                        <!-- Toggle Tampilkan di Filter (filter publik peta persampahan) -->
+                                        <button @click.stop="toggleLayerFilter(layer)"
+                                            :class="layer.show_in_filter ? 'filter-toggle in-filter' : 'filter-toggle out-filter'"
+                                            :title="layer.show_in_filter ? 'Klik untuk sembunyikan dari filter publik' : 'Klik untuk tampilkan di filter publik'">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                            <span x-text="layer.show_in_filter ? 'Di Filter' : 'Tanpa Filter'"></span>
                                         </button>
 
                                         <!-- Public page badge (only if layer has a public page) -->
@@ -892,15 +899,6 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
                     <input type="text" x-model="createForm.nama_layer" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Titik TPA Palu" />
                 </div>
-                @php
-                    $bidangOptions = collect($accessibleBidang)->mapWithKeys(fn($b) => [$b => $bidangLabels[$b] ?? $b])->all();
-                @endphp
-                <div x-show="!createForm.parent_id">
-                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Bidang</label>
-                    <x-admin.select name="bidang" :options="$bidangOptions"
-                        selected="{{ $accessibleBidang[0] ?? 'rth' }}"
-                        x-model="createForm.bidang" />
-                </div>
                 <template x-if="createForm.parent_id">
                     <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3">
                         <p class="text-[12px] text-emerald-700 font-semibold">Sub-layer dari: <span x-text="getLayerName(createForm.parent_id)"></span></p>
@@ -1052,9 +1050,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 </div>
 
     @push('scripts')
-    {{-- Task 5: DlhZoomControl, DlhBasemapSwitcher, DlhMarkers, dll. via map-bundle --}}
-    @vite('resources/js/map-bundle.js')
-    <script src="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js"></script>
+    {{-- Task 5: peta admin lazy-load map-bundle via ensureMaplibreLoaded (app.js) --}}
     <script>
     // Initialize Alpine store for peta sidebar
     document.addEventListener('alpine:init', () => {
@@ -1127,6 +1123,13 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             init() {
+                var self = this;
+                // Lazy-load: maplibregl + DlhZoomControl dsb. baru tersedia
+                // setelah chunk map-bundle di-import via ensureMaplibreLoaded.
+                window.ensureMaplibreLoaded(function () { self._initMap(); });
+            },
+
+            _initMap() {
                 var self = this;
 
                 // Get marker types from DlhMarkers
@@ -1635,16 +1638,34 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ is_visible: layer.is_visible }),
                 });
+                // Cascade: visibilitas layer utama diwariskan ke seluruh
+                // sublayer-nya (ikut tampil / ikut disembunyikan).
+                this.descendantsOf(layer).forEach(child => {
+                    child.is_visible = layer.is_visible;
+                    if (child.is_visible) { this.showLayer(child.id); }
+                    else { this.hideLayer(child.id); }
+                    fetch(`/admin/peta/layer/${child.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ is_visible: child.is_visible }),
+                    });
+                });
             },
 
             toggleLayerPublic(layer) {
                 layer.is_public = !layer.is_public;
-                fetch(`/admin/peta/layer/${layer.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ is_public: layer.is_public }),
-                }).then(res => res.json()).then(data => {
-                    if (data.success) {
+                // Cascade: status publik layer utama diwariskan ke seluruh sublayer.
+                const children = this.descendantsOf(layer);
+                children.forEach(child => { child.is_public = layer.is_public; });
+                const targets = [layer, ...children];
+                Promise.all(targets.map(l =>
+                    fetch(`/admin/peta/layer/${l.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ is_public: l.is_public }),
+                    }).then(res => res.json())
+                )).then(results => {
+                    if (results.every(d => d.success)) {
                         this.showToast(
                             layer.is_public
                                 ? `Layer "${layer.nama_layer}" sekarang tampil di publik`
@@ -1653,11 +1674,45 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                         );
                     } else {
                         layer.is_public = !layer.is_public; // rollback
+                        children.forEach(child => { child.is_public = layer.is_public; });
                         this.showToast('Gagal mengubah visibilitas publik', 'error');
                     }
                 }).catch(() => {
                     layer.is_public = !layer.is_public; // rollback on error
+                    children.forEach(child => { child.is_public = layer.is_public; });
                     this.showToast('Gagal mengubah visibilitas publik', 'error');
+                });
+            },
+
+            toggleLayerFilter(layer) {
+                layer.show_in_filter = !layer.show_in_filter;
+                // Cascade: status filter layer utama diwariskan ke seluruh sublayer.
+                const children = this.descendantsOf(layer);
+                children.forEach(child => { child.show_in_filter = layer.show_in_filter; });
+                const targets = [layer, ...children];
+                Promise.all(targets.map(l =>
+                    fetch(`/admin/peta/layer/${l.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ show_in_filter: l.show_in_filter }),
+                    }).then(res => res.json())
+                )).then(results => {
+                    if (results.every(d => d.success)) {
+                        this.showToast(
+                            layer.show_in_filter
+                                ? `Layer "${layer.nama_layer}" sekarang tampil di filter publik`
+                                : `Layer "${layer.nama_layer}" disembunyikan dari filter publik`,
+                            'success'
+                        );
+                    } else {
+                        layer.show_in_filter = !layer.show_in_filter; // rollback
+                        children.forEach(child => { child.show_in_filter = layer.show_in_filter; });
+                        this.showToast('Gagal mengubah status filter', 'error');
+                    }
+                }).catch(() => {
+                    layer.show_in_filter = !layer.show_in_filter; // rollback on error
+                    children.forEach(child => { child.show_in_filter = layer.show_in_filter; });
+                    this.showToast('Gagal mengubah status filter', 'error');
                 });
             },
 
@@ -1690,6 +1745,20 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         // Sub-layer langsung dari sebuah layer.
         childrenOf(layer) {
             return this.layers.filter(l => l.parent_id === layer.id);
+        },
+
+        // Seluruh keturunan (anak, cucu, dst.) dari sebuah layer — dipakai
+        // untuk cascade: toggle pada layer utama diwariskan ke semua sublayer.
+        descendantsOf(layer) {
+            const out = [];
+            const walk = (parent) => {
+                this.childrenOf(parent).forEach(child => {
+                    out.push(child);
+                    walk(child);
+                });
+            };
+            walk(layer);
+            return out;
         },
 
         // Kedalaman hierarki (root = 0).

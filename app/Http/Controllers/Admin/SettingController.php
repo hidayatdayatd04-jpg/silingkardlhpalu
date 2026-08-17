@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiProvider;
 use App\Models\Setting;
+use App\Services\MonitoringService;
 use App\Support\ActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class SettingController extends Controller
 {
-    public function edit()
+    public function edit(MonitoringService $monitoring)
     {
         $estimatedAt = Setting::get('maintenance_estimated_at');
 
@@ -19,6 +22,9 @@ class SettingController extends Controller
             'isSuperadmin' => auth()->user()->isSuperadmin(),
             'maintenanceEnabled'    => (bool) Setting::get('maintenance_enabled', false),
             'maintenanceEstimatedAt' => $estimatedAt ? Carbon::parse($estimatedAt)->format('Y-m-d\TH:i') : '',
+            'b2'   => $monitoring->b2Storage(),
+            'neon' => $monitoring->neonDatabase(),
+            'providers' => AiProvider::orderBy('priority')->get(),
         ]);
     }
 
@@ -45,5 +51,216 @@ class SettingController extends Controller
         ActivityLogger::log('updated', 'Pengaturan diperbarui', 'settings', null, ['settings' => $validated], $user);
 
         return back()->with('success', 'Pengaturan berhasil disimpan.');
+    }
+
+    public function storeProvider(Request $request)
+    {
+        $this->ensureSuperadmin();
+
+        $validated = $this->validateProvider($request);
+
+        $provider = AiProvider::create([
+            'name'      => $validated['name'],
+            'type'      => $validated['type'],
+            'base_url'  => $validated['base_url'],
+            'api_key'   => $validated['api_key'],
+            'model'     => $validated['model'],
+            'priority'  => $validated['priority'] ?? 1,
+            'is_active' => $validated['is_active'],
+        ]);
+
+        ActivityLogger::log('created', "Provider AI \"{$provider->name}\" ditambahkan", 'settings', null, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority'])], $provider);
+
+        return back()->with('success', "Provider \"{$provider->name}\" berhasil ditambahkan.");
+    }
+
+    public function updateProvider(Request $request, AiProvider $provider)
+    {
+        $this->ensureSuperadmin();
+
+        $validated = $this->validateProvider($request, $provider);
+
+        $old = $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active']);
+
+        $provider->fill([
+            'name'      => $validated['name'],
+            'type'      => $validated['type'],
+            'base_url'  => $validated['base_url'],
+            'model'     => $validated['model'],
+            'priority'  => $validated['priority'] ?? $provider->priority,
+            'is_active' => $validated['is_active'],
+        ]);
+
+        // API key kosong berarti pertahankan key lama.
+        if (! empty($validated['api_key'])) {
+            $provider->api_key = $validated['api_key'];
+        }
+
+        $provider->save();
+
+        ActivityLogger::log('updated', "Provider AI \"{$provider->name}\" diperbarui", 'settings', $old, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active'])], $provider);
+
+        return back()->with('success', "Provider \"{$provider->name}\" berhasil diperbarui.");
+    }
+
+    public function destroyProvider(AiProvider $provider)
+    {
+        $this->ensureSuperadmin();
+
+        $name = $provider->name;
+
+        ActivityLogger::log('deleted', "Provider AI \"{$name}\" dihapus", 'settings', ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority'])], null, $provider);
+
+        $provider->delete();
+
+        return back()->with('success', "Provider \"{$name}\" berhasil dihapus.");
+    }
+
+    /**
+     * Ambil daftar model dari provider (OpenRouter, Google, & custom OpenAI-compatible).
+     */
+    public function fetchModels(Request $request)
+    {
+        $this->ensureSuperadmin();
+
+        $validated = $request->validate([
+            'type'     => ['required', 'in:openrouter,google,custom'],
+            'api_key'  => ['required', 'string'],
+            'base_url' => ['nullable', 'required_if:type,custom', 'url'],
+        ]);
+
+        try {
+            $models = match ($validated['type']) {
+                AiProvider::TYPE_OPENROUTER => $this->fetchOpenRouterModels(),
+                AiProvider::TYPE_GOOGLE     => $this->fetchGoogleModels($validated['api_key']),
+                AiProvider::TYPE_CUSTOM     => $this->fetchCustomModels($validated['base_url'], $validated['api_key']),
+            };
+
+            return response()->json(['models' => $models]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Gagal memuat daftar model: ' . $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Model dari endpoint OpenAI-compatible ({base_url}/models).
+     *
+     * @return list<array{id: string, label: string}>
+     */
+    private function fetchCustomModels(string $baseUrl, string $apiKey): array
+    {
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->get(rtrim($baseUrl, '/') . '/models');
+
+        if ($response->failed()) {
+            throw new \RuntimeException('Endpoint model merespons dengan status ' . $response->status());
+        }
+
+        $models = [];
+        foreach ($response->json('data', []) as $item) {
+            $id = is_array($item) ? ($item['id'] ?? '') : $item;
+
+            if (is_string($id) && $id !== '') {
+                $models[] = ['id' => $id, 'label' => $id];
+            }
+        }
+
+        usort($models, fn ($a, $b) => strcmp($a['id'], $b['id']));
+
+        return $models;
+    }
+
+    /**
+     * Model gratis OpenRouter (id berakhiran ":free" atau pricing 0).
+     *
+     * @return list<array{id: string, label: string}>
+     */
+    private function fetchOpenRouterModels(): array
+    {
+        $response = Http::timeout(30)->get('https://openrouter.ai/api/v1/models');
+
+        if ($response->failed()) {
+            throw new \RuntimeException('OpenRouter merespons dengan status ' . $response->status());
+        }
+
+        $models = [];
+        foreach ($response->json('data', []) as $item) {
+            $id = $item['id'] ?? '';
+            $isFree = str_ends_with($id, ':free')
+                || (float) data_get($item, 'pricing.prompt', 1) === 0.0;
+
+            if ($id !== '' && $isFree) {
+                $models[] = ['id' => $id, 'label' => $item['name'] ?? $id];
+            }
+        }
+
+        usort($models, fn ($a, $b) => strcmp($a['id'], $b['id']));
+
+        return $models;
+    }
+
+    /**
+     * Model Gemini yang tersedia lewat API key Google AI Studio.
+     *
+     * @return list<array{id: string, label: string}>
+     */
+    private function fetchGoogleModels(string $apiKey): array
+    {
+        $response = Http::timeout(30)->get(
+            'https://generativelanguage.googleapis.com/v1beta/models',
+            ['key' => $apiKey]
+        );
+
+        if ($response->failed()) {
+            throw new \RuntimeException(data_get($response->json(), 'error.message', 'Google merespons dengan status ' . $response->status()));
+        }
+
+        $models = [];
+        foreach ($response->json('models', []) as $item) {
+            $name = $item['name'] ?? '';
+            $methods = $item['supportedGenerationMethods'] ?? [];
+
+            if (! str_starts_with($name, 'models/gemini') || ! in_array('generateContent', $methods, true)) {
+                continue;
+            }
+
+            $id = substr($name, strlen('models/'));
+            $models[] = ['id' => $id, 'label' => $item['displayName'] ?? $id];
+        }
+
+        return $models;
+    }
+
+    /**
+     * Validasi form provider; base URL ditetapkan server-side sesuai tipe.
+     *
+     * @return array<string, mixed>
+     */
+    private function validateProvider(Request $request, ?AiProvider $provider = null): array
+    {
+        $validated = $request->validate([
+            'name'      => ['required', 'string', 'max:100'],
+            'type'      => ['required', 'in:openrouter,google,custom'],
+            'base_url'  => ['required_if:type,custom', 'nullable', 'url', 'max:255'],
+            'api_key'   => [$provider ? 'nullable' : 'required', 'string', 'max:500'],
+            'model'     => ['required', 'string', 'max:150'],
+            'priority'  => ['nullable', 'integer', 'min:1', 'max:100'],
+            'is_active' => ['nullable', 'string', 'in:1,0'],
+        ]);
+
+        // Base URL untuk OpenRouter/Google ditetapkan server-side.
+        $validated['base_url'] = $validated['type'] === AiProvider::TYPE_CUSTOM
+            ? $validated['base_url']
+            : AiProvider::defaultBaseUrls()[$validated['type']];
+
+        $validated['is_active'] = ($validated['is_active'] ?? ($provider ? '0' : '1')) === '1';
+
+        return $validated;
+    }
+
+    private function ensureSuperadmin(): void
+    {
+        abort_unless(auth()->user()?->isSuperadmin(), 403);
     }
 }

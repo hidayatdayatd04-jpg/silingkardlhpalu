@@ -16,7 +16,7 @@
         
         <!-- Content -->
         <div class="mt-6">
-            <h3 class="text-lg font-extrabold text-slate-900">{{ $title }}</h3>
+            <h2 class="text-base font-bold text-slate-900">{{ $title }}</h2>
             <p class="mt-2 text-sm text-slate-500">{{ $description }}</p>
         </div>
         

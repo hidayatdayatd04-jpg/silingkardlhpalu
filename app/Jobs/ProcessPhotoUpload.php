@@ -2,8 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\LaporanFoto;
-use App\Models\PengaduanTataPenataanFoto;
 use App\Services\ImageUploadService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,13 +20,13 @@ class ProcessPhotoUpload implements ShouldQueue
     public int $timeout = 120;
 
     /**
-     * @param  string  $fotoType     'laporan' | 'tata'
-     * @param  int     $fotoId        Primary key of the foto row.
-     * @param  string  $stagingPath  Local disk path of the temporarily stored upload.
-     * @param  string  $context      Storage folder, e.g. "pengaduan-pengendalian".
+     * @param  class-string  $fotoModelClass  Kelas model foto (mis. PengaduanRthFoto).
+     * @param  int           $fotoId          Primary key of the foto row.
+     * @param  string        $stagingPath     Local disk path of the temporarily stored upload.
+     * @param  string        $context         Storage folder, e.g. "pengaduan-pengendalian".
      */
     public function __construct(
-        public string $fotoType,
+        public string $fotoModelClass,
         public int $fotoId,
         public string $stagingPath,
         public string $context,
@@ -41,13 +39,11 @@ class ProcessPhotoUpload implements ShouldQueue
         $foto->update(['status' => 'processing', 'error_message' => null]);
 
         $source = Storage::disk('local')->path($this->stagingPath);
-        $paths = $service->upload($source, $this->context);
+        $path = $service->upload($source, $this->context);
 
+        // Satu file WebP dengan nama asli — tanpa varian thumb/medium/full.
         $foto->update([
-            'path_foto' => $paths['full'],
-            'thumb_path' => $paths['thumb'],
-            'medium_path' => $paths['medium'],
-            'full_path' => $paths['full'],
+            'path_foto' => $path,
             'status' => 'done',
             'error_message' => null,
         ]);
@@ -66,7 +62,7 @@ class ProcessPhotoUpload implements ShouldQueue
         Storage::disk('local')->delete($this->stagingPath);
 
         Log::error('ProcessPhotoUpload failed', [
-            'fotoType' => $this->fotoType,
+            'fotoModel' => $this->fotoModelClass,
             'fotoId' => $this->fotoId,
             'error' => $exception->getMessage(),
         ]);
@@ -74,8 +70,6 @@ class ProcessPhotoUpload implements ShouldQueue
 
     protected function resolveFoto()
     {
-        return $this->fotoType === 'tata'
-            ? PengaduanTataPenataanFoto::findOrFail($this->fotoId)
-            : LaporanFoto::findOrFail($this->fotoId);
+        return $this->fotoModelClass::findOrFail($this->fotoId);
     }
 }

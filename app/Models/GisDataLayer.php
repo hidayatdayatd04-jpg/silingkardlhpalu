@@ -9,7 +9,7 @@ class GisDataLayer extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'gis_data_layers';
+    protected $table = 'gis_data_layer';
 
     protected $fillable = [
         'bidang',
@@ -21,6 +21,7 @@ class GisDataLayer extends Model
         'metadata',
         'is_visible',
         'is_public',
+        'show_in_filter',
         'z_index',
     ];
 
@@ -31,6 +32,7 @@ class GisDataLayer extends Model
             'metadata' => 'array',
             'is_visible' => 'boolean',
             'is_public' => 'boolean',
+            'show_in_filter' => 'boolean',
         ];
     }
 

@@ -4,11 +4,8 @@
 @section('description', 'Visi, misi, struktur organisasi, serta tugas dan fungsi Dinas Lingkungan Hidup Kota Palu.')
 
 @php
-    $hasStructureImage = ! empty($profil->struktur_organisasi_image);
     $assetStructurePath = 'assets/images/struktur.jpg';
-    $structureImage = $hasStructureImage
-        ? Storage::disk('public')->temporaryUrl($profil->struktur_organisasi_image, now()->addHours(24))
-        : (file_exists(public_path($assetStructurePath)) ? asset($assetStructurePath) : null);
+    $structureImage = file_exists(public_path($assetStructurePath)) ? asset($assetStructurePath) : null;
 @endphp
 
 @section('content')
@@ -105,9 +102,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                         </svg>
                     </span>
-                    <p class="mt-6 text-xs font-bold uppercase tracking-[0.3em] text-emerald-200/80">{{ __('Visi') }}</p>
+                    <p class="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">{{ __('Visi') }}</p>
                     <div class="profile-vision mt-6">
-                        {!! $profil->visi_translated !!}
+                        {!! '<p>Terwujudnya Kota Palu Mantap Berkelanjutan yang Akseleratif, Inovatif dan Kolaboratif</p>' !!}
                     </div>
 
                 </div>
@@ -121,11 +118,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15L15 9.75M7.5 3.75h9A2.25 2.25 0 0118.75 6v12A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V6A2.25 2.25 0 017.5 3.75Z"/>
                         </svg>
                     </span>
-                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">{{ __('Misi') }}</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">{{ __('Misi') }}</p>
 
                 </div>
                 <div class="profile-prose profile-mission mt-4">
-                    {!! $profil->misi_translated !!}
+                    {!! '<ol>
+<li>Meningkatkan akselerasi pengelolaan lingkungan dan penataan kota yang layak huni.</li>
+<li>Bersinergi dengan Rencana Strategis Kementerian Lingkungan Hidup dan Kehutanan tahun 2025 - 2029.</li>
+<li>Rencana Strategis Dinas Lingkungan Hidup Pemerintah Provinsi Sulawesi Tengah Tahun 2025-2029.</li>
+</ol>' !!}
                 </div>
             </article>
         </div>
@@ -134,8 +135,8 @@
     <section x-show="tab === 'struktur'" x-cloak id="struktur-organisasi" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
         <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-xs font-bold uppercase tracking-[0.22em] text-brand-600 dark:text-brand-300">{{ __('Struktur Organisasi') }}</p>
-                <h2 class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{{ __('Bagan Organisasi DLH Kota Palu') }}</h2>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-300">{{ __('Struktur Organisasi') }}</p>
+                <h2 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ __('Bagan Organisasi DLH Kota Palu') }}</h2>
             </div>
         </div>
 
@@ -147,7 +148,7 @@
                     <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
                         <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h12a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25V6.75Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 15 4.5-4.5a2.121 2.121 0 0 1 3 0l1.5 1.5 1.5-1.5a2.121 2.121 0 0 1 3 0l3 3M8.25 8.25h.008v.008H8.25V8.25Z"/></svg>
                     </span>
-                    <h3 class="mt-5 text-lg font-extrabold text-slate-900 dark:text-white">{{ __('Gambar struktur belum tersedia') }}</h3>
+                    <h3 class="mt-5 text-lg font-bold text-slate-900 dark:text-white">{{ __('Gambar struktur belum tersedia') }}</h3>
                     <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{{ __('Area ini sengaja dikosongkan dulu agar nanti bisa langsung diisi dengan gambar struktur organisasi dari folder asset.') }}</p>
                 </div>
             @endif
@@ -156,7 +157,7 @@
 
     <section x-show="tab === 'tugas'" x-cloak id="tugas-fungsi" class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-lg shadow-slate-200/50 dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-slate-900/50 sm:p-10">
         <div class="mb-10 max-w-3xl">
-            <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-600 dark:text-brand-300">{{ __('Tugas & Fungsi') }}</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-300">{{ __('Tugas & Fungsi') }}</p>
         </div>
         <div class="profile-prose profile-prose-long">
             <h3>Tugas Dinas Lingkungan Hidup Kota Palu</h3>

@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
@@ -34,7 +36,7 @@ class StatistikService
 
     public function pengunjungHariIni(): int
     {
-        if (! $this->hasTableCached('website_visits')) {
+        if (! $this->hasTableCached('website_visit')) {
             return 0;
         }
 
@@ -45,7 +47,7 @@ class StatistikService
 
     public function totalPengunjung(): int
     {
-        if (! $this->hasTableCached('website_visits')) {
+        if (! $this->hasTableCached('website_visit')) {
             return 0;
         }
 
@@ -54,11 +56,25 @@ class StatistikService
 
     public function totalPelapor(): int
     {
-        if (! $this->hasTableCached('laporans')) {
-            return 0;
+        $total = 0;
+
+        if ($this->hasTableCached('pengaduan_pengendalian')) {
+            $total += PengaduanPengendalian::query()->count();
         }
 
-        return Laporan::query()->count();
+        if ($this->hasTableCached('pengaduan_sampah')) {
+            $total += PengaduanSampah::query()->count();
+        }
+
+        if ($this->hasTableCached('pengaduan_rth')) {
+            $total += PengaduanRth::query()->count();
+        }
+
+        if ($this->hasTableCached('pengaduan_tata_penataan')) {
+            $total += PengaduanTataPenataan::query()->count();
+        }
+
+        return $total;
     }
 
     public function totalPengajuan(): int
@@ -69,15 +85,15 @@ class StatistikService
             $total += PermohonanRekomendasi::query()->count();
         }
 
-        if ($this->hasTableCached('registrasi_usaha_lb3s')) {
+        if ($this->hasTableCached('registrasi_usaha_lb3')) {
             $total += RegistrasiUsahaLb3::query()->count();
         }
 
-        if ($this->hasTableCached('pengajuan_rintek_perteks')) {
+        if ($this->hasTableCached('pengajuan_rintek_pertek')) {
             $total += PengajuanRintekPertek::query()->count();
         }
 
-        if ($this->hasTableCached('permohonan_pinjam_tamans')) {
+        if ($this->hasTableCached('permohonan_pinjam_taman')) {
             $total += PermohonanPinjamTaman::query()->count();
         }
 
@@ -86,8 +102,8 @@ class StatistikService
 
     public function summary(): array
     {
-        // Ringkasan bersifat statistik — cache 5 menit agar tidak query tiap request.
-        return Cache::remember('statistik:summary', now()->addMinutes(5), function () {
+        // Ringkasan bersifat statistik — cache 15 menit agar tidak query tiap request.
+        return Cache::remember('statistik:summary', now()->addMinutes(15), function () {
             return [
                 'pengunjung_hari_ini' => $this->pengunjungHariIni(),
                 'total_pengunjung' => $this->totalPengunjung(),
@@ -106,25 +122,25 @@ class StatistikService
         $labels = $months->map(fn ($m) => $m->translatedFormat('M Y'))->all();
 
         $bidangMap = [
-            'pengendalian' => 'pengendalian',
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
+            'pengendalian' => PengaduanPengendalian::class,
+            'sampah-lb3' => PengaduanSampah::class,
+            'rth' => PengaduanRth::class,
+            'tata-penataan' => PengaduanTataPenataan::class,
         ];
 
         $datasets = [];
         foreach ($allowedGroups as $group) {
-            $bidang = $bidangMap[$group] ?? null;
-            if (! $bidang) continue;
+            $modelClass = $bidangMap[$group] ?? null;
+            if (! $modelClass) continue;
 
-            $data = $months->map(function ($m) use ($bidang) {
-                return Laporan::where('bidang', $bidang)
+            $data = $months->map(function ($m) use ($modelClass) {
+                return $modelClass::query()
                     ->whereYear('created_at', $m->year)
                     ->whereMonth('created_at', $m->month)
                     ->count();
             })->all();
 
-            $datasets[$bidang] = $data;
+            $datasets[$group] = $data;
         }
 
         return ['labels' => $labels, 'datasets' => $datasets];

@@ -19,7 +19,14 @@ class StoreRegistrasiUsahaLb3Request extends FormRequest
             'nomor_telepon' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
             'email' => ['required', 'email:rfc,dns', 'max:255'],
             'alamat' => ['required', 'string', 'max:1000'],
-            'jenis_lb3_id' => ['required', 'integer', Rule::exists('jenis_lb3s', 'id')],
+            'jenis_lb3' => ['required', 'string', Rule::in([
+                'Pengumpul LB3',
+                'Pengangkut LB3',
+                'Pemanfaat LB3',
+                'Pengolah LB3',
+                'Penimbun LB3',
+                'Lainnya',
+            ])],
         ];
     }
 

@@ -13,15 +13,15 @@
 
 @php
     $id = $attributes->get('id', 'admin-select-' . Str::random(8));
-    $hasError = $error || $errors->has($name);
-    $errorMessage = $error ?? $errors->first($name);
+    $hasError = $error === '' ? false : ($error || $errors->has($name));
+    $errorMessage = $error === '' ? null : ($error ?? $errors->first($name));
     $normalizedOptions = collect($options)
         ->map(fn ($label, $value) => ['value' => (string) $value, 'label' => (string) $label])
         ->values();
 @endphp
 
 <div
-    {{ $attributes->whereStartsWith('wire:model') }}
+    {{ $attributes->whereStartsWith(['wire:model', 'x-model']) }}
     x-modelable="selected"
     class="fi-field"
     x-data="{
@@ -169,17 +169,16 @@
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
-        .fi-field { position: relative; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-field { position: relative; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #12201a; margin-bottom: 8px; cursor: pointer; }
         .fi-required { color: #f43f5e; font-size: 14px; font-weight: 400; margin-left: 1px; }
         .fi-select-shell { position: relative; }
-        .fi-select-trigger { width: 100%; height: 48px; border-radius: 9999px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 20px; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 13.5px; font-weight: 500; color: #12201a; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease; text-align: left; }
+        .fi-select-trigger { width: 100%; height: 48px; border-radius: 9999px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 20px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; font-size: 13.5px; font-weight: 500; color: #12201a; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease; text-align: left; }
         .fi-select-trigger:hover:not(.fi-select-trigger--error):not(.fi-select-trigger--disabled) { border-color: #c3d8cc; }
         .fi-select-shell--open .fi-select-trigger, .fi-select-trigger:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
         .fi-select-trigger--error { border-color: #e0533d !important; box-shadow: 0 0 0 4px rgba(224, 83, 61, 0.1) !important; }
         .fi-select-trigger--disabled { cursor: not-allowed; opacity: 0.5; background: #f8fafc; }
-        .fi-select-placeholder { color: #9fb0a8; font-weight: 400; }
+        .fi-select-placeholder { color: #5f7268; font-weight: 400; }
         .fi-select-value { font-weight: 500; color: #12201a; }
         .fi-select-chevron { width: 16px; height: 16px; color: #5b6b63; transition: transform .18s ease; flex-shrink: 0; }
         .fi-select-chevron--open { transform: rotate(180deg); }
@@ -191,8 +190,8 @@
         .fi-select-leave-start { opacity: 1; transform: translateY(0) scale(1); }
         .fi-select-leave-end { opacity: 0; transform: translateY(-4px) scale(0.98); }
         .fi-select-search-wrap { padding: 4px 4px 6px; }
-        .fi-select-search { width: 100%; height: 36px; border-radius: 10px; border: 1px solid #dfe9e3; background: #f4faf6; padding: 0 12px; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; color: #12201a; outline: none; transition: border-color .15s ease, background .15s ease; }
-        .fi-select-search::placeholder { color: #9fb0a8; }
+        .fi-select-search { width: 100%; height: 36px; border-radius: 10px; border: 1px solid #dfe9e3; background: #f4faf6; padding: 0 12px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; color: #12201a; outline: none; transition: border-color .15s ease, background .15s ease; }
+        .fi-select-search::placeholder { color: #5f7268; }
         .fi-select-search:focus { border-color: #1ea567; background: #fff; }
         .fi-select-options-scroll { max-height: 280px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #dfe9e3 transparent; overscroll-behavior: contain; }
         .fi-select-option { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; color: #12201a; cursor: pointer; transition: background .12s ease; }
@@ -202,10 +201,10 @@
         .fi-select-option-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .fi-select-check { width: 18px; height: 18px; border-radius: 9999px; background: rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 8px; }
         .fi-select-check svg { width: 11px; height: 11px; }
-        .fi-select-empty { padding: 24px 16px; text-align: center; font-size: 13px; color: #9fb0a8; }
-        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-select-empty { padding: 24px 16px; text-align: center; font-size: 13px; color: #5f7268; }
+        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-error svg { width: 13px; height: 13px; flex-shrink: 0; }
-        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .dark .fi-label { color: #e2e8f0; }
         .dark .fi-select-trigger { background: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .fi-select-trigger:hover:not(.fi-select-trigger--error) { border-color: #475569; }

@@ -16,7 +16,7 @@
                 <x-admin.icon :name="$icon" :size="14" />
             </span>
         @endif
-        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">{{ $label }}</p>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">{{ $label }}</p>
     </div>
 
     @if($slot->isNotEmpty())

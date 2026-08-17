@@ -31,7 +31,7 @@
         class="glass-dropdown absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl p-1.5"
         style="display: none;"
     >
-        <p class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aksi Cepat</p>
+        <p class="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aksi Cepat</p>
 
         {{-- Pengendalian --}}
         @if(in_array('pengendalian', $allowedGroups))

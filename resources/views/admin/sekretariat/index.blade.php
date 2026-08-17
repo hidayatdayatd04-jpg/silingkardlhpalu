@@ -14,11 +14,11 @@
         </span>
     </div>
 
-    <span class="inline-flex items-center gap-2 rounded-full bg-clay-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-clay-700 dark:bg-clay-900/25 dark:text-clay-300 mb-5">
+    <span class="inline-flex items-center gap-2 rounded-full bg-clay-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-clay-700 dark:bg-clay-900/25 dark:text-clay-300 mb-5">
         <span class="relative flex size-2"><span class="status-ping absolute inline-flex h-full w-full rounded-full bg-clay-400"></span><span class="relative inline-flex size-2 rounded-full bg-clay-500"></span></span>
         {{ __('Segera Hadir') }}
     </span>
-    <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white sm:text-4xl tracking-tight">{{ $title ?? 'Kesekretariatan' }}</h1>
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl tracking-tight">{{ $title ?? 'Kesekretariatan' }}</h1>
     <p class="mt-4 max-w-md text-base leading-relaxed text-slate-500 dark:text-slate-400">
         {{ __('Modul Kesekretariatan sedang dalam tahap pengembangan. Silakan kunjungi kembali nanti untuk mengelola data dan informasi Sekretariat DLH Kota Palu.') }}
     </p>

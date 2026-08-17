@@ -2,6 +2,7 @@
     <input
         type="checkbox"
         x-model="selectAll"
+        aria-label="{{ __('Pilih semua') }}"
         x-on:change="
             if (selectAll) {
                 selected = items.map(i => i.toString());

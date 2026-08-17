@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('pengajuan_rintek_perteks', function (Blueprint $table) {
+        Schema::table('pengajuan_rintek_pertek', function (Blueprint $table) {
             $table->string('nama_penanggung_jawab')->default('');
             $table->string('nomor_nib')->default('');
             $table->string('npwp', 30)->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('pengajuan_rintek_perteks', function (Blueprint $table) {
+        Schema::table('pengajuan_rintek_pertek', function (Blueprint $table) {
             $table->dropColumn([
                 'nama_penanggung_jawab',
                 'nomor_nib',

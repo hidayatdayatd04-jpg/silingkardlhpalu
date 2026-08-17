@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\FileUploadService;
 use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -23,17 +23,17 @@ class ProfileController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
-            'email'    => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', Rule::unique('user', 'username')->ignore($user->id)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('user', 'email')->ignore($user->id)],
+            'photo' => ['nullable', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ], [
-            'name.required'     => 'Nama wajib diisi.',
+            'name.required' => 'Nama wajib diisi.',
             'username.required' => 'Username wajib diisi.',
-            'username.unique'   => 'Username sudah dipakai pengguna lain.',
-            'email.unique'      => 'Email sudah dipakai pengguna lain.',
-            'photo.image'       => 'File foto harus berupa gambar.',
-            'photo.max'         => 'Ukuran foto maksimal 2MB.',
+            'username.unique' => 'Username sudah dipakai pengguna lain.',
+            'email.unique' => 'Email sudah dipakai pengguna lain.',
+            'photo.mimes' => 'Foto harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
+            'photo.max' => 'Ukuran foto maksimal 5MB.',
         ]);
 
         $old = $user->only(['name', 'username', 'email', 'photo_path']);
@@ -43,17 +43,18 @@ class ProfileController extends Controller
         $user->email = $validated['email'] ?? null;
 
         if ($request->boolean('photo_remove') && $user->photo_path) {
-            // Hapus foto profil.
-            if (Storage::disk('public')->exists($user->photo_path)) {
-                Storage::disk('public')->delete($user->photo_path);
-            }
+            // Hapus foto profil lewat service terpusat agar versi lama di B2 ikut ter-purge.
+            app(FileUploadService::class)->deletePath($user->photo_path);
             $user->photo_path = null;
         } elseif ($request->hasFile('photo')) {
-            // Ganti foto lama bila ada.
-            if ($user->photo_path && Storage::disk('public')->exists($user->photo_path)) {
-                Storage::disk('public')->delete($user->photo_path);
+            // Foto baru otomatis dikompres & dikonversi ke WebP.
+            $photoPath = app(FileUploadService::class)->store($request->file('photo'), 'avatars', 'public');
+
+            if ($photoPath !== false) {
+                // Hapus foto lama hanya setelah file baru sukses tersimpan.
+                app(FileUploadService::class)->deletePath($user->photo_path);
+                $user->photo_path = $photoPath;
             }
-            $user->photo_path = $request->file('photo')->store('avatars', 'public');
         }
 
         $user->save();
@@ -69,13 +70,13 @@ class ProfileController extends Controller
 
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password'         => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', 'min:8'],
         ], [
-            'current_password.required'         => 'Password saat ini wajib diisi.',
+            'current_password.required' => 'Password saat ini wajib diisi.',
             'current_password.current_password' => 'Password saat ini salah.',
-            'password.required'                 => 'Password baru wajib diisi.',
-            'password.confirmed'                => 'Konfirmasi password baru tidak cocok.',
-            'password.min'                      => 'Password baru minimal 8 karakter.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.min' => 'Password baru minimal 8 karakter.',
         ]);
 
         $user->password = Hash::make($request->input('password'));

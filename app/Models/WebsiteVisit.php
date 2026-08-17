@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WebsiteVisit extends Model
 {
+    protected $table = 'website_visit';
+
     protected $fillable = [
         'visit_date',
         'ip_address',

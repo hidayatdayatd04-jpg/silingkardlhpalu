@@ -15,6 +15,5 @@
 </div>
 @endsection
 @push('scripts')
-{{-- Task 5: peta-objek-pengawasan (dlhPetaObjekPengawasan) butuh map-bundle --}}
-@vite('resources/js/map-bundle.js')
+{{-- Task 5: peta-objek-pengawasan lazy-load peta via ensureMaplibreLoaded --}}
 @endpush

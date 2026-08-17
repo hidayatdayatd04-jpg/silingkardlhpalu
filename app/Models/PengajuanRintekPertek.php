@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PengajuanRintekPertek extends Model
 {
+    protected $table = 'pengajuan_rintek_pertek';
+
     public const JENIS_PENGAJUAN_RINTEK = 'Rekomendasi Teknis (RINTEK)';
     public const JENIS_PENGAJUAN_PERTEK = 'Persetujuan Teknis (PERTEK)';
 

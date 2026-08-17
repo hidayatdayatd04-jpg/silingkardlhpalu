@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class TicketFeedback extends Model
 {
-    protected $table = 'ticket_feedbacks';
+    protected $table = 'ticket_feedback';
 
     protected $fillable = [
         'feedbackable_type',

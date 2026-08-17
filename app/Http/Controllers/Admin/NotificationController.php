@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\AdminNotificationFeed;
+use App\Support\Admin\AdminRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -14,21 +16,13 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $allowedGroups = $user->accessibleGroups();
 
         $notifications = $user->notifications()->latest()->paginate(20);
 
         // Filter notifikasi berdasarkan module/akses role di pagination.
-        $moduleGroupMap = [
-            'pengendalian' => 'pengendalian',
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
-        ];
-
-        $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
-            return $moduleGroupMap[$g] ?? $g;
-        })->push('system')->push('global')->all();
+        // Module disimpan sebagai slug resource (mis. 'artikel'), jadi daftar
+        // yang diizinkan memuat key grup + slug item dalam grup tersebut.
+        $allowedModules = AdminRegistry::allowedNotificationModules($user->accessibleGroups());
 
         $filteredNotifications = $notifications->filter(function ($n) use ($allowedModules) {
             $module = $n->data['module'] ?? 'system';
@@ -39,52 +33,28 @@ class NotificationController extends Controller
 
         return view('admin.notifications.index', [
             'notifications' => $notifications,
-            'unreadCount'   => $user->unreadNotifications()->count(),
+            'unreadCount'   => $user->unreadNotifications()->get()
+                ->filter(fn ($n) => in_array($n->data['module'] ?? 'system', $allowedModules))
+                ->count(),
         ]);
     }
 
     /**
      * Endpoint JSON untuk polling bell (fetch tiap 30 detik).
+     *
+     * Memakai cache feed yang sama dengan topbar (AdminNotificationFeed),
+     * sehingga polling tidak memicu query DB remote (Neon) tiap 30 detik
+     * per tab — cukup saat cache expired (5 menit).
      */
     public function poll(Request $request)
     {
         $user = auth()->user();
-        $allowedGroups = $user->accessibleGroups();
 
-        $recent = $user->notifications()->latest()->take(20)->get()->map(function ($n) {
-            $data = $n->data;
-
-            return [
-                'id'       => $n->id,
-                'title'    => $data['title'] ?? 'Notifikasi',
-                'message'  => $data['message'] ?? '',
-                'icon'     => $data['icon'] ?? 'bell',
-                'color'    => $data['color'] ?? 'emerald',
-                'href'     => $data['href'] ?? null,
-                'read'     => $n->read_at !== null,
-                'module'   => $data['module'] ?? 'system',
-            ];
-        });
-
-        // Filter berdasarkan module/akses role.
-        $moduleGroupMap = [
-            'pengendalian' => 'pengendalian',
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
-        ];
-
-        $allowedModules = collect($allowedGroups)->map(function ($g) use ($moduleGroupMap) {
-            return $moduleGroupMap[$g] ?? $g;
-        })->push('system')->push('global')->all();
-
-        $filtered = $recent->filter(function ($n) use ($allowedModules) {
-            return in_array($n['module'], $allowedModules);
-        });
+        $data = AdminNotificationFeed::forUser($user);
 
         return response()->json([
-            'unread'        => $user->unreadNotifications()->count(),
-            'notifications' => $filtered->values(),
+            'unread'        => $data['count'],
+            'notifications' => $data['notifications'],
         ]);
     }
 

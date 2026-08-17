@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasRoles, Notifiable;
+
+    protected $table = 'user';
 
     protected $fillable = [
         'name',
@@ -39,6 +38,27 @@ class User extends Authenticatable
             'additional_access' => 'array',
             'preferences' => 'array',
         ];
+    }
+
+    /**
+     * Invalidate cache user ter-cache (Auth\CachedUserProvider) saat disimpan,
+     * agar perubahan role/profil tercermin paling lambat dalam TTL cache.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (User $user) {
+            \Illuminate\Support\Facades\Cache::forget('auth.user.' . $user->id);
+        });
+    }
+
+    /**
+     * Notifikasi database — override bawaan framework agar memakai model
+     * App\Models\DatabaseNotification (tabel "notification", bukan "notifications").
+     */
+    public function notifications()
+    {
+        return $this->morphMany(DatabaseNotification::class, 'notifiable')
+            ->latest();
     }
 
     /**

@@ -114,7 +114,7 @@ new class extends Component
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                             </span>
                             <div>
-                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-extrabold">{{ __('Nomor Tiket') }}</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">{{ __('Nomor Tiket') }}</span>
                                 <x-public.copy-ticket :ticket="$permohonan->nomor_tiket" class="font-mono font-bold text-lg text-slate-900 dark:text-slate-100" />
                                 <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ $permohonan->nama_perusahaan }} <span class="text-slate-300 dark:text-slate-600">•</span> {{ $permohonan->jenis_usaha }}</p>
                             </div>
@@ -163,10 +163,9 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .ck-wrap {
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         /* ── Search Cards ── */
@@ -225,7 +224,7 @@ new class extends Component
             border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px;
             font-weight: 700;
             cursor: pointer;

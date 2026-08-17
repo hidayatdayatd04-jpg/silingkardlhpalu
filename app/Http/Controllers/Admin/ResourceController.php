@@ -2,18 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Bidang;
+use App\Enums\AdminRole;
+use App\Enums\ArtikelStatus;
+use App\Enums\JenisPengaduanPengendalian;
+use App\Enums\JenisPengaduanRth;
+use App\Enums\JenisPengaduanSampah;
+use App\Enums\PengaduanStatus;
+use App\Enums\StatusPengaduanRth;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateExportJob;
-use App\Models\LaporanFoto;
+use App\Models\Pelanggaran;
+use App\Models\Sanksi;
+use App\Models\User;
+use App\Services\FileUploadService;
 use App\Services\ImageCompressionService;
+use App\Support\ActivityLogger;
 use App\Support\Admin\AdminRegistry;
+use App\Support\DataIO;
+use Closure;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class ResourceController extends Controller
@@ -21,15 +34,15 @@ class ResourceController extends Controller
     protected function authorize(array $meta): void
     {
         $user = auth()->user();
-        
+
         // Superadmin bisa akses semua
         if ($user->isSuperadmin()) {
             return;
         }
-        
+
         // Cek apakah user bisa akses group dari resource ini
         // (atau slug menu spesifik yang diberikan sebagai akses tambahan).
-        if (!$user->canAccessResource($meta)) {
+        if (! $user->canAccessResource($meta)) {
             throw new AccessDeniedHttpException('Anda tidak memiliki izin untuk mengakses menu ini. Silakan hubungi administrator.');
         }
     }
@@ -40,7 +53,8 @@ class ResourceController extends Controller
         $this->authorize($meta);
         $query = $this->query($meta, $request);
 
-        $view = match($meta['slug']) {
+        $view = match ($meta['slug']) {
+            'artikel' => 'admin.artikel.index',
             default => 'admin.resources.index',
         };
 
@@ -61,8 +75,9 @@ class ResourceController extends Controller
         abort_if(($meta['can_create'] ?? true) === false, 403,
             'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.');
 
-        $view = match($meta['slug']) {
+        $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
+            'artikel' => 'admin.artikel.form',
             default => 'admin.resources.form',
         };
 
@@ -91,22 +106,26 @@ class ResourceController extends Controller
         $this->storeSpecialRelations($request, $meta, $record);
         $this->storeDaftarHadir($request, $meta, $record);
         $this->storeSanksiIfPelanggaran($request, $record);
-        
+
         // Handle role assignment untuk user
         if ($resource === 'user' && $request->filled('role')) {
             $record->syncRoles([$request->input('role')]);
         }
-        
+
         // Handle additional_access untuk user
         if ($resource === 'user' && $request->has('additional_access')) {
             $record->additional_access = $request->input('additional_access', []);
             $record->save();
         }
 
-        // Simpan foto profil user (bila diunggah).
+        // Simpan foto profil user (bila diunggah) — otomatis dikompres & dikonversi ke WebP.
         if ($resource === 'user' && $request->hasFile('photo')) {
-            $record->photo_path = $request->file('photo')->store('avatars', 'public');
-            $record->save();
+            $photoPath = app(FileUploadService::class)->store($request->file('photo'), 'avatars', 'public');
+
+            if ($photoPath !== false) {
+                $record->photo_path = $photoPath;
+                $record->save();
+            }
         }
 
         return redirect()->route('admin.resources.show', [$resource, $record])->with('success', $meta['label'].' berhasil ditambahkan.');
@@ -118,8 +137,9 @@ class ResourceController extends Controller
         $this->authorize($meta);
         $model = $meta['model']::findOrFail($record);
 
-        $view = match($meta['slug']) {
+        $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.show',
+            'artikel' => 'admin.artikel.show',
             default => 'admin.resources.show',
         };
 
@@ -136,8 +156,9 @@ class ResourceController extends Controller
         $this->authorize($meta);
         $model = $meta['model']::findOrFail($record);
 
-        $view = match($meta['slug']) {
+        $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
+            'artikel' => 'admin.artikel.form',
             default => 'admin.resources.form',
         };
 
@@ -163,15 +184,15 @@ class ResourceController extends Controller
         $this->storeSpecialRelations($request, $meta, $model);
         $this->storeDaftarHadir($request, $meta, $model);
         $this->storeSanksiIfPelanggaran($request, $model);
-        
+
         // Handle role assignment untuk user
         if ($resource === 'user' && $request->filled('role')) {
             // Jangan update role jika user adalah superadmin (protection)
-            if (!$model->isSuperadmin()) {
+            if (! $model->isSuperadmin()) {
                 $model->syncRoles([$request->input('role')]);
             }
         }
-        
+
         // Handle additional_access untuk user
         if ($resource === 'user' && $request->has('additional_access')) {
             $model->additional_access = $request->input('additional_access', []);
@@ -181,17 +202,19 @@ class ResourceController extends Controller
         // Foto profil: hapus bila diminta, atau ganti bila ada file baru.
         if ($resource === 'user') {
             if ($request->boolean('photo_remove') && $model->photo_path) {
-                if (Storage::disk('public')->exists($model->photo_path)) {
-                    Storage::disk('public')->delete($model->photo_path);
-                }
+                // Lewat service terpusat agar versi lama di B2 ikut ter-purge.
+                app(FileUploadService::class)->deletePath($model->photo_path);
                 $model->photo_path = null;
                 $model->save();
             } elseif ($request->hasFile('photo')) {
-                if ($model->photo_path && Storage::disk('public')->exists($model->photo_path)) {
-                    Storage::disk('public')->delete($model->photo_path);
+                $photoPath = app(FileUploadService::class)->store($request->file('photo'), 'avatars', 'public');
+
+                if ($photoPath !== false) {
+                    // Hapus foto lama hanya setelah file baru sukses tersimpan.
+                    app(FileUploadService::class)->deletePath($model->photo_path);
+                    $model->photo_path = $photoPath;
+                    $model->save();
                 }
-                $model->photo_path = $request->file('photo')->store('avatars', 'public');
-                $model->save();
             }
         }
 
@@ -207,7 +230,7 @@ class ResourceController extends Controller
     {
         abort_unless(auth()->user()?->isSuperadmin(), 403, 'Hanya Admin yang dapat mereset password pengguna.');
 
-        $target = \App\Models\User::findOrFail($record);
+        $target = User::findOrFail($record);
 
         $validated = $request->validate([
             'password' => ['required', 'string', 'min:8'],
@@ -222,7 +245,7 @@ class ResourceController extends Controller
 
         return redirect()
             ->route('admin.resources.show', ['user', $target])
-            ->with('success', 'Password untuk ' . $target->name . ' berhasil direset. Password baru: ' . $validated['password']);
+            ->with('success', 'Password untuk '.$target->name.' berhasil direset. Password baru: '.$validated['password']);
     }
 
     /**
@@ -250,10 +273,10 @@ class ResourceController extends Controller
             if ($nameExt === '' || $nameExt === 'file') {
                 // Belum ada ekstensi (atau ekstensi generik ".file") -> gunakan ekstensi asli.
                 $base = $nameExt === 'file' ? pathinfo($downloadName, PATHINFO_FILENAME) : $downloadName;
-                $downloadName = $base . '.' . $pathExt;
+                $downloadName = $base.'.'.$pathExt;
             } elseif ($nameExt !== $pathExt) {
                 // Ekstensi tidak cocok dengan file asli -> ganti agar sesuai format.
-                $downloadName = pathinfo($downloadName, PATHINFO_FILENAME) . '.' . $pathExt;
+                $downloadName = pathinfo($downloadName, PATHINFO_FILENAME).'.'.$pathExt;
             }
         }
 
@@ -265,6 +288,10 @@ class ResourceController extends Controller
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
         $model = $meta['model']::findOrFail($record);
+
+        // Hapus file di storage terlebih dahulu (sebelum cascade delete di DB).
+        $this->deleteRecordFiles($meta, $model);
+
         $model->delete();
 
         return redirect()->route('admin.resources.index', $resource)->with('success', $meta['label'].' berhasil dihapus.');
@@ -348,7 +375,7 @@ class ResourceController extends Controller
 
         abort_if(! $notification, 404, 'File ekspor tidak ditemukan atau kadaluwarsa.');
 
-        $dir  = storage_path('app/private/'.trim(config('exports.storage_dir', 'exports'), '/'));
+        $dir = storage_path('app/private/'.trim(config('exports.storage_dir', 'exports'), '/'));
         $file = $dir.'/'.$token;
 
         abort_if(! is_file($file), 404, 'File ekspor sudah diunduh atau dihapus.');
@@ -367,15 +394,15 @@ class ResourceController extends Controller
         $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
         // Ekspor selalu berisi DATA LENGKAP tiap menu (semua kolom tabel),
         // bukan sekadar subset $meta['columns'].
-        $exportMap = \App\Support\Admin\AdminRegistry::exportColumns($meta['slug'], $meta['model'])
+        $exportMap = AdminRegistry::exportColumns($meta['slug'], $meta['model'])
             ?? array_combine($meta['columns'], $meta['columns']);
         $columns = array_keys($exportMap);
         $headings = array_values($exportMap);
         $filename = $meta['slug'].'-'.$scope.'-'.now()->format('Ymd-His');
 
-        \App\Support\ActivityLogger::log('exported', $meta['label'].' ('.strtoupper($format).', '.$scope.')', $meta['slug']);
+        ActivityLogger::log('exported', $meta['label'].' ('.strtoupper($format).', '.$scope.')', $meta['slug']);
 
-        $dataIO = app(\App\Support\DataIO::class);
+        $dataIO = app(DataIO::class);
 
         if ($format === 'csv') {
             return $dataIO->csvDownload($query, $columns, $filename.'.csv', $headings);
@@ -399,6 +426,7 @@ class ResourceController extends Controller
         foreach ($ids as $id) {
             $record = $model::find($id);
             if ($record) {
+                $this->deleteRecordFiles($meta, $record);
                 $record->delete();
                 $deleted++;
             }
@@ -408,27 +436,138 @@ class ResourceController extends Controller
             ->with('success', $deleted.' '.$meta['label'].' berhasil dihapus.');
     }
 
+    /**
+     * Hapus semua file milik record dari storage SEBELUM record dihapus dari
+     * database. Path file pada relasi (foto, dokumen, media) harus dibaca
+     * terlebih dahulu karena baris relasi ikut terhapus via cascadeOnDelete.
+     *
+     * Kegagalan penghapusan file diabaikan agar tidak pernah menggagalkan
+     * penghapusan record itu sendiri.
+     */
+    protected function deleteRecordFiles(array $meta, Model $record): void
+    {
+        try {
+            $paths = [];
+            $stagingPaths = [];
+
+            // 1. Field file langsung dari form (thumbnail, surat_permohonan, dll).
+            foreach (AdminRegistry::formFields($meta) as $field) {
+                if (($field['type'] ?? null) !== 'file') {
+                    continue;
+                }
+
+                $value = $record->{$field['name']} ?? null;
+
+                if (is_string($value) && filled($value)) {
+                    $paths[] = $value;
+                } elseif (is_array($value)) {
+                    foreach ($value as $item) {
+                        if (is_string($item) && filled($item)) {
+                            $paths[] = $item;
+                        }
+                    }
+                }
+            }
+
+            // 2. Foto profil user.
+            if ($meta['slug'] === 'user' && filled($record->photo_path ?? null)) {
+                $paths[] = $record->photo_path;
+            }
+
+            // 3. File dari relasi upload (foto pengaduan, dokumen, media, file sosialisasi).
+            foreach (AdminRegistry::relationUploads($meta['slug']) as $upload) {
+                $relation = $upload['relation'] ?? null;
+
+                if (! $relation || ! method_exists($record, $relation)) {
+                    continue;
+                }
+
+                foreach ($record->{$relation} as $row) {
+                    $pathField = $upload['path_field'] ?? null;
+
+                    if ($pathField && filled($row->{$pathField} ?? null)) {
+                        $paths[] = $row->{$pathField};
+                    }
+
+                    // File staging di disk lokal (foto yang masih antre diproses).
+                    if (filled($row->staging_path ?? null)) {
+                        $stagingPaths[] = $row->staging_path;
+                    }
+                }
+            }
+
+            // 3b. Sosialisasi: sertifikat peserta (bila pernah diunggah).
+            if ($meta['slug'] === 'sosialisasi' && method_exists($record, 'pesertas')) {
+                foreach ($record->pesertas as $peserta) {
+                    if (filled($peserta->sertifikat_path ?? null)) {
+                        $paths[] = $peserta->sertifikat_path;
+                    }
+                }
+            }
+
+            // 4. Pelanggaran: surat sanksi ikut dihapus.
+            if ($meta['slug'] === 'pelanggaran' && filled($record->sanksi?->surat_path ?? null)) {
+                $paths[] = $record->sanksi->surat_path;
+            }
+
+            // 5. Artikel: gambar yang disematkan di konten (Jodit) ikut dibersihkan,
+            //    kecuali gambar tersebut masih dipakai oleh artikel lain.
+            if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth'], true)) {
+                $konten = (string) ($record->konten ?? '');
+
+                if ($konten !== '' && preg_match_all('~artikel-images(?:/|%2F)[^"\'\s<>?&]+~', $konten, $matches)) {
+                    $embedded = array_unique(array_map('urldecode', $matches[0]));
+
+                    // Ekstrak path gambar dari semua artikel lain (regex yang sama)
+                    // lalu bandingkan path yang sudah di-decode, agar tahan terhadap
+                    // perbedaan encoding URL (spasi, unicode, dll).
+                    $otherPaths = [];
+
+                    $otherKonten = $meta['model']::query()
+                        ->whereKeyNot($record->getKey())
+                        ->whereNotNull('konten')
+                        ->pluck('konten')
+                        ->all();
+
+                    foreach ($otherKonten as $other) {
+                        if (preg_match_all('~artikel-images(?:/|%2F)[^"\'\s<>?&]+~', (string) $other, $otherMatches)) {
+                            foreach (array_map('urldecode', $otherMatches[0]) as $op) {
+                                $otherPaths[] = $op;
+                            }
+                        }
+                    }
+
+                    $otherPaths = array_unique($otherPaths);
+
+                    foreach ($embedded as $path) {
+                        // Jangan hapus gambar yang masih dipakai artikel lain.
+                        if (! in_array($path, $otherPaths, true)) {
+                            $paths[] = $path;
+                        }
+                    }
+                }
+            }
+
+            $files = app(FileUploadService::class);
+            $files->deletePaths(array_unique(array_filter($paths)));
+
+            if ($stagingPaths !== []) {
+                $files->deletePaths(array_unique(array_filter($stagingPaths)), 'local');
+            }
+        } catch (\Throwable $e) {
+            // Pembersihan file tidak boleh menggagalkan penghapusan record.
+        }
+    }
+
     protected function query(array $meta, Request $request)
     {
         $model = new $meta['model'];
         $query = $meta['model']::query();
-        
-        // Custom scope untuk resource pengaduan berdasarkan bidang
-        if ($meta['slug'] === 'pengaduan-pengendalian') {
-            $query->where('bidang', 'pengendalian');
-        } elseif ($meta['slug'] === 'pengaduan-sampah') {
-            $query->where('bidang', 'sampah-lb3');
-        } elseif ($meta['slug'] === 'pengaduan-rth') {
-            $query->where('bidang', 'rth');
-        } elseif ($meta['slug'] === 'laporan') {
-            // Resource 'laporan' menampilkan semua kategori sesuai allowed groups
-            // (sudah dihandle di authorization)
-        }
-        
+
         // Filtering generik berdasarkan definisi $meta['filters'].
         foreach (($meta['filters'] ?? []) as $filter) {
-            $key    = $filter['key'] ?? null;
-            $type   = $filter['type'] ?? null;
+            $key = $filter['key'] ?? null;
+            $type = $filter['type'] ?? null;
             $column = $filter['column'] ?? null;
 
             if (! $key || ! $type || ! $column) {
@@ -438,7 +577,7 @@ class ResourceController extends Controller
             if ($type === 'daterange') {
                 // Terima {key}_from/{key}_to, kompatibel dengan date_from/date_to lama.
                 $from = $request->input($key.'_from') ?? $request->input('date_from');
-                $to   = $request->input($key.'_to') ?? $request->input('date_to');
+                $to = $request->input($key.'_to') ?? $request->input('date_to');
 
                 if (filled($from)) {
                     $query->whereDate($column, '>=', $from);
@@ -478,7 +617,7 @@ class ResourceController extends Controller
         // Columns that are not direct DB columns (virtual/computed)
         $virtualColumns = ['role'];
 
-        if ($sortColumn && in_array($sortColumn, $meta['columns']) && !in_array($sortColumn, $virtualColumns)) {
+        if ($sortColumn && in_array($sortColumn, $meta['columns']) && ! in_array($sortColumn, $virtualColumns)) {
             $query->orderBy($sortColumn, in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc');
         } else {
             $query->orderByDesc($model->getKeyName());
@@ -491,8 +630,11 @@ class ResourceController extends Controller
         } elseif ($meta['slug'] === 'user') {
             // Kolom 'role' dan nama peran di index memakai $record->roles->first().
             $query->with('roles');
+        } elseif ($meta['slug'] === 'artikel') {
+            // Kolom penulis di index artikel memakai relasi user.
+            $query->with('user');
         }
-        
+
         // Search
         $search = trim($request->string('q')->toString());
 
@@ -528,7 +670,25 @@ class ResourceController extends Controller
                 if ($request->hasFile($name)) {
                     $file = $request->file($name);
                     if ($this->fileMatchesAccept($file, $field['accept'] ?? null)) {
-                        $payload[$name] = $file->store('admin/'.$meta['slug'], 'public');
+                        // Gambar raster otomatis dikompres & dikonversi ke WebP;
+                        // file lain (pdf, doc, dll) disimpan apa adanya.
+                        $stored = app(FileUploadService::class)->store($file, 'admin/'.$meta['slug'], 'public');
+
+                        if ($stored !== false) {
+                            // Hapus file lama bila file diganti saat edit.
+                            if ($record->exists) {
+                                $old = $record->getOriginal($name);
+                                $oldPaths = is_array($old) ? $old : [$old];
+
+                                foreach ($oldPaths as $oldPath) {
+                                    if (is_string($oldPath) && filled($oldPath) && $oldPath !== $stored) {
+                                        app(FileUploadService::class)->deletePath($oldPath);
+                                    }
+                                }
+                            }
+
+                            $payload[$name] = $stored;
+                        }
                     }
                 }
 
@@ -571,32 +731,6 @@ class ResourceController extends Controller
             }
         }
 
-        if ($meta['slug'] === 'pengaduan-pengendalian') {
-            $payload['bidang'] = Bidang::PENGENDALIAN->value;
-
-            if (array_key_exists('jenis_pengaduan', $payload)) {
-                $payload['kategori'] = $payload['jenis_pengaduan'];
-            }
-        } elseif ($meta['slug'] === 'pengaduan-sampah') {
-            $payload['bidang'] = Bidang::SAMPAH_LB3->value;
-
-            if (array_key_exists('jenis_pengaduan', $payload)) {
-                $payload['kategori'] = $payload['jenis_pengaduan'];
-            }
-        } elseif ($meta['slug'] === 'pengaduan-rth') {
-            $payload['bidang'] = Bidang::RTH->value;
-
-            if (array_key_exists('jenis_pengaduan', $payload)) {
-                $payload['kategori'] = $payload['jenis_pengaduan'];
-            }
-        } elseif ($meta['slug'] === 'pinjam-taman') {
-            // Taman "Lainnya" -> simpan nama manual dan kosongkan relasi taman_kota_id.
-            if (($payload['taman_kota_id'] ?? null) === '__lainnya__' && $request->filled('taman_kota_id_lainnya')) {
-                $payload['nama_taman_manual'] = $request->input('taman_kota_id_lainnya');
-                $payload['taman_kota_id'] = null;
-            }
-        }
-
         return $payload;
     }
 
@@ -606,7 +740,7 @@ class ResourceController extends Controller
      * ekstensi bertitik (.pdf) maupun polos (jpg). Bersikap permisif:
      * jika accept kosong / tidak bisa diurai, file tetap diterima.
      */
-    protected function fileMatchesAccept(\Illuminate\Http\UploadedFile $file, ?string $accept): bool
+    protected function fileMatchesAccept(UploadedFile $file, ?string $accept): bool
     {
         $accept = trim((string) $accept);
         if ($accept === '') {
@@ -621,8 +755,10 @@ class ResourceController extends Controller
             'image/jpeg' => ['jpg', 'jpeg'],
             'image/jpg' => ['jpg', 'jpeg'],
             'image/png' => ['png'],
-            'image/gif' => ['gif'],
             'image/webp' => ['webp'],
+            'image/avif' => ['avif'],
+            'image/heic' => ['heic'],
+            'image/heif' => ['heif'],
             'application/pdf' => ['pdf'],
             'application/msword' => ['doc'],
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
@@ -642,7 +778,7 @@ class ResourceController extends Controller
                 if (str_starts_with($mime, $prefix)) {
                     return true;
                 }
-                if (str_starts_with($token, 'image/') && in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true)) {
+                if (str_starts_with($token, 'image/') && in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic', 'heif'], true)) {
                     return true;
                 }
 
@@ -676,12 +812,11 @@ class ResourceController extends Controller
         // Validasi foto profil untuk resource 'user' (tambah / ubah / hapus).
         if ($meta['slug'] === 'user') {
             $request->validate([
-                'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'photo' => ['nullable', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
                 'photo_remove' => ['nullable', 'boolean'],
             ], [
-                'photo.image' => 'File foto profil harus berupa gambar.',
-                'photo.mimes' => 'Foto profil harus berformat JPG, PNG, atau WEBP.',
-                'photo.max' => 'Ukuran foto profil maksimal 2MB.',
+                'photo.mimes' => 'Foto profil harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
+                'photo.max' => 'Ukuran foto profil maksimal 5MB.',
             ]);
 
             return;
@@ -694,19 +829,19 @@ class ResourceController extends Controller
         }
 
         $jenisOptions = match ($meta['slug']) {
-            'pengaduan-pengendalian' => \App\Enums\JenisPengaduanPengendalian::options(),
-            'pengaduan-sampah' => \App\Enums\JenisPengaduanSampah::options(),
-            'pengaduan-rth' => \App\Enums\JenisPengaduanRth::options(),
+            'pengaduan-pengendalian' => JenisPengaduanPengendalian::options(),
+            'pengaduan-sampah' => JenisPengaduanSampah::options(),
+            'pengaduan-rth' => JenisPengaduanRth::options(),
         };
 
         $statusOptions = match ($meta['slug']) {
-            'pengaduan-rth' => \App\Enums\StatusPengaduanRth::options(),
-            default => \App\Enums\PengaduanStatus::options(),
+            'pengaduan-rth' => StatusPengaduanRth::options(),
+            default => PengaduanStatus::options(),
         };
 
         $status = $request->input('status');
         $isDitolak = $meta['slug'] === 'pengaduan-rth'
-            ? $status === \App\Enums\StatusPengaduanRth::DITOLAK->value
+            ? $status === StatusPengaduanRth::DITOLAK->value
             : false;
 
         $request->validate([
@@ -721,7 +856,7 @@ class ResourceController extends Controller
             'catatan_admin' => ['nullable', 'string'],
             'alasan_penolakan' => $meta['slug'] === 'pengaduan-rth' ? [$isDitolak ? 'required' : 'nullable', 'string'] : ['nullable', 'string'],
             'photos' => [$updating ? 'nullable' : 'required', 'array', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photos.*' => ['mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ], [
             'nama_pelapor.required' => 'Nama lengkap wajib diisi.',
             'nomor_hp.required' => 'Nomor telepon wajib diisi.',
@@ -736,9 +871,8 @@ class ResourceController extends Controller
             'alasan_penolakan.required' => 'Alasan penolakan wajib diisi saat status Ditolak.',
             'photos.required' => 'Foto bukti wajib diunggah.',
             'photos.max' => 'Maksimal 5 foto bukti.',
-            'photos.*.image' => 'File foto bukti harus berupa gambar.',
-            'photos.*.mimes' => 'Foto bukti harus berformat JPG atau PNG.',
-            'photos.*.max' => 'Ukuran setiap foto maksimal 2MB.',
+            'photos.*.mimes' => 'Foto bukti harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
+            'photos.*.max' => 'Ukuran setiap foto maksimal 5MB.',
         ]);
     }
 
@@ -753,13 +887,7 @@ class ResourceController extends Controller
     protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
     {
         if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth'], true)) {
-            $request->validate([
-                'judul' => ['required', 'string', 'max:255'],
-                'konten' => ['required', 'string'],
-            ], [], [
-                'judul' => 'Judul',
-                'konten' => 'Konten',
-            ]);
+            $this->validateArtikelFields($request, $updating, $model);
 
             return;
         }
@@ -818,9 +946,9 @@ class ResourceController extends Controller
         // Aturan khusus resource 'user': unique username/email.
         if ($meta['slug'] === 'user') {
             $ignoreId = $model?->getKey();
-            $rules['username'] = ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($ignoreId)];
-            $rules['email'] = ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($ignoreId)];
-            $rules['role'] = ['nullable', Rule::in(collect(\App\Enums\AdminRole::cases())->map(fn ($r) => $r->value)->all())];
+            $rules['username'] = ['required', 'string', 'max:255', Rule::unique('user', 'username')->ignore($ignoreId)];
+            $rules['email'] = ['nullable', 'email', 'max:255', Rule::unique('user', 'email')->ignore($ignoreId)];
+            $rules['role'] = ['nullable', Rule::in(collect(AdminRole::cases())->map(fn ($r) => $r->value)->all())];
             $attributes['username'] = 'Username';
             $attributes['email'] = 'Email';
             $attributes['role'] = 'Role';
@@ -829,6 +957,60 @@ class ResourceController extends Controller
         if (! empty($rules)) {
             $request->validate($rules, [], $attributes);
         }
+    }
+
+    /**
+     * Validasi khusus Artikel: semua field wajib diisi (judul, thumbnail, konten,
+     * tanggal publish, status). Konten yang hanya berisi tag kosong (<p></p>, <br>,
+     * &nbsp;) dianggap kosong. Thumbnail wajib diunggah saat create, atau saat update
+     * bila belum ada file sebelumnya.
+     */
+    protected function validateArtikelFields(Request $request, bool $updating, ?Model $model): void
+    {
+        $thumbnailRule = ($updating && filled($model?->thumbnail))
+            ? ['nullable', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120']
+            : ['required', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'];
+
+        $request->validate([
+            'judul' => ['required', 'string', 'max:255'],
+            'thumbnail' => $thumbnailRule,
+            'konten' => [
+                'required',
+                'string',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $cleaned = (string) $value;
+                    do {
+                        $prev = $cleaned;
+                        $cleaned = preg_replace('/<(p|div|span)[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/i', '', $cleaned);
+                    } while ($cleaned !== $prev);
+
+                    $plain = trim(strip_tags($cleaned));
+                    $hasMedia = (bool) preg_match('/<(img|video|table|iframe)\b/i', $cleaned);
+
+                    if ($plain === '' && ! $hasMedia) {
+                        $fail('Konten artikel wajib diisi.');
+                    }
+                },
+            ],
+            'tanggal_publish' => ['required', 'date'],
+            'status' => ['required', Rule::in(array_keys(ArtikelStatus::options()))],
+        ], [
+            'judul.required' => 'Judul artikel wajib diisi.',
+            'thumbnail.required' => 'Thumbnail wajib diunggah.',
+            'thumbnail.mimes' => 'Thumbnail harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
+            'thumbnail.max' => 'Ukuran thumbnail maksimal 5MB.',
+            'konten.required' => 'Konten artikel wajib diisi.',
+            'tanggal_publish.required' => 'Tanggal publish wajib diisi.',
+            'tanggal_publish.date' => 'Tanggal publish tidak valid.',
+            'status.required' => 'Status wajib dipilih.',
+            'status.in' => 'Status tidak valid.',
+        ], [
+            'judul' => 'Judul',
+            'thumbnail' => 'Thumbnail',
+            'konten' => 'Konten',
+            'tanggal_publish' => 'Tanggal Publish',
+            'status' => 'Status',
+        ]);
     }
 
     protected function storeSpecialRelations(Request $request, array $meta, Model $record): void
@@ -843,9 +1025,17 @@ class ResourceController extends Controller
             }
 
             foreach ((array) $request->file($name, []) as $file) {
+                // 'image' => true memakai jalur kompresi WebP; file non-gambar
+                // tetap lewat FileUploadService agar file sementara dibersihkan.
                 $path = ($upload['image'] ?? false)
                     ? $compressionService->compressAndStore($file, $upload['directory'])
-                    : $file->store($upload['directory'], 'public');
+                    : app(FileUploadService::class)->store($file, $upload['directory'], 'public');
+
+                if ($path === false) {
+                    // Penyimpanan gagal (mis. gangguan koneksi ke B2) — lewati
+                    // baris ini agar tidak menulis path kosong ke database.
+                    continue;
+                }
 
                 $payload = array_merge($upload['defaults'] ?? [], [
                     $upload['foreign_key'] => $record->getKey(),
@@ -895,7 +1085,8 @@ class ResourceController extends Controller
     }
 
     protected function storeSanksiIfPelanggaran(Request $request, Model $record): void
-    {        if (! ($record instanceof \App\Models\Pelanggaran)) {
+    {
+        if (! ($record instanceof Pelanggaran)) {
             return;
         }
 
@@ -914,7 +1105,7 @@ class ResourceController extends Controller
         if ($sanksi) {
             $sanksi->update($sanksiData);
         } else {
-            \App\Models\Sanksi::create(array_merge($sanksiData, [
+            Sanksi::create(array_merge($sanksiData, [
                 'pelanggaran_id' => $record->id,
             ]));
         }

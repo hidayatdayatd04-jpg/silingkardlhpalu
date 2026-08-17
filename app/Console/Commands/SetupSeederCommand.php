@@ -18,27 +18,12 @@ class SetupSeederCommand extends Command
         $this->info('==============================================');
         $this->newLine();
 
-        // Step 1: Setup Storage Folders
-        $this->info('📁 Step 1: Membuat struktur folder storage...');
-        Artisan::call('db:seed', ['--class' => 'SetupStorageSeeder']);
-        $this->line(Artisan::output());
-
-        // Step 2: Create Placeholder Files
-        $this->info('🖼️  Step 2: Membuat file placeholder...');
+        // Step 1: Create Placeholder Files
+        $this->info('🖼️  Step 1: Membuat file placeholder...');
         Artisan::call('db:seed', ['--class' => 'CreatePlaceholderFilesSeeder']);
         $this->line(Artisan::output());
 
-        // Step 3: Create Storage Link
-        $this->info('🔗 Step 3: Membuat symbolic link storage...');
-        try {
-            Artisan::call('storage:link');
-            $this->info('✓ Symbolic link berhasil dibuat');
-        } catch (\Exception $e) {
-            $this->warn('⚠ Symbolic link sudah ada atau gagal dibuat: ' . $e->getMessage());
-        }
-        $this->newLine();
-
-        // Step 4: Seeding Data
+        // Step 2: Seeding Data
         if ($this->option('fresh')) {
             $this->warn('⚠️  Mode FRESH: Database akan di-reset!');
             if ($this->confirm('Apakah Anda yakin ingin melanjutkan?', true)) {

@@ -4,11 +4,11 @@
     $chatMessages = $messages ?? [];
     $chatHistory  = array_map(fn ($m) => ['role' => $m['role'], 'content' => $m['content']], $chatMessages);
     $avatar       = asset('assets/images/chatbot.png');
-    $cityLogo     = asset('assets/images/logo-web.png');
+    $cityLogo     = asset('assets/images/logo-web.webp');
 @endphp
 
 <div id="chatbot-wrapper" class="fixed inset-0 pointer-events-none z-[9999]">
-    {{-- â•â•â• FAB Button â•â•â• --}}
+    {{-- FAB Button --}}
     <button
         id="chatbot-fab"
         onclick="chatbotOpen()"
@@ -22,7 +22,7 @@
         <span id="chatbot-unread" class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 border-2 border-white text-[9px] font-bold text-white z-20 flex items-center justify-center" style="display:none;">0</span>
     </button>
 
-    {{-- â•â•â• Chat Panel â•â•â• --}}
+    {{-- Chat Panel --}}
     <div
         id="chatbot-panel"
         wire:ignore
@@ -51,7 +51,7 @@
                         <p class="text-white font-bold text-sm tracking-tight">{{ __('DLH Assistant') }}</p>
                         <p class="text-emerald-200 text-[11px] flex items-center gap-1.5 mt-0.5">
                             <span id="chatbot-status-dot" class="h-1.5 w-1.5 rounded-full bg-green-400 inline-block"></span>
-                            <span id="chatbot-status-text">{{ __('Online Â· DLH Kota Palu') }}</span>
+                            <span id="chatbot-status-text">{{ __('Online · DLH Kota Palu') }}</span>
                         </p>
                     </div>
                 </div>
@@ -67,26 +67,20 @@
         </div>
 
         {{-- Messages --}}
-        <div id="chatbot-messages" wire:ignore.self class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50 dark:bg-slate-950"
+        <div id="chatbot-messages" wire:ignore.self class="flex-1 overflow-y-auto px-4 py-6 flex flex-col bg-slate-50 dark:bg-slate-950"
             style="scrollbar-width:thin;scrollbar-color:#a7f3d0 transparent;">
 
             @foreach($chatMessages as $msg)
-                @php
-                    $isUser = $msg['role'] === 'user';
-                    $c = e($msg['content']);
-                    $c = preg_replace('/\*\*(.*?)\*\*/s','<strong>$1</strong>',$c);
-                    $c = preg_replace('/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/','<a href="$2" class="underline decoration-dotted font-medium" target="_blank" rel="noopener noreferrer">$1</a>',$c);
-                    $c = nl2br($c);
-                @endphp
+                @php $isUser = $msg['role'] === 'user'; @endphp
                 @if($isUser)
-                <div class="flex justify-end">
-                    <div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium"
-                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">{!! $c !!}</div>
+                <div class="cb-msg-row flex justify-end" data-sender="user">
+                    <div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium"
+                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);"><span class="cb-raw">{{ $msg['content'] }}</span></div>
                 </div>
                 @else
-                <div class="flex items-end gap-2">
+                <div class="cb-msg-row flex items-start gap-2" data-sender="bot">
                     <img src="{{ $avatar }}" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">
-                    <div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">{!! $c !!}</div>
+                    <div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><span class="cb-raw">{{ $msg['content'] }}</span></div>
                 </div>
                 @endif
             @endforeach
@@ -127,10 +121,24 @@
                     <svg id="chatbot-loading-icon" class="h-4 w-4 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647Z"/></svg>
                 </button>
             </div>
-            <p class="text-center text-[10px] text-slate-400 pb-2 select-none">{{ __('DLH Assistant Â· Kota Palu Â· Enter untuk kirim') }}</p>
+            <p class="text-center text-[10px] text-slate-400 pb-2 select-none">{{ __('DLH Assistant · Kota Palu · Enter untuk kirim') }}</p>
         </div>
     </div>
-</div>
+
+<style>
+    /* Spasi antar gelembung chat DLH Assistant.
+       Flex column + margin per row agar jarak bisa dibedakan:
+       - ganti sender (user <-> bot): 16px (lebih lega)
+       - pesan berurutan sender sama  : 7px  (lebih rapat, avatar tak menumpuk)
+       Baris pertama mengikuti padding container (py-6). */
+    #chatbot-messages { gap: 0; }
+    #chatbot-messages > .cb-msg-row { margin-top: 16px; }
+    #chatbot-messages > .cb-msg-row:first-child { margin-top: 0; }
+    #chatbot-messages > .cb-msg-row[data-sender="user"] + .cb-msg-row[data-sender="user"],
+    #chatbot-messages > .cb-msg-row[data-sender="bot"]  + .cb-msg-row[data-sender="bot"] {
+        margin-top: 7px;
+    }
+</style>
 
 <script>
 (function () {
@@ -142,6 +150,10 @@
     var _welcomed    = {{ count($chatMessages) > 0 ? 'true' : 'false' }};
     var _reduced     = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Teks sambutan DLH Assistant (sama seperti toggleChat di server) —
+    // dipakai agar tampilan setelah hapus kembali ke kondisi "chat pertama kali".
+    var WELCOME_TEXT = "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda tentang layanan DLH Kota Palu.";
+
     function el(id) { return document.getElementById(id); }
     var panel = function () { return el('chatbot-panel'); };
     var fab   = function () { return el('chatbot-fab'); };
@@ -150,11 +162,14 @@
     var placeholder = function () { return el('chatbot-stream-placeholder'); };
 
     function wire() {
-        var id = document.querySelector('[wire\\:id]')?.getAttribute('wire:id');
+        // $wire disediakan Livewire di scope blok script ini — selalu merujuk komponen ini.
+        if (typeof $wire !== 'undefined') return $wire;
+        var root = document.getElementById('chatbot-wrapper');
+        var id = root ? root.getAttribute('wire:id') : null;
         return (window.Livewire && id) ? window.Livewire.find(id) : null;
     }
 
-    // â”€â”€ Open / Close â”€â”€
+    // Open / Close
     window.chatbotOpen = function () {
         var p = panel(), f = fab();
         if (!p || !f) return;
@@ -173,6 +188,7 @@
         if (!_welcomed && _history.length === 0) {
             _welcomed = true;
             wire()?.call('toggleChat');
+            showWelcome();
         }
         scrollBottom();
         setTimeout(function () { input()?.focus(); }, 300);
@@ -197,13 +213,18 @@
         var m = msgs();
         // Panel ber-wire:ignore, jadi re-render Livewire tidak menyentuh DOM ini.
         // Hapus SEMUA bubble (server + dinamis) langsung, sisakan placeholder.
-        Array.prototype.slice.call(m.children).forEach(function (ch) {
-            if (ch.id !== 'chatbot-stream-placeholder') ch.remove();
-        });
+        if (m) {
+            Array.prototype.slice.call(m.children).forEach(function (ch) {
+                if (ch.id !== 'chatbot-stream-placeholder') ch.remove();
+            });
+        }
         var chips = el('chatbot-chips');
         if (chips) chips.style.display = 'flex';
-        appendAIBubble(@js(__('Chat telah dihapus. Ada yang bisa saya bantu? ðŸ™‚')));
-        wire()?.call('clearChat');
+        scrollBottom();
+        // Reset session di server agar setelah refresh tetap tampil seperti awal.
+        try { wire()?.call('clearChat'); } catch (e) {}
+        // Tampilkan kembali pesan sambutan seperti saat chat pertama kali dibuka.
+        showWelcome();
     };
 
     window.chatbotSuggest = function (text) {
@@ -211,7 +232,7 @@
         chatbotSend();
     };
 
-    // â”€â”€ Send â”€â”€
+    // Send
     window.chatbotSend = function () {
         var text = input().value.trim();
         if (!text || _isStreaming) return;
@@ -227,7 +248,7 @@
         startStream(text, historyForApi);
     };
 
-    // â”€â”€ Streaming â”€â”€
+    // Streaming
     function startStream(userMessage, historyForApi) {
         _isStreaming = true;
         setLoadingState(true);
@@ -282,8 +303,9 @@
         if (typingEl) {
             typingEl.innerHTML =
                 '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-                '<div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><span class="cb-body"></span><span class="cb-caret"></span></div>';
+                '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><span class="cb-body"></span><span class="cb-caret"></span></div>';
         }
+        if (typingEl) typingEl.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
         var body = typingEl ? typingEl.querySelector('.cb-body') : null;
         var caret = typingEl ? typingEl.querySelector('.cb-caret') : null;
 
@@ -334,7 +356,7 @@
         setLoadingState(false);
     }
 
-    // â”€â”€ Helpers â”€â”€
+    // Helpers
     function setLoadingState(loading) {
         el('chatbot-send-icon').classList.toggle('hidden', loading);
         el('chatbot-loading-icon').classList.toggle('hidden', !loading);
@@ -354,7 +376,7 @@
 
     function typingHTML(id) {
         // Loading "keren": logo Kota Palu berputar dalam cincin, + label + titik memantul.
-        return '<div id="' + id + '" class="flex items-end gap-2 cb-dynamic-bubble">' +
+        return '<div id="' + id + '" class="cb-msg-row flex items-start gap-2 cb-dynamic-bubble" data-sender="bot">' +
             '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
             '<div class="px-4 py-3 rounded-2xl rounded-bl-md bg-white dark:bg-slate-800 border border-black/5 dark:border-white/5 shadow-sm">' +
             '<div class="flex items-center gap-2.5">' +
@@ -373,33 +395,115 @@
         if (!typingEl) { appendAIBubble(text); return; }
         typingEl.innerHTML =
             '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
         scrollBottom();
     }
 
     function appendUserBubble(text) {
         var d = document.createElement('div');
-        d.className = 'flex justify-end cb-dynamic-bubble';
-        d.innerHTML = '<div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '</div>';
+        d.className = 'cb-msg-row flex justify-end cb-dynamic-bubble';
+        d.setAttribute('data-sender', 'user');
+        d.innerHTML = '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '</div>';
         placeholder().before(d);
         scrollBottom();
+    }
+
+    function showWelcome() {
+        if (_history.length > 0) return;
+        appendAIBubble(WELCOME_TEXT);
     }
 
     function appendAIBubble(text) {
         var d = document.createElement('div');
-        d.className = 'flex items-end gap-2 cb-dynamic-bubble';
+        d.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
+        d.setAttribute('data-sender', 'bot');
         d.innerHTML = '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
         placeholder().before(d);
         scrollBottom();
     }
 
+    // ── Format output AI (markdown ringan → HTML rapi) ──
     function format(text) {
-        var t = escHtml(text);
-        t = t.replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>');
-        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-brand-600 dark:text-brand-400 underline decoration-dotted font-medium">$1</a>');
-        t = t.replace(/\n/g, '<br>');
+        if (!text) return '';
+        var src = String(text).replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+        var out = [], lines = src.split('\n'), i = 0;
+
+        while (i < lines.length) {
+            var line = lines[i];
+
+            if (!line.trim()) { i++; continue; }
+
+            // Blok kode ``` ... ```
+            if (/^```/.test(line.trim())) {
+                var code = []; i++;
+                while (i < lines.length && !/^```/.test(lines[i].trim())) { code.push(lines[i]); i++; }
+                i++; // lewati ``` penutup
+                out.push('<pre class="cb-md-pre"><code>' + escHtml(code.join('\n')) + '</code></pre>');
+                continue;
+            }
+
+            // Heading # / ## / ###
+            var h = line.match(/^\s{0,3}(#{1,3})\s+(.*)$/);
+            if (h) { out.push('<p class="cb-md-heading">' + inline(h[2]) + '</p>'); i++; continue; }
+
+            // List tidak berurutan (-, *, •)
+            if (/^\s*[-*•]\s+/.test(line)) {
+                var items = [];
+                while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) {
+                    items.push('<li>' + inline(lines[i].replace(/^\s*[-*•]\s+/, '')) + '</li>');
+                    i++;
+                }
+                out.push('<ul class="cb-md-ul">' + items.join('') + '</ul>');
+                continue;
+            }
+
+            // List berurutan (1. / 1))
+            if (/^\s*\d+[.)]\s+/.test(line)) {
+                var oitems = [];
+                while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) {
+                    oitems.push('<li>' + inline(lines[i].replace(/^\s*\d+[.)]\s+/, '')) + '</li>');
+                    i++;
+                }
+                out.push('<ol class="cb-md-ol">' + oitems.join('') + '</ol>');
+                continue;
+            }
+
+            // Paragraf: gabungkan baris berturut-turut sampai baris kosong/struktur lain.
+            var para = [line]; i++;
+            while (i < lines.length && lines[i].trim() &&
+                   !/^```/.test(lines[i].trim()) &&
+                   !/^\s{0,3}#{1,3}\s+/.test(lines[i]) &&
+                   !/^\s*[-*•]\s+/.test(lines[i]) &&
+                   !/^\s*\d+[.)]\s+/.test(lines[i])) {
+                para.push(lines[i]); i++;
+            }
+            out.push('<p>' + para.map(inline).join('<br>') + '</p>');
+        }
+
+        return out.join('');
+    }
+
+    // Format inline: escape dulu, lalu bold, italic, kode, link.
+    function inline(s) {
+        var t = escHtml(s);
+        t = t.replace(/`([^`]+)`/g, '<code class="cb-md-code">$1</code>');
+        t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+        t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-600 dark:text-brand-400 underline decoration-dotted underline-offset-2 break-words">$1</a>');
         return t;
+    }
+
+    // Bubble hasil render server (loop Blade) berisi teks mentah di .cb-raw —
+    // format dengan renderer yang sama agar tampilannya konsisten.
+    function formatRawBubbles() {
+        var m = msgs();
+        if (!m) return;
+        var raws = m.querySelectorAll('.cb-raw');
+        Array.prototype.forEach.call(raws, function (el) {
+            el.innerHTML = format(el.textContent);
+        });
     }
 
     function escHtml(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
@@ -408,6 +512,9 @@
         var m = msgs();
         if (m) setTimeout(function () { m.scrollTo({ top: m.scrollHeight, behavior: _reduced ? 'auto' : 'smooth' }); }, 40);
     }
+
+    // Format bubble hasil render server (riwayat dari session) saat halaman dimuat.
+    formatRawBubbles();
 
     // Escape untuk menutup
     document.addEventListener('keydown', function (e) {
@@ -418,3 +525,4 @@
     });
 })();
 </script>
+</div>

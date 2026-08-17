@@ -1,10 +1,9 @@
 <?php
 
-use App\Enums\Bidang;
 use App\Enums\JenisPengaduanSampah;
 use App\Http\Requests\StorePengaduanSampahRequest;
-use App\Models\Laporan;
-use App\Models\LaporanFoto;
+use App\Models\PengaduanSampah;
+use App\Models\PengaduanSampahFoto;
 use App\Traits\HandlesPengaduanPhotoUpload;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -43,30 +42,28 @@ new class extends Component
 
         $jenisPengaduan = $validated['jenis_pengaduan'];
 
-        $laporan = Laporan::create([
-            'bidang' => Bidang::SAMPAH_LB3->value,
+        $pengaduan = PengaduanSampah::create([
             'nama_pelapor' => $validated['nama_pelapor'],
             'nomor_hp' => $validated['nomor_hp'],
             'jenis_pengaduan' => $jenisPengaduan,
-            'kategori' => $jenisPengaduan,
             'deskripsi' => $validated['deskripsi'],
             'alamat' => $validated['alamat'],
             'latitude' => $validated['latitude'],
             'longitude' => $validated['longitude'],
-            'status' => 'Belum Ditindaklanjuti',
         ]);
 
-        $this->queuePhotos(
+        $this->processPhotos(
             $this->photos,
-            $laporan->id,
-            'laporan_id',
-            LaporanFoto::class,
-            'laporans',
-            'laporan',
+            $pengaduan->id,
+            'pengaduan_sampah_id',
+            PengaduanSampahFoto::class,
+            'pengaduan-sampah',
         );
 
-        $this->ticket = $laporan->nomor_tiket;
+        $this->ticket = $pengaduan->nomor_tiket;
         $this->processing = true;
+        // Foto diproses sinkron di atas — langsung balik ke layar sukses bila selesai.
+        $this->checkPhotoStatus();
 
         $this->reset(['nama_pelapor', 'nomor_hp', 'deskripsi', 'alamat', 'photos']);
         $this->latitude = -0.9;
@@ -85,7 +82,7 @@ new class extends Component
                 <p class="text-sm text-slate-500 max-w-md mx-auto">{{ __('Pengaduan Anda telah terkirim. Foto bukti sedang dioptimalkan dan diunggah ke penyimpanan cloud (maksimal beberapa menit).') }}</p>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-slate-900 border rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] font-extrabold tracking-widest uppercase text-brand-600">{{ __('Nomor Tiket') }}</span>
+                <span class="block text-[10px] font-bold tracking-widest uppercase text-brand-600">{{ __('Nomor Tiket') }}</span>
                 <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $ticket }}</span>
             </div>
         </div>
@@ -94,17 +91,17 @@ new class extends Component
             @if ($photoError)
                 <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">{{ $photoError }}</div>
             @endif
-            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto"><x-icons.berhasil class="size-8" /></div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold">{{ __('Pengaduan Berhasil Terkirim') }}</h3>
                 <p class="text-sm text-slate-500 max-w-md mx-auto">{{ __('Simpan nomor tiket berikut untuk mengecek status pengaduan.') }}</p>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-slate-900 border rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] font-extrabold tracking-widest uppercase text-brand-600">{{ __('Nomor Tiket') }}</span>
+                <span class="block text-[10px] font-bold tracking-widest uppercase text-brand-600">{{ __('Nomor Tiket') }}</span>
                 <x-public.copy-ticket :ticket="$ticket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                <a href="/cek-pengaduan-sampah" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-brand-600 text-white h-10 px-4 hover:bg-brand-700">{{ __('Cek Status') }}</a>
+                <a href="/lacak" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-brand-600 text-white h-10 px-4 hover:bg-brand-700">{{ __('Cek Status') }}</a>
                 <button wire:click="resetPhotoState" type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium border h-10 px-4">{{ __('Buat Pengaduan Baru') }}</button>
             </div>
         </div>
@@ -162,8 +159,8 @@ new class extends Component
                 />
 
                 <div class="space-y-2.5">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti (min 1, max 5, JPG/PNG/WebP maksimal 5MB)') }}</label>
-                    <input wire:model="photos" type="file" multiple accept="image/jpeg,image/png,image/webp" class="flex h-10 w-full rounded-md border border-slate-200 px-3 text-sm dark:border-slate-800" />
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti (min 1, max 5, JPG/PNG/WebP/AVIF/HEIC maksimal 5MB)') }}</label>
+                    <input wire:model="photos" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" aria-label="{{ __('Foto Bukti') }}" class="flex h-10 w-full rounded-md border border-slate-200 px-3 text-sm dark:border-slate-800" />
                     @error('photos') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                     @error('photos.*') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                 </div>
@@ -185,7 +182,7 @@ new class extends Component
                                          attributionControl: false
                                      });
                                      self.map.addControl(new DlhZoomControl(), 'top-left');
-if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
+if (window.DlhWeatherControl) self.map.addControl(new DlhWeatherControl(), 'top-right');
                                      if (window.DlhBasemapSwitcher) { var bs = new DlhBasemapSwitcher(); self.map.on('load', function() { bs.onAdd(self.map); }); }
                                      dlhAddLocBtn(self.map, function(lat, lng) { self.marker.setLngLat([lng, lat]); @this.set('latitude', lat); @this.set('longitude', lng); });
                                      self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' })
@@ -195,7 +192,7 @@ if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right
                                      self.map.on('click', function(e) { self.marker.setLngLat(e.lngLat); @this.set('latitude', e.lngLat.lat); @this.set('longitude', e.lngLat.lng); });
                                  });
                              }
-                         }" x-init="initMap()"></div>
+                         }" x-intersect.once="initMap()"></div>
                     <div class="flex justify-between text-xs text-slate-500">
                         <span>Lat: {{ number_format($latitude, 6) }}</span>
                         <span>Lng: {{ number_format($longitude, 6) }}</span>

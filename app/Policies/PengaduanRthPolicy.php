@@ -3,8 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\AdminRole;
-use App\Enums\Bidang;
-use App\Models\Laporan;
+use App\Models\PengaduanRth;
 use App\Models\User;
 use App\Support\AdminAccess;
 
@@ -15,9 +14,9 @@ class PengaduanRthPolicy
         return $this->canAccess($user);
     }
 
-    public function view(User $user, Laporan $laporan): bool
+    public function view(User $user, PengaduanRth $pengaduan): bool
     {
-        return $this->canAccess($user) && $this->isRth($laporan);
+        return $this->canAccess($user);
     }
 
     public function create(User $user): bool
@@ -25,26 +24,19 @@ class PengaduanRthPolicy
         return false;
     }
 
-    public function update(User $user, Laporan $laporan): bool
+    public function update(User $user, PengaduanRth $pengaduan): bool
     {
-        return $this->canAccess($user) && $this->isRth($laporan);
+        return $this->canAccess($user);
     }
 
-    public function delete(User $user, Laporan $laporan): bool
+    public function delete(User $user, PengaduanRth $pengaduan): bool
     {
-        return AdminAccess::isSuperadmin($user) && $this->isRth($laporan);
+        return AdminAccess::isSuperadmin($user);
     }
 
     protected function canAccess(User $user): bool
     {
         return AdminAccess::isSuperadmin($user)
             || $user->hasRole(AdminRole::BIDANG_RTH->value);
-    }
-
-    protected function isRth(Laporan $laporan): bool
-    {
-        $bidang = $laporan->bidang;
-
-        return ($bidang instanceof Bidang ? $bidang->value : $bidang) === Bidang::RTH->value;
     }
 }

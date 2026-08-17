@@ -12,10 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('gis_data_layers', function (Blueprint $table) {
+        Schema::table('gis_data_layer', function (Blueprint $table) {
             $table->foreignId('parent_id')
                 ->nullable()
-                ->constrained('gis_data_layers')
+                ->constrained('gis_data_layer')
                 ->nullOnDelete();
             $table->index('parent_id');
         });
@@ -23,7 +23,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('gis_data_layers', function (Blueprint $table) {
+        Schema::table('gis_data_layer', function (Blueprint $table) {
             $table->dropForeign(['parent_id']);
             $table->dropColumn('parent_id');
         });

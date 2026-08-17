@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('ticket_feedbacks', function (Blueprint $table) {
+        Schema::create('ticket_feedback', function (Blueprint $table) {
             $table->id();
             $table->string('feedbackable_type');
             $table->unsignedBigInteger('feedbackable_id');
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('ticket_feedbacks');
+        Schema::dropIfExists('ticket_feedback');
     }
 };

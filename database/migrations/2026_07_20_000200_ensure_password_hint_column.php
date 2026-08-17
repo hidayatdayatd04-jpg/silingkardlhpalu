@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasColumn('users', 'password_hint')) {
-            Schema::table('users', function (Blueprint $table) {
+        if (! Schema::hasColumn('user', 'password_hint')) {
+            Schema::table('user', function (Blueprint $table) {
                 $table->string('password_hint')->nullable();
             });
         }
@@ -22,8 +22,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('users', 'password_hint')) {
-            Schema::table('users', function (Blueprint $table) {
+        if (Schema::hasColumn('user', 'password_hint')) {
+            Schema::table('user', function (Blueprint $table) {
                 $table->dropColumn('password_hint');
             });
         }

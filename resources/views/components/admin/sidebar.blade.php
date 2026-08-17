@@ -67,7 +67,7 @@
         <div class="px-6 pt-6 pb-4">
             <div class="flex items-center justify-between">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo" class="h-14 w-auto" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
+                    <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo" class="h-14 w-auto" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
                     <div>
                         <p class="text-[15px] font-bold text-white tracking-tight">DLH Kota Palu</p>
                         <p class="text-[10px] text-emerald-400/50 tracking-widest uppercase mt-0.5">Ruang Kendali Admin</p>
@@ -87,7 +87,7 @@
                 <div class="pt-3">
                     <div class="flex items-center gap-3 px-2 mb-2.5">
                         <div class="h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent"></div>
-                        <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 shrink-0">{{ $group['label'] }}</p>
+                        <p class="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30 shrink-0">{{ $group['label'] }}</p>
                         <div class="h-px flex-1 bg-gradient-to-l from-white/[0.08] to-transparent"></div>
                     </div>
                     <div class="space-y-1">
@@ -114,7 +114,7 @@
             <div class="pt-3">
                 <div class="flex items-center gap-3 px-2 mb-2.5">
                     <div class="h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent"></div>
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 shrink-0">Sistem</p>
+                    <p class="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30 shrink-0">Sistem</p>
                     <div class="h-px flex-1 bg-gradient-to-l from-white/[0.08] to-transparent"></div>
                 </div>
                 <div class="space-y-1">
@@ -151,13 +151,13 @@
     class="hidden lg:flex relative min-h-screen flex-col border-r border-white/[0.06] text-white transition-all duration-300"
     style="background: linear-gradient(180deg, #0B3A2A 0%, #06291F 40%, #041B14 100%); color: #fff;"
 >
-    <div class="pointer-events-none absolute inset-0 opacity-[0.015]" style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E&quot;); background-size: 256px;"></div>
+    <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.015]" aria-hidden="true"></div>
 
     {{-- HEADER --}}
     <div class="relative z-10 px-6 pt-6 pb-4" x-bind:class="$store.sidebar.collapsed ? 'px-3 pt-5 pb-3' : ''">
         <div class="flex items-center gap-3" x-bind:class="$store.sidebar.collapsed ? 'justify-center' : ''">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 shrink-0">
-                <img src="{{ asset('assets/images/logo-web.png') }}" alt="Logo" class="h-14 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
+                <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo" width="320" height="337" class="h-14 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
                 <div x-show="!$store.sidebar.collapsed" x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="min-w-0">
                     <p class="text-[15px] font-bold text-white tracking-tight leading-tight">DLH Kota Palu</p>
                     <p class="text-[10px] text-emerald-400/50 tracking-widest uppercase mt-0.5">Ruang Kendali Admin</p>
@@ -190,7 +190,7 @@
             <div class="pt-3" x-bind:class="$store.sidebar.collapsed ? 'pt-2' : ''">
                 <div x-show="!$store.sidebar.collapsed" x-transition class="flex items-center gap-3 px-2 mb-2.5 cursor-pointer select-none" x-on:click="openSections['{{ $groupKey }}'] = openSections['{{ $groupKey }}'] === false ? true : false">
                     <div class="h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent"></div>
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 shrink-0">{{ $group['label'] }}</p>
+                    <p class="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30 shrink-0">{{ $group['label'] }}</p>
                     <div class="h-px flex-1 bg-gradient-to-l from-white/[0.08] to-transparent"></div>
                     <svg class="size-3 text-white/20 transition-transform duration-300 shrink-0" x-bind:class="openSections['{{ $groupKey }}'] === false ? '-rotate-90' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
                 </div>

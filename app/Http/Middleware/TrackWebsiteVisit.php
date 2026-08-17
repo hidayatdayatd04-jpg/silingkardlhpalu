@@ -13,19 +13,49 @@ class TrackWebsiteVisit
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $hasTable = Cache::remember('schema:has:website_visits', now()->addHour(), fn () => Schema::hasTable('website_visits'));
+        return $next($request);
+    }
 
-        if ($request->isMethod('GET') && ! $request->is('admin*') && ! $request->is('api/*') && $hasTable) {
-            $sessionId = $request->session()->getId();
-            $ip = $request->ip() ?? '0.0.0.0';
+    /**
+     * Dicatat SETELAH response dikirim (terminable middleware) agar query DB
+     * remote tidak memblokir TTFB. Dengan mod_php, response sudah di-flush
+     * ke browser sebelum metode ini dijalankan.
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        // mod_php menahan response sampai script selesai. Flush buffer SEKARANG
+        // agar byte response terdorong ke browser sebelum query DB remote yang
+        // lambat di bawah dijalankan — TTFB tidak lagi membayar query ini.
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush();
 
+        if (! $request->isMethod('GET') || $request->is('admin*') || $request->is('api/*')) {
+            return;
+        }
+
+        $hasTable = Cache::remember('schema:has:website_visit', now()->addHour(), fn () => Schema::hasTable('website_visit'));
+
+        if (! $hasTable) {
+            return;
+        }
+
+        $sessionId = $request->hasSession() ? $request->session()->getId() : '';
+        $ip = $request->ip() ?? '0.0.0.0';
+
+        // DB berada di host remote — hindari query firstOrCreate pada setiap
+        // request. Cukup catat sekali per sesi per hari (cache 1 jam).
+        $throttleKey = 'visit:tracked:' . $sessionId . ':' . today()->toDateString();
+
+        if (! Cache::has($throttleKey)) {
             WebsiteVisit::query()->firstOrCreate([
                 'visit_date' => today()->toDateString(),
                 'ip_address' => $ip,
                 'session_id' => $sessionId,
             ]);
-        }
 
-        return $next($request);
+            Cache::put($throttleKey, true, now()->addHour());
+        }
     }
 }

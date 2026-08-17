@@ -27,8 +27,8 @@
         <div class="relative flex flex-col gap-6 p-7 sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
                 <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">{{ $roleLabel }}</p>
-                <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-[2rem]">
-                    {{ $greet }}, {{ $firstName }} <span class="inline-block animate-pulse">👋</span>
+                <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                    {{ $greet }}, {{ $firstName }} <x-icons.sapa class="inline-block size-6 animate-pulse align-middle" />
                 </h1>
                 <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/75">
                     <span class="inline-flex items-center gap-1.5">
@@ -44,7 +44,7 @@
             </div>
 
             <div class="flex items-center gap-3 rounded-2xl bg-white/10 p-3 pr-5 backdrop-blur">
-                <div class="grid size-14 shrink-0 place-items-center rounded-xl bg-white/15 text-lg font-extrabold tracking-tight text-white">
+                <div class="grid size-14 shrink-0 place-items-center rounded-xl bg-white/15 text-base font-bold tracking-tight text-white">
                     {{ strtoupper($initials) }}
                 </div>
                 <div class="min-w-0">
@@ -104,7 +104,7 @@
                     <div class="flex items-end justify-between">
                         <div>
                             <p class="text-sm font-semibold text-ink-500">Tingkat Penyelesaian</p>
-                            <p class="mt-1 text-3xl font-extrabold tracking-tight text-ink-900">{{ $statusStats['selesai_pct'] }}<span class="text-xl text-ink-400">%</span></p>
+                            <p class="mt-1 text-2xl font-bold tracking-tight text-ink-900">{{ $statusStats['selesai_pct'] }}<span class="text-xl text-ink-400">%</span></p>
                         </div>
                         <p class="text-xs text-slate-500">{{ number_format($statusStats['selesai'], 0, ',', '.') }} dari {{ number_format($statusStats['total'], 0, ',', '.') }} pengaduan selesai</p>
                     </div>
@@ -114,19 +114,19 @@
 
                     <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                         <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                            <p class="text-xl font-extrabold text-amber-600">{{ number_format($statusStats['belum'], 0, ',', '.') }}</p>
+                            <p class="text-lg font-bold text-amber-600">{{ number_format($statusStats['belum'], 0, ',', '.') }}</p>
                             <p class="mt-0.5 text-xs font-medium text-slate-500">Belum Ditindak</p>
                         </div>
                         <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                            <p class="text-xl font-extrabold text-sky-600">{{ number_format($statusStats['proses'], 0, ',', '.') }}</p>
+                            <p class="text-lg font-bold text-sky-600">{{ number_format($statusStats['proses'], 0, ',', '.') }}</p>
                             <p class="mt-0.5 text-xs font-medium text-slate-500">Diproses</p>
                         </div>
                         <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                            <p class="text-xl font-extrabold text-emerald-600">{{ number_format($statusStats['selesai'], 0, ',', '.') }}</p>
+                            <p class="text-lg font-bold text-emerald-600">{{ number_format($statusStats['selesai'], 0, ',', '.') }}</p>
                             <p class="mt-0.5 text-xs font-medium text-slate-500">Selesai</p>
                         </div>
                         <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                            <p class="text-xl font-extrabold text-rose-600">{{ number_format($statusStats['ditolak'], 0, ',', '.') }}</p>
+                            <p class="text-lg font-bold text-rose-600">{{ number_format($statusStats['ditolak'], 0, ',', '.') }}</p>
                             <p class="mt-0.5 text-xs font-medium text-slate-500">Ditolak</p>
                         </div>
                     </div>
@@ -138,7 +138,7 @@
                         <canvas id="chartStatusMini"></canvas>
                         <div class="pointer-events-none absolute inset-0 grid place-items-center">
                             <div class="text-center">
-                                <p class="text-2xl font-extrabold text-ink-900">{{ number_format($statusStats['total'], 0, ',', '.') }}</p>
+                                <p class="text-xl font-bold text-ink-900">{{ number_format($statusStats['total'], 0, ',', '.') }}</p>
                                 <p class="text-[11px] font-medium text-slate-500">Total</p>
                             </div>
                         </div>
@@ -237,13 +237,13 @@
                         <div class="relative mt-6 grid grid-cols-2 gap-3">
                             @if($activeUsers !== null)
                                 <div class="rounded-lg bg-white/10 p-4 backdrop-blur">
-                                    <p class="text-h1 font-extrabold"><x-admin.count-up :value="(int) $activeUsers" /></p>
+                                    <p class="text-h1 font-bold"><x-admin.count-up :value="(int) $activeUsers" /></p>
                                     <p class="mt-1 text-xs text-brand-200">Admin Aktif</p>
                                 </div>
                             @endif
                             @if($visits !== null)
                                 <div class="rounded-lg bg-white/10 p-4 backdrop-blur">
-                                    <p class="text-h1 font-extrabold"><x-admin.count-up :value="(int) $visits" /></p>
+                                    <p class="text-h1 font-bold"><x-admin.count-up :value="(int) $visits" /></p>
                                     <p class="mt-1 text-xs text-brand-200">Kunjungan</p>
                                 </div>
                             @endif
@@ -364,13 +364,6 @@
                         <span class="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">{{ $recent['registrasi_lb3']->count() }}</span>
                     </button>
                 @endif
-                @if(isset($recent['tata_penataan']))
-                    <button x-on:click="activeTab = 'tata_penataan'" :class="activeTab === 'tata_penataan' ? 'bg-white shadow-sm text-brand-700' : 'text-slate-500 hover:text-slate-700'" class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition">
-                        <x-admin.icon name="building" :size="14" />
-                        Tata Penataan
-                        <span class="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">{{ $recent['tata_penataan']->count() }}</span>
-                    </button>
-                @endif
                 @if(isset($recent['rintek_pertek']))
                     <button x-on:click="activeTab = 'rintek_pertek'" :class="activeTab === 'rintek_pertek' ? 'bg-white shadow-sm text-brand-700' : 'text-slate-500 hover:text-slate-700'" class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition">
                         <x-admin.icon name="factory" :size="14" />
@@ -396,9 +389,9 @@
                         icon="megaphone"
                         icon-color="emerald"
                         :title="$item->nomor_tiket"
-                        :subtitle="'Laporan — '.(\Illuminate\Support\Str::title(str_replace('-', ' ', $item->bidang->value ?? '-'))) . ($item->jenis_pengaduan ? ' • '.$item->jenis_pengaduan : '')"
+                        :subtitle="'Pengaduan — '.($item->bidang_label ?? '-').($item->jenis_pengaduan ? ' • '.$item->jenis_pengaduan : '')"
                         :time="$item->created_at?->diffForHumans()"
-                        :badge="$item->status"
+                        :badge="$item->status_text ?? (string) $item->status"
                         href="#"
                     />
                 @empty
@@ -439,24 +432,6 @@
                     />
                 @empty
                     <p class="px-5 py-8 text-center text-sm text-slate-400">Belum ada registrasi LB3 terbaru</p>
-                @endforelse
-            </div>
-            @endif
-
-            @if(isset($recent['tata_penataan']))
-            <div x-show="activeTab === 'tata_penataan'" class="divide-y divide-slate-100" x-cloak>
-                @forelse($recent['tata_penataan'] as $item)
-                    <x-admin.recent-item
-                        icon="building"
-                        icon-color="purple"
-                        :title="$item->nomor_tiket ?? ('Pengaduan #' . $item->id)"
-                        :subtitle="$item->nama_pelapor ?? 'Pengaduan Tata Penataan'"
-                        :time="$item->created_at?->diffForHumans()"
-                        :badge="$item->status ?? null"
-                        href="#"
-                    />
-                @empty
-                    <p class="px-5 py-8 text-center text-sm text-slate-400">Belum ada pengaduan tata penataan terbaru</p>
                 @endforelse
             </div>
             @endif
@@ -502,11 +477,66 @@
 @endsection
 
 @push('scripts')
-{{-- Task 5: peta di sebaran-pengaduan butuh map-bundle (DlhMarkers, DlhZoomControl, dll.) --}}
-@vite('resources/js/map-bundle.js')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+{{-- Aset self-host (di-bundle oleh Vite): menghilangkan CDN eksternal yang
+     tadinya mem-block parser/render dan menyebabkan LCP lambat.
+     Chart.js (206KB) + Flatpickr (15KB + 3KB CSS) dimuat LAZY setelah idle:
+     keduanya hanya dipakai widget below-fold (grafik & picker tanggal peta
+     sebaran), dan partial terkait sudah mem-poll window.Chart /
+     window.flatpickr sehingga inisialisasi aman menunggu bundle tiba.
+     map-bundle.js (234KB) juga TIDAK dimuat eager — di-import dinamis setelah
+     idle karena partial sebaran-pengaduan sudah polling window.maplibregl. --}}
+@php
+    $buildManifest = is_file(public_path('build/manifest.json'))
+        ? json_decode((string) file_get_contents(public_path('build/manifest.json')), true)
+        : [];
+    $lazyChartsJs = $buildManifest['resources/js/dashboard-charts.js']['file'] ?? null;
+    $lazyFpEntry = $buildManifest['resources/js/flatpickr-init.js'] ?? null;
+@endphp
+@if($lazyChartsJs && $lazyFpEntry)
+<script>
+    // Muat bundle chart + flatpickr secara lazy agar keluar dari critical path.
+    (function () {
+        var base = @json(rtrim(asset('build'), '/') . '/');
+        var kicked = false;
+        function kick() {
+            if (kicked) return;
+            kicked = true;
+            @foreach ((array) ($lazyFpEntry['css'] ?? []) as $cssFile)
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = base + @json($cssFile);
+            document.head.appendChild(l);
+            @endforeach
+            [@json($lazyFpEntry['file']), @json($lazyChartsJs)].forEach(function (f) {
+                var s = document.createElement('script');
+                s.type = 'module';
+                s.src = base + f;
+                document.head.appendChild(s);
+            });
+        }
+        function schedule() {
+            if (window.requestIdleCallback) requestIdleCallback(kick, { timeout: 1200 });
+            else setTimeout(kick, 300);
+        }
+        if (document.readyState === 'complete') schedule();
+        else window.addEventListener('load', schedule, { once: true });
+    })();
+</script>
+@endif
+<script>
+    // Muat chunk peta secara lazy agar keluar dari critical path dashboard.
+    // Partial sebaran-pengaduan mem-poll window.maplibregl tiap 80ms, sehingga
+    // peta tetap ter-init begitu dynamic import di bawah selesai.
+    (function () {
+        var kick = function () { if (window.ensureMapComponents) window.ensureMapComponents(); };
+        var schedule = function () {
+            if (window.requestIdleCallback) requestIdleCallback(kick, { timeout: 1500 });
+            else setTimeout(kick, 250);
+        };
+        if (document.readyState === 'complete') schedule();
+        else window.addEventListener('load', schedule, { once: true });
+    })();
+</script>
 <script>
     (function () {
         const charts = @json($charts);

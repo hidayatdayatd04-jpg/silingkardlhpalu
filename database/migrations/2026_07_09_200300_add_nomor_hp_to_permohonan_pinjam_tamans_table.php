@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('permohonan_pinjam_tamans', function (Blueprint $table) {
+        Schema::table('permohonan_pinjam_taman', function (Blueprint $table) {
             $table->string('nomor_hp')->nullable();
             $table->string('email')->nullable();
         });
@@ -16,7 +16,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('permohonan_pinjam_tamans', function (Blueprint $table) {
+        Schema::table('permohonan_pinjam_taman', function (Blueprint $table) {
             $table->dropColumn(['nomor_hp', 'email']);
         });
     }

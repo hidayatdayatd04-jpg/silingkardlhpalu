@@ -1,13 +1,15 @@
 <?php
 
-use App\Enums\Bidang;
 use App\Enums\JenisPengaduanPengendalian;
 use App\Enums\JenisPengaduanSampah;
 use App\Enums\JenisPengaduanTataPenataan;
 use App\Enums\JenisPengaduanRth;
-use App\Enums\PengaduanStatus;
-use App\Models\Laporan;
-use App\Models\LaporanFoto;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanPengendalianFoto;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanRthFoto;
+use App\Models\PengaduanSampah;
+use App\Models\PengaduanSampahFoto;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengaduanTataPenataanFoto;
 use App\Traits\HandlesPengaduanPhotoUpload;
@@ -87,7 +89,7 @@ new class extends Component {
         if ($this->bidang === 'tata-penataan') {
             $pengaduan = PengaduanTataPenataan::create([
                 'nama_pelapor' => $this->nama_pelapor,
-                'no_hp' => $this->nomor_hp,
+                'nomor_hp' => $this->nomor_hp,
                 'jenis_pengaduan' => $this->jenis_pengaduan,
                 'nama_terlapor' => $this->nama_terlapor ?? null,
                 'nama_perusahaan_terlapor' => $this->nama_perusahaan_terlapor ?? null,
@@ -99,52 +101,46 @@ new class extends Component {
 
             $this->ticket = $pengaduan->nomor_tiket;
 
-            $this->queuePhotos(
+            $this->processPhotos(
                 $this->photos,
                 $pengaduan->id,
                 'pengaduan_tata_penataan_id',
                 PengaduanTataPenataanFoto::class,
                 'pengaduan-tata-penataan',
-                'tata',
             );
         } else {
-            $bidangEnum = match ($this->bidang) {
-                'pengendalian' => Bidang::PENGENDALIAN,
-                'sampah' => Bidang::SAMPAH_LB3,
-                'rth' => Bidang::RTH,
-            };
-
-            $storageDir = match ($this->bidang) {
-                'pengendalian' => 'pengaduan-pengendalian',
-                default => 'laporans',
-            };
-
-            $laporan = Laporan::create([
-                'bidang' => $bidangEnum->value,
+            $payload = [
                 'nama_pelapor' => $this->nama_pelapor,
                 'nomor_hp' => $this->nomor_hp,
                 'jenis_pengaduan' => $this->jenis_pengaduan,
-                'kategori' => $this->jenis_pengaduan,
                 'alamat' => $this->alamat,
                 'deskripsi' => $this->deskripsi,
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
-                'status' => PengaduanStatus::BELUM_DITINDAKLANJUTI->value,
-            ]);
+            ];
 
-            $this->ticket = $laporan->nomor_tiket;
+            [$modelClass, $fotoClass, $fkColumn, $storageDir] = match ($this->bidang) {
+                'pengendalian' => [PengaduanPengendalian::class, PengaduanPengendalianFoto::class, 'pengaduan_pengendalian_id', 'pengaduan-pengendalian'],
+                'sampah' => [PengaduanSampah::class, PengaduanSampahFoto::class, 'pengaduan_sampah_id', 'pengaduan-sampah'],
+                'rth' => [PengaduanRth::class, PengaduanRthFoto::class, 'pengaduan_rth_id', 'pengaduan-rth'],
+            };
 
-            $this->queuePhotos(
+            $pengaduan = $modelClass::create($payload);
+
+            $this->ticket = $pengaduan->nomor_tiket;
+
+            $this->processPhotos(
                 $this->photos,
-                $laporan->id,
-                'laporan_id',
-                LaporanFoto::class,
+                $pengaduan->id,
+                $fkColumn,
+                $fotoClass,
                 $storageDir,
-                'laporan',
             );
         }
 
         $this->processing = true;
+        // Foto diproses sinkron di atas — langsung balik ke layar sukses bila selesai.
+        $this->checkPhotoStatus();
 
         $this->resetForm();
     }
@@ -159,7 +155,7 @@ new class extends Component {
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'deskripsi' => ['required', 'string', 'max:5000'],
             'photos' => ['required', 'array', 'min:1', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photos.*' => ['mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ];
 
         $jenisValues = match ($this->bidang) {
@@ -189,8 +185,7 @@ new class extends Component {
             'photos.array' => 'Foto bukti harus berupa array.',
             'photos.min' => 'Foto bukti minimal 1 foto.',
             'photos.max' => 'Foto bukti maksimal 5 foto.',
-            'photos.*.image' => 'File harus berupa gambar.',
-            'photos.*.mimes' => 'Format foto harus JPG atau PNG.',
+            'photos.*.mimes' => 'Format foto harus JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
             'photos.*.max' => 'Ukuran foto maksimal 5MB.',
             'deskripsi.required' => 'Deskripsi pengaduan wajib diisi.',
             'deskripsi.max' => 'Deskripsi maksimal 5000 karakter.',
@@ -235,12 +230,8 @@ new class extends Component {
 
     public function getCekUrl(): string
     {
-        return match ($this->bidang) {
-            'pengendalian' => '/cek-pengaduan-pengendalian',
-            'sampah' => '/cek-pengaduan-sampah',
-            'tata-penataan' => '/cek-pengaduan-tata-penataan',
-            'rth' => '/cek-pengaduan-rth',
-        };
+        // Semua bidang kini dilacak terpusat di /lacak.
+        return '/lacak';
     }
 };
 ?>
@@ -259,7 +250,7 @@ new class extends Component {
             </div>
             <div
                 class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
                 <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $ticket }}</span>
             </div>
         </div>
@@ -269,8 +260,8 @@ new class extends Component {
                 <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">{{ $photoError }}</div>
             @endif
             <div
-                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
-                ✓
+                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto">
+                <x-icons.berhasil class="size-8" />
             </div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Pengaduan Berhasil Terkirim') }}</h3>
@@ -278,7 +269,7 @@ new class extends Component {
             </div>
             <div
                 class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
                 <x-public.copy-ticket :ticket="$ticket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -465,18 +456,21 @@ new class extends Component {
                 />
 
                 <div class="fi-field">
-                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG/WebP maksimal 5MB)</span></label>
+                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG/WebP/AVIF/HEIC maksimal 5MB)</span></label>
                     <div class="fi-file-drop">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.fileInput.click()">{{ __('Choose Files') }}</button>
                         <span class="fi-file-status">{{ __('No file chosen') }}</span>
-                        <input wire:model="photos" x-ref="fileInput" type="file" multiple accept="image/jpeg,image/png,image/webp" required
+                        <input wire:model="photos" x-ref="fileInput" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" required aria-label="{{ __('Foto Bukti') }}"
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;"
                             x-on:change="
                                 let files = $el.files;
                                 if(files.length > 5){ alert('Maksimal 5 foto yang diizinkan!'); $el.value=''; return; }
+                                const okTypes = ['image/jpeg','image/jpg','image/png','image/webp','image/avif','image/heic','image/heif'];
+                                const okExts = ['jpg','jpeg','png','webp','avif','heic','heif'];
                                 for(let f of files){
                                     if(f.size > 5*1024*1024){ alert('Ukuran foto ' + f.name + ' melebihi 5MB!'); $el.value=''; return; }
-                                    if(!['image/jpeg','image/png','image/webp'].includes(f.type)){ alert('File ' + f.name + ' bukan JPG/PNG/WebP!'); $el.value=''; return; }
+                                    const ext = f.name.split('.').pop().toLowerCase();
+                                    if(!okTypes.includes(f.type) && !okExts.includes(ext)){ alert('File ' + f.name + ' bukan JPG/PNG/WebP/AVIF/HEIC!'); $el.value=''; return; }
                                 }
                             "
                         />
@@ -527,7 +521,6 @@ new class extends Component {
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         /* ── File Upload ── */
         .fi-file-drop {
@@ -539,7 +532,7 @@ new class extends Component {
             align-items: center;
             gap: 14px;
             transition: border-color .18s ease, background .18s ease;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-file-drop:hover {
@@ -555,7 +548,7 @@ new class extends Component {
             border: none;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -569,7 +562,7 @@ new class extends Component {
 
         .fi-file-status {
             font-size: 13px;
-            color: #9fb0a8;
+            color: #5f7268;
         }
 
         .fi-file-hidden {
@@ -584,7 +577,7 @@ new class extends Component {
             border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 15px;
             font-weight: 700;
             letter-spacing: .2px;
@@ -604,11 +597,11 @@ new class extends Component {
 
         /* ── Form card ── */
         .fi-form-card {
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         /* ── Map label font fix ── */
-        .fi-label.fi-label { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-label.fi-label { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         /* ── Dark mode file/submit ── */
         .dark .fi-file-drop {
@@ -640,7 +633,7 @@ new class extends Component {
             letter-spacing: 0.02em;
             box-shadow: 0 8px 20px -6px rgba(20,106,68,0.5);
             transition: filter .18s ease, transform .12s ease;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             cursor: pointer;
             border: none;
         }

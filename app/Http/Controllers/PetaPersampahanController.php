@@ -42,7 +42,11 @@ class PetaPersampahanController extends Controller
                 && $root->is_visible && $root->is_public;
         });
 
-        // Flat array (untuk inisialisasi peta di JS) — hanya layer yang lolos aturan visibilitas.
+        // Flat array (untuk inisialisasi peta di JS) — SEMUA layer yang lolos
+        // aturan visibilitas dikirim ke peta, termasuk layer "Tanpa Filter"
+        // (show_in_filter = false). Layer tanpa filter tetap digambar di peta
+        // (line/icon/polygon dari data .shp), hanya saja tidak muncul sebagai
+        // kartu filter maupun grup legend — pengaturannya ada di vehicleTypes.
         $layers = $visibleLayers->map(fn ($layer) => [
             'id' => $layer->id,
             'nama_layer' => $layer->nama_layer,
@@ -78,15 +82,25 @@ class PetaPersampahanController extends Controller
             if (!is_null($l->parent_id)) {
                 continue;
             }
+            // Layer akar yang dimatikan toggle "Tampilkan di Filter"-nya
+            // tidak muncul sebagai tipe kendaraan di filter publik.
+            if (!$l->show_in_filter) {
+                continue;
+            }
             $info = $typeInfo($l->nama_layer);
             $key = $info['key'];
             if (isset($vehicleTypes[$key])) {
                 continue;
             }
 
-            // Layer milik tipe ini = root itu sendiri + seluruh sub-layer langsung.
+            // Layer milik tipe ini = root itu sendiri + sub-layer langsung
+            // yang toggle "Tampilkan di Filter"-nya aktif. Sub-layer yang
+            // dimatikan tidak ikut dihitung (kelurahan, total, layerIds).
             $typeLayers = $visibleLayers->filter(function ($c) use ($l) {
-                return $c->id === $l->id || $c->parent_id === $l->id;
+                if ($c->id === $l->id) {
+                    return true;
+                }
+                return $c->parent_id === $l->id && $c->show_in_filter;
             });
 
             $kelurahans = $typeLayers

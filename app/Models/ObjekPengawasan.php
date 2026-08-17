@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ObjekPengawasan extends Model
 {
+    protected $table = 'objek_pengawasan';
+
     protected $fillable = [
         'nama_perusahaan',
         'nama_penanggung_jawab',
-        'jenis_usaha_id',
+        'jenis_usaha',
         'alamat',
         'latitude',
         'longitude',
@@ -25,11 +26,6 @@ class ObjekPengawasan extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
         ];
-    }
-
-    public function jenisUsaha(): BelongsTo
-    {
-        return $this->belongsTo(JenisUsaha::class, 'jenis_usaha_id');
     }
 
     public function dokumens(): HasMany

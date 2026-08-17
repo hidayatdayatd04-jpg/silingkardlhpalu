@@ -5,8 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0a2f24">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin DLH Kota Palu')</title>
+    <meta name="description" content="Panel admin Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu — kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna.">
+    <script>document.documentElement.classList.add('js');</script>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    @include('partials.web-fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-common.js'])
     <style>
         /* Hide scrollbar on sidebar nav */
@@ -76,6 +80,9 @@
 
     {{-- Command Palette (Ctrl+K) --}}
     <x-admin.command-palette :user="$user" />
+
+    {{-- Widget progres backup/restore latar belakang --}}
+    <x-admin.backup-progress />
 
     {{-- Toast host (Alpine store 'toasts') --}}
     <x-admin.toast />

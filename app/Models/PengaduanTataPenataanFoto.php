@@ -8,12 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PengaduanTataPenataanFoto extends Model
 {
+    protected $table = 'pengaduan_tata_penataan_foto';
+
     protected $fillable = [
         'pengaduan_tata_penataan_id',
         'path_foto',
-        'thumb_path',
-        'medium_path',
-        'full_path',
         'status',
         'error_message',
         'staging_path',
@@ -28,24 +27,10 @@ class PengaduanTataPenataanFoto extends Model
         return $this->belongsTo(PengaduanTataPenataan::class, 'pengaduan_tata_penataan_id');
     }
 
-    public function thumbUrl(): ?string
-    {
-        $key = $this->thumb_path ?? $this->path_foto;
-
-        return $key ? Storage::disk('public')->temporaryUrl($key, now()->addHours(24)) : null;
-    }
-
-    public function mediumUrl(): ?string
-    {
-        $key = $this->medium_path ?? $this->path_foto;
-
-        return $key ? Storage::disk('public')->temporaryUrl($key, now()->addHours(24)) : null;
-    }
-
     public function fullUrl(): ?string
     {
-        $key = $this->full_path ?? $this->path_foto;
-
-        return $key ? Storage::disk('public')->temporaryUrl($key, now()->addHours(24)) : null;
+        return $this->path_foto
+            ? Storage::disk('public')->temporaryUrl($this->path_foto, now()->addHours(24))
+            : null;
     }
 }

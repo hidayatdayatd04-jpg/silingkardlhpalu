@@ -97,7 +97,7 @@
             :label="$field['label']"
             :error="$err"
             :currentFile="$currentFile"
-            :hint="$fieldAccept ? 'Format: '.strtoupper(str_replace(['.', ','], ['', ', '], $fieldAccept)).' (Max: 2MB)' : 'Max: 2MB'"
+            :hint="$fieldAccept ? 'Format: '.strtoupper(str_replace(['.', ','], ['', ', '], $fieldAccept)).' (Max: 5MB)' : 'Max: 5MB'"
             :accept="$fieldAccept"
             :required="!$record->exists && $isRequired"
         />
@@ -114,7 +114,7 @@
         $canAddNew = $allowAddNew ? true : ! $record->exists;
     @endphp
     <div class="sm:col-span-2">
-        @if($record->exists && $record instanceof \App\Models\Laporan && $record->fotos && $record->fotos->isNotEmpty())
+        @if($record->exists && method_exists($record, 'fotos') && $record->fotos && $record->fotos->isNotEmpty())
             <label class="mb-1.5 block text-sm font-semibold text-ink-800">{{ $field['label'] }}</label>
             @if($canAddNew)
                 <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat (untuk menambah foto baru, gunakan unggahan di bawah).</p>
@@ -123,8 +123,8 @@
             @endif
             <div class="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 @foreach($record->fotos as $foto)
-                    <a href="{{ Storage::url($foto->path_foto) }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                        <img src="{{ Storage::url($foto->path_foto) }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
+                    <a href="{{ $foto->fullUrl() }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                        <img src="{{ $foto->fullUrl() }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
                     </a>
                 @endforeach
             </div>
@@ -134,9 +134,9 @@
                         name="{{ $name }}"
                         :label="'Tambah Foto Baru'"
                         :max="5"
-                        :max-size-mb="2"
-                        :accept="$fieldAccept ?: 'image/jpeg,image/png'"
-                        hint="Maksimal 5 foto, JPG/PNG, 2MB per foto."
+                        :max-size-mb="5"
+                        :accept="$fieldAccept ?: 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif'"
+                        hint="Maksimal 5 foto, JPG/PNG/WEBP/AVIF/HEIC, 5MB per foto."
                     />
                 </div>
             @endif
@@ -145,10 +145,10 @@
                 name="{{ $name }}"
                 :label="$field['label']"
                 :max="5"
-                :max-size-mb="2"
-                :accept="$fieldAccept ?: 'image/jpeg,image/png'"
+                :max-size-mb="5"
+                :accept="$fieldAccept ?: 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif'"
                 :required="$isRequired"
-                hint="Maksimal 5 foto, JPG/PNG, 2MB per foto."
+                hint="Maksimal 5 foto, JPG/PNG/WEBP/AVIF/HEIC, 5MB per foto."
             />
         @else
             <p class="text-xs text-slate-500">Belum ada foto lampiran dari masyarakat.</p>

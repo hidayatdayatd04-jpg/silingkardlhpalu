@@ -2,8 +2,8 @@
     'name' => 'photos',
     'label' => 'Lampiran Foto',
     'max' => 5,
-    'maxSizeMb' => 2,
-    'accept' => 'image/jpeg,image/png',
+    'maxSizeMb' => 5,
+    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
     'hint' => null,
     'required' => false,
     'error' => null,
@@ -49,7 +49,7 @@
         <p class="text-sm font-semibold text-ink-700">
             Seret &amp; lepas foto, atau <span class="text-brand-600">klik untuk pilih</span>
         </p>
-        <p class="text-xs text-slate-500">JPG / PNG · maks {{ $maxSizeMb }}MB · hingga {{ $max }} foto</p>
+        <p class="text-xs text-slate-500">JPG / PNG / WEBP / AVIF / HEIC · maks {{ $maxSizeMb }}MB · hingga {{ $max }} foto</p>
 
         <input
             x-ref="input"
@@ -110,7 +110,7 @@
                     this.clientError = '';
                     Array.from(fileList).forEach((file) => {
                         if (this._dt.files.length >= opts.max) { this.clientError = 'Maksimal ' + opts.max + ' foto.'; return; }
-                        if (opts.accept.length && !opts.accept.includes(file.type)) { this.clientError = 'Format harus JPG atau PNG.'; return; }
+                        if (opts.accept.length && !opts.accept.some((a) => a === file.type || a === '.' + file.name.split('.').pop().toLowerCase())) { this.clientError = 'Format harus JPG, PNG, WEBP, AVIF, atau HEIC.'; return; }
                         if (file.size > opts.maxSize) { this.clientError = 'Ukuran maksimal ' + (opts.maxSize / 1048576) + 'MB.'; return; }
                         this._dt.items.add(file);
                         this.previews.push({ key: ++this._key, url: URL.createObjectURL(file), name: file.name });

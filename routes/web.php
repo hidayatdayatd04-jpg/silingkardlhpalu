@@ -15,20 +15,20 @@ use App\Models\Artikel;
 use App\Models\GpsVehicleCache;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanRekomendasi;
-use App\Models\ProfilDinas;
 use App\Models\Sosialisasi;
 use App\Models\SosialisasiPeserta;
 use App\Services\StatistikService;
-use App\Support\ProfileMarkdown;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
+    // DB berada di host remote (Neon) — cache hasil query homepage agar TTFB
+    // tidak membayar 3-5 round-trip database pada setiap request.
     return view('welcome', [
-        'profil' => ProfilDinas::current(),
         'statistik' => app(StatistikService::class)->summary(),
-        'artikels' => Artikel::published()->latest('tanggal_publish')->take(6)->with('user')->get(),
+        'artikels' => Cache::remember('artikel:beranda', now()->addMinutes(30), fn () => Artikel::published()->latest('tanggal_publish')->take(6)->with('user')->get()),
     ]);
 });
 
@@ -42,9 +42,7 @@ Route::get('/pengaduan', fn () => view('public.pengaduan'));
 
 Route::get('/armada', fn () => view('public.armada'));
 
-Route::get('/profil', fn () => view('public.profil', [
-    'profil' => ProfileMarkdown::load() ?? ProfilDinas::current(),
-]));
+Route::get('/profil', fn () => view('public.profil'));
 
 Route::get('/tentang', fn () => view('public.tentang-kami'));
 
@@ -76,7 +74,8 @@ Route::get('/api/tata-lingkungan/files', [App\Http\Controllers\TataLingkunganCon
 
 // Tata Penataan Public Routes
 Route::get('/pengaduan-tata-penataan', fn () => view('public.pengaduan-tata-penataan'));
-Route::get('/cek-pengaduan-tata-penataan', fn () => view('public.cek-pengaduan-tata-penataan'))->middleware('throttle:30,1');
+// Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
+Route::redirect('/cek-pengaduan-tata-penataan', '/lacak');
 Route::get('/peta-objek-pengawasan', fn () => view('public.peta-objek-pengawasan'));
 
 Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->middleware('throttle:30,1')->name('feedback.store');
@@ -120,20 +119,6 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
     Route::put('/peta/layer/{layer}/feature/{featureIndex}', [\App\Http\Controllers\Admin\PetaController::class, 'updateFeature'])->name('peta.feature.update');
     Route::delete('/peta/layer/{layer}/feature', [\App\Http\Controllers\Admin\PetaController::class, 'deleteFeature'])->name('peta.feature.delete');
 
-    // Component Demo (only for development)
-    if (app()->environment('local')) {
-        Route::get('/component-demo', fn() => view('admin.component-demo'))->name('component-demo');
-
-        // Task 9 — PoC wire:navigate (SPA-like Livewire) — khusus environment lokal.
-        // Halaman memakai layout terpisah (layouts.admin-navigate-poc) yang TIDAK
-        // memuat app.js sendiri sehingga tidak terjadi double-Alpine dengan
-        // Alpine yang dibundel @livewireScripts. Lihat docs/perf/task09-...md.
-        Route::get('/navigate-poc', fn () => view('admin.navigate-poc.index'))->name('navigate-poc.index');
-        Route::get('/navigate-poc/item/{n}', fn (int $n) => view('admin.navigate-poc.show', ['n' => $n]))->name('navigate-poc.show');
-    }
-
-    Route::get('/ulasan-masyarakat', [\App\Http\Controllers\Admin\UlasanMasyarakatController::class, 'index'])->name('ulasan-masyarakat.index');
-
     // A. Audit / Activity Log (superadmin only — dicek di controller)
     Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/export', [ActivityLogController::class, 'export'])->name('activity-log.export');
@@ -150,13 +135,20 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('/settings/ai-providers', [SettingController::class, 'storeProvider'])->name('settings.providers.store');
+    Route::post('/settings/ai-providers/models', [SettingController::class, 'fetchModels'])->name('settings.providers.models');
+    Route::put('/settings/ai-providers/{provider}', [SettingController::class, 'updateProvider'])->name('settings.providers.update');
+    Route::delete('/settings/ai-providers/{provider}', [SettingController::class, 'destroyProvider'])->name('settings.providers.destroy');
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 
     // E. Backup / Restore Database (superadmin only — dicek di controller)
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
+    Route::get('/backup/progress', [BackupController::class, 'progress'])->name('backup.progress');
+    Route::post('/backup/cancel', [BackupController::class, 'cancel'])->name('backup.cancel');
     Route::get('/backup/{file}/download', [BackupController::class, 'download'])->name('backup.download');
     Route::post('/backup/restore', [BackupController::class, 'restore'])->name('backup.restore');
+    Route::post('/backup/bulk-delete', [BackupController::class, 'destroyMany'])->name('backup.destroy-many');
     Route::delete('/backup/{file}', [BackupController::class, 'destroy'])->name('backup.destroy');
 
     // D. (Import dihapus) — export tetap di bawah wildcard /{resource}
@@ -198,7 +190,8 @@ Route::get('/sosialisasi/{sosialisasi}/sertifikat/{peserta}.pdf', function (Sosi
 
 // Pengendalian Public Routes
 Route::get('/pengaduan-pengendalian', fn () => view('public.pengaduan-pengendalian'));
-Route::get('/cek-pengaduan-pengendalian', fn () => view('public.cek-pengaduan-pengendalian'))->middleware('throttle:30,1');
+// Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
+Route::redirect('/cek-pengaduan-pengendalian', '/lacak');
 Route::get('/permohonan-rekomendasi', fn () => view('public.permohonan-rekomendasi'));
 Route::get('/cek-permohonan-rekomendasi', fn () => view('public.cek-permohonan-rekomendasi'))->middleware('throttle:30,1');
 
@@ -218,7 +211,8 @@ Route::get('/syarat-ketentuan', fn () => view('public.syarat-ketentuan'));
 
 // RTH Public Routes
 Route::get('/pengaduan-rth', fn () => view('public.pengaduan-rth'));
-Route::get('/cek-pengaduan-rth', fn () => view('public.cek-pengaduan-rth'))->middleware('throttle:30,1');
+// Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
+Route::redirect('/cek-pengaduan-rth', '/lacak');
 Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
 Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middleware('throttle:30,1');
 
@@ -226,7 +220,8 @@ Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middl
 Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index']);
 Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers']);
 Route::get('/pengaduan-sampah', fn () => view('public.pengaduan-sampah'));
-Route::get('/cek-pengaduan-sampah', fn () => view('public.cek-pengaduan-sampah'))->middleware('throttle:30,1');
+// Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
+Route::redirect('/cek-pengaduan-sampah', '/lacak');
 Route::get('/registrasi-usaha-lb3', fn () => view('public.registrasi-usaha-lb3'));
 Route::get('/cek-registrasi-lb3', fn () => view('public.cek-registrasi-lb3'))->middleware('throttle:30,1');
 Route::get('/pengajuan-rintek-pertek', fn () => view('public.pengajuan-rintek-pertek'));

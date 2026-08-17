@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Requests\StoreRegistrasiUsahaLb3Request;
-use App\Models\JenisLb3;
 use App\Models\RegistrasiUsahaLb3;
 use Livewire\Component;
 
@@ -11,41 +10,41 @@ new class extends Component
     public ?string $nomor_telepon = null;
     public ?string $email = null;
     public ?string $alamat = null;
-    public ?string $jenis_lb3_id = null;
-    public ?int $lainnyaId = null;
+    public ?string $jenis_lb3 = null;
     public ?string $jenis_lb3_lainnya = null;
 
     public ?string $successNumber = null;
-
-    public function mount(): void
-    {
-        $this->lainnyaId = JenisLb3::where('nama', 'Lainnya')->value('id');
-    }
 
     public function submit(): void
     {
         $validated = $this->validate((new StoreRegistrasiUsahaLb3Request())->rules());
 
-        if ((int) $this->jenis_lb3_id === (int) $this->lainnyaId && blank($this->jenis_lb3_lainnya)) {
+        if ($this->jenis_lb3 === 'Lainnya' && blank($this->jenis_lb3_lainnya)) {
             $this->addError('jenis_lb3_lainnya', __('Mohon isi jenis LB3 lainnya.'));
 
             return;
         }
 
         $registrasi = RegistrasiUsahaLb3::create(array_merge($validated, [
-            'jenis_lb3_lainnya' => ((int) $this->jenis_lb3_id === (int) $this->lainnyaId) ? $this->jenis_lb3_lainnya : null,
+            'jenis_lb3_lainnya' => ($this->jenis_lb3 === 'Lainnya') ? $this->jenis_lb3_lainnya : null,
         ]));
 
         $this->successNumber = $registrasi->nomor_registrasi;
-        $this->reset(['nama_perusahaan', 'nomor_telepon', 'email', 'alamat', 'jenis_lb3_id', 'jenis_lb3_lainnya']);
+        $this->reset(['nama_perusahaan', 'nomor_telepon', 'email', 'alamat', 'jenis_lb3', 'jenis_lb3_lainnya']);
     }
 
     public function getJenisOptions(): array
     {
-        return JenisLb3::orderByRaw("CASE WHEN nama = 'Lainnya' THEN 1 ELSE 0 END")
-            ->orderBy('nama')
-            ->pluck('nama', 'id')
-            ->all();
+        $options = [
+            'Pengumpul LB3',
+            'Pengangkut LB3',
+            'Pemanfaat LB3',
+            'Pengolah LB3',
+            'Penimbun LB3',
+            'Lainnya',
+        ];
+
+        return array_combine($options, $options);
     }
 };
 ?>
@@ -53,13 +52,13 @@ new class extends Component
 <div class="fi-form-card bg-white dark:bg-slate-950 rounded-2xl p-6 md:p-8 shadow-[0_1px_3px_rgba(13,43,29,0.06),0_12px_32px_-12px_rgba(13,43,29,0.10)] max-w-2xl mx-auto">
     @if ($successNumber)
         <div class="space-y-6 text-center py-8">
-            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto"><x-icons.berhasil class="size-8" /></div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Registrasi Berhasil') }}</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('Simpan nomor registrasi LB3 Anda untuk referensi dan pengecekan status.') }}</p>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Registrasi') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Registrasi') }}</span>
                 <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider font-mono">{{ $successNumber }}</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -116,8 +115,8 @@ new class extends Component
             />
 
             <x-public.select
-                wire:model="jenis_lb3_id"
-                name="jenis_lb3_id"
+                wire:model="jenis_lb3"
+                name="jenis_lb3"
                 label="{{ __('Jenis LB3') }}"
                 :options="$this->getJenisOptions()"
                 :searchable="true"
@@ -125,7 +124,7 @@ new class extends Component
                 required
             />
 
-            @if ((int) $jenis_lb3_id === (int) $lainnyaId)
+            @if ($jenis_lb3 === 'Lainnya')
                 <x-public.input
                     wire:model="jenis_lb3_lainnya"
                     name="jenis_lb3_lainnya"
@@ -143,10 +142,9 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .fi-form-card {
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-submit-btn {
@@ -156,7 +154,7 @@ new class extends Component
             border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 15px;
             font-weight: 700;
             letter-spacing: .2px;

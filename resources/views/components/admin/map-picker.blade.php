@@ -57,8 +57,6 @@
 
 @once
     @push('scripts')
-    {{-- Task 5: kelas peta (DlhZoomControl, DlhBasemapSwitcher, dll.) dimuat on-demand via map-bundle --}}
-    @vite('resources/js/map-bundle.js')
     <script>
         function mapPicker(cfg) {
             return {
@@ -79,7 +77,7 @@
                             attributionControl: false
                         });
                         self.map.addControl(new DlhZoomControl(), 'top-left');
-if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl(), 'top-right');
+if (window.DlhWeatherControl) self.map.addControl(new DlhWeatherControl(), 'top-right');
                         if (window.DlhBasemapSwitcher) self.map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
                         if (window.dlhAddLocBtn) dlhAddLocBtn(self.map);
                         if (hasInit) self.setMarker(cfg.initLat, cfg.initLng, false);

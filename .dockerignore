@@ -1,19 +1,49 @@
+# VCS & editor
 .git
 .github
 .vscode
 .idea
+.claude
+.cursor
+.mimocode
+.DS_Store
+Thumbs.db
+
+# Dependensi & build output — dibangun ulang di dalam image
 node_modules
+vendor
+public/build
+public/hot
+public/storage
+
+# Runtime / cache Laravel
+bootstrap/cache/*
 storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+storage/app/private/*
+storage/app/public/*
+storage/pail
+*.log
+
+# Data lokal berukuran besar (tidak dibutuhkan di image)
+bahan
+documentation
+Data SHP Valid
+Test Peta Data
+image command
+recordings
+logs
+*.zip
+*.sqlite
+*.db
+
+# Environment — kredensial tidak boleh masuk image
 .env
 .env.*
 !.env.example
+
+# Dokumentasi lain tidak dibutuhkan di image
 *.md
 !README.md
-tests
-scripts
-*.log
-.DS_Store
-Thumbs.db

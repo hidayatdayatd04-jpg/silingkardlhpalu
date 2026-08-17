@@ -23,3 +23,29 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ── Kompresi GZIP (mod_deflate) — turunkan ukuran transfer CSS/JS/HTML/font ──
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml application/x-font-ttf application/vnd.ms-fontobject image/svg+xml
+</IfModule>
+
+# ── Cache header untuk aset statis (mod_expires + mod_headers) ──
+<IfModule mod_expires.c>
+    ExpiresActive On
+    <FilesMatch "\.(css|js)$">
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$">
+        ExpiresDefault "access plus 30 days"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$">
+        Header set Cache-Control "public"
+    </FilesMatch>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

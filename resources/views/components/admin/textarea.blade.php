@@ -101,8 +101,7 @@
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
-        .ta-field { position: relative; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; margin-bottom: 4px; }
+        .ta-field { position: relative; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; margin-bottom: 4px; }
         .ta-field-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .ta-field-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; letter-spacing: 0.01em; }
         .ta-required { color: #10b981; font-size: 13px; font-weight: 400; margin-left: 2px; }
@@ -114,7 +113,7 @@
         .ta-shell--focus, .ta-shell.ta-shell--focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); background: #fff; }
         .ta-shell--focus::before { transform: scaleY(1); }
         .ta-shell--error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08); }
-        .ta-input { width: 100%; display: block; border: none; outline: none; resize: none; background: transparent; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.55; color: #1e293b; padding: 14px 16px 34px 18px; }
+        .ta-input { width: 100%; display: block; border: none; outline: none; resize: none; background: transparent; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.55; color: #1e293b; padding: 14px 16px 34px 18px; }
         .ta-input::placeholder { color: #94a3b8; font-weight: 400; font-size: 13.5px; }
         .ta-input--disabled { cursor: not-allowed; opacity: 0.5; }
         .ta-input--readonly { cursor: not-allowed; }
@@ -124,7 +123,7 @@
         .ta-counter { font-size: 12px; font-weight: 500; color: #94a3b8; background: #f0fdf4; padding: 3px 10px; border-radius: 20px; pointer-events: auto; transition: color .15s ease, background .15s ease; white-space: nowrap; font-variant-numeric: tabular-nums; }
         .ta-counter--warn { color: #d97706; background: #fef3c7; }
         .ta-counter--full { color: #fff; background: #ef4444; }
-        .ta-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 500; color: #ef4444; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .ta-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 500; color: #ef4444; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .ta-error svg { width: 14px; height: 14px; flex-shrink: 0; }
         .dark .ta-field-label { color: #e2e8f0; }
         .dark .ta-shell { background: #1e293b; border-color: #334155; }

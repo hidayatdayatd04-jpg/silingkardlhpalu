@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            if (! Schema::hasColumn('users', 'photo_path')) {
+        Schema::table('user', function (Blueprint $table) {
+            if (! Schema::hasColumn('user', 'photo_path')) {
                 $table->string('photo_path')->nullable();
             }
-            if (! Schema::hasColumn('users', 'preferences')) {
+            if (! Schema::hasColumn('user', 'preferences')) {
                 $table->json('preferences')->nullable();
             }
         });
@@ -20,7 +20,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('user', function (Blueprint $table) {
             $table->dropColumn(['photo_path', 'preferences']);
         });
     }

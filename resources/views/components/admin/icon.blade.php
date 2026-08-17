@@ -20,6 +20,7 @@
         
         // Actions
         'plus' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/>',
+        'device-floppy' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2z"/><path d="M7 3v5h9"/><path d="M13 11h3"/><path d="M13 15h3"/><path d="M9 11h.01"/><path d="M9 15h.01"/>',
         'edit' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/><path d="M16 5l3 3"/>',
         'trash' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>',
         'eye' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>',
@@ -84,8 +85,10 @@
         'bin' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>',
         'presentation' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 20l-12 -2l0 -14l12 2l0 12z"/><path d="M3 20l0 -10"/><path d="M15 10l6 -2"/>',
         'news' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-14a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2z"/><path d="M7 10h2"/><path d="M7 14h6"/><path d="M13 10h4"/>',
+        'image' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8l.01 0"/><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"/><path d="M3 16l5 -5c1.5 -1.5 3.5 -1.5 5 0l5 5"/><path d="M14 14l1 -1c1 -1 3 -1 4 0l3 3"/>',
         'star' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2l3 6l7 1l-5 5l1 7l-6 -3l-6 3l1 -7l-5 -5l7 -1z"/>',
         'send' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M22 2l-7 20l-4 -9l-9 -4z"/><path d="M22 2l-11 11"/>',
+        'tag' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.828 7.828a2 2 0 0 0 2.828 0l5.172 -5.172a2 2 0 0 0 0 -2.828l-7.828 -7.828a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3z"/>',
         'user-check' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M15 11l2 2l4 -4"/>',
         'whatsapp' => '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.102.117-.204.131-.378.044-.174-.087-.735-.271-1.4-.863-.517-.46-.866-1.03-1.046-1.203-.087-.174-.009-.268.066-.355.068-.068.174-.174.262-.261.087-.087.116-.152.174-.262.058-.087.029-.174-.015-.261-.044-.087-.394-1.016-.555-1.39-.145-.37-.295-.32-.394-.326-.102-.006-.222-.008-.34-.008a.656.656 0 0 0-.47.222c-.16.174-.62.607-.62 1.48 0 .873.638 1.716.727 3.074.149.198 2.096 3.2 5.077 4.487.421.306 1.262.489 1.694.373.422.135 1.36.116 1.871.07.339-.05 1.03-.42 1.176-.827.145-.407.145-.756.102-.827-.044-.07-.16-.116-.334-.203m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 0-1.51-5.26c0-5.45 4.215-9.396 9.397-9.396 1.74 0 3.365-.474 4.77-1.296l4.572 1.203-1.229-4.38a9.32 9.32 0 0 0 2.182-5.98c0-5.45-4.216-9.397-9.397-9.397M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.358.101 11.94c-.003 2.074.543 4.097 1.577 5.885l-1.657 6.115 6.18-1.621a11.9 11.9 0 0 0 5.845 1.49h.005c6.582 0 11.942-5.358 11.945-11.94a11.857 11.857 0 0 0-3.486-8.42"/>',
         
@@ -101,20 +104,26 @@
         'user-plus' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 11l4 0"/><path d="M18 9l0 4"/>',
         'book-open' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/>',
         'palette' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c4.5 0 8 3.5 8 8c0 3 -1.5 5.5 -4 7.5c-1 .8 -2 1.5 -2 2.5v2h-4v-2c0 -1 -1 -1.7 -2 -2.5c-2.5 -2 -4 -4.5 -4 -7.5c0 -4.5 3.5 -8 8 -8z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M7 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M17 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>',
+        'globe' => '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M12 3a16 16 0 0 1 4.8 9a16 16 0 0 1 -4.8 9a16 16 0 0 1 -4.8 -9a16 16 0 0 1 4.8 -9"/>',
     ];
 @endphp
 
-<svg 
-    {{ $attributes->merge(['class' => 'inline-block shrink-0']) }} 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="{{ $size }}" 
-    height="{{ $size }}" 
-    viewBox="0 0 24 24" 
-    fill="{{ $filled ? 'currentColor' : 'none' }}" 
-    stroke="{{ $filled ? 'none' : 'currentColor' }}" 
-    stroke-width="{{ $stroke }}" 
-    stroke-linecap="round" 
-    stroke-linejoin="round"
->
-    {!! $icons[$name] ?? $icons['alert-circle'] !!}
-</svg>
+@if($name === 'whatsapp')
+    {{-- Logo merek: pakai SVG WhatsApp full-color resmi, bukan path stroke generik. --}}
+    <x-icons.social.whatsapp {{ $attributes->merge(['class' => 'inline-block shrink-0']) }} style="width:{{ $size }}px;height:{{ $size }}px" />
+@else
+    <svg 
+        {{ $attributes->merge(['class' => 'inline-block shrink-0']) }} 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="{{ $size }}" 
+        height="{{ $size }}" 
+        viewBox="0 0 24 24" 
+        fill="{{ $filled ? 'currentColor' : 'none' }}" 
+        stroke="{{ $filled ? 'none' : 'currentColor' }}" 
+        stroke-width="{{ $stroke }}" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+    >
+        {!! $icons[$name] ?? $icons['alert-circle'] !!}
+    </svg>
+@endif

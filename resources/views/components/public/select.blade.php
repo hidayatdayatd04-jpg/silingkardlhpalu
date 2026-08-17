@@ -106,6 +106,7 @@
             x-ref="trigger"
             x-on:click="open = !open"
             :disabled="{{ $disabled ? 'true' : 'false' }}"
+            aria-label="{{ $label ?: $placeholder }}"
             class="fi-select-trigger {{ $hasError ? 'fi-select-trigger--error' : '' }} {{ $disabled ? 'fi-select-trigger--disabled' : '' }}"
         >
             <span x-show="!selected" class="fi-select-placeholder">{{ $placeholder }}</span>
@@ -183,11 +184,10 @@
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .fi-field {
             position: relative;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-label {
@@ -220,7 +220,7 @@
             border: 1.5px solid #dfe9e3;
             background: #fff;
             padding: 0 20px;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px;
             font-weight: 500;
             color: #12201a;
@@ -254,7 +254,7 @@
         }
 
         .fi-select-placeholder {
-            color: #9fb0a8;
+            color: #5f7268;
             font-weight: 400;
         }
 
@@ -312,14 +312,14 @@
             border: 1px solid #dfe9e3;
             background: #f4faf6;
             padding: 0 12px;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 12.5px;
             color: #12201a;
             outline: none;
             transition: border-color .15s ease, background .15s ease;
         }
 
-        .fi-select-search::placeholder { color: #9fb0a8; }
+        .fi-select-search::placeholder { color: #5f7268; }
         .fi-select-search:focus { border-color: #1ea567; background: #fff; }
 
         /* ── Options ── */
@@ -385,7 +385,7 @@
             padding: 24px 16px;
             text-align: center;
             font-size: 13px;
-            color: #9fb0a8;
+            color: #5f7268;
         }
 
         /* ── Error / Hint ── */
@@ -397,7 +397,7 @@
             font-size: 11.5px;
             font-weight: 500;
             color: #e0533d;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-error svg {
@@ -410,7 +410,7 @@
             margin-top: 6px;
             font-size: 12px;
             color: #5b6b63;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         /* ── Dark mode ── */

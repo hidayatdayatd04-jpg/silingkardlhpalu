@@ -26,7 +26,7 @@
             <x-admin.topbar.quick-action :user="$user" />
 
             {{-- Notifications --}}
-            <x-admin.topbar.notification-dropdown />
+            <x-admin.topbar.notification-dropdown :notifications="$notifications" :notification-count="$notificationCount" />
 
             {{-- Lihat Website --}}
             <x-admin.topbar.public-website />

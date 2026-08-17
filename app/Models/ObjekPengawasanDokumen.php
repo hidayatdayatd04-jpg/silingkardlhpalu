@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ObjekPengawasanDokumen extends Model
 {
+    protected $table = 'objek_pengawasans_dokumen';
+
     protected $fillable = [
         'objek_pengawasan_id',
         'jenis_dokumen',

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AiChatService;
 use App\Services\ChatKnowledgeBase;
-use App\Services\OpenRouterService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class ChatStreamController extends Controller
 {
-    public function stream(Request $request, OpenRouterService $openRouter, ChatKnowledgeBase $knowledgeBase)
+    public function stream(Request $request, AiChatService $aiChat, ChatKnowledgeBase $knowledgeBase)
     {
         $userMessage = trim($request->input('message', ''));
         $history     = $request->input('history', []);
@@ -57,11 +57,9 @@ class ChatStreamController extends Controller
                 'user_message' => $userMessage,
             ]);
 
-            $fullResponse = '';
-            foreach ($openRouter->streamChat($apiMessages) as $chunk) {
-                $fullResponse .= $chunk;
-            }
-            $fullResponse = trim($fullResponse);
+            // AiChatService mencoba provider aktif sesuai prioritas dan
+            // otomatis failover bila provider sebelumnya gagal/down.
+            $fullResponse = trim((string) $aiChat->chat($apiMessages));
 
             // Fallback cerdas bila AI mengembalikan respons kosong.
             if ($fullResponse === '') {

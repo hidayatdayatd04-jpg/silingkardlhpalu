@@ -14,11 +14,14 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      - DB_CONNECTION=pgsql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_DATABASE=${DB_DATABASE:-dlh_palu}
       - DB_USERNAME=${DB_USERNAME:-dlh_user}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - DB_SSLMODE=prefer
+      - DB_NEON_ENDPOINT=
     depends_on:
       db:
         condition: service_healthy
@@ -31,7 +34,6 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - .:/var/www
       - ./storage:/var/www/storage
@@ -42,20 +44,17 @@ services:
       - dlh-network
 
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     container_name: dlh-palu-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-dlh_palu}
-      MYSQL_USER: ${DB_USERNAME:-dlh_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      POSTGRES_DB: ${DB_DATABASE:-dlh_palu}
+      POSTGRES_USER: ${DB_USERNAME:-dlh_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
-      - db-data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-dlh_user} -d ${DB_DATABASE:-dlh_palu}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,18 +69,23 @@ services:
     container_name: dlh-palu-queue
     restart: unless-stopped
     working_dir: /var/www
-    command: php artisan queue:work --tries=3 --timeout=60
+    # --timeout mengikuti DB_QUEUE_RETRY_AFTER (1900) agar job panjang
+    # (backup/restore ~30 menit) tidak dibunuh di tengah jalan.
+    command: php artisan queue:work --tries=3 --timeout=1900
     volumes:
       - .:/var/www
       - ./storage:/var/www/storage
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      - DB_CONNECTION=pgsql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_DATABASE=${DB_DATABASE:-dlh_palu}
       - DB_USERNAME=${DB_USERNAME:-dlh_user}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - DB_SSLMODE=prefer
+      - DB_NEON_ENDPOINT=
     depends_on:
       db:
         condition: service_healthy
@@ -104,11 +108,14 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      - DB_CONNECTION=pgsql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_DATABASE=${DB_DATABASE:-dlh_palu}
       - DB_USERNAME=${DB_USERNAME:-dlh_user}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - DB_SSLMODE=prefer
+      - DB_NEON_ENDPOINT=
     depends_on:
       db:
         condition: service_healthy

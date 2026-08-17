@@ -5,11 +5,10 @@ namespace App\Models;
 use App\Enums\StatusPengaduanRth;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PermohonanPinjamTaman extends Model
 {
-    protected $table = 'permohonan_pinjam_tamans';
+    protected $table = 'permohonan_pinjam_taman';
 
     protected $fillable = [
         'nomor_tiket',
@@ -17,8 +16,7 @@ class PermohonanPinjamTaman extends Model
         'nomor_hp',
         'email',
         'nama_kegiatan',
-        'taman_kota_id',
-        'nama_taman_manual',
+        'nama_taman',
         'tanggal_kegiatan',
         'tanggal_selesai',
         'surat_permohonan',
@@ -56,22 +54,17 @@ class PermohonanPinjamTaman extends Model
         });
     }
 
-    public function tamanKota(): BelongsTo
-    {
-        return $this->belongsTo(TamanKota::class);
-    }
-
     public function feedback(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
         return $this->morphOne(TicketFeedback::class, 'feedbackable');
     }
 
-    public static function hasConflict(int $tamanKotaId, \DateTimeInterface $start, ?\DateTimeInterface $end = null): bool
+    public static function hasConflict(string $namaTaman, \DateTimeInterface $start, ?\DateTimeInterface $end = null): bool
     {
         $end ??= $start;
 
         return static::query()
-            ->where('taman_kota_id', $tamanKotaId)
+            ->where('nama_taman', $namaTaman)
             ->where('status', StatusPengaduanRth::DITINJAU->value)
             ->where(function ($query) use ($start, $end) {
                 $query->whereBetween('tanggal_kegiatan', [$start, $end])

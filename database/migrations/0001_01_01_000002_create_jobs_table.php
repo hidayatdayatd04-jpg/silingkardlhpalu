@@ -34,7 +34,7 @@ return new class extends Migration
             $table->integer('finished_at')->nullable();
         });
 
-        Schema::create('failed_jobs', function (Blueprint $table) {
+        Schema::create('failed_job', function (Blueprint $table) {
             $table->id();
             $table->string('uuid')->unique();
             $table->text('connection');
@@ -52,6 +52,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('jobs');
         Schema::dropIfExists('job_batches');
-        Schema::dropIfExists('failed_jobs');
+        Schema::dropIfExists('failed_job');
     }
 };

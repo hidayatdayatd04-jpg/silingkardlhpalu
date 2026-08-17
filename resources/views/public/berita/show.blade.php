@@ -6,6 +6,19 @@
     @section('og_image', url('/file/og?path='.urlencode($artikel->thumbnail)))
 @endif
 
+@php
+    // Bersihkan konten mentah dari editor (Jodit) yang kerap menyisipkan
+    // paragraf/baris kosong (<p></p>, <p><br></p>, &nbsp;) sehingga tampilan
+    // detail tidak berantakan dan tidak banyak spasi kosong.
+    $kontenBersih = (string) $artikel->konten;
+    do {
+        $kontenPrev = $kontenBersih;
+        $kontenBersih = preg_replace('/<(p|div|span)[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/i', '', $kontenBersih);
+    } while ($kontenBersih !== $kontenPrev);
+    $kontenBersih = trim($kontenBersih);
+    $kontenKosong = trim(strip_tags($kontenBersih)) === '' && ! preg_match('/<(img|video|table|iframe)\b/i', $kontenBersih);
+@endphp
+
 @section('content')
 <article class="max-w-3xl mx-auto">
     {{-- Kembali --}}
@@ -17,7 +30,7 @@
 
     {{-- Header --}}
     <header class="reveal mt-6 text-center">
-        <h1 class="mt-5 text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.1] tracking-tight text-slate-900 dark:text-white">{{ $artikel->judul }}</h1>
+        <h1 class="mt-5 text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-[1.1] tracking-tight text-slate-900 dark:text-white">{{ $artikel->judul }}</h1>
         <div class="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
             <span class="inline-flex items-center gap-1.5">
                 <svg class="size-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg>
@@ -41,14 +54,14 @@
 
     {{-- Konten --}}
     <div class="reveal mt-10 text-[1.05rem] leading-8 text-slate-700 dark:text-slate-300
-                [&_p]:mb-5 [&_h1]:mt-9 [&_h1]:mb-3 [&_h1]:text-3xl [&_h1]:font-extrabold [&_h1]:text-slate-900 dark:[&_h1]:text-white [&_h1]:tracking-tight
-                [&_h2]:mt-9 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-extrabold [&_h2]:text-slate-900 dark:[&_h2]:text-white [&_h2]:tracking-tight
+                [&_p]:mb-5 [&_p]:empty:hidden [&_h1]:mt-9 [&_h1]:mb-3 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-slate-900 dark:[&_h1]:text-white [&_h1]:tracking-tight
+                [&_h2]:mt-9 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-slate-900 dark:[&_h2]:text-white [&_h2]:tracking-tight
                 [&_h3]:mt-7 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-slate-900 dark:[&_h3]:text-white
                 [&_h4]:mt-6 [&_h4]:mb-2 [&_h4]:text-lg [&_h4]:font-bold [&_h4]:text-slate-900 dark:[&_h4]:text-white
                 [&_ul]:my-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ol]:my-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2
                 [&_li]:mb-1
                 [&_a]:font-semibold [&_a]:text-brand-600 dark:[&_a]:text-brand-400 [&_a]:underline [&_a]:decoration-brand-500/30 [&_a]:underline-offset-2
-                [&_img]:my-6 [&_img]:rounded-2xl [&_img]:shadow-lg [&_img]:max-w-full [&_img]:h-auto
+                [&_img]:mx-auto [&_img]:my-6 [&_img]:rounded-2xl [&_img]:shadow-lg [&_img]:max-w-full [&_img]:h-auto
                 [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-brand-500 [&_blockquote]:bg-brand-50/50 dark:[&_blockquote]:bg-brand-900/15 [&_blockquote]:rounded-r-xl [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:italic
                 [&_strong]:text-slate-900 dark:[&_strong]:text-white [&_em]:italic
                 [&_pre]:my-6 [&_pre]:rounded-xl [&_pre]:bg-slate-900 [&_pre]:p-5 [&_pre]:overflow-x-auto [&_pre]:text-sm [&_pre]:text-slate-100
@@ -63,7 +76,14 @@
                 [&_figure]:my-6 [&_figure]:rounded-2xl [&_figure]:overflow-hidden
                 [&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-slate-500 dark:[&_figcaption]:text-slate-400
                 [&_sub]:text-xs [&_sub]:align-sub [&_sup]:text-xs [&_sup]:align-super">
-        {!! $artikel->konten !!}
+        @if ($kontenKosong)
+            <div class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 px-6 py-10 text-center">
+                <svg class="size-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                <p class="text-sm text-slate-400 dark:text-slate-500">Konten artikel belum diisi.</p>
+            </div>
+        @else
+            {!! $kontenBersih !!}
+        @endif
     </div>
 
     {{-- Bagikan + kembali --}}
@@ -71,7 +91,7 @@
         <div class="flex items-center gap-2.5">
             <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Bagikan:') }}</span>
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}" target="_blank" rel="noopener noreferrer" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all hover:-translate-y-0.5" title="Facebook">
-                <svg class="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                <x-icons.social.facebook class="size-4" />
             </a>
             <button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href).then(()=>{this.querySelector('span').textContent='{{ __('Tersalin!') }}';})" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-slate-700 transition-all hover:-translate-y-0.5 relative" title="{{ __('Salin tautan') }}">
                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg>

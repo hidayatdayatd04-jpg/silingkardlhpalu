@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('permohonan_pinjam_tamans')) {
-            Schema::create('permohonan_pinjam_tamans', function (Blueprint $table) {
+        if (! Schema::hasTable('permohonan_pinjam_taman')) {
+            Schema::create('permohonan_pinjam_taman', function (Blueprint $table) {
                 $table->id();
                 $table->string('nomor_tiket', 20)->unique();
                 $table->string('nama_pemohon');
                 $table->string('nama_kegiatan');
-                $table->foreignId('taman_kota_id')->constrained('taman_kotas')->cascadeOnDelete();
+                $table->string('nama_taman')->nullable();
                 $table->dateTime('tanggal_kegiatan');
                 $table->dateTime('tanggal_selesai')->nullable();
                 $table->string('surat_permohonan');
@@ -26,8 +26,8 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasTable('data_tanam_pohons')) {
-            Schema::create('data_tanam_pohons', function (Blueprint $table) {
+        if (! Schema::hasTable('data_tanam_pohon')) {
+            Schema::create('data_tanam_pohon', function (Blueprint $table) {
                 $table->id();
                 $table->string('nama_penanggung_jawab');
                 $table->unsignedInteger('jumlah_pohon');
@@ -42,7 +42,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('data_tanam_pohons');
-        Schema::dropIfExists('permohonan_pinjam_tamans');
+        Schema::dropIfExists('data_tanam_pohon');
+        Schema::dropIfExists('permohonan_pinjam_taman');
     }
 };

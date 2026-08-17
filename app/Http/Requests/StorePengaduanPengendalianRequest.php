@@ -24,7 +24,7 @@ class StorePengaduanPengendalianRequest extends FormRequest
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'deskripsi' => ['required', 'string', 'max:5000'],
             'photos' => ['required', 'array', 'min:1', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photos.*' => ['mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ];
     }
 

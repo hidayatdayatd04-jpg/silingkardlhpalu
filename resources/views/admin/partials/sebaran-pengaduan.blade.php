@@ -89,7 +89,6 @@
 @endif
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
     <style>
         .pl-filter {
             background: linear-gradient(180deg, #ffffff, #f8fafc);
@@ -273,7 +272,6 @@
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (!document.getElementById('sebaran-pengaduan-map')) return;

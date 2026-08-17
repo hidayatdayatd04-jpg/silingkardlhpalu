@@ -40,7 +40,10 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Harus LEBIH BESAR dari durasi terlama job (backup/restore bisa
+            // ~30 menit). Kalau lebih kecil, worker mengira job "macet" dan
+            // menandainya gagal ("attempted too many times") padahal masih jalan.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 1900),
             'after_commit' => false,
         ],
 
@@ -123,7 +126,7 @@ return [
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'failed_jobs',
+        'table' => 'failed_job',
     ],
 
 ];

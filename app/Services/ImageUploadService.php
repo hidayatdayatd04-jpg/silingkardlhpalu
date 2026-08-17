@@ -3,28 +3,31 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\ImageManager;
+use RuntimeException;
 use Throwable;
 
 class ImageUploadService
 {
     /**
-     * Generate thumb (300px), medium (800px) and full (1920px) WebP variants
-     * from a single source image and store them on the given disk, grouped
-     * under a UUID folder (e.g. pengaduan/{uuid}/thumb.webp).
+     * Proses satu gambar sumber: orientasi EXIF diterapkan, diperkecil bila
+     * melebihi 1920px, lalu dikonversi ke WebP (metadata EXIF/GPS terhapus
+     * demi privasi) dan disimpan ke disk tujuan dengan NAMA ASLI file
+     * (hanya ekstensi yang diganti menjadi .webp), langsung di folder konteks
+     * — cukup SATU file, tanpa folder varian (mis.
+     * pengaduan-pengendalian/foto-bukti.webp).
      *
-     * Re-encoding to WebP strips all EXIF/GPS/device metadata (privacy safe).
-     * Orientation is applied from EXIF before stripping it.
+     * Bila sudah ada file dengan nama yang sama, ditambahkan sufiks -1, -2,
+     * dst agar file lama tidak tertimpa.
      *
      * @param  string  $sourcePath  Absolute path to a local image file.
      * @param  string  $context     Storage folder, e.g. "pengaduan-pengendalian".
      * @param  string  $disk        Laravel disk name (defaults to "public" -> B2).
-     * @return array{thumb:string,medium:string,full:string}
+     * @return string Path relatif terhadap root disk.
      */
-    public function upload(string $sourcePath, string $context, string $disk = 'public'): array
+    public function upload(string $sourcePath, string $context, string $disk = 'public'): string
     {
         $driverClass = extension_loaded('imagick')
             ? ImagickDriver::class
@@ -32,36 +35,75 @@ class ImageUploadService
 
         $manager = new ImageManager(new $driverClass);
 
-        $sizes = [
-            'thumb' => 300,
-            'medium' => 800,
-            'full' => 1920,
-        ];
+        $image = $manager->read($sourcePath);
 
-        $folder = rtrim($context, '/').'/'.Str::uuid()->toString();
-        $paths = [];
-
-        foreach ($sizes as $name => $width) {
-            $image = $manager->read($sourcePath);
-
-            // Apply EXIF orientation (rotates pixels), then strip metadata on re-encode.
-            try {
-                $image->orient();
-            } catch (Throwable $e) {
-                // orientation not available — continue without it
-            }
-
-            $image->scaleDown(width: $width);
-
-            // toWebp(80) re-encodes and drops EXIF/GPS metadata by default.
-            $encoded = $image->toWebp(80);
-
-            $path = $folder.'/'.$name.'.webp';
-            Storage::disk($disk)->put($path, (string) $encoded);
-
-            $paths[$name] = $path;
+        // Apply EXIF orientation (rotates pixels), then strip metadata on re-encode.
+        try {
+            $image->orient();
+        } catch (Throwable $e) {
+            // orientation not available — continue without it
         }
 
-        return $paths;
+        // Perkecil hanya bila melebihi 1920px (hemat ukuran tanpa merusak kualitas umum).
+        $image->scaleDown(width: 1920);
+
+        // WebP kualitas tinggi (85) agar tampilan tetap setara dengan aslinya.
+        $encoded = $image->toWebp(85);
+
+        // Pertahankan nama asli file (hanya ekstensi diganti .webp).
+        $baseName = $this->safeBaseName(basename($sourcePath));
+        $context = trim($context, '/');
+        $fileName = $this->uniqueName($baseName.'.webp', $context, $disk);
+        $path = ($context !== '' ? $context.'/' : '').$fileName;
+
+        $written = Storage::disk($disk)->put($path, (string) $encoded);
+
+        // Disk dikonfigurasi dengan throw=false sehingga kegagalan put()
+        // bersifat sunyi. Lempar exception agar job queue menandai foto
+        // sebagai 'failed' dan mencoba ulang, bukan mencatat path yang
+        // sebenarnya tidak pernah tertulis ke storage.
+        if ($written === false) {
+            throw new RuntimeException('Gagal menulis gambar ke storage: '.$path);
+        }
+
+        return $path;
+    }
+
+    /**
+     * Nama dasar dari nama file asli, dibersihkan dari karakter yang
+     * berbahaya bagi filesystem/URL. Spasi dan karakter unicode dipertahankan.
+     */
+    protected function safeBaseName(string $fileName): string
+    {
+        $base = (string) pathinfo($fileName, PATHINFO_FILENAME);
+        $base = str_replace(chr(0), '', $base);
+        $base = preg_replace('~[<>:"/\\\\|?*#%\r\n\t]~', '-', $base) ?? '';
+        $base = trim($base, " \t.-_");
+
+        return $base === '' ? 'foto' : $base;
+    }
+
+    /**
+     * Pastikan nama file unik di folder tujuan. Bila sudah ada file dengan
+     * nama yang sama, tambahkan sufiks -1, -2, dst agar file lama tidak
+     * tertimpa.
+     */
+    protected function uniqueName(string $filename, string $context, string $disk): string
+    {
+        $storage = Storage::disk($disk);
+        $dir = $context !== '' ? $context.'/' : '';
+
+        $base = (string) pathinfo($filename, PATHINFO_FILENAME);
+        $extension = (string) pathinfo($filename, PATHINFO_EXTENSION);
+
+        $candidate = $filename;
+        $suffix = 1;
+
+        while ($storage->exists($dir.$candidate)) {
+            $candidate = $base.'-'.$suffix.($extension !== '' ? '.'.$extension : '');
+            $suffix++;
+        }
+
+        return $candidate;
     }
 }

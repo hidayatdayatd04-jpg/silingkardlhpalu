@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sanksi extends Model
 {
+    protected $table = 'sanksi';
+
     protected $fillable = [
         'pelanggaran_id',
         'jenis_sanksi',
@@ -38,8 +40,8 @@ class Sanksi extends Model
             ObjekPengawasan::class,
             Pelanggaran::class,
             'id',        // Foreign key on pelanggarans table
-            'id',        // Foreign key on objek_pengawasans table
-            'pelanggaran_id', // Local key on sanksis table
+            'id',        // Foreign key on objek_pengawasan table
+            'pelanggaran_id', // Local key on sanksi table
             'objek_pengawasan_id' // Local key on pelanggarans table
         );
     }

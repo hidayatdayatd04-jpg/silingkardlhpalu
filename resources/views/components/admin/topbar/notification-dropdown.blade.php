@@ -67,6 +67,7 @@
         x-on:click="open = !open; if (open) refresh()"
         class="topbar-btn relative"
         title="Notifikasi"
+        :aria-label="count > 0 ? 'Notifikasi (' + count + ')' : 'Notifikasi'"
     >
         <x-admin.icon name="bell" :size="20" />
         <template x-if="count > 0">

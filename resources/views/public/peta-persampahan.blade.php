@@ -4,8 +4,6 @@
 @section('description', 'Peta interaktif titik TPA, TPST, Bank Sampah, TPS, pelacakan armada real-time, dan statistik timbulan sampah DLH Kota Palu.')
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
     .map-container {
         position: relative;
@@ -178,7 +176,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                     </span>
                     <div class="min-w-0">
-                        <h2 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-tight">{{ __('Pilih Tipe Kendaraan') }}</h2>
+                        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ __('Pilih Tipe Kendaraan') }}</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{{ __('Pilih tipe kendaraan untuk menampilkan jalur angkut sampah di peta.') }}</p>
                     </div>
                 </div>
@@ -292,7 +290,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-500 dark:text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
                         <span id="armada-toggle-label" class="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{{ __('Sembunyikan Armada') }}</span>
                         <label class="ml-1 cursor-pointer flex-shrink-0">
-                            <input type="checkbox" id="armada-toggle" class="sr-only" checked>
+                            <input type="checkbox" id="armada-toggle" class="sr-only" checked aria-label="{{ __('Sembunyikan Armada') }}">
                             <span class="dlh-switch" style="--switch-color:#10b981"></span>
                         </label>
                     </div>
@@ -314,8 +312,8 @@
 </div>
 
 @push('scripts')
-{{-- Task 5: peta persampahan memakai DlhMarkers/DlhZoomControl — muat map-bundle --}}
-@vite('resources/js/map-bundle.js')
+{{-- Task 5: peta persampahan lazy-load map via ensureMaplibreLoaded; charts tetap eager --}}
+@vite('resources/js/dashboard-charts.js')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var mapLayers = @json($layers);
@@ -336,14 +334,12 @@
 
         // Selalu inisialisasi peta walau tidak ada data layer
         function initMap() {
-            if (typeof dlhPetaPersampahan === 'function') {
+            window.ensureMaplibreLoaded(function () {
                 dlhPetaPersampahan('peta-persampahan-map', mapLayers, initialArmada, {
                     vehicleTypes: vehicleTypes,
                     defaultType: defaultType
                 });
-            } else {
-                setTimeout(initMap, 100);
-            }
+            });
         }
         initMap();
 

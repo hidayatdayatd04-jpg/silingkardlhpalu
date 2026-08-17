@@ -10,6 +10,5 @@
 </div>
 @endsection
 @push('scripts')
-{{-- Task 5: form pengaduan-sampah memakai peta MapLibre — muat map-bundle --}}
-@vite('resources/js/map-bundle.js')
+{{-- Task 5: form pengaduan-sampah lazy-load peta via ensureMaplibreLoaded --}}
 @endpush

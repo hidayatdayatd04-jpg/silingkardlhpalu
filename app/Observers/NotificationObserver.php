@@ -4,8 +4,10 @@ namespace App\Observers;
 
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
-use App\Models\Laporan;
 use App\Models\Pelanggaran;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
@@ -24,7 +26,12 @@ class NotificationObserver
     public function created(Model $model): void
     {
         match (true) {
-            $model instanceof Laporan => $this->laporan($model),
+            $model instanceof PengaduanPengendalian => $this->notify('pengendalian', 'megaphone', 'amber', 'Pengaduan Pengendalian Baru',
+                ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan.', 'pengaduan-pengendalian', $model->getKey()),
+            $model instanceof PengaduanSampah => $this->notify('sampah-lb3', 'megaphone', 'amber', 'Pengaduan Sampah Baru',
+                ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan.', 'pengaduan-sampah', $model->getKey()),
+            $model instanceof PengaduanRth => $this->notify('rth', 'megaphone', 'amber', 'Pengaduan RTH Baru',
+                ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan.', 'pengaduan-rth', $model->getKey()),
             $model instanceof PermohonanRekomendasi => $this->notify('rth', 'clipboard-check', 'indigo', 'Permohonan Rekomendasi Baru',
                 ($model->nama_perusahaan ?? $model->nama_pemohon ?? 'Pemohon').' mengajukan permohonan rekomendasi.', 'permohonan-rekomendasi', $model->getKey()),
             $model instanceof PengajuanRintekPertek => $this->notify('sampah-lb3', 'factory', 'blue', 'Pengajuan RINTEK/PERTEK Baru',
@@ -60,7 +67,9 @@ class NotificationObserver
         $statusValue = $model->status instanceof \BackedEnum ? $model->status->value : $model->status;
 
         match (true) {
-            $model instanceof Laporan => $this->laporanStatusChanged($model, $statusValue),
+            $model instanceof PengaduanPengendalian => $this->pengaduanStatusChanged($model, 'pengendalian', 'pengaduan-pengendalian', $statusValue),
+            $model instanceof PengaduanSampah => $this->pengaduanStatusChanged($model, 'sampah-lb3', 'pengaduan-sampah', $statusValue),
+            $model instanceof PengaduanRth => $this->pengaduanStatusChanged($model, 'rth', 'pengaduan-rth', $statusValue),
             $model instanceof PermohonanRekomendasi => $this->notify('rth', 'clipboard-check', 'indigo', 'Status Permohonan Berubah',
                 'Status permohonan #'.$model->id.' berubah menjadi '.$statusValue.'.', 'permohonan-rekomendasi', $model->getKey()),
             $model instanceof RegistrasiUsahaLb3 => $this->notify('sampah-lb3', 'building', 'amber', 'Status Registrasi LB3 Berubah',
@@ -71,53 +80,8 @@ class NotificationObserver
         };
     }
 
-    protected function laporan(Laporan $model): void
+    protected function pengaduanStatusChanged(Model $model, string $group, string $slug, string $newStatus): void
     {
-        $bidang = $model->bidang instanceof \BackedEnum ? $model->bidang->value : ($model->bidang ?? 'pengendalian');
-
-        $group = match ($bidang) {
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
-            default => 'pengendalian',
-        };
-
-        $slug = match ($group) {
-            'sampah-lb3' => 'pengaduan-sampah',
-            'rth' => 'pengaduan-rth',
-            'tata-penataan' => 'pengaduan-tata-penataan',
-            default => 'pengaduan-pengendalian',
-        };
-
-        $bidangLabel = match ($bidang) {
-            'sampah-lb3' => 'Sampah',
-            'rth' => 'RTH',
-            'tata-penataan' => 'Tata Penataan',
-            default => 'Pengendalian',
-        };
-
-        $this->notify($group, 'megaphone', 'amber', 'Pengaduan '.$bidangLabel.' Baru',
-            ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan.', $slug, $model->getKey());
-    }
-
-    protected function laporanStatusChanged(Laporan $model, string $newStatus): void
-    {
-        $bidang = $model->bidang instanceof \BackedEnum ? $model->bidang->value : ($model->bidang ?? 'pengendalian');
-
-        $group = match ($bidang) {
-            'sampah-lb3' => 'sampah-lb3',
-            'rth' => 'rth',
-            'tata-penataan' => 'tata-penataan',
-            default => 'pengendalian',
-        };
-
-        $slug = match ($group) {
-            'sampah-lb3' => 'pengaduan-sampah',
-            'rth' => 'pengaduan-rth',
-            'tata-penataan' => 'pengaduan-tata-penataan',
-            default => 'pengaduan-pengendalian',
-        };
-
         $color = match ($newStatus) {
             'Selesai' => 'emerald',
             'Ditolak' => 'rose',

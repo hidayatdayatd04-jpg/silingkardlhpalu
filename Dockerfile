@@ -3,9 +3,9 @@ FROM php:8.2-fpm AS base
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libxml2-dev libzip-dev \
+    libonig-dev libxml2-dev libzip-dev libpq-dev libicu-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions for Laravel
@@ -45,9 +45,8 @@ RUN composer dump-autoload --optimize
 # --- Production Stage ---
 FROM base AS production
 
-# Create www-data user if not exists
-RUN groupadd -g 1000 www-data && \
-    useradd -u 1000 -ms /bin/bash -g www-data www-data
+# NB: user www-data sudah tersedia di image php:8.2-fpm (uid 33),
+# tidak perlu dibuat ulang.
 
 # Copy built application
 COPY --from=build --chown=www-data:www-data /var/www /var/www
@@ -57,7 +56,7 @@ WORKDIR /var/www
 
 # Create storage directories
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions \
-    storage/framework/views storage/app/public bootstrap/cache \
+    storage/framework/views storage/app/public storage/app/private bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 

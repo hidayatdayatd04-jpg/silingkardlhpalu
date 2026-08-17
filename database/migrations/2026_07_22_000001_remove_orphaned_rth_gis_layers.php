@@ -9,7 +9,7 @@ return new class extends Migration
     {
         $excludedLayers = ['Taman Kota', 'Hutan Kota', 'Jalur Hijau', 'Pohon Pelindung', 'Aset RTH'];
 
-        DB::table('gis_data_layers')
+        DB::table('gis_data_layer')
             ->whereIn('nama_layer', $excludedLayers)
             ->where('bidang', 'rth')
             ->delete();

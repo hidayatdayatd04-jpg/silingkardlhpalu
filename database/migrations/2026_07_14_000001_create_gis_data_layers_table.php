@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('gis_data_layers', function (Blueprint $table) {
+        Schema::create('gis_data_layer', function (Blueprint $table) {
             $table->id();
             $table->string('bidang'); // pengendalian, sampah-lb3, rth, tata-penataan
             $table->string('nama_layer');
@@ -27,6 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('gis_data_layers');
+        Schema::dropIfExists('gis_data_layer');
     }
 };

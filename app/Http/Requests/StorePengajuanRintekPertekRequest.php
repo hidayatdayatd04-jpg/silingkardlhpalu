@@ -15,7 +15,7 @@ class StorePengajuanRintekPertekRequest extends FormRequest
 
     public function rules(): array
     {
-        $imagePdfRule = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
+        $imagePdfRule = ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'];
 
         return [
             'registrasi_usaha_lb3_id' => [
@@ -67,7 +67,7 @@ class StorePengajuanRintekPertekRequest extends FormRequest
     {
         return [
             '*.max' => 'Ukuran dokumen maksimal 5MB.',
-            '*.mimes' => 'Format dokumen tidak valid. Hanya menerima PDF, JPG, JPEG, dan PNG.',
+            '*.mimes' => 'Format dokumen tidak valid. Hanya menerima PDF, JPG, JPEG, PNG, WEBP, AVIF, HEIC, dan HEIF.',
             'nomor_telepon.regex' => 'Format nomor telepon tidak valid. Gunakan nomor Indonesia yang aktif.',
             'jenis_pengajuan.in' => 'Jenis pengajuan tidak valid.',
         ];

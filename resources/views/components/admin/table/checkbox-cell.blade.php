@@ -5,6 +5,7 @@
         type="checkbox"
         :value="{{ $value }}"
         x-model="selected"
+        aria-label="{{ __('Pilih baris') }}"
         class="size-4 cursor-pointer rounded-md border-slate-300 text-brand-600 transition focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-0 checked:bg-brand-600"
     >
 </td>

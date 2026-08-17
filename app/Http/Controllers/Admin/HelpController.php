@@ -11,7 +11,7 @@ class HelpController extends Controller
         $sections = [
             [
                 'title' => 'Memulai',
-                'icon'  => 'home',
+                'icon' => 'home',
                 'color' => 'brand',
                 'items' => [
                     ['q' => 'Bagaimana cara mengakses menu?', 'a' => 'Menu tersedia di sidebar kiri, dikelompokkan per bidang. Menu yang terkunci (ikon gembok) hanya bisa diakses jika Superadmin memberi izin tambahan pada akun Anda.'],
@@ -22,7 +22,7 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Mengelola Data',
-                'icon'  => 'table',
+                'icon' => 'table',
                 'color' => 'emerald',
                 'items' => [
                     ['q' => 'Bagaimana menambah / mengubah data?', 'a' => 'Buka modul yang diinginkan, klik "Tambah" untuk data baru, atau ikon pensil untuk mengubah. Isi form lalu simpan. Nomor tiket/registrasi dibuat otomatis.'],
@@ -33,7 +33,7 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Export & Import',
-                'icon'  => 'download',
+                'icon' => 'download',
                 'color' => 'blue',
                 'items' => [
                     ['q' => 'Format apa saja yang didukung export?', 'a' => 'Excel (.xlsx), CSV, dan PDF. Gunakan tiga ikon di toolbar: Excel berwarna hijau, CSV (lembar/Sheets), dan PDF.'],
@@ -43,7 +43,7 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Notifikasi',
-                'icon'  => 'bell',
+                'icon' => 'bell',
                 'color' => 'amber',
                 'items' => [
                     ['q' => 'Dari mana notifikasi berasal?', 'a' => 'Notifikasi muncul saat ada data baru dari masyarakat (pengaduan, permohonan, registrasi) sesuai bidang Anda. Ikon lonceng di kanan atas menampilkan jumlah yang belum dibaca dan diperbarui otomatis.'],
@@ -53,17 +53,17 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Profil & Pengaturan',
-                'icon'  => 'user',
+                'icon' => 'user',
                 'color' => 'purple',
                 'items' => [
-                    ['q' => 'Bagaimana cara mengubah foto profil?', 'a' => 'Buka menu Profil Saya, klik tombol "Pilih Foto Baru", pilih gambar dari perangkat Anda (JPG, PNG, WEBP maks 2MB), lalu klik "Simpan Perubahan".'],
+                    ['q' => 'Bagaimana cara mengubah foto profil?', 'a' => 'Buka menu Profil Saya, klik tombol "Pilih Foto Baru", pilih gambar dari perangkat Anda (JPG, PNG, WEBP maks 5MB), lalu klik "Simpan Perubahan".'],
                     ['q' => 'Bagaimana cara mengubah password?', 'a' => 'Buka menu Profil Saya, masukkan password saat ini, masukkan password baru minimal 8 karakter, konfirmasi password baru, lalu klik "Ubah Password".'],
                     ['q' => 'Bagaimana cara mengubah nama dan email?', 'a' => 'Buka menu Profil Saya, edit kolom nama lengkap dan/atau email, lalu klik "Simpan Perubahan". Pastikan email yang dimasukkan masih aktif.'],
                 ],
             ],
             [
                 'title' => 'Peta & GIS',
-                'icon'  => 'map-pin',
+                'icon' => 'map-pin',
                 'color' => 'teal',
                 'items' => [
                     ['q' => 'Bagaimana cara membuka peta?', 'a' => 'Klik menu "Peta" di sidebar. Peta akan menampilkan semua data geospasial seperti objek pengawasan, rute, dan area.'],
@@ -73,7 +73,7 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Pengaduan Masyarakat',
-                'icon'  => 'message',
+                'icon' => 'message',
                 'color' => 'rose',
                 'items' => [
                     ['q' => 'Dari mana data pengaduan berasal?', 'a' => 'Data pengaduan masuk dari formulir publik di website. Masyarakat dapat mengirim pengaduan beserta foto bukti dan lokasi kejadian.'],
@@ -83,11 +83,11 @@ class HelpController extends Controller
             ],
             [
                 'title' => 'Sistem (Superadmin)',
-                'icon'  => 'settings',
+                'icon' => 'settings',
                 'color' => 'slate',
                 'items' => [
                     ['q' => 'Apa itu Log Aktivitas?', 'a' => 'Catatan seluruh tindakan pengguna (tambah/ubah/hapus, login, export, backup) lengkap dengan perubahan data sebelum→sesudah. Hanya Superadmin yang bisa membuka.'],
-                    ['q' => 'Bagaimana backup & restore database?', 'a' => 'Buka menu Backup Database. Klik "Buat Backup" untuk menghasilkan file .sql, unduh untuk arsip. Restore bersifat destruktif — menimpa data saat ini — sehingga memerlukan konfirmasi dan hanya untuk Superadmin.'],
+                    ['q' => 'Bagaimana backup & restore database?', 'a' => 'Buka menu Backup Database. Klik "Buat Backup Sekarang" untuk menghasilkan arsip .zip berisi struktur + seluruh data database sekaligus semua file storage (foto, dokumen, .shp, dll) dan menyimpannya ke Backblaze B2. Arsip dapat diunduh untuk cadangan tambahan. Membuat backup baru akan menghapus semua backup lama — hanya backup terbaru yang tersimpan. Restore bersifat merge (non-destruktif) — data dan file yang ada di backup dipulihkan/diperbarui, sedangkan data dan file yang tidak ada di backup tetap dipertahankan (pre-restore otomatis dibuat dulu) — sehingga memerlukan konfirmasi dan hanya untuk Superadmin.'],
                     ['q' => 'Bagaimana mengelola pengguna?', 'a' => 'Superadmin dapat mengakses menu Pengguna untuk menambah, mengubah, atau menonaktifkan akun admin. Setiap pengguna dapat diberikan role dan akses modul tambahan.'],
                     ['q' => 'Bagaimana cara mengatur pengaturan aplikasi?', 'a' => 'Buka menu Pengaturan. Di sana Anda bisa mengubah email kontak, telepon kontak, serta mengaktifkan/menonaktifkan mode pemeliharaan beserta estimasi waktunya.'],
                 ],

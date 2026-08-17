@@ -51,7 +51,7 @@ new class extends Component
 
         <div wire:ignore
              class="po-map-container"
-             x-data x-init="setTimeout(function(){dlhPetaObjekPengawasan('peta-objek-map',@js($this->getMapData()))},100)">
+             x-data x-init="setTimeout(function(){window.ensureMaplibreLoaded(function(){dlhPetaObjekPengawasan('peta-objek-map',@js($this->getMapData()))})},100)">
             <div id="peta-objek-map" style="width:100%;height:100%"></div>
         </div>
     </div>
@@ -67,9 +67,8 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-        .po-wrap { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .po-wrap { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         .po-card {
             background: #fff;

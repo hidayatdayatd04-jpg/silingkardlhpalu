@@ -49,7 +49,7 @@
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-500">{{ $label }}</p>
-                <p class="mt-1.5 text-2xl font-extrabold tracking-tight text-ink-900">
+                <p class="mt-1.5 text-xl font-bold tracking-tight text-ink-900">
                     @if($numeric)
                         <x-admin.count-up :value="(int) $value" />
                     @else

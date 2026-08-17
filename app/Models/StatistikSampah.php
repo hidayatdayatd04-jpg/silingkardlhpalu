@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StatistikSampah extends Model
 {
+    protected $table = 'statistik_sampah';
+
     protected $fillable = [
         'tanggal',
         'volume_ton',

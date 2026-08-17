@@ -17,8 +17,7 @@ class StorePengaduanTataPenataanRequest extends FormRequest
     {
         return [
             'nama_pelapor' => ['required', 'string', 'max:255'],
-            'no_hp' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
-            'email' => ['required', 'email:rfc,dns', 'max:255'],
+            'nomor_hp' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
             'jenis_pengaduan' => ['required', 'string', Rule::in(array_column(JenisPengaduanTataPenataan::cases(), 'value'))],
             'nama_terlapor' => ['nullable', 'string', 'max:255'],
             'nama_perusahaan_terlapor' => ['nullable', 'string', 'max:255'],
@@ -27,14 +26,14 @@ class StorePengaduanTataPenataanRequest extends FormRequest
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'deskripsi' => ['required', 'string', 'max:5000'],
             'photos' => ['required', 'array', 'min:1', 'max:5'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photos.*' => ['mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'no_hp.regex' => 'Format nomor HP tidak valid. Gunakan nomor Indonesia yang aktif.',
+            'nomor_hp.regex' => 'Format nomor HP tidak valid. Gunakan nomor Indonesia yang aktif.',
             'photos.required' => 'Minimal unggah 1 foto bukti.',
             'photos.*.max' => 'Ukuran foto maksimal 5MB.',
         ];

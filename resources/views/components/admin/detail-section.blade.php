@@ -8,7 +8,7 @@
             </div>
         @endif
         <div class="min-w-0">
-            <h3 class="text-xl font-extrabold text-slate-900">{{ $title }}</h3>
+            <h3 class="text-lg font-bold text-slate-900">{{ $title }}</h3>
             @if($description)
                 <p class="mt-2 text-sm leading-relaxed text-slate-500">{{ $description }}</p>
             @endif

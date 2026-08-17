@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('nama_pemilik');
             $table->string('npwp', 20);
             $table->string('jenis_usaha');
-            $table->foreignId('jenis_usaha_id')->nullable()->constrained('jenis_usahas')->nullOnDelete();
             $table->text('alamat_lengkap');
             $table->string('nomor_telepon', 20);
             $table->string('email');

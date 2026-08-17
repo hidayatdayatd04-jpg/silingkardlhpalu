@@ -10,13 +10,13 @@
 
     <div class="relative z-10 max-w-3xl">
         @if ($badge)
-            <span class="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide uppercase backdrop-blur-sm mb-4">
+            <span class="page-hero-enter inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide uppercase backdrop-blur-sm mb-4">
                 {!! $badge !!}
             </span>
         @endif
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">{!! $title !!}</h1>
+        <h1 class="page-hero-enter text-2xl sm:text-3xl font-bold tracking-tight" style="--hero-delay:90ms">{!! $title !!}</h1>
         @if ($description)
-            <p class="mt-2 text-sm sm:text-base text-brand-50/90 leading-relaxed max-w-2xl">{!! $description !!}</p>
+            <p class="page-hero-enter mt-2 text-sm sm:text-base text-brand-50/90 leading-relaxed max-w-2xl" style="--hero-delay:180ms">{!! $description !!}</p>
         @endif
     </div>
 </div>

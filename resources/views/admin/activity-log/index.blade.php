@@ -30,13 +30,13 @@
         <form method="GET" class="border-b border-slate-200 p-4">
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                 <div class="lg:col-span-2">
-                    <label class="mb-1 block text-xs font-bold text-slate-500">Pencarian</label>
-                    <input name="q" value="{{ $filters['q'] }}" placeholder="Subjek / user / IP..."
+                    <label for="al-q" class="mb-1 block text-xs font-bold text-slate-500">Pencarian</label>
+                    <input id="al-q" name="q" value="{{ $filters['q'] }}" placeholder="Subjek / user / IP..."
                         class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-500">Pengguna</label>
-                    <select name="user_id" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
+                    <label for="al-user" class="mb-1 block text-xs font-bold text-slate-500">Pengguna</label>
+                    <select id="al-user" name="user_id" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                         <option value="">Semua</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" @selected($filters['user_id'] == $u->id)>{{ $u->name }}</option>
@@ -44,8 +44,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-500">Aksi</label>
-                    <select name="event" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
+                    <label for="al-event" class="mb-1 block text-xs font-bold text-slate-500">Aksi</label>
+                    <select id="al-event" name="event" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                         <option value="">Semua</option>
                         @foreach($events as $value => $label)
                             <option value="{{ $value }}" @selected($filters['event'] === $value)>{{ $label }}</option>
@@ -53,8 +53,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-500">Modul</label>
-                    <select name="module" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
+                    <label for="al-module" class="mb-1 block text-xs font-bold text-slate-500">Modul</label>
+                    <select id="al-module" name="module" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                         <option value="">Semua</option>
                         @foreach($modules as $m)
                             <option value="{{ $m }}" @selected($filters['module'] === $m)>{{ \Illuminate\Support\Str::headline($m) }}</option>
@@ -63,13 +63,13 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 lg:col-span-1">
                     <div>
-                        <label class="mb-1 block text-xs font-bold text-slate-500">Dari</label>
-                        <input type="date" name="date_from" value="{{ $filters['date_from'] }}"
+                        <label for="al-from" class="mb-1 block text-xs font-bold text-slate-500">Dari</label>
+                        <input id="al-from" type="date" name="date_from" value="{{ $filters['date_from'] }}"
                             class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-bold text-slate-500">Sampai</label>
-                        <input type="date" name="date_to" value="{{ $filters['date_to'] }}"
+                        <label for="al-to" class="mb-1 block text-xs font-bold text-slate-500">Sampai</label>
+                        <input id="al-to" type="date" name="date_to" value="{{ $filters['date_to'] }}"
                             class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
                     </div>
                 </div>
@@ -80,7 +80,7 @@
             </div>
         </form>
 
-        <div x-show="loading" class="p-6">
+        <div x-show="loading" x-cloak class="p-6">
             <x-admin.table-skeleton :rows="6" :columns="7" :checkbox="false" />
         </div>
         <div x-show="!loading">

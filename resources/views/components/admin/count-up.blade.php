@@ -36,4 +36,4 @@
         }
     }"
     x-init="run()"
-><span aria-hidden="true">{{ $prefix }}<span x-text="fmt(display)"></span>{{ $suffix }}</span><span class="sr-only">{{ $prefix }}{{ $format ? number_format($target) : $target }}{{ $suffix }}</span></span>
+><span aria-hidden="true">{{ $prefix }}<span x-text="fmt(display)">{{ $format ? number_format($target) : $target }}</span>{{ $suffix }}</span><span class="sr-only">{{ $prefix }}{{ $format ? number_format($target) : $target }}{{ $suffix }}</span></span>

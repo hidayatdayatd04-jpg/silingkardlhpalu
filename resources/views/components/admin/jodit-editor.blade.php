@@ -30,7 +30,7 @@
         class="hidden"
     >{{ $currentValue }}</textarea>
 
-    <div id="{{ $id }}-container"></div>
+    <div id="{{ $id }}-container" style="min-height: 520px;"></div>
 
     @if($error)
         <p class="flex items-center gap-1 text-xs font-medium text-rose-600">
@@ -43,7 +43,7 @@
 </div>
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('vendor/jodit/jodit.min.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/jodit/jodit.min.css') }}" media="print" onload="this.media='all'">
 <style>
     /* ═══════════════════════════════════════════════════════
        JODIT EDITOR — Modern Professional Redesign
@@ -150,7 +150,7 @@
 
     /* Editor content: professional typography */
     .jodit-editor__content {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         font-size: 0.9375rem !important;
         line-height: 1.75 !important;
         color: #1e293b !important;
@@ -321,115 +321,160 @@
 @endpush
 
 @push('scripts')
-<script src="{{ asset('vendor/jodit/jodit.min.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var textarea = document.getElementById('{{ $id }}');
-    var container = document.getElementById('{{ $id }}-container');
+(function() {
+    function initJodit() {
+        var textarea = document.getElementById('{{ $id }}');
+        var container = document.getElementById('{{ $id }}-container');
 
-    if (textarea && container && typeof Jodit !== 'undefined') {
-        var editor = Jodit.make(container, {
-            value: textarea.value,
-            height: 500,
-            toolbarSticky: true,
-            toolbarStickyOffset: 0,
-            showCharsCounter: true,
-            showWordsCounter: true,
-            showXPathInStatusbar: false,
-            askBeforePasteHTML: false,
-            askBeforePasteFromWord: false,
-            defaultActionOnPaste: 'insert_clear_html',
-            placeholder: 'Ketik konten artikel di sini...',
-            buttons: [
-                'source',
-                '|',
-                'bold',
-                'strikethrough',
-                'italic',
-                'underline',
-                '|',
-                'font',
-                'fontsize',
-                'brush',
-                'paragraph',
-                '|',
-                'ul',
-                'ol',
-                '|',
-                'align',
-                '|',
-                'link',
-                'image',
-                'table',
-                'hr',
-                '|',
-                'undo',
-                'redo',
-                '|',
-                'fullsize'
-            ],
-            uploader: {
-                insertImageAsBase64URI: false,
-                url: '{{ route("admin.upload-image") }}',
-                format: 'json',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                filesVariableName: 'file',
-                isSuccess: function(resp) {
-                    return resp.success;
-                },
-                getMessage: function(resp) {
-                    return resp.message || '';
-                },
-                processFileName: function(file) {
-                    return file;
-                },
-                process: function(resp) {
-                    return {
-                        files: resp.files || [resp.file],
-                        isImages: resp.isImages || [true],
-                        message: resp.message
-                    };
-                },
-                defaultHandlerSuccess: function(data) {
-                    if (data.files && data.files.length) {
-                        for (var i = 0; i < data.files.length; i++) {
-                            this.s.insertImage(data.files[i]);
+        if (textarea && container && typeof Jodit !== 'undefined') {
+            var editor = Jodit.make(container, {
+                value: textarea.value,
+                height: 500,
+                toolbarSticky: true,
+                toolbarStickyOffset: 0,
+                showCharsCounter: true,
+                showWordsCounter: true,
+                showXPathInStatusbar: false,
+                askBeforePasteHTML: false,
+                askBeforePasteFromWord: false,
+                defaultActionOnPaste: 'insert_clear_html',
+                placeholder: 'Ketik konten artikel di sini...',
+                buttons: [
+                    'source',
+                    '|',
+                    'bold',
+                    'strikethrough',
+                    'italic',
+                    'underline',
+                    '|',
+                    'font',
+                    'fontsize',
+                    'brush',
+                    'paragraph',
+                    '|',
+                    'ul',
+                    'ol',
+                    '|',
+                    'align',
+                    '|',
+                    'link',
+                    'image',
+                    'table',
+                    'hr',
+                    '|',
+                    'undo',
+                    'redo',
+                    '|',
+                    'fullsize'
+                ],
+                uploader: {
+                    insertImageAsBase64URI: false,
+                    url: '{{ route("admin.upload-image") }}',
+                    format: 'json',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    filesVariableName: 'file',
+                    isSuccess: function(resp) {
+                        return resp.success;
+                    },
+                    getMessage: function(resp) {
+                        return resp.message || '';
+                    },
+                    processFileName: function(file) {
+                        return file;
+                    },
+                    process: function(resp) {
+                        return {
+                            files: resp.files || [resp.file],
+                            isImages: resp.isImages || [true],
+                            message: resp.message
+                        };
+                    },
+                    defaultHandlerSuccess: function(data) {
+                        if (data.files && data.files.length) {
+                            for (var i = 0; i < data.files.length; i++) {
+                                this.s.insertImage(data.files[i]);
+                            }
                         }
                     }
-                }
-            },
-            filebrowser: {
-                ajax: {
-                    url: '{{ route("admin.upload-image") }}'
-                }
-            },
-            events: {
-                change: function(newValue) {
-                    textarea.value = newValue;
                 },
-                afterInit: function(editorInstance) {
-                    // Sync on mouse interactions
-                    editorInstance.e.on('mousedown', function() {
-                        textarea.value = editorInstance.value;
-                    });
-                    // Add focus/blur styling
-                    editorInstance.events.on('focus', function() {
-                        editorInstance.container.classList.add('jodit-focused');
-                    });
-                    editorInstance.events.on('blur', function() {
-                        editorInstance.container.classList.remove('jodit-focused');
-                    });
+                filebrowser: {
+                    ajax: {
+                        url: '{{ route("admin.upload-image") }}'
+                    }
+                },
+                events: {
+                    afterInit: function(editorInstance) {
+                        editorInstance.e.on('mousedown', function() {
+                            textarea.value = editorInstance.value;
+                        });
+                        editorInstance.events.on('focus', function() {
+                            editorInstance.container.classList.add('jodit-focused');
+                        });
+                        editorInstance.events.on('blur', function() {
+                            editorInstance.container.classList.remove('jodit-focused');
+                        });
+                    }
                 }
+            });
+
+            if (textarea.value && textarea.value.trim() !== '') {
+                editor.value = textarea.value;
+            }
+
+            editor.events.on('change', function() {
+                textarea.value = editor.value;
+            });
+
+            window.__joditEditors = window.__joditEditors || [];
+            window.__joditEditors.push(editor);
+            window['jodit_{{ $id }}'] = editor;
+        }
+    }
+
+    function ensureJoditLoaded(cb) {
+        if (typeof Jodit !== 'undefined') { cb(); return; }
+        window.__joditQueue = window.__joditQueue || [];
+        window.__joditQueue.push(cb);
+        if (window.__joditLoading) return;
+        window.__joditLoading = true;
+        var s = document.createElement('script');
+        s.src = '{{ asset('vendor/jodit/jodit.min.js') }}';
+        s.onload = function() {
+            var q = window.__joditQueue;
+            window.__joditQueue = [];
+            q.forEach(function(fn) { fn(); });
+        };
+        document.head.appendChild(s);
+    }
+
+    function triggerLoad() { ensureJoditLoaded(initJodit); }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.requestIdleCallback) {
+                requestIdleCallback(triggerLoad, { timeout: 2500 });
+            } else {
+                setTimeout(triggerLoad, 1200);
             }
         });
-
-        window.__joditEditors = window.__joditEditors || [];
-        window.__joditEditors.push(editor);
-        window['jodit_{{ $id }}'] = editor;
+    } else {
+        if (window.requestIdleCallback) {
+            requestIdleCallback(triggerLoad, { timeout: 2500 });
+        } else {
+            setTimeout(triggerLoad, 1200);
+        }
     }
-});
+
+    var __container = document.getElementById('{{ $id }}-container');
+    if (__container) {
+        ['focusin', 'pointerdown'].forEach(function(ev) {
+            __container.addEventListener(ev, triggerLoad, { once: true });
+        });
+    }
+})();
 </script>
 @endpush

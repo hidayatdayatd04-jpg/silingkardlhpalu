@@ -94,15 +94,14 @@
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
-        .fi-field { position: relative; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-field { position: relative; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #12201a; margin-bottom: 8px; cursor: pointer; }
         .fi-required { color: #f43f5e; font-size: 14px; font-weight: 400; margin-left: 1px; }
         .fi-icon-badge { width: 26px; height: 26px; border-radius: 8px; background: #e6f5ec; display: flex; align-items: center; justify-content: center; color: #146a44; flex-shrink: 0; }
         .fi-icon-badge svg { width: 15px; height: 15px; }
         .fi-pill-wrap { position: relative; display: flex; align-items: center; }
-        .fi-pill-input { width: 100%; height: 48px; border-radius: 9999px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 20px; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 13.5px; transition: border-color .18s ease, box-shadow .18s ease, padding .18s ease; outline: none; color: #12201a; }
-        .fi-pill-input::placeholder { color: #9fb0a8; font-size: 13.5px; }
+        .fi-pill-input { width: 100%; height: 48px; border-radius: 9999px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 20px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; font-size: 13.5px; transition: border-color .18s ease, box-shadow .18s ease, padding .18s ease; outline: none; color: #12201a; }
+        .fi-pill-input::placeholder { color: #5f7268; font-size: 13.5px; }
         .fi-pill-input:hover:not(:focus):not(.fi-pill-input--error) { border-color: #c3d8cc; }
         .fi-pill-input:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
         .fi-pill-input--error { border-color: #e0533d !important; box-shadow: 0 0 0 4px rgba(224, 83, 61, 0.1) !important; }
@@ -115,9 +114,9 @@
         .fi-pill-icon-right { right: 14px; }
         .fi-pill-prefix { position: absolute; left: 14px; display: flex; align-items: center; pointer-events: none; z-index: 1; font-size: 13.5px; color: #5b6b63; font-weight: 500; }
         .fi-pill-input--icon-left:not(.fi-pill-input--suffix) { padding-left: 44px; }
-        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-error svg { width: 13px; height: 13px; flex-shrink: 0; }
-        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .dark .fi-label { color: #e2e8f0; }
         .dark .fi-pill-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .fi-pill-input::placeholder { color: #64748b; }
@@ -130,9 +129,9 @@
         .dark .fi-pill-prefix { color: #64748b; }
         .dark .fi-pill-suffix { color: #64748b; }
         .fi-pill-suffix { position: absolute; right: 14px; display: flex; align-items: center; pointer-events: none; z-index: 1; font-size: 13.5px; color: #5b6b63; font-weight: 500; }
-        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-error svg { width: 13px; height: 13px; flex-shrink: 0; }
-        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .dark .fi-label { color: #e2e8f0; }
         .dark .fi-pill-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .fi-pill-input::placeholder { color: #64748b; }

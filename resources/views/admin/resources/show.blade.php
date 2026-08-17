@@ -202,7 +202,7 @@
                                 <x-admin.icon name="user" :size="18" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Nama Lengkap</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Nama Lengkap</p>
                                 <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ $record->name ?? '-' }}</p>
                             </div>
                         </div>
@@ -213,7 +213,7 @@
                                 <x-admin.icon name="at-sign" :size="18" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Username</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Username</p>
                                 <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ $record->username ?? '-' }}</p>
                             </div>
                         </div>
@@ -224,7 +224,7 @@
                                 <x-admin.icon name="mail" :size="18" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Email</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Email</p>
                                 <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ $record->email ?? '-' }}</p>
                             </div>
                         </div>
@@ -235,7 +235,7 @@
                                 <x-admin.icon name="lock" :size="18" />
                             </span>
                             <div class="min-w-0 flex-1">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Password</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Password</p>
                                 <div class="mt-0.5 flex items-center gap-2">
                                     @if($record->password_hint)
                                         <p class="font-mono text-sm font-semibold text-slate-900" x-show="!showPassword" x-cloak>&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</p>
@@ -280,7 +280,7 @@
                                 <x-admin.icon name="shield" :size="18" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Role / Jabatan</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Role / Jabatan</p>
                                 @if($roleEnum)
                                     <p class="mt-0.5 text-sm font-bold text-slate-900">{{ $roleEnum->label() }}</p>
                                     <p class="mt-0.5 text-xs text-slate-500">Kode : <span class="font-mono">{{ $roleEnum->value }}</span></p>
@@ -295,7 +295,7 @@
 
                         {{-- Menu Access --}}
                         <div>
-                            <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Menu yang Dapat Diakses</p>
+                            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Menu yang Dapat Diakses</p>
                             <div class="flex flex-wrap gap-2">
                                 @forelse($allGroups as $groupKey => $group)
                                     @php
@@ -319,7 +319,7 @@
                             </div>
                             @if(!empty($extraSlugs))
                                 <div class="mt-3">
-                                    <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Akses Tambahan (Menu Spesifik)</p>
+                                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Akses Tambahan (Menu Spesifik)</p>
                                     <div class="flex flex-wrap gap-2">
                                         @foreach($extraSlugs as $slug)
                                             @php $menu = $allMenus[$slug] ?? null; @endphp
@@ -462,7 +462,7 @@
                             <div class="space-y-6">
                                 @foreach($textareaFields as $field)
                                     <div>
-                                        <p class="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                                        <p class="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
                                             <span class="inline-flex size-7 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-white/[.06] dark:text-slate-500">
                                                 <x-admin.icon name="message" :size="14" />
                                             </span>
@@ -482,7 +482,7 @@
                             <div class="overflow-x-auto">
                                 <table class="w-full min-w-[720px] text-left text-sm">
                                     <thead>
-                                        <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-slate-400">
+                                        <tr class="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-slate-400">
                                             <th class="w-12 px-3 py-2.5 text-center">No</th>
                                             <th class="px-3 py-2.5">Nama Perusahaan</th>
                                             <th class="px-3 py-2.5">Jenis Usaha</th>
@@ -529,31 +529,11 @@
                                         $docExt = $docPath ? pathinfo($docPath, PATHINFO_EXTENSION) : '';
                                         $docName = $docExt ? $field['label'].'.'.$docExt : $field['label'];
                                     @endphp
-                                    <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition hover:bg-slate-50">
-                                        <div class="flex min-w-0 items-center gap-3">
-                                            <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
-                                                <x-admin.icon name="file-text" :size="18" />
-                                            </span>
-                                            <div class="min-w-0">
-                                                <p class="truncate text-sm font-semibold text-slate-700">{{ $field['label'] }}</p>
-                                                @if($docPath)
-                                                    <p class="truncate text-xs text-slate-400">{{ basename($docPath) }}</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        @if($docPath)
-                                            <div class="flex shrink-0 items-center gap-2">
-                                                <a href="{{ Storage::url($docPath) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
-                                                    <x-admin.icon name="eye" :size="14" /> Lihat
-                                                </a>
-                                                <a href="{{ route('admin.file.download', ['path' => $docPath, 'name' => $docName]) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700">
-                                                    <x-admin.icon name="download" :size="14" /> Unduh
-                                                </a>
-                                            </div>
-                                        @else
-                                            <span class="shrink-0 text-xs font-medium text-slate-400">Belum ada file</span>
-                                        @endif
-                                    </div>
+                                    <x-admin.file-preview
+                                        :label="$field['label']"
+                                        :path="$docPath"
+                                        :downloadName="$docName"
+                                    />
                                 @endforeach
                             </div>
                         </x-admin.section-card>
@@ -570,7 +550,16 @@
                                     @php
                                         $imgs = $record->{$config['relation']}->map(function ($item) use ($pathFor, $nameFor, $config) {
                                             $p = $pathFor($item, $config);
-                                            return $p ? ['url' => Storage::url($p), 'caption' => $nameFor($item, $p, $config)] : null;
+                                            if (! $p) return null;
+                                            // File tersimpan di B2 (bucket private) -> wajib signed URL.
+                                            try {
+                                                $url = method_exists($item, 'fullUrl')
+                                                    ? $item->fullUrl()
+                                                    : Storage::disk('public')->temporaryUrl($p, now()->addHours(24));
+                                            } catch (\Throwable $e) {
+                                                $url = Storage::url($p);
+                                            }
+                                            return ['url' => $url, 'caption' => $nameFor($item, $p, $config)];
                                         })->filter()->values()->all();
                                     @endphp
                                     <x-admin.lightbox :images="$imgs" :columns="3" />
@@ -578,19 +567,7 @@
                                     <div class="space-y-3">
                                         @foreach($record->{$config['relation']} as $item)
                                             @php $path = $pathFor($item, $config); $label = $nameFor($item, $path, $config); @endphp
-                                            <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition hover:bg-slate-50">
-                                                <span class="text-sm font-semibold text-slate-700">{{ $label }}</span>
-                                                @if($path)
-                                                    <div class="flex shrink-0 items-center gap-2">
-                                                        <a href="{{ Storage::url($path) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
-                                                            <x-admin.icon name="eye" :size="14" /> Lihat
-                                                        </a>
-                                                        <a href="{{ route('admin.file.download', ['path' => $path, 'name' => $label]) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700">
-                                                            <x-admin.icon name="download" :size="14" /> Unduh
-                                                        </a>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                            <x-admin.file-preview :label="$label" :path="$path" />
                                         @endforeach
                                     </div>
                                 @endif

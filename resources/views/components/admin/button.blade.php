@@ -13,7 +13,7 @@
     $baseClasses = 'relative inline-flex items-center justify-center gap-2 font-bold transition duration-150 focus:outline-none focus:ring-4 disabled:pointer-events-none disabled:opacity-60';
 
     $variantClasses = [
-        'primary'   => 'bg-brand-600 text-white shadow-[var(--shadow-brand-glow)] hover:bg-brand-700 focus:ring-brand-100',
+        'primary'   => 'bg-brand-800 text-white shadow-[var(--shadow-brand-glow)] hover:bg-brand-900 focus:ring-brand-100',
         'secondary' => 'border border-slate-200 bg-white text-ink-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)] hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus:ring-brand-100',
         'ghost'     => 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-100',
         'danger'    => 'bg-danger-600 text-white shadow-[0_8px_20px_-8px_rgba(225,29,72,0.6)] hover:bg-danger-700 focus:ring-danger-100',

@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $ids = DB::table('artikels')
+        $ids = DB::table('artikel')
             ->whereNull('slug')
             ->orWhere('slug', '')
             ->pluck('id');
 
         foreach ($ids as $id) {
-            $artikel = DB::table('artikels')->where('id', $id)->first();
+            $artikel = DB::table('artikel')->where('id', $id)->first();
 
             if (! $artikel || ! $artikel->judul) {
                 continue;
@@ -22,7 +22,7 @@ return new class extends Migration
 
             $slug = Artikel::generateUniqueSlug($artikel->judul, $id);
 
-            DB::table('artikels')->where('id', $id)->update(['slug' => $slug]);
+            DB::table('artikel')->where('id', $id)->update(['slug' => $slug]);
         }
     }
 

@@ -17,7 +17,7 @@
             </div>
         @endif
         <div class="min-w-0 flex-1 pt-1">
-            <h3 class="text-h4 font-bold text-ink-900">{{ $title }}</h3>
+            <h2 class="text-h4 font-bold text-ink-900">{{ $title }}</h2>
             @if($subtitle)
                 <p class="mt-0.5 text-sm text-slate-500">{{ $subtitle }}</p>
             @endif

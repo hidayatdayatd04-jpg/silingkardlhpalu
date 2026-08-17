@@ -86,11 +86,11 @@
         <div class="absolute -top-24 -right-16 size-72 rounded-full bg-bay-500/5 blur-3xl" aria-hidden="true"></div>
         <div class="mx-auto grid max-w-[85rem] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_22rem] lg:px-8 lg:py-20">
             <div class="reveal max-w-3xl">
-                <span class="inline-flex items-center gap-2 rounded-full bg-bay-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-bay-700 dark:bg-bay-900/25 dark:text-bay-300">
+                <span class="inline-flex items-center gap-2 rounded-full bg-bay-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-bay-700 dark:bg-bay-900/25 dark:text-bay-300">
                     <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     {{ __('Dokumen Layanan Publik') }}
                 </span>
-                <h1 class="mt-5 text-4xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-5xl">{{ __('Kebijakan Privasi') }}</h1>
+                <h1 class="mt-5 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{{ __('Kebijakan Privasi') }}</h1>
                 <p class="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
                     {{ __('Penjelasan resmi mengenai bagaimana data pengguna diproses saat mengakses layanan digital Dinas Lingkungan Hidup Kota Palu.') }}
                 </p>
@@ -108,7 +108,7 @@
     <section class="mx-auto max-w-[85rem] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div class="grid gap-8 lg:grid-cols-[17rem_1fr]">
             <nav class="hidden self-start lg:sticky lg:top-24 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:block">
-                <p class="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{{ __('Daftar Isi') }}</p>
+                <p class="px-3 text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">{{ __('Daftar Isi') }}</p>
                 <div class="mt-3 space-y-1">
                     @foreach ($sections as $section)
                         <a href="#bagian-{{ $loop->iteration }}" data-toc="bagian-{{ $loop->iteration }}" class="block rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-950/30 dark:hover:text-brand-300">{{ $section['title'] }}</a>
@@ -120,8 +120,8 @@
                 @foreach ($sections as $section)
                     <article id="bagian-{{ $loop->iteration }}" class="reveal scroll-mt-24 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-shadow hover:shadow-[0_18px_44px_-20px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900 sm:p-8">
                         <div class="flex items-center gap-3">
-                            <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-bay-50 text-sm font-extrabold text-bay-600 dark:bg-bay-900/25 dark:text-bay-300">{{ $loop->iteration }}</span>
-                            <h2 class="text-xl font-extrabold text-slate-950 dark:text-white">{{ preg_replace('/^\d+\.\s*/', '', $section['title']) }}</h2>
+                            <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-bay-50 text-sm font-bold text-bay-600 dark:bg-bay-900/25 dark:text-bay-300">{{ $loop->iteration }}</span>
+                            <h2 class="text-xl font-bold text-slate-950 dark:text-white">{{ preg_replace('/^\d+\.\s*/', '', $section['title']) }}</h2>
                         </div>
                         <div class="mt-4 space-y-4 text-base leading-8 text-slate-600 dark:text-slate-300">
                             @foreach ($section['body'] ?? [] as $paragraph)

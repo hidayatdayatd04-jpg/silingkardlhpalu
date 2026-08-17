@@ -129,7 +129,13 @@ return [
     */
 
     'temporary_file_upload' => [
-        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
+        // PENTING: arahkan upload sementara Livewire ke disk 'local' (bukan disk
+        // default). Bila disk default adalah B2/S3, setiap upload form Livewire
+        // menaruh salinan sementara di bucket (livewire-tmp/) yang tidak pernah
+        // dibersihkan otomatis di S3 — inilah sumber file ganda/yatim di B2.
+        // File sementara dihapus eksplisit setelah diproses (FileUploadService /
+        // HandlesPengaduanPhotoUpload) dan dibersihkan berkala tiap 24 jam.
+        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK', 'local'), // Example: 'local', 's3'             | Default: 'default'
         'rules' => null,                                      // Example: ['file', 'mimes:png,jpg'] | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
         'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'

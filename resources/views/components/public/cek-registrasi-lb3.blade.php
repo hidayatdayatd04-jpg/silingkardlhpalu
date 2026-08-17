@@ -13,7 +13,7 @@ new class extends Component
     {
         $this->validate(['searchNomor' => 'required|string']);
 
-        $this->registrasi = RegistrasiUsahaLb3::with('jenisLb3')
+        $this->registrasi = RegistrasiUsahaLb3::query()
             ->where('nomor_registrasi', trim($this->searchNomor))
             ->first();
 
@@ -28,7 +28,7 @@ new class extends Component
     {
         $this->validate(['searchNama' => 'required|string|min:3']);
 
-        $this->registrasi = RegistrasiUsahaLb3::with('jenisLb3')
+        $this->registrasi = RegistrasiUsahaLb3::query()
             ->where('nama_perusahaan', 'like', '%'.trim($this->searchNama).'%')
             ->latest()
             ->first();
@@ -103,7 +103,7 @@ new class extends Component
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                     </span>
                     <div>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Registrasi') }}</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Registrasi') }}</span>
                         <h2 class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">{{ $registrasi->nomor_registrasi }}</h2>
                     </div>
                 </div>
@@ -135,7 +135,7 @@ new class extends Component
                 @php
                     $infoItems = [
                         __('Nama Perusahaan') => $registrasi->nama_perusahaan,
-                        __('Jenis LB3') => ($registrasi->jenisLb3?->nama ?? '-').($registrasi->jenis_lb3_lainnya ? ' ('.$registrasi->jenis_lb3_lainnya.')' : ''),
+                        __('Jenis LB3') => $registrasi->jenis_lb3 ?? '-',
                         __('Tanggal Registrasi') => $registrasi->created_at->format('d M Y H:i'),
                         __('Alamat') => $registrasi->alamat,
                     ];
@@ -161,10 +161,9 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .ck-wrap {
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .ck-card {
@@ -221,7 +220,7 @@ new class extends Component
             border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px;
             font-weight: 700;
             cursor: pointer;

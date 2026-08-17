@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ArtikelKategori;
 use App\Enums\ArtikelStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +9,13 @@ use Illuminate\Support\Str;
 
 class Artikel extends Model
 {
+    protected $table = 'artikel';
+
     protected $fillable = [
         'judul',
         'slug',
         'thumbnail',
         'konten',
-        'kategori',
         'tanggal_publish',
         'status',
         'user_id',
@@ -24,7 +24,6 @@ class Artikel extends Model
     protected function casts(): array
     {
         return [
-            'kategori' => ArtikelKategori::class,
             'status' => ArtikelStatus::class,
             'tanggal_publish' => 'date',
         ];

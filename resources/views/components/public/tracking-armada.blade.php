@@ -41,7 +41,7 @@ new class extends Component
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <h3 class="font-bold text-slate-800 dark:text-slate-200">{{ __('Daftar Armada') }}</h3>
+                <h2 class="font-bold text-slate-800 dark:text-slate-200">{{ __('Daftar Armada') }}</h2>
                 <span class="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold"><span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>{{ $this->getActiveCount() }} {{ __('unit') }}</span>
             </div>
             <p class="text-xs text-slate-500 mt-1">{{ __('Menampilkan seluruh armada beserta status mesin (menyala / parkir).') }}</p>
@@ -56,7 +56,7 @@ new class extends Component
             <div class="dlh-attr">Maps DLH - Palu Dev Custom</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-b-2xl">
-            <h4 class="font-bold text-xs text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wider text-center md:text-left">{{ __('Legenda Armada') }}</h4>
+            <h3 class="font-bold text-xs text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wider text-center md:text-left">{{ __('Legenda Armada') }}</h3>
             <div class="flex flex-col md:flex-row items-center justify-center md:justify-start gap-8">
                 <div class="flex items-center gap-3"><div class="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"><img src="/assets/tracking/car_acc_on.png" class="w-7 h-7 object-contain" alt="Pickup"></div><span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('Mobil Pickup (Roda 4)') }}</span></div>
                 <div class="flex items-center gap-3"><div class="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"><img src="/assets/tracking/truck_acc_on.png" class="w-7 h-7 object-contain" alt="Dump Truck"></div><span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('Dump Truck (Roda 6)') }}</span></div>

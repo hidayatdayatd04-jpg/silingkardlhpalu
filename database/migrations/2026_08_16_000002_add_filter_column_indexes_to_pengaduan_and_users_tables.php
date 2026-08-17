@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Schema;
  * Task 11 — Tambah index untuk kolom filter tambahan (non-status).
  *
  * `AdminRegistry::buildFilters()` menghasilkan query filter pada kolom:
- *   - laporans ............................... WHERE jenis_pengaduan IN (...)
- *   - pengaduan_tata_penataans ............... WHERE jenis_pengaduan IN (...)
+ *   - tabel pengaduan (pengaduan_pengendalian, pengaduan_sampah, pengaduan_rth,
+ *     pengaduan_tata_penataan) ............... WHERE jenis_pengaduan IN (...)
+ *     — index sudah dibuat di migration 2026_08_17_100000_restructure_pengaduan_tables.php
  *   - sosialisis ............................. WHERE jenis_kegiatan = ...  & daterange tanggal
  *   - users .................................. WHERE is_active = ...  (Dashboard.activeUsers)
  *
@@ -66,19 +67,15 @@ return new class extends Migration
 
     public function up(): void
     {
-        $this->addIndex('laporans', 'jenis_pengaduan');
-        $this->addIndex('pengaduan_tata_penataans', 'jenis_pengaduan');
-        $this->addIndex('sosialisasis', 'jenis_kegiatan');
-        $this->addIndex('sosialisasis', 'tanggal');
-        $this->addIndex('users', 'is_active');
+        $this->addIndex('sosialisasi', 'jenis_kegiatan');
+        $this->addIndex('sosialisasi', 'tanggal');
+        $this->addIndex('user', 'is_active');
     }
 
     public function down(): void
     {
-        $this->dropIndex('laporans', 'jenis_pengaduan');
-        $this->dropIndex('pengaduan_tata_penataans', 'jenis_pengaduan');
-        $this->dropIndex('sosialisasis', 'jenis_kegiatan');
-        $this->dropIndex('sosialisasis', 'tanggal');
-        $this->dropIndex('users', 'is_active');
+        $this->dropIndex('sosialisasi', 'jenis_kegiatan');
+        $this->dropIndex('sosialisasi', 'tanggal');
+        $this->dropIndex('user', 'is_active');
     }
 };

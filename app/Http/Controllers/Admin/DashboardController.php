@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Artikel;
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
+use App\Models\PengaduanTataPenataan;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\User;
@@ -30,11 +33,13 @@ class DashboardController extends Controller
             ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
             $allowedGroups,
         ));
-        $agg = $this->aggregateLaporan($bidangValues);
-
-        // Statistik berat di-cache 60 dtk agar navigasi berulang ke dashboard instan.
+        // Statistik berat di-cache 10 menit agar navigasi berulang ke dashboard instan.
+        // Agregat Laporan ikut dihitung DI DALAM closure supaya request yang
+        // mengenai cache tidak membayar 2 round-trip DB sama sekali.
         $cacheKey = 'dashboard:' . $user->id . ':' . md5(implode(',', $allowedGroups));
-        $cached = Cache::remember($cacheKey, now()->addMinutes(1), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $agg) {
+        $cached = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $bidangValues) {
+            $agg = $this->aggregateLaporan($bidangValues);
+
             return [
                 'cards'        => $this->buildCards($allowedGroups, $user, $agg),
                 'statusStats'  => $this->buildStatusStats($allowedGroups, $agg),
@@ -92,7 +97,7 @@ class DashboardController extends Controller
             $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text'];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Tata Penataan', 'value' => \App\Models\PengaduanTataPenataan::count(), 'tone' => 'purple', 'icon' => 'building'];
+            $cards[] = ['label' => 'Laporan Tata Penataan', 'value' => $bidangTotal('tata-penataan'), 'tone' => 'purple', 'icon' => 'building'];
         }
         if (in_array('konten', $allowedGroups)) {
             $cards[] = ['label' => 'Artikel', 'value' => Artikel::count(), 'tone' => 'rose', 'icon' => 'file-text'];
@@ -120,9 +125,9 @@ class DashboardController extends Controller
         foreach ($bidangValues as $b) {
             $row = $agg['byStatus'][$b] ?? [];
             $total += array_sum($row);
-            $belum += (int) ($row['Belum Ditindaklanjuti'] ?? 0) + (int) ($row['Belum Ditinjau'] ?? 0);
-            $proses += (int) ($row['Ditindaklanjuti'] ?? 0) + (int) ($row['Ditinjau'] ?? 0);
-            $selesai += (int) ($row['Selesai'] ?? 0);
+            $belum += (int) ($row['Belum Ditindaklanjuti'] ?? 0) + (int) ($row['Belum Ditinjau'] ?? 0) + (int) ($row['menunggu'] ?? 0);
+            $proses += (int) ($row['Ditindaklanjuti'] ?? 0) + (int) ($row['Ditinjau'] ?? 0) + (int) ($row['ditugaskan'] ?? 0);
+            $selesai += (int) ($row['Selesai'] ?? 0) + (int) ($row['selesai'] ?? 0);
             $ditolak += (int) ($row['Ditolak'] ?? 0);
         }
 
@@ -161,7 +166,7 @@ class DashboardController extends Controller
             $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi'])];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Tata Penataan belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'tata-penataan', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
+            $tasks[] = ['label' => 'Laporan Tata Penataan menunggu tindak lanjut', 'count' => $this->aggCount($agg, 'tata-penataan', ['menunggu']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
         }
 
         $total = collect($tasks)->sum('count');
@@ -174,7 +179,32 @@ class DashboardController extends Controller
         $recent = [];
 
         if (array_intersect($allowedGroups, ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'])) {
-            $recent['laporan'] = Laporan::latest()->take(5)->get();
+            $labels = [
+                'pengendalian' => 'Pengendalian',
+                'sampah-lb3' => 'Sampah & LB3',
+                'rth' => 'RTH',
+                'tata-penataan' => 'Tata Penataan',
+            ];
+            $sources = [
+                'pengendalian' => PengaduanPengendalian::class,
+                'sampah-lb3' => PengaduanSampah::class,
+                'rth' => PengaduanRth::class,
+                'tata-penataan' => PengaduanTataPenataan::class,
+            ];
+
+            $recent['laporan'] = collect($sources)
+                ->filter(fn ($class, $bidang) => in_array($bidang, $allowedGroups, true))
+                ->flatMap(function ($class, $bidang) use ($labels) {
+                    return $class::latest()->take(5)->get()->map(function ($item) use ($labels, $bidang) {
+                        $item->bidang_label = $labels[$bidang];
+                        $item->status_text = $item->status instanceof \BackedEnum ? $item->status->label() : (string) $item->status;
+
+                        return $item;
+                    });
+                })
+                ->sortByDesc('created_at')
+                ->take(5)
+                ->values();
         }
         if (in_array('rth', $allowedGroups)) {
             $recent['permohonan'] = PermohonanRekomendasi::latest()->take(5)->get();
@@ -184,9 +214,6 @@ class DashboardController extends Controller
         if (in_array('sampah-lb3', $allowedGroups)) {
             $recent['registrasi_lb3'] = RegistrasiUsahaLb3::latest()->take(5)->get();
             $recent['rintek_pertek'] = \App\Models\PengajuanRintekPertek::latest()->take(5)->get();
-        }
-        if (in_array('tata-penataan', $allowedGroups)) {
-            $recent['tata_penataan'] = \App\Models\PengaduanTataPenataan::latest()->take(5)->get();
         }
         if (in_array('konten', $allowedGroups)) {
             $recent['artikel'] = \App\Models\Artikel::latest()->take(5)->get();
@@ -269,32 +296,44 @@ class DashboardController extends Controller
     }
 
     /**
-     * Hitung agregat Laporan SEKALI: byStatus (bidang→status) dan byMonth (bidang→YYYY-MM).
-     * Hanya 2 query grouped, bukan puluhan COUNT terpisah.
+     * Hitung agregat pengaduan SEKALI per tabel bidang: byStatus (bidang→status)
+     * dan byMonth (bidang→YYYY-MM). Hanya 2 query grouped per bidang.
      */
     protected function aggregateLaporan(array $bidangValues): array
     {
-        $base = Laporan::query();
-        if (! empty($bidangValues)) {
-            $base->whereIn('bidang', $bidangValues);
-        }
+        $sources = [
+            'pengendalian' => PengaduanPengendalian::class,
+            'sampah-lb3' => PengaduanSampah::class,
+            'rth' => PengaduanRth::class,
+            'tata-penataan' => PengaduanTataPenataan::class,
+        ];
 
         $byStatus = [];
-        $statusRows = (clone $base)
-            ->select('bidang', 'status', DB::raw('COUNT(*) as total'))
-            ->groupBy('bidang', 'status')
-            ->get();
-        foreach ($statusRows as $r) {
-            $byStatus[$r->bidang][$r->status] = (int) $r->total;
-        }
-
         $byMonth = [];
-        $monthRows = (clone $base)
-            ->select('bidang', DB::raw("to_char(created_at, 'YYYY-MM') as ym"), DB::raw('COUNT(*) as total'))
-            ->groupBy('bidang', 'ym')
-            ->get();
-        foreach ($monthRows as $r) {
-            $byMonth[$r->bidang][$r->ym] = (int) $r->total;
+
+        foreach ($bidangValues as $bidang) {
+            $modelClass = $sources[$bidang] ?? null;
+
+            if (! $modelClass) {
+                continue;
+            }
+
+            $statusRows = $modelClass::query()
+                ->select('status', DB::raw('COUNT(*) as total'))
+                ->groupBy('status')
+                ->get();
+            foreach ($statusRows as $r) {
+                $status = $r->status instanceof \BackedEnum ? $r->status->value : (string) $r->status;
+                $byStatus[$bidang][$status] = (int) $r->total;
+            }
+
+            $monthRows = $modelClass::query()
+                ->select(DB::raw("to_char(created_at, 'YYYY-MM') as ym"), DB::raw('COUNT(*) as total'))
+                ->groupBy('ym')
+                ->get();
+            foreach ($monthRows as $r) {
+                $byMonth[$bidang][$r->ym] = (int) $r->total;
+            }
         }
 
         return ['byStatus' => $byStatus, 'byMonth' => $byMonth];

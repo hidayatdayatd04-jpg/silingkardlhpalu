@@ -1,14 +1,24 @@
 <?php
 
 use Livewire\Component;
-use App\Models\Laporan;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanSampah;
+use App\Models\PengaduanRth;
 use App\Models\PengaduanTataPenataan;
 
 new class extends Component
 {
     public string $searchTicket = '';
-    public ?Laporan $laporan = null;
+    /** @var PengaduanPengendalian|PengaduanSampah|PengaduanRth|null */
+    public $pengaduan = null;
     public ?PengaduanTataPenataan $pengaduanTataPenataan = null;
+
+    private const TICKET_MODELS = [
+        'PDL' => PengaduanPengendalian::class,
+        'SMP' => PengaduanSampah::class,
+        'RTH' => PengaduanRth::class,
+        'TTP' => PengaduanTataPenataan::class,
+    ];
 
     public function search()
     {
@@ -16,30 +26,34 @@ new class extends Component
             'searchTicket' => 'required|string',
         ]);
 
-        $ticket = trim($this->searchTicket);
+        $ticket = strtoupper(trim($this->searchTicket));
 
-        // Tata penataan tickets use TTP prefix
-        if (str_starts_with(strtoupper($ticket), 'TTP')) {
-            $this->pengaduanTataPenataan = PengaduanTataPenataan::with('fotos')
-                ->where('nomor_tiket', $ticket)
+        $this->pengaduan = null;
+        $this->pengaduanTataPenataan = null;
+
+        // Shortcut: cari di tabel sesuai prefix tiket.
+        $prefix = substr($ticket, 0, 3);
+        $ordered = isset(self::TICKET_MODELS[$prefix])
+            ? [self::TICKET_MODELS[$prefix]] + self::TICKET_MODELS
+            : self::TICKET_MODELS;
+
+        foreach ($ordered as $modelClass) {
+            $found = $modelClass::with('fotos')
+                ->whereRaw('UPPER(nomor_tiket) = ?', [$ticket])
                 ->first();
 
-            if ($this->pengaduanTataPenataan) {
-                $this->laporan = null;
+            if ($found) {
+                if ($modelClass === PengaduanTataPenataan::class) {
+                    $this->pengaduanTataPenataan = $found;
+                } else {
+                    $this->pengaduan = $found;
+                }
+
                 return;
             }
         }
 
-        // Default: search in Laporan
-        $this->laporan = Laporan::with('fotos')
-            ->where('nomor_tiket', $ticket)
-            ->first();
-
-        $this->pengaduanTataPenataan = null;
-
-        if (!$this->laporan && !$this->pengaduanTataPenataan) {
-            $this->addError('searchTicket', __('Nomor tiket tidak ditemukan.'));
-        }
+        $this->addError('searchTicket', __('Nomor tiket tidak ditemukan.'));
     }
 };
 ?>
@@ -61,7 +75,7 @@ new class extends Component
                 <x-public.input
                     wire:model="searchTicket"
                     name="searchTicket"
-                    placeholder="{{ __('Contoh: TK-XXXXXX atau TTP-XXXX-XXXX') }}"
+                    placeholder="{{ __('Contoh: PDL-XXXX-XXXX, SMP-XXXX-XXXX, RTH-XXXX-XXXX, atau TTP-XXXX-XXXX') }}"
                     required
                 />
             </div>
@@ -72,7 +86,7 @@ new class extends Component
         </form>
     </div>
 
-    @if ($laporan)
+    @if ($pengaduan)
         <div class="lc-result-card max-w-4xl mx-auto">
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
                 <div class="flex items-center gap-3">
@@ -80,8 +94,8 @@ new class extends Component
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                     </span>
                     <div>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
-                        <x-public.copy-ticket :ticket="$laporan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                        <x-public.copy-ticket :ticket="$pengaduan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
                     </div>
                 </div>
                 @php
@@ -93,10 +107,11 @@ new class extends Component
                         'Belum Ditindaklanjuti' => 'lc-status--pending',
                         'Ditindaklanjuti' => 'lc-status--info',
                     ];
-                    $isDone = in_array($laporan->status, ['Selesai']);
-                    $isRejected = $laporan->status === 'Ditolak';
+                    $statusStr = $pengaduan->status instanceof \BackedEnum ? $pengaduan->status->value : $pengaduan->status;
+                    $isDone = $statusStr === 'Selesai';
+                    $isRejected = $statusStr === 'Ditolak';
                 @endphp
-                <span class="lc-status-badge {{ $badgeColors[$laporan->status_label] ?? 'lc-status--pending' }}">
+                <span class="lc-status-badge {{ $badgeColors[$pengaduan->status_label] ?? 'lc-status--pending' }}">
                     @if ($isDone)
                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                     @elseif ($isRejected)
@@ -104,14 +119,14 @@ new class extends Component
                     @else
                         <span class="lc-status-dot"></span>
                     @endif
-                    {{ $laporan->status_label }}
+                    {{ $pengaduan->status_label }}
                 </span>
             </div>
 
             {{-- Mini Stepper --}}
             <div class="lc-stepper-wrap">
                 @php
-                    $statusStr = $laporan->status;
+                    $statusStr = $pengaduan->status instanceof \BackedEnum ? $pengaduan->status->value : $pengaduan->status;
                     $steps = [__('Menunggu'), __('Selesai')];
                     $statusToStep = [
                         'Belum Ditinjau' => 0,
@@ -144,7 +159,7 @@ new class extends Component
                 @endforeach
             </div>
 
-            <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($laporan)" />
+            <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($pengaduan)" />
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-slate-100 dark:border-slate-800 pt-8">
                 <div class="space-y-6">
@@ -155,17 +170,17 @@ new class extends Component
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="lc-info-tile">
-                                <span class="lc-info-label">{{ __('Kategori') }}</span>
-                                <span class="lc-info-value">{{ $laporan->kategori }}</span>
+                                <span class="lc-info-label">{{ __('Jenis Pengaduan') }}</span>
+                                <span class="lc-info-value">{{ $pengaduan->jenis_pengaduan }}</span>
                             </div>
                             <div class="lc-info-tile">
                                 <span class="lc-info-label">{{ __('Tanggal Masuk') }}</span>
-                                <span class="lc-info-value">{{ $laporan->created_at->format('d M Y H:i') }}</span>
+                                <span class="lc-info-value">{{ $pengaduan->created_at->format('d M Y H:i') }}</span>
                             </div>
                         </div>
                         <div class="lc-desc-box">
                             <span class="lc-info-label">{{ __('Deskripsi') }}</span>
-                            <p class="lc-desc-text">{{ $laporan->deskripsi }}</p>
+                            <p class="lc-desc-text">{{ $pengaduan->deskripsi }}</p>
                         </div>
                     </div>
 
@@ -175,15 +190,15 @@ new class extends Component
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 {{ __('Alasan Penolakan') }}
                             </span>
-                            <p class="text-sm mt-1.5">{{ $laporan->alasan_penolakan ?? __('Tidak ada alasan penolakan yang ditulis.') }}</p>
+                            <p class="text-sm mt-1.5">{{ $pengaduan->alasan_penolakan ?? __('Tidak ada alasan penolakan yang ditulis.') }}</p>
                         </div>
                     @endif
 
-                    @if ($laporan->fotos->isNotEmpty())
+                    @if ($pengaduan->fotos->isNotEmpty())
                         <div class="space-y-2">
                             <span class="lc-info-label">{{ __('Foto Lampiran Pengaduan') }}</span>
                             <div class="grid grid-cols-3 gap-2">
-                                @foreach ($laporan->fotos as $foto)
+                                @foreach ($pengaduan->fotos as $foto)
                                     <div class="lc-photo-thumb">
                                         <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto lampiran pengaduan') }}" class="w-full h-full object-cover" />
                                     </div>
@@ -198,9 +213,9 @@ new class extends Component
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>
                         {{ __('Lokasi Peta') }}
                     </h3>
-                    <div wire:ignore wire:key="map-{{ $laporan->nomor_tiket }}"
-                         x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-laporan-{{ $laporan->nomor_tiket }}',{lat:@js($laporan->latitude),lng:@js($laporan->longitude),zoom:14,popupText:'{{ __('Lokasi Laporan') }}'})},100)">
-                        <div id="cek-map-laporan-{{ $laporan->nomor_tiket }}" class="lc-map"></div>
+                    <div wire:ignore wire:key="map-{{ $pengaduan->nomor_tiket }}"
+                         x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-laporan-{{ $pengaduan->nomor_tiket }}',{lat:@js($pengaduan->latitude),lng:@js($pengaduan->longitude),zoom:14,popupText:'{{ __('Lokasi Laporan') }}'})},100)">
+                        <div id="cek-map-laporan-{{ $pengaduan->nomor_tiket }}" class="lc-map"></div>
                     </div>
                 </div>
             </div>
@@ -224,7 +239,7 @@ new class extends Component
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                     </span>
                     <div>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
                         <x-public.copy-ticket :ticket="$pengaduanTataPenataan->nomor_tiket" class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100" />
                     </div>
                 </div>
@@ -302,9 +317,8 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-        .lc-wrap { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .lc-wrap { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         /* ── Search Card ── */
         .lc-search-card {
@@ -326,7 +340,7 @@ new class extends Component
         .lc-search-btn {
             height: 48px; padding: 0 24px; border: none; border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 14px; font-weight: 700; cursor: pointer;
             box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
             transition: transform .12s ease, box-shadow .12s ease;

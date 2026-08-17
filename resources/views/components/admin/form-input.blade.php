@@ -21,8 +21,8 @@
 
 @php
     $id = $attributes->get('id', 'fi-' . Str::random(6));
-    $hasError = $error || $errors->has($name);
-    $errorMessage = $error ?? $errors->first($name);
+    $hasError = $error === '' ? false : ($error || $errors->has($name));
+    $errorMessage = $error === '' ? null : ($error ?? $errors->first($name));
     $currentValue = old($name, $value);
     $hasIcon = $icon !== null;
     $hasSuffix = $suffix || $toggleable;
@@ -104,12 +104,11 @@
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
-        .fi-field { position: relative; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; margin-bottom: 4px; }
+        .fi-field { position: relative; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; margin-bottom: 4px; }
         .fi-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; cursor: pointer; letter-spacing: 0.01em; }
         .fi-required { color: #f43f5e; font-size: 13px; font-weight: 400; margin-left: 2px; }
         .fi-pill-wrap { position: relative; display: flex; align-items: center; }
-        .fi-pill-input { width: 100%; height: 46px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #fff; padding: 0 16px; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 14px; transition: border-color .2s ease, box-shadow .2s ease; outline: none; color: #1e293b; }
+        .fi-pill-input { width: 100%; height: 46px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #fff; padding: 0 16px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; font-size: 14px; transition: border-color .2s ease, box-shadow .2s ease; outline: none; color: #1e293b; }
         .fi-pill-input::placeholder { color: #94a3b8; font-size: 13.5px; }
         .fi-pill-input:hover:not(:focus):not(.fi-pill-input--error) { border-color: #cbd5e1; }
         .fi-pill-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
@@ -130,9 +129,9 @@
         .fi-pill-input:focus ~ .fi-float-label { top: 1.5px; transform: translateY(0) scale(0.85); color: #10b981; }
         .fi-pill-input--error:not(:placeholder-shown) ~ .fi-float-label--error,
         .fi-pill-input--error:focus ~ .fi-float-label--error { color: #ef4444; }
-        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 500; color: #ef4444; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 500; color: #ef4444; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-error svg { width: 14px; height: 14px; flex-shrink: 0; }
-        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #64748b; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #64748b; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         @keyframes fieldShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
         .field-shake { animation: fieldShake .4s ease; }
         .dark .fi-label { color: #e2e8f0; }

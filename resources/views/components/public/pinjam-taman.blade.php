@@ -1,10 +1,11 @@
 <?php
 
-use App\Enums\PengaduanStatus;
+use App\Enums\StatusPengaduanRth;
 use App\Http\Requests\StorePermohonanPinjamTamanRequest;
 use App\Models\PermohonanPinjamTaman;
-use App\Models\TamanKota;
+use App\Services\FileUploadService;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 new class extends Component {
@@ -14,27 +15,31 @@ new class extends Component {
     public string $nomor_hp = '';
     public string $email = '';
     public string $nama_kegiatan = '';
-    public string $taman_kota_id = '';
+    public string $nama_taman = '';
     public string $nama_taman_manual = '';
     public string $tanggal_kegiatan = '';
     public string $tanggal_selesai = '';
-    public ?string $surat_permohonan = null;
+    // Properti file upload harus bertipe TemporaryUploadedFile agar Livewire
+    // dapat meng-hydrate file sementara (tipe string membuat upload gagal 419).
+    public ?TemporaryUploadedFile $surat_permohonan = null;
     public $jaminan_kebersihan = false;
-    public ?string $surat_jaminan = null;
+    public ?TemporaryUploadedFile $surat_jaminan = null;
     public ?string $successTicket = null;
     public $conflictWarning = false;
 
-    public function updatedTamanKotaId(): void
+    public function updatedNamaTaman(): void
     {
         $this->checkConflict();
     }
 
     public function checkConflict(): void
     {
-        if (is_numeric($this->taman_kota_id) && $this->taman_kota_id && $this->tanggal_kegiatan) {
+        $namaTaman = $this->resolvedNamaTaman();
+
+        if ($namaTaman && $this->tanggal_kegiatan) {
             $end = $this->tanggal_selesai ?: $this->tanggal_kegiatan;
             $this->conflictWarning = PermohonanPinjamTaman::hasConflict(
-                (int) $this->taman_kota_id,
+                $namaTaman,
                 new \DateTime($this->tanggal_kegiatan),
                 new \DateTime($end),
             );
@@ -43,15 +48,29 @@ new class extends Component {
         }
     }
 
+    // Nama taman final: nama resmi yang dipilih, atau nama manual saat opsi Lainnya.
+    protected function resolvedNamaTaman(): ?string
+    {
+        if (! $this->nama_taman) {
+            return null;
+        }
+
+        return $this->nama_taman === '__lainnya__'
+            ? ($this->nama_taman_manual ?: null)
+            : $this->nama_taman;
+    }
+
     public function getCalendarDaysProperty(): array
     {
-        if (! is_numeric($this->taman_kota_id) || ! $this->taman_kota_id) {
+        $namaTaman = $this->resolvedNamaTaman();
+
+        if (! $namaTaman) {
             return [];
         }
 
         $booked = PermohonanPinjamTaman::query()
-            ->where('taman_kota_id', $this->taman_kota_id)
-            ->where('status', PengaduanStatus::DITINJAU->value)
+            ->where('nama_taman', $namaTaman)
+            ->where('status', StatusPengaduanRth::DITINJAU->value)
             ->get(['tanggal_kegiatan', 'tanggal_selesai']);
 
         $days = [];
@@ -87,41 +106,39 @@ new class extends Component {
             return;
         }
 
-        $isManualTaman = $validated['taman_kota_id'] === '__lainnya__';
+        $isManualTaman = $validated['nama_taman'] === '__lainnya__';
+        $namaTamanFinal = $isManualTaman ? $validated['nama_taman_manual'] : $validated['nama_taman'];
+
+        $fileService = app(FileUploadService::class);
 
         $record = PermohonanPinjamTaman::create([
             'nama_pemohon' => $validated['nama_pemohon'],
             'nomor_hp' => $validated['nomor_hp'],
             'email' => $validated['email'],
             'nama_kegiatan' => $validated['nama_kegiatan'],
-            'taman_kota_id' => $isManualTaman ? null : $validated['taman_kota_id'],
-            'nama_taman_manual' => $isManualTaman ? $validated['nama_taman_manual'] : null,
+            'nama_taman' => $namaTamanFinal,
             'tanggal_kegiatan' => $validated['tanggal_kegiatan'],
             'tanggal_selesai' => $validated['tanggal_selesai'] ?: $validated['tanggal_kegiatan'],
-            'surat_permohonan' => $this->surat_permohonan->store('pinjam-taman', 'public'),
+            // Surat wajib PDF -> disimpan apa adanya (file sementara ikut dibersihkan).
+            'surat_permohonan' => $fileService->store($this->surat_permohonan, 'pinjam-taman', 'public') ?: null,
             'jaminan_kebersihan' => true,
-            'surat_jaminan' => $this->surat_jaminan?->store('pinjam-taman', 'public'),
+            'surat_jaminan' => $this->surat_jaminan ? ($fileService->store($this->surat_jaminan, 'pinjam-taman', 'public') ?: null) : null,
         ]);
 
         $this->successTicket = $record->nomor_tiket;
-        $this->reset(['nama_pemohon', 'nomor_hp', 'email', 'nama_kegiatan', 'taman_kota_id', 'nama_taman_manual', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan', 'surat_jaminan']);
+        $this->reset(['nama_pemohon', 'nomor_hp', 'email', 'nama_kegiatan', 'nama_taman', 'nama_taman_manual', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan', 'surat_jaminan']);
         $this->conflictWarning = false;
     }
 
     public function getTamansProperty()
     {
-        $namaTaman = [
-            'Taman Vatulemo',
-            'Taman Gor',
-            'Taman Nasional',
-            'Taman Doyata',
-            'Taman Lasoso',
+        $tamans = [
+            'Taman Vatulemo' => 'Taman Vatulemo',
+            'Taman Gor' => 'Taman Gor',
+            'Taman Nasional' => 'Taman Nasional',
+            'Taman Doyata' => 'Taman Doyata',
+            'Taman Lasoso' => 'Taman Lasoso',
         ];
-
-        $tamans = TamanKota::whereIn('nama', $namaTaman)
-            ->orderBy('nama')
-            ->pluck('nama', 'id')
-            ->toArray();
 
         $tamans['__lainnya__'] = 'Lainnya';
 
@@ -133,13 +150,13 @@ new class extends Component {
 <div class="fi-form-card bg-white dark:bg-slate-950 rounded-2xl p-6 md:p-8 shadow-[0_1px_3px_rgba(13,43,29,0.06),0_12px_32px_-12px_rgba(13,43,29,0.10)] max-w-4xl mx-auto space-y-6">
     @if ($successTicket)
         <div class="space-y-6 text-center py-8">
-            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto"><x-icons.berhasil class="size-8" /></div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Permohonan Berhasil Terkirim') }}</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('Simpan nomor tiket di bawah untuk mengecek status penyewaan taman.') }}</p>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket Anda') }}</span>
                 <x-public.copy-ticket :ticket="$successTicket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider font-mono" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -154,7 +171,7 @@ new class extends Component {
             </div>
         </div>
     @else
-        @if ($taman_kota_id && count($this->calendarDays))
+        @if ($nama_taman && count($this->calendarDays))
             <div class="fi-cal-box">
                 <div class="fi-cal-head">
                     <div class="flex items-center gap-2">
@@ -228,8 +245,8 @@ new class extends Component {
             </div>
 
             <x-public.select
-                wire:model.live="taman_kota_id"
-                name="taman_kota_id"
+                wire:model.live="nama_taman"
+                name="nama_taman"
                 label="{{ __('Taman') }}"
                 :options="$this->tamans"
                 :searchable="true"
@@ -237,7 +254,7 @@ new class extends Component {
                 required
             />
 
-            @if ($taman_kota_id === '__lainnya__')
+            @if ($nama_taman === '__lainnya__')
                 <x-public.input
                     wire:model="nama_taman_manual"
                     name="nama_taman_manual"
@@ -254,7 +271,7 @@ new class extends Component {
                         {{ __('Tanggal & Jam Mulai') }} <span class="fi-required">*</span>
                     </label>
                     <div class="fi-date-wrap">
-                        <input wire:model.live="tanggal_kegiatan" wire:change="checkConflict" type="datetime-local" class="fi-date-input" />
+                        <input wire:model.live="tanggal_kegiatan" wire:change="checkConflict" type="datetime-local" class="fi-date-input" aria-label="{{ __('Tanggal & Jam Mulai') }}" />
                     </div>
                     @error('tanggal_kegiatan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
                 </div>
@@ -265,7 +282,7 @@ new class extends Component {
                         {{ __('Tanggal & Jam Selesai') }}
                     </label>
                     <div class="fi-date-wrap">
-                        <input wire:model.live="tanggal_selesai" wire:change="checkConflict" type="datetime-local" class="fi-date-input" />
+                        <input wire:model.live="tanggal_selesai" wire:change="checkConflict" type="datetime-local" class="fi-date-input" aria-label="{{ __('Tanggal & Jam Selesai') }}" />
                     </div>
                     @error('tanggal_selesai') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
                 </div>
@@ -294,7 +311,7 @@ new class extends Component {
                             {{ __('Belum ada file dipilih') }}
                         @endif
                     </span>
-                    <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required
+                    <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required aria-label="{{ __('Surat Permohonan') }}"
                         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                 </div>
                 @error('surat_permohonan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
@@ -337,9 +354,8 @@ new class extends Component {
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-        .fi-form-card { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-form-card { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         .fi-field { position: relative; }
         .fi-label {
@@ -364,11 +380,11 @@ new class extends Component {
         .fi-date-input {
             width: 100%; height: 48px; border-radius: 9999px;
             border: 1.5px solid #dfe9e3; background: #fff;
-            padding: 0 20px; font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            padding: 0 20px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px; color: #12201a; outline: none;
             transition: border-color .18s ease, box-shadow .18s ease;
         }
-        .fi-date-input::placeholder { color: #9fb0a8; }
+        .fi-date-input::placeholder { color: #5f7268; }
         .fi-date-input:hover:not(:focus) { border-color: #c3d8cc; }
         .fi-date-input:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
 
@@ -382,12 +398,12 @@ new class extends Component {
         .fi-file-btn {
             flex-shrink: 0; height: 38px; padding: 0 20px; border-radius: 9999px; border: none;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13px; font-weight: 600; cursor: pointer;
             box-shadow: 0 4px 10px -2px rgba(20, 106, 68, 0.4); transition: filter .15s ease;
         }
         .fi-file-btn:hover { filter: brightness(1.05); }
-        .fi-file-status { font-size: 13px; color: #9fb0a8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fi-file-status { font-size: 13px; color: #5f7268; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* ── Checkbox row ── */
         .fi-check-row {
@@ -451,7 +467,7 @@ new class extends Component {
         .fi-submit-btn {
             width: 100%; height: 52px; border: none; border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 15px; font-weight: 700; letter-spacing: .2px; cursor: pointer;
             box-shadow: 0 10px 24px -8px rgba(20, 106, 68, 0.55);
             transition: transform .12s ease, box-shadow .12s ease;

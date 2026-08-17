@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RunBackupJob;
+use App\Jobs\RunRestoreJob;
+use App\Services\FileUploadService;
 use App\Support\ActivityLogger;
+use App\Support\BackupProgress;
 use App\Support\DatabaseBackup;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class BackupController extends Controller
 {
+    /** Folder persisten untuk file restore hasil upload (diproses job queue). */
+    protected const RESTORE_UPLOAD_DIR = 'app/private/backup-restore';
+
     protected function authorizeSuperadmin(): void
     {
         if (! auth()->user()?->isSuperadmin()) {
@@ -23,7 +30,7 @@ class BackupController extends Controller
         $this->authorizeSuperadmin();
 
         return view('admin.backup.index', [
-            'backups'  => DatabaseBackup::listBackups(),
+            'backups' => DatabaseBackup::listBackups(),
             'database' => config('database.connections.'.config('database.default').'.database'),
         ]);
     }
@@ -31,114 +38,177 @@ class BackupController extends Controller
     public function store()
     {
         $this->authorizeSuperadmin();
-        set_time_limit(600);
 
-        try {
-            $path = app(DatabaseBackup::class)->dump();
-            $name = basename($path);
-
-            ActivityLogger::log('backup', 'Backup database: '.$name, 'system');
-
-            return back()->with('success', 'Backup berhasil dibuat: '.$name);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return back()->with('error', 'Gagal membuat backup: '.$e->getMessage());
+        if (! BackupProgress::start('backup')) {
+            return back()->with('error', 'Masih ada proses backup/restore yang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
         }
+
+        RunBackupJob::dispatch(auth()->id());
+
+        return back()->with('info', 'Backup sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
     }
 
     public function download(string $file)
     {
         $this->authorizeSuperadmin();
 
-        $path = DatabaseBackup::safePath($file);
-        abort_if($path === null, 404, 'File backup tidak ditemukan.');
+        $relative = DatabaseBackup::safePath($file);
+        abort_if($relative === null, 404, 'File backup tidak ditemukan.');
 
-        $name = basename($path);
+        $tmp = DatabaseBackup::downloadToTemp($relative);
+        abort_if($tmp === null, 404, 'Gagal mengambil file backup dari storage.');
+
+        $name = basename($relative);
         $headers = [];
         if (str_ends_with($name, '.zip')) {
             $headers['Content-Type'] = 'application/zip';
         }
 
-        return response()->download($path, $name, $headers);
+        return response()->download($tmp, $name, $headers)->deleteFileAfterSend(true);
     }
 
     public function restore(Request $request)
     {
         $this->authorizeSuperadmin();
 
-        // Backup/restore butuh waktu — naikkan timeout.
-        set_time_limit(600);
-
         $request->validate([
-            'file'         => ['nullable', 'file', 'max:102400'],
-            'existing'     => ['nullable', 'string'],
+            'file' => ['nullable', 'file', 'max:512000'],
+            'existing' => ['nullable', 'string'],
             'confirmation' => ['required', 'in:RESTORE'],
         ], [
             'confirmation.required' => 'Ketik RESTORE untuk konfirmasi.',
-            'confirmation.in'       => 'Konfirmasi tidak valid. Ketik RESTORE persis.',
-            'file.max'              => 'Ukuran file terlalu besar (maks 100MB).',
+            'confirmation.in' => 'Konfirmasi tidak valid. Ketik RESTORE persis.',
+            'file.max' => 'Ukuran file terlalu besar (maks 500MB).',
         ]);
 
-        try {
-            $service = app(DatabaseBackup::class);
+        $filePath = null;
+        $backupRelative = null;
 
-            if ($request->hasFile('file')) {
-                $uploadedFile = $request->file('file');
+        if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
 
-                if (! $uploadedFile->isValid()) {
-                    return back()->with('error', 'File gagal diunggah. Silakan coba lagi.');
-                }
-
-                $originalName = $uploadedFile->getClientOriginalName();
-                $extension = strtolower($uploadedFile->getClientOriginalExtension());
-
-                if (! in_array($extension, ['zip', 'sql', 'txt'])) {
-                    return back()->with('error', 'Format file tidak valid. Hanya file .zip atau .sql yang diterima.');
-                }
-
-                // Amankan backup saat ini dulu sebelum overwrite.
-                $service->dump('pre-restore-'.now()->format('Ymd-His').'.zip');
-
-                $fullPath = $uploadedFile->getRealPath();
-
-                if (! is_file($fullPath)) {
-                    return back()->with('error', 'File temporary tidak ditemukan. Silakan unggah ulang.');
-                }
-
-                $count = $service->restore($fullPath);
-                $source = $originalName;
-            } elseif ($request->filled('existing')) {
-                $fullPath = DatabaseBackup::safePath($request->input('existing'));
-                abort_if($fullPath === null, 404, 'File backup tidak ditemukan.');
-                $service->dump('pre-restore-'.now()->format('Ymd-His').'.zip');
-                $count = $service->restore($fullPath);
-                $source = basename($request->input('existing'));
-            } else {
-                return back()->with('error', 'Pilih file backup atau unggah file .sql untuk restore.');
+            if (! $uploadedFile->isValid()) {
+                return back()->with('error', 'File gagal diunggah. Silakan coba lagi.');
             }
 
-            ActivityLogger::log('restore', 'Restore database dari: '.$source.' ('.$count.' statement)', 'system');
+            $source = $uploadedFile->getClientOriginalName();
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
 
-            return back()->with('success', "Restore berhasil dari {$source}. {$count} statement dieksekusi.");
-        } catch (\Throwable $e) {
-            report($e);
+            if (! in_array($extension, ['zip', 'sql'])) {
+                return back()->with('error', 'Format file tidak valid. Hanya file .zip atau .sql yang diterima.');
+            }
 
-            return back()->with('error', 'Gagal restore: '.$e->getMessage());
+            // Simpan ke folder persisten (bukan temp sistem) agar file tetap ada
+            // saat job queue memprosesnya nanti.
+            $dir = storage_path(self::RESTORE_UPLOAD_DIR);
+            File::ensureDirectoryExists($dir);
+
+            $filePath = $dir.'/'.uniqid('restore_', true).'.'.$extension;
+            $uploadedFile->move($dir, basename($filePath));
+        } elseif ($request->filled('existing')) {
+            $backupRelative = DatabaseBackup::safePath($request->input('existing'));
+            abort_if($backupRelative === null, 404, 'File backup tidak ditemukan.');
+
+            $source = basename($request->input('existing'));
+        } else {
+            return back()->with('error', 'Pilih file backup atau unggah file .zip/.sql untuk restore.');
         }
+
+        if (! BackupProgress::start('restore', $source)) {
+            if ($filePath && is_file($filePath)) {
+                @unlink($filePath);
+            }
+
+            return back()->with('error', 'Masih ada proses backup/restore yang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
+        }
+
+        RunRestoreJob::dispatch(
+            auth()->id(),
+            $source,
+            filePath: $filePath,
+            backupRelative: $backupRelative,
+        );
+
+        return back()->with('info', 'Restore sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
+    }
+
+    /**
+     * State progres task backup/restore (dipoll widget global).
+     */
+    public function progress()
+    {
+        $this->authorizeSuperadmin();
+
+        return response()->json(BackupProgress::state() ?? ['status' => 'idle']);
+    }
+
+    /**
+     * Minta pembatalan task yang sedang berjalan (dipenuhi secara kooperatif).
+     */
+    public function cancel()
+    {
+        $this->authorizeSuperadmin();
+
+        return response()->json(['ok' => BackupProgress::requestCancel()]);
     }
 
     public function destroy(string $file)
     {
         $this->authorizeSuperadmin();
 
-        $path = DatabaseBackup::safePath($file);
-        abort_if($path === null, 404, 'File backup tidak ditemukan.');
+        $relative = DatabaseBackup::safePath($file);
+        abort_if($relative === null, 404, 'File backup tidak ditemukan.');
 
-        Storage::disk(DatabaseBackup::DISK)->delete(DatabaseBackup::DIR.'/'.basename($file));
+        // Hapus lewat service terpusat agar versi lama objek di B2
+        // (versioning: delete biasa hanya membuat hide marker) ikut ter-purge.
+        app(FileUploadService::class)->deletePath($relative, DatabaseBackup::diskName());
 
         ActivityLogger::log('deleted', 'Hapus backup: '.basename($file), 'system');
 
         return back()->with('success', 'Backup '.basename($file).' berhasil dihapus.');
+    }
+
+    /**
+     * Hapus banyak file backup sekaligus (dipilih via checkbox di halaman index).
+     */
+    public function destroyMany(Request $request)
+    {
+        $this->authorizeSuperadmin();
+
+        $files = array_values(array_unique(array_filter((array) $request->input('files', []))));
+
+        if (empty($files)) {
+            return back()->with('error', 'Pilih minimal satu file backup untuk dihapus.');
+        }
+
+        $deleted = 0;
+        $failed = [];
+
+        foreach ($files as $file) {
+            $relative = DatabaseBackup::safePath($file);
+            if ($relative === null) {
+                $failed[] = $file;
+                continue;
+            }
+
+            try {
+                app(FileUploadService::class)->deletePath($relative, DatabaseBackup::diskName());
+                $deleted++;
+            } catch (\Throwable $e) {
+                $failed[] = $file;
+            }
+        }
+
+        ActivityLogger::log('deleted', 'Hapus '.count($files).' backup (berhasil '.$deleted.')', 'system');
+
+        if ($deleted > 0 && empty($failed)) {
+            return back()->with('success', $deleted.' file backup berhasil dihapus.');
+        }
+
+        if ($deleted > 0) {
+            return back()->with('warning', $deleted.' file dihapus; '.count($failed).' gagal: '.implode(', ', $failed));
+        }
+
+        return back()->with('error', 'Gagal menghapus file backup: '.implode(', ', $failed));
     }
 }

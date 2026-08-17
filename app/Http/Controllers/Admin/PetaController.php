@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GisDataLayer;
+use App\Services\FileUploadService;
 use App\Services\ShpParserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -143,7 +144,23 @@ $collections = $layers->map(fn ($layer) => [
 
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
-        $tempPath = $file->store('temp/gis', 'local');
+
+        // Simpan file sementara import dengan NAMA ASLI (karakter berbahaya
+        // dibersihkan). Bila nama sudah dipakai, ditambahkan sufiks -1, -2, dst.
+        $originalName = basename(str_replace('\\', '/', (string) $file->getClientOriginalName()));
+        $originalName = str_replace(chr(0), '', $originalName);
+        $baseName = (string) pathinfo($originalName, PATHINFO_FILENAME);
+        $baseName = preg_replace('~[<>:"/\\\\|?*#%\r\n\t]~', '-', $baseName) ?? '';
+        $baseName = trim($baseName, " \t.-_") ?: 'gis-import';
+        $fileName = $baseName.($extension !== '' ? '.'.$extension : '');
+        $suffix = 1;
+
+        while (Storage::disk('local')->exists('temp/gis/'.$fileName)) {
+            $fileName = $baseName.'-'.$suffix.($extension !== '' ? '.'.$extension : '');
+            $suffix++;
+        }
+
+        $tempPath = $file->storeAs('temp/gis', $fileName, 'local');
 
         \Log::info("IMPORT DEBUG: ext={$extension}, stored={$tempPath}, size=" . $file->getSize());
 
@@ -176,6 +193,9 @@ $collections = $layers->map(fn ($layer) => [
                 $createdChildren = [];
                 $totalFeatures = 0;
 
+                // Arsipkan file sumber ke B2 (folder gis-shp/) agar ikut backup.
+                $sourcePath = $this->archiveSourceFile($tempPath, $fileName);
+
                 foreach ($subLayers as $sub) {
                     $features = $sub['features'];
                     $this->shpParser->validateAndSwapCoordinates($features);
@@ -191,6 +211,7 @@ $collections = $layers->map(fn ($layer) => [
                         'metadata' => [
                             'color' => $parentColor,
                             'source_file' => $file->getClientOriginalName(),
+                            'source_path' => $sourcePath,
                             'feature_count' => count($features),
                             'imported_at' => now()->toISOString(),
                         ],
@@ -238,6 +259,9 @@ $collections = $layers->map(fn ($layer) => [
             $createdLayers = [];
             $totalFeatures = 0;
 
+            // Arsipkan file sumber ke B2 (folder gis-shp/) agar ikut backup.
+            $sourcePath = $this->archiveSourceFile($tempPath, $fileName);
+
                 foreach ($layerDatas as $layerData) {
                     $features = $layerData['features'];
                     $this->shpParser->validateAndSwapCoordinates($features);
@@ -252,6 +276,7 @@ $collections = $layers->map(fn ($layer) => [
                         'metadata' => [
                             'color' => $color,
                             'source_file' => $file->getClientOriginalName(),
+                            'source_path' => $sourcePath,
                             'feature_count' => count($features),
                             'imported_at' => now()->toISOString(),
                         ],
@@ -294,6 +319,9 @@ $collections = $layers->map(fn ($layer) => [
             $swapped = $this->shpParser->validateAndSwapCoordinates($features);
             $jenisGeometri = $this->detectGeometryType($features);
 
+            // Arsipkan file sumber ke B2 (folder gis-shp/) agar ikut backup.
+            $sourcePath = $this->archiveSourceFile($tempPath, $fileName);
+
             $layer = GisDataLayer::create([
                 'bidang' => $bidang,
                 'nama_layer' => $request->input('nama_layer'),
@@ -303,6 +331,7 @@ $collections = $layers->map(fn ($layer) => [
                 'metadata' => [
                     'color' => $color,
                     'source_file' => $file->getClientOriginalName(),
+                    'source_path' => $sourcePath,
                     'feature_count' => count($features),
                     'imported_at' => now()->toISOString(),
                 ],
@@ -342,6 +371,37 @@ $collections = $layers->map(fn ($layer) => [
                 'success' => false,
                 'message' => 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']',
             ], 422);
+        }
+    }
+
+    /**
+     * Arsipkan file sumber import (.shp/.zip/.geojson/dll) ke disk 'public'
+     * (B2) di folder "gis-shp/" agar ikut ter-backup oleh fitur backup
+     * database. Dengan begitu file mentah tetap tersedia untuk re-import
+     * bila data layer hilang dari peta. Return path relatif di disk, atau
+     * null bila penyimpanan gagal (import tetap dianggap berhasil).
+     */
+    private function archiveSourceFile(string $tempPath, string $fileName): ?string
+    {
+        try {
+            $local = Storage::disk('local');
+            if (! $local->exists($tempPath)) {
+                return null;
+            }
+
+            $archivePath = 'gis-shp/'.now()->format('Ymd-His').'-'.$fileName;
+            $stream = $local->readStream($tempPath);
+            Storage::disk('public')->writeStream($archivePath, $stream);
+
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            return $archivePath;
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengarsipkan file sumber GIS: '.$e->getMessage());
+
+            return null;
         }
     }
 
@@ -423,6 +483,7 @@ $collections = $layers->map(fn ($layer) => [
             'deskripsi'  => 'nullable|string|max:500',
             'is_visible' => 'sometimes|boolean',
             'is_public'  => 'sometimes|boolean',
+            'show_in_filter' => 'sometimes|boolean',
             'color'      => 'nullable|string|max:7',
             'z_index'    => 'sometimes|integer|min:0|max:100',
         ]);
@@ -443,27 +504,25 @@ $collections = $layers->map(fn ($layer) => [
     }
 
     /**
-     * Delete a layer (soft delete)
+     * Delete a layer (permanent) — record dihapus permanen dari database dan
+     * file .shp terkait dihapus dari storage B2 (termasuk versi lamanya).
      */
     public function destroyLayer(GisDataLayer $layer)
     {
         $this->authorizeBidang($layer->bidang);
 
-        // Hapus juga sub-layer (child) agar tidak menjadi yatim (orphan).
-        GisDataLayer::where('parent_id', $layer->id)->delete();
-
         $layerId = $layer->id;
-        $layer->delete();
+        $this->purgeLayerAndFiles($layer);
 
         return response()->json([
             'success' => true,
-            'message' => 'Layer berhasil dihapus',
+            'message' => 'Layer berhasil dihapus permanen',
             'layer_id' => $layerId,
         ]);
     }
 
     /**
-     * Delete multiple layers (soft delete)
+     * Delete multiple layers (permanent) — sama seperti destroyLayer, per id.
      */
     public function bulkDestroyLayers(Request $request)
     {
@@ -479,7 +538,7 @@ $collections = $layers->map(fn ($layer) => [
             $layer = GisDataLayer::findOrFail($id);
             try {
                 $this->authorizeBidang($layer->bidang);
-                $layer->delete();
+                $this->purgeLayerAndFiles($layer);
                 $deletedIds[] = $id;
             } catch (\Exception $e) {
                 // Ignore unauthorized
@@ -488,9 +547,39 @@ $collections = $layers->map(fn ($layer) => [
 
         return response()->json([
             'success' => true,
-            'message' => count($deletedIds) . ' layer berhasil dihapus',
+            'message' => count($deletedIds) . ' layer berhasil dihapus permanen',
             'deleted_ids' => $deletedIds,
         ]);
+    }
+
+    /**
+     * Hapus permanen sebuah layer beserta seluruh child-nya dari database,
+     * lalu hapus file sumber (.shp di gis-shp/) dari storage B2 termasuk
+     * seluruh versi lamanya. File yang sama (dipakai beberapa layer) hanya
+     * dihapus sekali.
+     */
+    protected function purgeLayerAndFiles(GisDataLayer $layer): void
+    {
+        $children = GisDataLayer::where('parent_id', $layer->id)->get();
+
+        // Kumpulkan path file sumber dari layer dan seluruh child.
+        $sourcePaths = collect([$layer])
+            ->concat($children)
+            ->map(fn (GisDataLayer $l) => $l->metadata['source_path'] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Hapus permanen dari database (forceDelete melewati soft delete).
+        foreach ($children as $child) {
+            $child->forceDelete();
+        }
+        $layer->forceDelete();
+
+        // Hapus file dari storage B2 (purge seluruh versi lama).
+        if ($sourcePaths->isNotEmpty()) {
+            app(FileUploadService::class)->deletePaths($sourcePaths->all(), 'public');
+        }
     }
 
     /**

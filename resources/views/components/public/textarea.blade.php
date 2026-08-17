@@ -91,7 +91,7 @@
                 @if($maxlength && $showCharCount)
                     <span class="ta-counter"
                         :class="count >= max ? 'ta-counter--full' : (count >= max * 0.85 ? 'ta-counter--warn' : '')">
-                        <span x-text="count"></span>/<span x-text="max"></span>
+                        <span x-text="count">{{ $charCount }}</span>/<span x-text="max">{{ $maxlength }}</span>
                     </span>
                 @endif
             </div>
@@ -108,11 +108,10 @@
 
     <style>
         /* ── Outfit font ── */
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .ta-field {
             position: relative;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         /* ── Label ── */
@@ -209,7 +208,7 @@
             outline: none;
             resize: none;
             background: transparent;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13.5px;
             line-height: 1.55;
             color: #12201a;
@@ -217,7 +216,7 @@
         }
 
         .ta-input::placeholder {
-            color: #9fb0a8;
+            color: #5f7268;
             font-weight: 400;
             font-size: 13.5px;
         }
@@ -245,7 +244,7 @@
 
         .ta-hint {
             font-size: 11.5px;
-            color: #9fb0a8;
+            color: #5f7268;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -262,7 +261,7 @@
         .ta-counter {
             font-size: 11.5px;
             font-weight: 500;
-            color: #9fb0a8;
+            color: #5f7268;
             background: #f4faf6;
             padding: 3px 9px;
             border-radius: 20px;
@@ -291,7 +290,7 @@
             font-size: 11.5px;
             font-weight: 500;
             color: #e0533d;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .ta-error svg {

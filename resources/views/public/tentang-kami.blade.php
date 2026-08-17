@@ -8,7 +8,7 @@
 
     {{-- Hero Section --}}
     <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-8 sm:p-12 lg:p-16 text-white">
-        <div class="absolute inset-0 bg-[url('https://preline.co/assets/svg/examples-dark/polygon-bg-element.svg')] opacity-10 mix-blend-overlay"></div>
+        <div class="absolute inset-0 opacity-10 mix-blend-overlay" style="background-image:url('/assets/images/polygon-bg-element.svg')"></div>
         <div class="absolute -right-20 -top-20 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl"></div>
         <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-brand-500/15 rounded-full blur-3xl"></div>
         <div class="relative z-10 max-w-3xl mx-auto text-center">
@@ -16,7 +16,7 @@
                 <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21"/></svg>
                 {{ __('Tentang Kami') }}
             </span>
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
+            <h1 class="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight">
                 {{ __('Dinas Lingkungan Hidup') }}<br>
                 <span class="text-emerald-400">{{ __('Kota Palu') }}</span>
             </h1>
@@ -32,7 +32,7 @@
         <div class="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             <div class="lg:col-span-4 flex justify-center lg:justify-start">
                 <div class="relative rounded-2xl overflow-hidden group shadow-xl max-w-sm w-full border-4 border-white dark:border-slate-800">
-                    <img class="w-full object-cover rounded-xl aspect-[3/4]" src="{{ asset('assets/images/foto_kadis.jpeg') }}" alt="{{ __('Foto Kepala Dinas') }}">
+                    <img class="w-full object-cover rounded-xl aspect-[3/4]" src="{{ asset('assets/images/foto_kadis.webp') }}" alt="{{ __('Foto Kepala Dinas') }}" decoding="async">
                     <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent p-6 text-center">
                         <p class="text-white font-bold text-xl">Mohamad Arif, S.STP., M.Si</p>
                         <p class="text-brand-300 text-sm font-medium mt-1">{{ __('Kepala Dinas Lingkungan Hidup Kota Palu') }}</p>
@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div class="lg:col-span-8 space-y-6">
-                <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-200 relative inline-block">
+                <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-200 relative inline-block">
                     {{ __('Sambutan Kepala Dinas') }}
                     <span class="absolute bottom-0 left-0 w-12 h-1.5 bg-brand-500 rounded-full"></span>
                 </h2>
@@ -65,7 +65,7 @@
                 <span class="p-2 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-lg">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
                 </span>
-                <h2 class="text-2xl font-extrabold text-slate-800 dark:text-slate-200">{{ __('Sejarah Singkat') }}</h2>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200">{{ __('Sejarah Singkat') }}</h2>
             </div>
             <div class="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
                 <p>
@@ -82,7 +82,7 @@
                 <span class="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
                 </span>
-                <h2 class="text-2xl font-extrabold text-slate-800 dark:text-slate-200">{{ __('Wilayah Kerja') }}</h2>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200">{{ __('Wilayah Kerja') }}</h2>
             </div>
             <div class="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
                 <p>
@@ -98,8 +98,8 @@
     {{-- Program Unggulan --}}
     <section>
         <div class="text-center mb-10">
-            <span class="text-xs font-bold uppercase tracking-[0.25em] text-brand-600 dark:text-brand-400">{{ __('Program Unggulan') }}</span>
-            <h2 class="mt-3 text-3xl font-extrabold text-slate-800 dark:text-slate-200">{{ __('Inovasi Lingkungan DLH Palu') }}</h2>
+            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-400">{{ __('Program Unggulan') }}</span>
+            <h2 class="mt-3 text-3xl font-bold text-slate-800 dark:text-slate-200">{{ __('Inovasi Lingkungan DLH Palu') }}</h2>
             <p class="mt-3 text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{{ __('Berbagai program strategis yang kami jalankan untuk menjaga kelestarian lingkungan di Kota Palu.') }}</p>
         </div>
 
@@ -160,7 +160,7 @@
             <div class="p-8 sm:p-12 flex flex-col justify-center relative">
                 <div class="absolute top-0 left-0 w-full h-full bg-brand-600/10 blur-3xl rounded-full pointer-events-none"></div>
                 <div class="relative z-10">
-                    <h2 class="text-3xl font-extrabold text-white mb-8">{{ __('Hubungi Kami') }}</h2>
+                    <h2 class="text-3xl font-bold text-white mb-8">{{ __('Hubungi Kami') }}</h2>
                     <div class="space-y-6">
                         <div class="flex items-start gap-4">
                             <div class="p-3 bg-slate-700 rounded-xl text-brand-400">
@@ -197,13 +197,13 @@
                                 <h3 class="text-white font-semibold text-lg">{{ __('Media Sosial') }}</h3>
                                 <div class="flex items-center gap-3 mt-2">
                                     <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" class="p-2 bg-slate-700 rounded-lg text-slate-400 hover:text-white hover:bg-pink-600 transition-all" title="Instagram">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                        <x-icons.social.instagram class="w-5 h-5" />
                                     </a>
                                     <a href="https://www.facebook.com/share/18qHSySQr4/?locale=id_ID" target="_blank" rel="noopener noreferrer" class="p-2 bg-slate-700 rounded-lg text-slate-400 hover:text-white hover:bg-blue-600 transition-all" title="Facebook">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                                        <x-icons.social.facebook class="w-5 h-5" />
                                     </a>
                                     <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="p-2 bg-slate-700 rounded-lg text-slate-400 hover:text-white hover:bg-brand-600 transition-all" title="WhatsApp">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                                        <x-icons.social.whatsapp class="w-5 h-5" />
                                     </a>
                                 </div>
                             </div>
@@ -214,6 +214,7 @@
             <div class="h-64 lg:h-auto w-full bg-slate-200 dark:bg-slate-800">
                 <iframe 
                     src="https://maps.google.com/maps?q=Dinas%20Lingkungan%20Hidup%20Kota%20Palu&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                    title="{{ __('Peta lokasi Dinas Lingkungan Hidup Kota Palu') }}"
                     width="100%" 
                     height="100%" 
                     style="border:0;" 

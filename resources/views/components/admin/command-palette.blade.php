@@ -125,7 +125,7 @@
 
             <template x-for="(items, groupName) in groupedItems" :key="groupName">
                 <div class="mb-2">
-                    <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500" x-text="groupName"></p>
+                    <p class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500" x-text="groupName"></p>
                     <template x-for="(item, idx) in items" :key="item.url">
                         <a
                             :href="item.url"

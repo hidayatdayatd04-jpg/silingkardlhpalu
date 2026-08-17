@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PengaduanTataPenataan extends Model
 {
+    protected $table = 'pengaduan_tata_penataan';
+
     protected $fillable = [
         'nomor_tiket',
         'nama_pelapor',
-        'no_hp',
+        'nomor_hp',
         'jenis_pengaduan',
         'nama_terlapor',
         'nama_perusahaan_terlapor',

@@ -8,15 +8,11 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Task 2 — Tambah index database untuk query agregat dashboard & filter tabel pengaduan.
  *
- * Query `DashboardController::aggregateLaporan()` melakukan GROUP BY bidang/status
- * dan bidang/created_at di tabel `laporans` setiap cache dashboard kedaluwarsa.
- * Kolom `bidang` ditambahkan oleh migration 2026_07_08_140100_generalize_laporans_table.php
- * tanpa index — sehingga agregasi berjalan full table scan (Seq Scan).
+ * Index status/created_at/jenis_pengaduan untuk tabel pengaduan baru
+ * (pengaduan_pengendalian, pengaduan_sampah, pengaduan_rth, pengaduan_tata_penataan)
+ * sudah dibuat langsung di migration 2026_08_17_100000_restructure_pengaduan_tables.php.
  *
- * Migration ini menambahkan:
- *  - laporans        : index bidang, (bidang,status), (bidang,created_at), status, created_at
- *  - semua tabel pengaduan lain : index status + created_at (sepadan dengan filter
- *    `WHERE status=...` / `ORDER BY created_at` di ResourceController & AdminRegistry).
+ * Migration ini menambahkan index untuk tabel pendukung lainnya.
  */
 return new class extends Migration
 {
@@ -68,74 +64,54 @@ return new class extends Migration
 
     public function up(): void
     {
-        // ── laporans ── tabel unifikasi pengaduan pengendalian/sampah/rth ───────────
-        $this->addIndex('laporans', 'bidang');
-        $this->addIndex('laporans', ['bidang', 'status']);
-        $this->addIndex('laporans', ['bidang', 'created_at']);
-        $this->addIndex('laporans', 'status');
-        $this->addIndex('laporans', 'created_at');
-
-        // ── pengaduan_tata_penataans ──
-        $this->addIndex('pengaduan_tata_penataans', 'status');
-        $this->addIndex('pengaduan_tata_penataans', 'created_at');
-
-        // ── registrasi_usaha_lb3s ──
-        $this->addIndex('registrasi_usaha_lb3s', 'status');
-        $this->addIndex('registrasi_usaha_lb3s', 'created_at');
+        // ── registrasi_usaha_lb3 ──
+        $this->addIndex('registrasi_usaha_lb3', 'status');
+        $this->addIndex('registrasi_usaha_lb3', 'created_at');
 
         // ── permohonan_rekomendasis ──
         $this->addIndex('permohonan_rekomendasis', 'status');
         $this->addIndex('permohonan_rekomendasis', 'created_at');
 
-        // ── pengajuan_rintek_perteks ──
-        $this->addIndex('pengajuan_rintek_perteks', 'status');
-        $this->addIndex('pengajuan_rintek_perteks', 'created_at');
+        // ── pengajuan_rintek_pertek ──
+        $this->addIndex('pengajuan_rintek_pertek', 'status');
+        $this->addIndex('pengajuan_rintek_pertek', 'created_at');
 
-        // ── permohonan_pinjam_tamans ──
-        $this->addIndex('permohonan_pinjam_tamans', 'status');
-        $this->addIndex('permohonan_pinjam_tamans', 'created_at');
+        // ── permohonan_pinjam_taman ──
+        $this->addIndex('permohonan_pinjam_taman', 'status');
+        $this->addIndex('permohonan_pinjam_taman', 'created_at');
 
-        // ── data_tanam_pohons ──
-        $this->addIndex('data_tanam_pohons', 'created_at');
+        // ── data_tanam_pohon ──
+        $this->addIndex('data_tanam_pohon', 'created_at');
 
-        // ── sosialisis ──
-        $this->addIndex('sosialisasis', 'created_at');
+        // ── sosialisasi ──
+        $this->addIndex('sosialisasi', 'created_at');
 
         // ── pelanggarans (tanpa kolom status; index created_at) ──
         $this->addIndex('pelanggarans', 'created_at');
 
-        // ── sidaks (filter status_tindak_lanjut + created_at) ──
-        $this->addIndex('sidaks', 'status_tindak_lanjut');
-        $this->addIndex('sidaks', 'created_at');
+        // ── sidak (filter status_tindak_lanjut + created_at) ──
+        $this->addIndex('sidak', 'status_tindak_lanjut');
+        $this->addIndex('sidak', 'created_at');
     }
 
     public function down(): void
     {
-        $this->dropIndex('laporans', 'bidang');
-        $this->dropIndex('laporans', ['bidang', 'status']);
-        $this->dropIndex('laporans', ['bidang', 'created_at']);
-        $this->dropIndex('laporans', 'status');
-        $this->dropIndex('laporans', 'created_at');
-
-        $this->dropIndex('pengaduan_tata_penataans', 'status');
-        $this->dropIndex('pengaduan_tata_penataans', 'created_at');
-
-        $this->dropIndex('registrasi_usaha_lb3s', 'status');
-        $this->dropIndex('registrasi_usaha_lb3s', 'created_at');
+        $this->dropIndex('registrasi_usaha_lb3', 'status');
+        $this->dropIndex('registrasi_usaha_lb3', 'created_at');
 
         $this->dropIndex('permohonan_rekomendasis', 'status');
         $this->dropIndex('permohonan_rekomendasis', 'created_at');
 
-        $this->dropIndex('pengajuan_rintek_perteks', 'status');
-        $this->dropIndex('pengajuan_rintek_perteks', 'created_at');
+        $this->dropIndex('pengajuan_rintek_pertek', 'status');
+        $this->dropIndex('pengajuan_rintek_pertek', 'created_at');
 
-        $this->dropIndex('permohonan_pinjam_tamans', 'status');
-        $this->dropIndex('permohonan_pinjam_tamans', 'created_at');
+        $this->dropIndex('permohonan_pinjam_taman', 'status');
+        $this->dropIndex('permohonan_pinjam_taman', 'created_at');
 
-        $this->dropIndex('data_tanam_pohons', 'created_at');
-        $this->dropIndex('sosialisasis', 'created_at');
+        $this->dropIndex('data_tanam_pohon', 'created_at');
+        $this->dropIndex('sosialisasi', 'created_at');
         $this->dropIndex('pelanggarans', 'created_at');
-        $this->dropIndex('sidaks', 'status_tindak_lanjut');
-        $this->dropIndex('sidaks', 'created_at');
+        $this->dropIndex('sidak', 'status_tindak_lanjut');
+        $this->dropIndex('sidak', 'created_at');
     }
 };

@@ -4,12 +4,11 @@ namespace App\Support\Admin;
 
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
-use App\Models\JenisLb3;
-use App\Models\JenisUsaha;
-use App\Models\Laporan;
-use App\Models\LaporanRth;
 use App\Models\ObjekPengawasan;
 use App\Models\Pelanggaran;
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanRth;
+use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
@@ -17,7 +16,6 @@ use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\Sidak;
 use App\Models\Sosialisasi;
-use App\Models\TamanKota;
 use App\Models\StatistikSampah;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +36,7 @@ class AdminRegistry
                 'label' => 'Pengendalian',
                 'icon' => 'alert-circle',
                 'items' => [
-                    array_merge(self::resource('pengaduan-pengendalian', 'Pengaduan Pengendalian', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('pengaduan-pengendalian', 'Pengaduan Pengendalian', PengaduanPengendalian::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     array_merge(self::resource('permohonan-rekomendasi', 'Permohonan/Rekomendasi', PermohonanRekomendasi::class, ['nomor_tiket', 'nama_perusahaan', 'jenis_usaha', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
                 ],
             ],
@@ -46,7 +44,7 @@ class AdminRegistry
                 'label' => 'Sampah & LB3',
                 'icon' => 'recycle',
                 'items' => [
-                    array_merge(self::resource('pengaduan-sampah', 'Pengaduan Sampah', Laporan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('pengaduan-sampah', 'Pengaduan Sampah', PengaduanSampah::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     array_merge(self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('statistik-sampah', 'Statistik Sampah', StatistikSampah::class, ['tanggal', 'volume_ton', 'periode']),
                     array_merge(self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
@@ -66,7 +64,7 @@ class AdminRegistry
                 'label' => 'RTH',
                 'icon' => 'tree',
                 'items' => [
-                    array_merge(self::resource('pengaduan-rth', 'Pengaduan RTH', LaporanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('pengaduan-rth', 'Pengaduan RTH', PengaduanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     array_merge(self::resource('pinjam-taman', 'Penyewaan Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']), ['can_create' => false]),
                     self::resource('data-tanam-pohon', 'Data Tanam Pohon', DataTanamPohon::class, ['jenis_pohon', 'jumlah_pohon', 'nama_penanggung_jawab', 'latitude', 'longitude']),
                 ],
@@ -81,6 +79,31 @@ class AdminRegistry
                 ],
             ],
         ];
+    }
+
+    /**
+     * Modul notifikasi yang boleh dilihat user: key grup yang diakses,
+     * slug resource di dalam grup tersebut, plus notifikasi system/global.
+     * Observer menyimpan module sebagai slug resource (mis. 'artikel'),
+     * bukan key grup, jadi keduanya harus dimasukkan.
+     */
+    public static function allowedNotificationModules(array $allowedGroups): array
+    {
+        $registry = self::all();
+
+        return collect($allowedGroups)
+            ->flatMap(function (string $group) use ($registry) {
+                $slugs = collect($registry[$group]['items'] ?? [])
+                    ->pluck('slug')
+                    ->filter()
+                    ->all();
+
+                return array_merge([$group], $slugs);
+            })
+            ->push('system', 'global')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public static function flat(): array
@@ -246,8 +269,10 @@ class AdminRegistry
                     'name' => 'thumbnail',
                     'label' => 'Thumbnail',
                     'type' => 'file',
-                    'accept' => 'image/*',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'options' => [],
+                    'required' => true,
+                    'hint' => 'Gambar utama artikel. Format JPG, PNG, atau WEBP. Maksimal 5MB.',
                 ],
                 [
                     'name' => '_section_konten',
@@ -264,7 +289,7 @@ class AdminRegistry
                 ],
                 [
                     'name' => '_section_publish',
-                    'label' => 'Publish',
+                    'label' => 'Pengaturan Publikasi',
                     'type' => 'section',
                     'options' => [],
                 ],
@@ -273,6 +298,7 @@ class AdminRegistry
                     'label' => 'Tanggal Publish',
                     'type' => 'date',
                     'options' => [],
+                    'required' => true,
                 ],
                 [
                     'name' => 'status',
@@ -405,7 +431,7 @@ class AdminRegistry
                     'type' => 'photos',
                     'options' => [],
                     'required' => true,
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'wide' => true,
                     'add_new_on_edit' => false,
                 ],
@@ -542,7 +568,7 @@ class AdminRegistry
                     'label' => 'Foto Bukti',
                     'type' => 'photos',
                     'options' => [],
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'wide' => true,
                     'add_new_on_edit' => false,
                 ],
@@ -677,7 +703,7 @@ class AdminRegistry
                     'label' => 'Foto Bukti',
                     'type' => 'photos',
                     'options' => [],
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'wide' => true,
                     'add_new_on_edit' => false,
                 ],
@@ -702,18 +728,11 @@ class AdminRegistry
                     'wide' => true,
                 ],
                 [
-                    'name' => 'no_hp',
+                    'name' => 'nomor_hp',
                     'label' => 'Nomor Telepon',
                     'type' => 'tel',
                     'options' => [],
                     'required' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
                     'wide' => true,
                 ],
                 [
@@ -816,7 +835,7 @@ class AdminRegistry
                     'label' => 'Foto Bukti',
                     'type' => 'photos',
                     'options' => [],
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'wide' => true,
                     'add_new_on_edit' => false,
                 ],
@@ -1054,7 +1073,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => 'dplh_ukl_upl',
@@ -1062,7 +1081,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => 'nib',
@@ -1070,7 +1089,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => 'sppl',
@@ -1078,7 +1097,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => 'denah_tps_lb3',
@@ -1086,7 +1105,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => 'sop_tanggap_darurat',
@@ -1094,7 +1113,7 @@ class AdminRegistry
                     'type' => 'file',
                     'options' => [],
                     'required' => true,
-                    'accept' => '.pdf,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                 ],
                 [
                     'name' => '_section_verifikasi',
@@ -1249,13 +1268,13 @@ class AdminRegistry
                     'readonly_on_edit' => true,
                 ],
                 [
-                    'name' => 'jenis_lb3_id',
+                    'name' => 'jenis_lb3',
                     'label' => 'Jenis LB3',
                     'type' => 'select',
-                    'options' => JenisLb3::orderBy('nama')
-                        ->get(['id', 'nama'])
-                        ->mapWithKeys(fn ($j) => [$j->id => $j->nama])
-                        ->all(),
+                    'options' => array_combine(
+                        ['Pengumpul LB3', 'Pengangkut LB3', 'Pemanfaat LB3', 'Pengolah LB3', 'Penimbun LB3', 'Lainnya'],
+                        ['Pengumpul LB3', 'Pengangkut LB3', 'Pemanfaat LB3', 'Pengolah LB3', 'Penimbun LB3', 'Lainnya']
+                    ),
                     'required' => true,
                     'readonly_on_edit' => true,
                 ],
@@ -1284,10 +1303,9 @@ class AdminRegistry
 
         // Custom fields untuk resource 'pinjam-taman'
         // Taman dibatasi ke 5 taman resmi (konsisten dgn form publik).
-        // nama_taman_manual dikelola lewat alur "Lainnya" form publik, tidak ditampilkan di admin.
         if ($resource['slug'] === 'pinjam-taman') {
             $fields = collect($model->getFillable())
-                ->reject(fn (string $field) => in_array($field, ['id', 'created_at', 'updated_at', 'email_verified_at', 'remember_token', 'additional_access', 'nama_taman_manual'], true))
+                ->reject(fn (string $field) => in_array($field, ['id', 'created_at', 'updated_at', 'email_verified_at', 'remember_token', 'additional_access'], true))
                 ->map(fn (string $field) => [
                     'name' => $field,
                     'label' => self::labelForField($field),
@@ -1306,11 +1324,9 @@ class AdminRegistry
             ];
 
             foreach ($fields as &$field) {
-                if ($field['name'] === 'taman_kota_id') {
-                    $field['options'] = TamanKota::whereIn('nama', $namaTaman)
-                        ->orderBy('nama')
-                        ->pluck('nama', 'id')
-                        ->all();
+                if ($field['name'] === 'nama_taman') {
+                    $field['type'] = 'select';
+                    $field['options'] = array_combine($namaTaman, $namaTaman);
                 }
                 if ($field['name'] === 'jaminan_kebersihan') {
                     $field['type'] = 'checkbox';
@@ -1429,11 +1445,11 @@ class AdminRegistry
                     'name' => 'photos',
                     'label' => 'Foto Bukti',
                     'relation' => 'fotos',
-                    'model' => \App\Models\LaporanFoto::class,
-                    'foreign_key' => 'laporan_id',
+                    'model' => \App\Models\PengaduanPengendalianFoto::class,
+                    'foreign_key' => 'pengaduan_pengendalian_id',
                     'path_field' => 'path_foto',
                     'directory' => 'pengaduan-pengendalian',
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => true,
                 ],
             ],
@@ -1442,11 +1458,11 @@ class AdminRegistry
                     'name' => 'photos',
                     'label' => 'Foto Bukti',
                     'relation' => 'fotos',
-                    'model' => \App\Models\LaporanFoto::class,
-                    'foreign_key' => 'laporan_id',
+                    'model' => \App\Models\PengaduanSampahFoto::class,
+                    'foreign_key' => 'pengaduan_sampah_id',
                     'path_field' => 'path_foto',
                     'directory' => 'pengaduan-sampah',
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => true,
                 ],
             ],
@@ -1455,11 +1471,11 @@ class AdminRegistry
                     'name' => 'photos',
                     'label' => 'Foto Bukti',
                     'relation' => 'fotos',
-                    'model' => \App\Models\LaporanFoto::class,
-                    'foreign_key' => 'laporan_id',
+                    'model' => \App\Models\PengaduanRthFoto::class,
+                    'foreign_key' => 'pengaduan_rth_id',
                     'path_field' => 'path_foto',
                     'directory' => 'pengaduan-rth',
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => true,
                 ],
             ],
@@ -1472,7 +1488,7 @@ class AdminRegistry
                     'foreign_key' => 'pengaduan_tata_penataan_id',
                     'path_field' => 'path_foto',
                     'directory' => 'pengaduan-tata-penataan',
-                    'accept' => 'image/jpeg,image/png,image/jpg',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => true,
                 ],
             ],
@@ -1486,7 +1502,7 @@ class AdminRegistry
                     'path_field' => 'path_dokumen',
                     'name_field' => 'nama_dokumen',
                     'directory' => 'permohonan-rekomendasi/dokumen',
-                    'accept' => '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => false,
                     'readonly_on_edit' => true,
                 ],
@@ -1500,7 +1516,7 @@ class AdminRegistry
                     'foreign_key' => 'pelanggaran_id',
                     'path_field' => 'path',
                     'directory' => 'pelanggaran-media',
-                    'accept' => 'image/jpeg,image/png,image/jpg,.pdf',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => false,
                     'defaults' => ['tipe' => 'foto'],
                 ],
@@ -1515,7 +1531,7 @@ class AdminRegistry
                     'path_field' => 'path',
                     'name_field' => 'nama',
                     'directory' => 'sosialisasi-files',
-                    'accept' => '.pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png',
+                    'accept' => '.pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'image' => false,
                     'defaults' => ['tipe' => 'materi'],
                 ],
@@ -1575,8 +1591,8 @@ class AdminRegistry
 
         if (($field['type'] ?? null) === 'file') {
             $field['accept'] ??= Str::contains($name, ['foto', 'gambar', 'thumbnail'])
-                ? 'image/jpeg,image/png,image/jpg'
-                : '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+                ? 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif'
+                : '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif';
         }
 
         return $field;
@@ -1941,11 +1957,10 @@ class AdminRegistry
             'jenis_pengaduan' => 'Jenis Pengaduan',
             'jenis_pengajuan' => 'Jenis Pengajuan',
             'jenis_permohonan' => 'Jenis Permohonan',
-            'jenis_usaha_id' => 'Jenis Usaha',
             'jenis_usaha' => 'Jenis Usaha',
-            'jenis_lb3_id' => 'Jenis LB3',
+            'jenis_lb3' => 'Jenis LB3',
             'registrasi_usaha_lb3_id' => 'Registrasi Usaha LB3',
-            'taman_kota_id' => 'Taman Kota',
+            'nama_taman' => 'Taman',
             'objek_pengawasan_id' => 'Objek Pengawasan',
             'pengaduan_tata_penataan_id' => 'Pengaduan Tata Penataan',
             'user_id' => 'Petugas/Admin',

@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>
         (function () {
+            document.documentElement.classList.add('js');
             var stored = localStorage.getItem('theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (stored === 'dark' || (!stored && prefersDark)) {
@@ -40,8 +41,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    @include('partials.web-fonts')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -84,7 +84,40 @@
             background: #059669;
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('css/chatbot.css') }}">
+    {{-- chatbot.css di-inline agar tidak menjadi render-blocking request eksternal. --}}
+    <style>
+        #chatbot-fab{display:flex!important;pointer-events:auto!important;position:fixed!important;z-index:9991!important}
+        #chatbot-portal{pointer-events:none!important}
+        #chatbot-panel{pointer-events:auto!important;position:fixed!important;z-index:9991!important}
+        .typing-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background-color:#10b981;animation:typingBounce 1.4s infinite ease-in-out both}
+        .typing-dot:nth-child(1){animation-delay:-0.32s}
+        .typing-dot:nth-child(2){animation-delay:-0.16s}
+        @keyframes typingBounce{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+        .chatbot-fab{animation:fabPulse 2s cubic-bezier(0.4,0,0.6,1) infinite}
+        @keyframes fabPulse{0%,100%{box-shadow:0 10px 15px -3px rgba(16,185,129,0.3),0 4px 6px -2px rgba(16,185,129,0.2)}50%{box-shadow:0 20px 25px -5px rgba(16,185,129,0.4),0 10px 10px -5px rgba(16,185,129,0.3)}}
+        .chatbot-panel{animation:panelSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+        @keyframes panelSlideUp{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .chatbot-message-in{animation:messageBubbleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+        @keyframes messageBubbleIn{from{opacity:0;transform:translateY(10px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .streaming-cursor::after{content:'|';display:inline-block;animation:cursorBlink 1s step-end infinite;color:#10b981;font-weight:bold}
+        @keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+        .chatbot-header{background-size:200% 200%;animation:gradientShift 3s ease infinite}
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .chatbot-panel ::-webkit-scrollbar{width:6px}
+        .chatbot-panel ::-webkit-scrollbar-track{background:transparent}
+        .chatbot-panel ::-webkit-scrollbar-thumb{background-color:rgba(156,163,175,0.3);border-radius:3px}
+        .chatbot-panel ::-webkit-scrollbar-thumb:hover{background-color:rgba(156,163,175,0.5)}
+        .dark .chatbot-panel ::-webkit-scrollbar-thumb{background-color:rgba(71,85,105,0.5)}
+        .dark .chatbot-panel ::-webkit-scrollbar-thumb:hover{background-color:rgba(71,85,105,0.7)}
+        .chatbot-panel textarea:focus{box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+        .chatbot-panel button[type="submit"]:hover:not(:disabled){transform:scale(1.05)}
+        .chatbot-panel button[type="submit"]:active:not(:disabled){transform:scale(0.95)}
+        .chatbot-panel .px-3.py-1\.5{transition:all 0.2s ease}
+        .chatbot-panel .px-3.py-1\.5:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(16,185,129,0.2)}
+        @media (max-width:480px){.chatbot-panel{bottom:0;right:0;left:0;width:100%;height:100%;max-width:none;max-height:none;border-radius:0}.chatbot-fab{bottom:1rem;right:1rem;height:48px;width:48px}}
+        @media print{.chatbot-fab,.chatbot-panel{display:none!important}}
+        @media (prefers-reduced-motion:reduce){.chatbot-fab,.chatbot-panel,.typing-dot{animation:none}.chatbot-panel{transition:opacity 0.2s ease}}
+    </style>
     @yield('styles')
     @stack('styles')
 </head>
@@ -118,14 +151,14 @@
                 <a href="/" class="group flex items-center gap-2.5 sm:gap-3">
                     <span class="relative inline-flex items-center justify-center shrink-0">
                         <span class="absolute -inset-1 rounded-full bg-brand-500/15 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></span>
-                        <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo Kota Palu" class="relative h-11 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+                        <img src="{{ asset('assets/images/logo_kota_palu.webp') }}" alt="Logo Kota Palu" width="320" height="423" class="relative h-11 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
                     </span>
                     <div class="border-l border-slate-200 dark:border-slate-700 pl-2.5 sm:pl-3">
-                        <span class="block text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-white uppercase leading-none whitespace-nowrap">
+                        <span class="block text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white uppercase leading-none whitespace-nowrap">
                             <span class="hidden xl:inline">Dinas Lingkungan Hidup</span>
                             <span class="xl:hidden">DLH</span>
                         </span>
-                        <span class="mt-1 block text-[10px] sm:text-[11px] font-bold tracking-[0.18em] text-brand-600 dark:text-brand-400 uppercase leading-none whitespace-nowrap">
+                        <span class="mt-1 block text-[10px] sm:text-[11px] font-semibold tracking-[0.14em] text-brand-700 dark:text-brand-400 uppercase leading-none whitespace-nowrap">
                             Kota Palu
                         </span>
                     </div>
@@ -172,7 +205,7 @@
                 <!-- Bidang Pengendalian Dropdown -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('cek-pengaduan-pengendalian', 'permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Pengendalian') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -195,7 +228,7 @@
                 <!-- Bidang Sampah LB3 -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'cek-pengaduan-sampah', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Sampah & LB3') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -221,7 +254,7 @@
                 <!-- Bidang Tata Penataan Dropdown -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('tata-penataan', 'cek-pengaduan-tata-penataan', 'tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('tata-penataan', 'tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Tata Penataan') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -243,7 +276,7 @@
                 <!-- Bidang RTH Dropdown -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('cek-pengaduan-rth', 'pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('RTH') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -353,7 +386,7 @@
 
             <div class="flex items-center gap-2 shrink-0">
                 <x-public.dark-mode-toggle />
-                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-all dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" aria-label="Buka menu navigasi" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-all dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                     <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="!mobileMenuOpen"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
                     <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="mobileMenuOpen" style="display: none;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
@@ -551,9 +584,9 @@
 
                 <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
-                        <img src="{{ asset('assets/images/logo_kota_palu.png') }}" alt="Logo Kota Palu" class="h-14 sm:h-16 w-auto object-contain drop-shadow-sm">
+                        <img src="{{ asset('assets/images/logo_kota_palu.webp') }}" alt="Logo Kota Palu" width="320" height="423" class="h-14 sm:h-16 w-auto object-contain drop-shadow-sm">
                         <div class="min-w-0">
-                            <p class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight leading-tight">Dinas Lingkungan Hidup Kota Palu</p>
+                            <p class="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight leading-tight">Dinas Lingkungan Hidup Kota Palu</p>
                         </div>
                     </div>
                     <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
@@ -561,28 +594,28 @@
                     </p>
                     <div class="flex items-center gap-2 pt-1">
                         <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-500 transition-all duration-300 hover:-translate-y-0.5" title="Instagram">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                            <x-icons.social.instagram class="w-4 h-4" />
                         </a>
                         <a href="https://www.facebook.com/share/18qHSySQr4/?locale=id_ID" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:-translate-y-0.5" title="Facebook">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                            <x-icons.social.facebook class="w-4 h-4" />
                         </a>
                         <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:-translate-y-0.5" title="WhatsApp">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                            <x-icons.social.whatsapp class="w-4 h-4" />
                         </a>
                     </div>
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Pengendalian') }}</h4>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Pengendalian') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Pengendalian') }}</a></li>
                         <li><a href="/permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Permohonan') }}</a></li>
-                        <li><a href="/cek-pengaduan-pengendalian" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
+                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h4>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Peta Persampahan & Armada') }}</a></li>
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Sampah') }}</a></li>
@@ -593,7 +626,7 @@
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('RTH') }}</h4>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('RTH') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan RTH') }}</a></li>
                         <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Penyewaan Taman') }}</a></li>
@@ -601,22 +634,22 @@
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Tata Penataan') }}</h4>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Tata Penataan') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Modul Tata Penataan') }}</a></li>
                         <li><a href="/pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Tata Penataan') }}</a></li>
                         <li><a href="/peta-objek-pengawasan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Peta Objek Pengawasan') }}</a></li>
-                        <li><a href="/cek-pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
+                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Kontak') }}</h4>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Kontak') }}</h2>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu
                     </p>
                     <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-900/20 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors whitespace-nowrap">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.405 0 .025 5.38.025 12.006c0 2.118.552 4.186 1.603 6.002L.002 24l6.14-1.61c1.748.956 3.722 1.463 5.889 1.463 6.626 0 12.006-5.38 12.006-12.006S18.657 0 12.031 0z"/></svg>
+                        <x-icons.social.whatsapp class="w-4 h-4 flex-shrink-0" />
                         0851-9151-2076
                     </a>
                 </div>

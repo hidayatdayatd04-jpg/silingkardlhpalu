@@ -36,9 +36,10 @@ class ChatBot extends Component
         $this->messages = [];
         session()->forget('chatbot_messages');
 
+        // Kembalikan ke kondisi "chat pertama kali": simpan pesan sambutan.
         $this->messages[] = [
             'role'      => 'assistant',
-            'content'   => "Chat telah dihapus. Ada yang bisa saya bantu?",
+            'content'   => "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda tentang layanan DLH Kota Palu.",
             'timestamp' => now()->toIso8601String(),
         ];
         $this->saveMessages();

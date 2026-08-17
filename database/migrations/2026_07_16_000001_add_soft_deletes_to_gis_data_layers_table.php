@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('gis_data_layers', function (Blueprint $table) {
+        Schema::table('gis_data_layer', function (Blueprint $table) {
             $table->softDeletes();
         });
     }
 
     public function down(): void
     {
-        Schema::table('gis_data_layers', function (Blueprint $table) {
+        Schema::table('gis_data_layer', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
     }

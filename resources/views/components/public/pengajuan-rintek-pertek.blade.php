@@ -2,7 +2,9 @@
 
 use App\Models\PengajuanRintekPertek;
 use App\Models\RegistrasiUsahaLb3;
+use App\Services\FileUploadService;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 new class extends Component
@@ -22,12 +24,14 @@ new class extends Component
     public ?string $jenis_pengajuan = null;
     public ?string $keterangan_tambahan = null;
 
-    public ?string $surat_permohonan = null;
-    public ?string $dplh_ukl_upl = null;
-    public ?string $nib = null;
-    public ?string $sppl = null;
-    public ?string $denah_tps_lb3 = null;
-    public ?string $sop_tanggap_darurat = null;
+    // Properti file upload harus bertipe TemporaryUploadedFile agar Livewire
+    // dapat meng-hydrate file sementara (tipe string membuat upload gagal 419).
+    public ?TemporaryUploadedFile $surat_permohonan = null;
+    public ?TemporaryUploadedFile $dplh_ukl_upl = null;
+    public ?TemporaryUploadedFile $nib = null;
+    public ?TemporaryUploadedFile $sppl = null;
+    public ?TemporaryUploadedFile $denah_tps_lb3 = null;
+    public ?TemporaryUploadedFile $sop_tanggap_darurat = null;
 
     public ?string $successNumber = null;
     public $isSubmitting = false;
@@ -57,8 +61,10 @@ new class extends Component
         \Illuminate\Support\Facades\RateLimiter::hit('pengajuan-rintek-pertek:'.$ip, 3600);
 
         $paths = [];
+        $fileService = app(FileUploadService::class);
         foreach (array_keys(PengajuanRintekPertek::DOKUMEN_FIELDS) as $field) {
-            $paths[$field] = $this->{$field}->store('rintek-pertek', 'public');
+            // Gambar raster otomatis dikompres & dikonversi ke WebP; PDF disimpan apa adanya.
+            $paths[$field] = $fileService->store($this->{$field}, 'rintek-pertek', 'public') ?: null;
         }
 
         $registrasiId = $validated['registrasi_usaha_lb3_id'] ?? null;
@@ -128,7 +134,7 @@ new class extends Component
 
     public function getDocumentAccept(): string
     {
-        return '.pdf,.jpg,.jpeg,.png';
+        return '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif';
     }
 };
 ?>
@@ -136,13 +142,13 @@ new class extends Component
 <div class="fi-form-card bg-white dark:bg-slate-950 rounded-2xl p-6 md:p-8 shadow-[0_1px_3px_rgba(13,43,29,0.06),0_12px_32px_-12px_rgba(13,43,29,0.10)] max-w-4xl mx-auto">
     @if ($successNumber)
         <div class="space-y-6 text-center py-8">
-            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+            <div class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto"><x-icons.berhasil class="size-8" /></div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Pengajuan Berhasil Dikirim') }}</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('Simpan nomor pengajuan dan cetak bukti pengajuan untuk referensi Anda.') }}</p>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Pengajuan') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Pengajuan') }}</span>
                 <span class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider">{{ $successNumber }}</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -352,7 +358,7 @@ new class extends Component
                                         </span>
                                         <div class="fi-file-meta">
                                             <span class="fi-file-hint">{{ __('Klik atau seret file ke sini') }}</span>
-                                            <span class="fi-file-size">{{ __('PDF, JPG, PNG • max 5MB') }}</span>
+                                            <span class="fi-file-size">{{ __('PDF, JPG, PNG, WEBP, AVIF, HEIC • max 5MB') }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -388,7 +394,7 @@ new class extends Component
                 <ul>
                     <li>{!! __('Semua field bertanda (:asterisk:) wajib diisi.', ['asterisk' => '<span class="fi-required">*</span>']) !!}</li>
                     <li>{{ __('Ukuran file maksimal 5 MB per file.') }}</li>
-                    <li>{{ __('Hanya menerima file dengan format PDF, JPG, JPEG, dan PNG.') }}</li>
+                    <li>{{ __('Hanya menerima file dengan format PDF, JPG, JPEG, PNG, WEBP, AVIF, HEIC, dan HEIF.') }}</li>
                     <li>{{ __('Pastikan dokumen yang diunggah dapat dibaca dengan jelas.') }}</li>
                 </ul>
             </div>
@@ -407,9 +413,8 @@ new class extends Component
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-        .fi-form-card { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        .fi-form-card { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
 
         /* ── Section header ── */
         .fi-section-head {
@@ -514,7 +519,7 @@ new class extends Component
         .fi-file-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
         .fi-file-name { font-size: 13px; font-weight: 600; color: #12201a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
         .fi-file-hint { font-size: 13px; font-weight: 600; color: #5b6b63; }
-        .fi-file-size { font-size: 11.5px; color: #9fb0a8; }
+        .fi-file-size { font-size: 11.5px; color: #5f7268; }
 
         .fi-file-loading {
             position: absolute;
@@ -559,7 +564,7 @@ new class extends Component
         .fi-submit-btn {
             width: 100%; height: 52px; border: none; border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 15px; font-weight: 700; letter-spacing: .2px; cursor: pointer;
             box-shadow: 0 10px 24px -8px rgba(20, 106, 68, 0.55);
             transition: transform .12s ease, box-shadow .12s ease;

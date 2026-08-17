@@ -24,7 +24,7 @@ class StorePermohonanRekomendasiRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'surat_permohonan' => ['required', 'file', 'mimes:pdf', 'max:5120'],
             'dokumen_pendukung' => ['required', 'array', 'min:1', 'max:10'],
-            'dokumen_pendukung.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'dokumen_pendukung.*' => ['file', 'mimes:pdf,jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ];
     }
 

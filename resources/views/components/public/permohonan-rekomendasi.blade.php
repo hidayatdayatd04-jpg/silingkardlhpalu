@@ -4,6 +4,7 @@ use App\Http\Requests\StorePermohonanRekomendasiRequest;
 use App\Http\Requests\StorePermohonanRekomendasiStep1Request;
 use App\Models\PermohonanDokumen;
 use App\Models\PermohonanRekomendasi;
+use App\Services\FileUploadService;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -53,7 +54,10 @@ new class extends Component {
 
         \Illuminate\Support\Facades\RateLimiter::hit('permohonan-rekomendasi:'.$ip, 3600);
 
-        $suratPath = $this->surat_permohonan->store('permohonan-rekomendasi/surat', 'public');
+        $fileService = app(FileUploadService::class);
+
+        // Surat permohonan wajib PDF -> disimpan apa adanya.
+        $suratPath = $fileService->store($this->surat_permohonan, 'permohonan-rekomendasi/surat', 'public') ?: null;
 
         $permohonan = PermohonanRekomendasi::create([
             'nama_perusahaan' => $validated['nama_perusahaan'],
@@ -69,7 +73,14 @@ new class extends Component {
         ]);
 
         foreach ($this->dokumen_pendukung as $index => $file) {
-            $path = $file->store('permohonan-rekomendasi/dokumen', 'public');
+            // Dokumen pendukung boleh PDF atau gambar; gambar otomatis
+            // dikompres & dikonversi ke WebP, PDF disimpan apa adanya.
+            $path = $fileService->store($file, 'permohonan-rekomendasi/dokumen', 'public');
+
+            if ($path === false) {
+                continue;
+            }
+
             PermohonanDokumen::create([
                 'permohonan_rekomendasi_id' => $permohonan->id,
                 'path_dokumen' => $path,
@@ -120,8 +131,8 @@ new class extends Component {
     @if ($successTicket)
         <div class="space-y-6 text-center py-8">
             <div
-                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
-                ✓
+                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto">
+                <x-icons.berhasil class="size-8" />
             </div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Permohonan Berhasil Diajukan') }}</h3>
@@ -129,7 +140,7 @@ new class extends Component {
             </div>
             <div
                 class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xs mx-auto">
-                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-extrabold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
                 <x-public.copy-ticket :ticket="$successTicket" class="block text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 select-all tracking-wider" />
             </div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -334,15 +345,14 @@ new class extends Component {
     @endif
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
         .fi-form-card {
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-field {
             position: relative;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-label {
@@ -394,7 +404,7 @@ new class extends Component {
             align-items: center;
             gap: 14px;
             transition: border-color .18s ease, background .18s ease;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
         }
 
         .fi-file-drop:hover {
@@ -410,7 +420,7 @@ new class extends Component {
             border: none;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -424,7 +434,7 @@ new class extends Component {
 
         .fi-file-status {
             font-size: 13px;
-            color: #9fb0a8;
+            color: #5f7268;
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -439,7 +449,7 @@ new class extends Component {
             border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44);
             color: #fff;
-            font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
             font-size: 15px;
             font-weight: 700;
             letter-spacing: .2px;

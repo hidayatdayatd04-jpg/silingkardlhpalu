@@ -81,6 +81,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Backup Database
+    |--------------------------------------------------------------------------
+    |
+    | Disk tujuan file backup (.zip). Backup dibuat manual dari panel admin;
+    | setiap backup baru menghapus semua backup lama (hanya 1 backup tersimpan).
+    |
+    */
+
+    'backup_disk' => env('BACKUP_DISK', 'b2'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Symbolic Links
     |--------------------------------------------------------------------------
     |
