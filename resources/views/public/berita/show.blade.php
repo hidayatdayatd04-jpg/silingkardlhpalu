@@ -10,7 +10,7 @@
     // Bersihkan konten mentah dari editor (Jodit) yang kerap menyisipkan
     // paragraf/baris kosong (<p></p>, <p><br></p>, &nbsp;) sehingga tampilan
     // detail tidak berantakan dan tidak banyak spasi kosong.
-    $kontenBersih = (string) $artikel->konten;
+    $kontenBersih = \App\Support\HtmlSanitizer::clean((string) $artikel->konten);
     do {
         $kontenPrev = $kontenBersih;
         $kontenBersih = preg_replace('/<(p|div|span)[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/i', '', $kontenBersih);

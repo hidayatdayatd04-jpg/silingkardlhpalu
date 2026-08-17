@@ -69,7 +69,6 @@ class RolePermissionSeeder extends Seeder
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'password' => Hash::make($data['password']),
-                    'password_hint' => $data['password'],
                     'is_active' => true,
                 ]
             );

@@ -19,6 +19,7 @@ use App\Services\ImageCompressionService;
 use App\Support\ActivityLogger;
 use App\Support\Admin\AdminRegistry;
 use App\Support\DataIO;
+use App\Support\HtmlSanitizer;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -240,12 +241,11 @@ class ResourceController extends Controller
         ]);
 
         $target->password = Hash::make($validated['password']);
-        $target->password_hint = $validated['password'];
         $target->save();
 
         return redirect()
             ->route('admin.resources.show', ['user', $target])
-            ->with('success', 'Password untuk '.$target->name.' berhasil direset. Password baru: '.$validated['password']);
+            ->with('success', 'Password untuk '.$target->name.' berhasil direset. Sampaikan password baru melalui kanal yang aman.');
     }
 
     /**
@@ -641,7 +641,7 @@ class ResourceController extends Controller
         if ($search !== '') {
             $columns = collect(array_merge($meta['columns'], $model->getFillable()))
                 ->unique()
-                ->reject(fn ($column) => Str::endsWith($column, '_id') || in_array($column, ['password', 'remember_token', 'email_verified_at', 'additional_access', 'photo_path', 'preferences', 'role', 'password_hint']))
+                ->reject(fn ($column) => Str::endsWith($column, '_id') || in_array($column, ['password', 'remember_token', 'email_verified_at', 'additional_access', 'photo_path', 'preferences', 'role']))
                 ->take(8)
                 ->values();
 
@@ -703,25 +703,17 @@ class ResourceController extends Controller
 
             if ($name === 'password') {
                 if (filled($request->input($name))) {
-                    $plain = $request->input($name);
-                    $payload[$name] = Hash::make($plain);
-
-                    // Petunjuk password otomatis mengikuti password yang diisi.
-                    // Field password_hint disembunyikan saat create & read-only saat edit,
-                    // sehingga nilainya diambil dari password agar tidak pernah NULL
-                    // (sebelumnya akun baru / edit tanpa petunjuk jadi "(belum ada petunjuk)").
-                    $payload['password_hint'] = $plain;
+                    $payload[$name] = Hash::make($request->input($name));
                 }
 
                 continue;
             }
 
-            if ($name === 'password_hint') {
-                // Sudah diisi otomatis dari password di atas bila password diubah.
-                // Fallback: pertahankan nilai lama saat edit tanpa mengganti password.
-                if (! array_key_exists('password_hint', $payload) && $request->filled($name)) {
-                    $payload[$name] = $request->input($name);
-                }
+            // Konten artikel dirender apa adanya ({!! !!}) di halaman publik,
+            // jadi wajib disanitasi agar markup berbahaya (script, on*, dsb)
+            // tidak tersimpan sebagai stored XSS.
+            if ($name === 'konten' && str_starts_with($meta['slug'], 'artikel')) {
+                $payload[$name] = HtmlSanitizer::clean($request->input($name));
 
                 continue;
             }

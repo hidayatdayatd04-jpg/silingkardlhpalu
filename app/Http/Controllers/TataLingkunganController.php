@@ -62,7 +62,10 @@ class TataLingkunganController extends Controller
         }
 
         try {
-            $structure = $this->drive->listStructure($request->boolean('refresh'));
+            // Refresh cache (memaksa fetch ulang ke Google Drive API) hanya
+            // boleh dipicu pengguna terautentikasi — pengunjung anonim cukup
+            // membaca cache agar kuota API tidak bisa dikuras dari luar.
+            $structure = $this->drive->listStructure($request->boolean('refresh') && auth()->check());
         } catch (\Throwable $e) {
             report($e);
 

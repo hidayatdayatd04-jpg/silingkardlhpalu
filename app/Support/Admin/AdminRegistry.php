@@ -218,14 +218,6 @@ class AdminRegistry
                     'required' => true,
                 ],
                 [
-                    'name' => 'password_hint',
-                    'label' => 'Petunjuk Password (ditampilkan di detail pengguna)',
-                    'type' => 'text',
-                    'options' => [],
-                    'hide_on_create' => true,
-                    'readonly' => true,
-                ],
-                [
                     'name' => '_section_access',
                     'label' => 'Role & Akses',
                     'type' => 'section',
@@ -1676,9 +1668,8 @@ class AdminRegistry
      *
      * Mengambil SELURUH kolom tabel (bukan sekadar subset $columns) agar
      * file ekspor berisi data lengkap tiap menu — termasuk no. HP, email,
-     * petunjuk password, dst. Kolom internal/rahasia (hash password, token,
-     * field terenkripsi) dikecualikan; kolom "password" diganti dengan
-     * "password_hint" (plaintext) bila ada.
+     * dst. Kolom internal/rahasia (hash password, token, field terenkripsi)
+     * dikecualikan seluruhnya dari hasil ekspor.
      *
      * @return array<string,string> [nama_kolom => label_terbaca]
      */
@@ -1711,16 +1702,8 @@ class AdminRegistry
 
         $map = [];
         foreach ($columns as $col) {
-            // Hash password tak terbaca -> ganti dengan petunjuk (plaintext).
+            // Hash password tidak boleh diekspor dalam bentuk apa pun.
             if ($col === 'password') {
-                if (in_array('password_hint', $columns, true)) {
-                    $map['password_hint'] = 'Password (Petunjuk)';
-                }
-                continue;
-            }
-
-            // Sudah ditambahkan lewat cabang "password" di atas.
-            if ($col === 'password_hint') {
                 continue;
             }
 

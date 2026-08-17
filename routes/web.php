@@ -81,9 +81,10 @@ Route::get('/peta-objek-pengawasan', fn () => view('public.peta-objek-pengawasan
 Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->middleware('throttle:30,1')->name('feedback.store');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware(['guest', 'throttle:30,1'])->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::middleware(['guest'])->group(function () {
+        Route::get('/login', [AuthController::class, 'showLogin'])->middleware('throttle:30,1')->name('login');
+        // Percobaan login dibatasi ketat (5/menit per IP) untuk meredam brute-force.
+        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.store');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');

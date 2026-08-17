@@ -11,6 +11,7 @@ use App\Support\BackupProgress;
 use App\Support\DatabaseBackup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class BackupController extends Controller
@@ -29,9 +30,16 @@ class BackupController extends Controller
     {
         $this->authorizeSuperadmin();
 
+        // Konfirmasi dua langkah: kode acak per-sesi yang harus diketik ulang
+        // saat restore, selain kata RESTORE. Kode di-regenerasi tiap kali
+        // halaman dibuka dan hangus setelah satu kali restore sukses.
+        $restoreCode = strtoupper(Str::random(6));
+        session(['restore_code' => $restoreCode]);
+
         return view('admin.backup.index', [
             'backups' => DatabaseBackup::listBackups(),
             'database' => config('database.connections.'.config('database.default').'.database'),
+            'restoreCode' => $restoreCode,
         ]);
     }
 
@@ -75,11 +83,23 @@ class BackupController extends Controller
             'file' => ['nullable', 'file', 'max:512000'],
             'existing' => ['nullable', 'string'],
             'confirmation' => ['required', 'in:RESTORE'],
+            'restore_code' => ['required', 'string'],
         ], [
             'confirmation.required' => 'Ketik RESTORE untuk konfirmasi.',
             'confirmation.in' => 'Konfirmasi tidak valid. Ketik RESTORE persis.',
+            'restore_code.required' => 'Masukkan kode keamanan yang tampil di halaman backup.',
             'file.max' => 'Ukuran file terlalu besar (maks 500MB).',
         ]);
+
+        // Langkah kedua konfirmasi: kode acak dari sesi (dibuat saat halaman
+        // dibuka). Tolak bila kosong/salah, lalu hanguskan agar tidak bisa
+        // dipakai ulang (one-time use).
+        $sessionCode = session('restore_code');
+        if (! $sessionCode || ! hash_equals($sessionCode, (string) $request->input('restore_code'))) {
+            return back()->with('error', 'Kode keamanan tidak cocok. Buka kembali halaman backup untuk mendapatkan kode terbaru.');
+        }
+
+        session()->forget('restore_code');
 
         $filePath = null;
         $backupRelative = null;

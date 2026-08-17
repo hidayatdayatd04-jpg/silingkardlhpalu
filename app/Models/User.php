@@ -17,7 +17,6 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'password_hint',
         'is_active',
         'additional_access',
         'photo_path',

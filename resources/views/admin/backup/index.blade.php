@@ -186,7 +186,10 @@
                                         <input type="hidden" name="existing" value="{{ $b['name'] }}">
                                         <label class="mb-1.5 block text-sm font-bold text-ink-700">Ketik <span class="font-mono text-danger-600">RESTORE</span> untuk konfirmasi</label>
                                         <input name="confirmation" autocomplete="off" required
-                                            class="mb-5 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-danger-500 focus:ring-4 focus:ring-danger-100">
+                                            class="mb-4 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-danger-500 focus:ring-4 focus:ring-danger-100">
+                                        <label class="mb-1.5 block text-sm font-bold text-ink-700">Ketik kode keamanan <span class="font-mono text-danger-600">{{ $restoreCode }}</span></label>
+                                        <input name="restore_code" autocomplete="off" required
+                                            class="mb-5 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 font-mono text-sm uppercase outline-none transition focus:border-danger-500 focus:ring-4 focus:ring-danger-100">
                                         <div class="flex justify-end gap-2">
                                             <x-admin.button variant="soft" type="button" x-on:click="$dispatch('close-modal', 'restore-{{ $loop->index }}')">Batal</x-admin.button>
                                             <x-admin.button variant="danger" type="submit" icon="refresh">Restore Sekarang</x-admin.button>
@@ -227,7 +230,7 @@
                     </div>
 
                     <form id="restore-upload-form" method="POST" action="{{ route('admin.backup.restore') }}" enctype="multipart/form-data"
-                        x-data="{ confirm: '', fileName: '' }" class="space-y-3">
+                        x-data="{ confirm: '', fileName: '', code: '' }" class="space-y-3">
                         @csrf
                         <div x-data="{ over: false }"
                             x-on:dragover.prevent="over = true"
@@ -262,9 +265,15 @@
                                 class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-xs outline-none transition focus:border-danger-500 focus:ring-4 focus:ring-danger-100">
                         </div>
 
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-ink-700">Kode keamanan <span class="font-mono text-danger-600">{{ $restoreCode }}</span></label>
+                            <input name="restore_code" x-model="code" autocomplete="off"
+                                class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 font-mono text-xs uppercase outline-none transition focus:border-danger-500 focus:ring-4 focus:ring-danger-100">
+                        </div>
+
                         <button type="submit"
-                            x-bind:disabled="confirm !== 'RESTORE' || !fileName"
-                            x-bind:class="(confirm === 'RESTORE' && fileName) ? 'bg-danger-600 hover:bg-danger-700 text-white shadow-[0_8px_20px_-8px_rgba(225,29,72,0.6)]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+                            x-bind:disabled="confirm !== 'RESTORE' || !fileName || !code"
+                            x-bind:class="(confirm === 'RESTORE' && fileName && code) ? 'bg-danger-600 hover:bg-danger-700 text-white shadow-[0_8px_20px_-8px_rgba(225,29,72,0.6)]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
                             class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold transition focus:outline-none disabled:pointer-events-none disabled:opacity-60">
                             <span>Restore dari File</span>
                         </button>

@@ -118,22 +118,41 @@ class SettingController extends Controller
 
     /**
      * Ambil daftar model dari provider (OpenRouter, Google, & custom OpenAI-compatible).
+     *
+     * Saat mengedit provider, api_key boleh kosong dengan menyertakan
+     * provider_id — key terenkripsi yang sudah tersimpan akan dipakai,
+     * sehingga admin tidak perlu mengetik ulang key hanya untuk memuat model.
      */
     public function fetchModels(Request $request)
     {
         $this->ensureSuperadmin();
 
         $validated = $request->validate([
-            'type'     => ['required', 'in:openrouter,google,custom'],
-            'api_key'  => ['required', 'string'],
-            'base_url' => ['nullable', 'required_if:type,custom', 'url'],
+            'type'        => ['required', 'in:openrouter,google,custom'],
+            'api_key'     => ['nullable', 'string'],
+            'provider_id' => ['nullable', 'integer', 'exists:ai_provider,id'],
+            'base_url'    => ['nullable', 'required_if:type,custom', 'url'],
         ]);
 
+        $apiKey = $validated['api_key'] ?? '';
+
+        if ($apiKey === '' && ! empty($validated['provider_id'])) {
+            $apiKey = (string) (AiProvider::find($validated['provider_id'])?->api_key ?? '');
+        }
+
+        if ($apiKey === '') {
+            return response()->json(['error' => 'API key wajib diisi.'], 422);
+        }
+
         try {
+            if ($validated['type'] === AiProvider::TYPE_CUSTOM) {
+                $this->assertSafeOutboundUrl($validated['base_url']);
+            }
+
             $models = match ($validated['type']) {
                 AiProvider::TYPE_OPENROUTER => $this->fetchOpenRouterModels(),
-                AiProvider::TYPE_GOOGLE     => $this->fetchGoogleModels($validated['api_key']),
-                AiProvider::TYPE_CUSTOM     => $this->fetchCustomModels($validated['base_url'], $validated['api_key']),
+                AiProvider::TYPE_GOOGLE     => $this->fetchGoogleModels($apiKey),
+                AiProvider::TYPE_CUSTOM     => $this->fetchCustomModels($validated['base_url'], $apiKey),
             };
 
             return response()->json(['models' => $models]);
@@ -254,9 +273,62 @@ class SettingController extends Controller
             ? $validated['base_url']
             : AiProvider::defaultBaseUrls()[$validated['type']];
 
+        // Cegah SSRF: base_url custom tidak boleh menunjuk ke alamat internal.
+        if ($validated['type'] === AiProvider::TYPE_CUSTOM) {
+            $this->assertSafeOutboundUrl($validated['base_url']);
+        }
+
         $validated['is_active'] = ($validated['is_active'] ?? ($provider ? '0' : '1')) === '1';
 
         return $validated;
+    }
+
+    /**
+     * Tolak URL outbound yang mengarah ke alamat internal/privat (anti-SSRF).
+     *
+     * Dipakai sebelum server menghubungi base_url custom milik admin
+     * (fetch model & validasi provider). Host dicek dua lapis: pola nama
+     * (localhost, IP privat literal) lalu hasil resolusi DNS-nya.
+     */
+    private function assertSafeOutboundUrl(string $url): void
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = $parts['host'] ?? '';
+
+        if (! in_array($scheme, ['http', 'https'], true) || $host === '') {
+            throw new \RuntimeException('URL harus http/https dan memiliki host yang valid.');
+        }
+
+        $hostLower = strtolower(trim($host, '[]'));
+
+        $blockedPattern = '/^(localhost|127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1$)/i';
+
+        if (preg_match($blockedPattern, $hostLower)) {
+            throw new \RuntimeException('URL tidak boleh mengarah ke alamat internal/privat.');
+        }
+
+        // Lapis kedua: bila host berupa IP literal, validasi langsung;
+        // bila bukan, resolusikan DNS lalu validasi hasilnya. Keduanya harus
+        // berada di luar rentang privat/reserved.
+        if (filter_var($hostLower, FILTER_VALIDATE_IP) !== false) {
+            $candidates = [$hostLower];
+        } else {
+            $resolved = gethostbyname($hostLower);
+            $candidates = $resolved !== $hostLower ? [$resolved] : [];
+        }
+
+        foreach ($candidates as $ip) {
+            $isPublic = filter_var(
+                $ip,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            );
+
+            if (! $isPublic) {
+                throw new \RuntimeException('URL tidak boleh mengarah ke alamat internal/privat.');
+            }
+        }
     }
 
     private function ensureSuperadmin(): void

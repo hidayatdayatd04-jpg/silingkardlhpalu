@@ -229,28 +229,15 @@
                             </div>
                         </div>
 
-                        {{-- Password (petunjuk plaintext bisa dilihat via toggle) --}}
-                        <div class="flex items-start gap-3" x-data="{ showPassword: false }">
+                        {{-- Password — hanya tersimpan sebagai hash, tidak pernah ditampilkan --}}
+                        <div class="flex items-start gap-3">
                             <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500">
                                 <x-admin.icon name="lock" :size="18" />
                             </span>
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Password</p>
-                                <div class="mt-0.5 flex items-center gap-2">
-                                    @if($record->password_hint)
-                                        <p class="font-mono text-sm font-semibold text-slate-900" x-show="!showPassword" x-cloak>&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</p>
-                                        <p class="font-mono text-sm font-semibold text-slate-900" x-show="showPassword" x-cloak>{{ addslashes($record->password_hint) }}</p>
-                                    @else
-                                        <p class="font-mono text-sm font-semibold text-slate-400" x-show="!showPassword" x-cloak>&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</p>
-                                        <p class="font-mono text-sm font-semibold text-slate-400" x-show="showPassword" x-cloak>(belum ada petunjuk)</p>
-                                    @endif
-                                    <button type="button" @click="showPassword = !showPassword"
-                                        class="grid size-7 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                                        x-bind:title="showPassword ? 'Sembunyikan' : 'Tampilkan'">
-                                        <x-admin.icon name="eye" :size="14" x-show="!showPassword" />
-                                        <x-admin.icon name="eye-off" :size="14" x-show="showPassword" />
-                                    </button>
-                                </div>
+                                <p class="mt-0.5 text-sm font-semibold text-slate-900">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</p>
+                                <p class="mt-0.5 text-xs text-slate-400">Password terenkripsi — gunakan tombol Reset Password bila perlu mengganti.</p>
                             </div>
                         </div>
                     </div>

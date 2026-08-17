@@ -15,9 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // Trust reverse proxies (Cloudflare Tunnel, Nginx Proxy, dll)
+        // Trust reverse proxies (Cloudflare Tunnel, Nginx Proxy, dll).
+        // Daftar proxy yang dipercaya diambil dari env TRUSTED_PROXIES
+        // (pisahkan dengan koma). '*' berarti percaya semua alamat —
+        // hanya dipakai sebagai fallback bila env belum diisi.
+        $trustedProxies = env('TRUSTED_PROXIES', '172.16.0.0/12,127.0.0.1');
         $middleware->trustProxies(
-            at: '*',
+            at: $trustedProxies === '*'
+                ? '*'
+                : array_values(array_filter(array_map('trim', explode(',', $trustedProxies)))),
             headers:
                 Request::HEADER_X_FORWARDED_FOR |
                 Request::HEADER_X_FORWARDED_HOST |
@@ -33,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->appendToGroup('web', TrackWebsiteVisit::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckMaintenanceMode::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeaders::class);
 
         // Bila pengunjung (belum login) membuka rute terlindungi seperti
         // /admin saat mode pemeliharaan, arahkan langsung ke login panel

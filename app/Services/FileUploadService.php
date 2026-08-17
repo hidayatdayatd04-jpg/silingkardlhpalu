@@ -22,8 +22,9 @@ use Throwable;
  *   EXIF/GPS dihapus demi privasi) lalu disimpan dengan NAMA ASLI file
  *   (hanya ekstensi yang diganti menjadi .webp).
  *   GIF dibiarkan apa adanya agar animasi tidak rusak.
- * - File non-gambar (pdf, doc, dll) serta SVG disimpan apa adanya dengan
- *   nama asli.
+ * - File non-gambar (pdf, doc, dll) disimpan apa adanya dengan nama asli.
+ * - SVG/SVGZ DITOLAK — file vektor dapat memuat <script>/event handler
+ *   sehingga menjadi vektor stored XSS saat disajikan ke browser.
  * - Bila di direktori tujuan sudah ada file dengan nama yang sama, ditambahkan
  *   sufiks -1, -2, dst agar file lama tidak tertimpa.
  * - File sementara Livewire (TemporaryUploadedFile) dihapus setelah diproses
@@ -43,6 +44,20 @@ class FileUploadService
     {
         $directory = trim($directory, '/');
 
+        // SVG/SVGZ ditolak: vektor bisa memuat <script>/on*-handler dan
+        // menjadi stored XSS saat dibuka langsung di browser.
+        if ($this->isSvg($file)) {
+            Log::warning('FileUploadService: upload SVG ditolak', [
+                'file' => $file->getClientOriginalName(),
+                'directory' => $directory,
+                'disk' => $disk,
+            ]);
+
+            $this->deleteTemporary($file);
+
+            return false;
+        }
+
         if ($this->isConvertibleImage($file)) {
             $path = $this->storeAsWebp($file, $directory, $disk);
 
@@ -53,7 +68,7 @@ class FileUploadService
             }
         }
 
-        // Non-gambar, SVG, atau konversi gagal -> simpan apa adanya dengan nama asli.
+        // Non-gambar atau konversi gagal -> simpan apa adanya dengan nama asli.
         try {
             $name = $this->uniqueName($this->safeOriginalName($file), $directory, $disk);
             $path = $file->storeAs($directory, $name, ['disk' => $disk]);
@@ -83,6 +98,23 @@ class FileUploadService
         }
 
         return $path;
+    }
+
+    /**
+     * Deteksi file SVG berdasarkan MIME type maupun ekstensi (MIME bisa
+     * dimanipulasi, jadi keduanya diperiksa).
+     */
+    protected function isSvg(UploadedFile $file): bool
+    {
+        $mime = strtolower((string) $file->getMimeType());
+
+        if (in_array($mime, ['image/svg', 'image/svg+xml'], true)) {
+            return true;
+        }
+
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+
+        return in_array($extension, ['svg', 'svgz'], true);
     }
 
     /**

@@ -10,7 +10,9 @@
 
     $publicPageMap = \App\Models\GisDataLayer::publicPages();
 
-$layersJson = $layers->map(fn($l) => [
+    // Js::from() menghasilkan ekspresi JSON yang aman disisipkan ke <script>
+    // (karakter <, >, & di-escape) sehingga tidak perlu {!! !!} mentah.
+    $layersJs = \Illuminate\Support\Js::from($layers->map(fn($l) => [
     'id' => $l->id,
     'parent_id' => $l->parent_id,
     'nama_layer' => $l->nama_layer,
@@ -23,7 +25,7 @@ $layersJson = $layers->map(fn($l) => [
         'show_in_filter' => $l->show_in_filter,
         'public_page' => $publicPageMap[$l->bidang] ?? null,
         'geojson' => $l->toGeoJson(),
-    ])->toJson();
+    ]));
 @endphp
 
 @extends('layouts.admin')
@@ -1069,7 +1071,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             drawMode: 'simple_select',
             tempMarker: null,
             drawCoords: [],
-            layers: {!! $layersJson !!},
+            layers: {{ $layersJs }},
             layerSources: {},
             layerMarkers: {},
             isSelectionMode: false,

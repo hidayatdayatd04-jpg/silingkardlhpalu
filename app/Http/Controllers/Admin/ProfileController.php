@@ -80,8 +80,6 @@ class ProfileController extends Controller
         ]);
 
         $user->password = Hash::make($request->input('password'));
-        // Simpan petunjuk password (plaintext) agar bisa dilihat di detail pengguna.
-        $user->password_hint = $request->input('password');
         $user->save();
 
         ActivityLogger::log('updated', 'Ubah password: '.$user->name, 'profile', null, null, $user);

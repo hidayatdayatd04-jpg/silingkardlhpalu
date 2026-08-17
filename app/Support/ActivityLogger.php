@@ -24,7 +24,7 @@ class ActivityLogger
     /**
      * Kolom sensitif yang tidak boleh masuk ke diff old/new.
      */
-    public const HIDDEN = ['password', 'remember_token', 'additional_access', 'email_verified_at'];
+    public const HIDDEN = ['password', 'password_hint', 'remember_token', 'additional_access', 'email_verified_at', 'api_key'];
 
     public static function disable(): void
     {

@@ -67,7 +67,7 @@ Penting: **setiap admin bidang hanya dapat mengakses data bidangnya sendiri** (d
 | **Role/Permission** | Spatie Laravel Permission |
 | **Peta / GIS** | MapLibre GL JS; mendukung impor **Shapefile (SHP)** |
 | **PDF** | barryvdh/laravel-dompdf |
-| **Export Excel/CSV** | Maatwebsite Excel (didukung fallback ekspor berantre/async) |
+| **Export Excel/CSV** | Ekspor dependency-free via `App\Support\DataIO` (tanpa library eksternal) |
 | **Gambar** | Intervention Image (kompresi + varian gambar) |
 | **Storage cloud** | Backblaze B2 (S3-compatible), Flysystem S3 |
 | **Chatbot AI** | Provider OpenAI-compatible (OpenRouter/token router) — API key dikonfigurasi lewat UI admin, bukan `.env` |
@@ -108,7 +108,7 @@ Portal Publik (Blade + Livewire)      Panel Admin (/admin)
 - **Services** (`app/Services/`) — `GpsService`, `AiChatService`, `ChatKnowledgeBase`, `GoogleDriveService`, `StatistikService`, `ShpParserService`, `ImageCompressionService`, `FileUploadService`, `TicketTimelineService`, `MonitoringService`.
 - **Support** (`app/Support/`) — `AdminRegistry`, `AdminAccess`, `TicketGenerator`, `DatabaseBackup`, `DataIO`, `PhoneNormalizer`, `NumberFallback`, dll.
 - **Policies** (`app/Policies/`) — aturan izin per model.
-- **Middleware** — `EnsureAdminPanelAccess`, `NoStoreCacheHeaders`, `TrackWebsiteVisit`, `CheckMaintenanceMode`.
+- **Middleware** — `EnsureAdminPanelAccess`, `NoStoreCacheHeaders`, `TrackWebsiteVisit`, `CheckMaintenanceMode`, `SecurityHeaders`.
 
 ---
 
@@ -484,12 +484,16 @@ Admin dapat mengelola pengguna (`/admin/user/...`) dan melakukan **reset passwor
 ## 19. Keamanan
 
 - **Autentikasi & otorisasi berlapis**: middleware (`auth`, `admin.access`), otorisasi di controller, serta Spatie policies per model.
-- **Password ter-hash** (BCrypt rounds 12) + proteksi agar role Admin tidak dapat diturunkan sembarangan.
-- **Rate limiting** (`throttle`) pada halaman cek status, unduh PDF, login, input form publik, dan endpoint chatbot/API.
-- **Header keamanan** via `nginx.conf` (`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`); header `no-store` pada grup route admin.
-- **API key AI** terenkripsi di database.
+- **Password ter-hash** (BCrypt rounds 12) + proteksi agar role Admin tidak dapat diturunkan sembarangan. Kolom `password_hint` sudah dihapus dari skema & seluruh UI.
+- **Rate limiting** (`throttle`) pada halaman cek status, unduh PDF, input form publik, dan endpoint chatbot/API; percobaan login dibatasi **5/menit per IP** (`throttle:5,1`).
+- **Header keamanan** dikirim middleware `App\Http\Middleware\SecurityHeaders` (nosniff, X-Frame-Options, Referrer-Policy, HSTS saat HTTPS, Permissions-Policy, CSP report-only) plus header tambahan di `nginx.conf`; header `no-store` pada grup route admin.
+- **Sanitasi HTML**: konten artikel disanitasi dengan HTMLPurifier (`App\Support\HtmlSanitizer`) saat disimpan dan saat dirender — script/handler `on*` dibuang, embed hanya diizinkan dari YouTube.
+- **API key AI** terenkripsi di database (cast `encrypted` di model `AiProvider`); nilai sensitif (`password`, `api_key`, dsb) tidak pernah masuk diff `activity_logs`.
+- **Upload file**: SVG/SVGZ ditolak oleh `FileUploadService` (vektor bisa memuat script → XSS).
+- **Reverse proxy**: hanya alamat di `TRUSTED_PROXIES` (`.env`) yang dipercaya membaca header `X-Forwarded-*` — jangan gunakan `*` di produksi.
+- **`.env` tidak pernah di-commit** (sudah masuk `.gitignore`, termasuk `.env.backup`/`.env.production`); simpan kredensial hanya di server produksi.
 - **Log aktivitas** (`activity_logs`) & **notifikasi admin** untuk audit.
-- Sebelum produksi: **ganti password demo** (§16), set `APP_ENV=production` & `APP_DEBUG=false`, aktifkan HTTPS.
+- Sebelum produksi: **ganti password demo** (§16), set `APP_ENV=production` & `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true` (setelah full HTTPS), isi `TRUSTED_PROXIES` dengan alamat proxy sebenarnya, aktifkan HTTPS.
 
 ---
 

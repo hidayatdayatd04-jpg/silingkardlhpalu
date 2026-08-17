@@ -218,8 +218,10 @@
                                 name="api_key"
                                 label="API Key"
                                 toggleable
-                                :value="$provider->api_key"
-                                hint="Key tersimpan di database sebagai teks biasa. Dibutuhkan untuk memuat daftar model."
+                                value=""
+                                placeholder="•••• (terenkripsi — kosongkan untuk mempertahankan)"
+                                data-provider-id="{{ $provider->id }}"
+                                hint="Key tersimpan terenkripsi di database. Kosongkan bila tidak ingin mengubah key; key tersimpan akan dipakai saat memuat daftar model."
                                 :error="$showErr && $errors->has('api_key') ? $errors->first('api_key') : ''"
                             />
 
@@ -747,9 +749,13 @@
             },
 
             async loadModels() {
-                const apiKey = this.$root.querySelector('[name="api_key"]')?.value?.trim();
+                const apiKeyInput = this.$root.querySelector('[name="api_key"]');
+                const apiKey = apiKeyInput?.value?.trim();
+                // Form edit menyimpan provider_id di data-attribute agar backend bisa
+                // memakai api_key terenkripsi dari DB saat input dikosongkan.
+                const providerId = apiKeyInput?.dataset?.providerId || null;
 
-                if (!apiKey) {
+                if (!apiKey && !providerId) {
                     this.status = 'Isi API key terlebih dahulu untuk memuat daftar model.';
                     this.statusError = true;
                     return;
@@ -777,7 +783,7 @@
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         },
-                        body: JSON.stringify({ type: this.type, api_key: apiKey, base_url: baseUrl }),
+                        body: JSON.stringify({ type: this.type, api_key: apiKey || null, base_url: baseUrl, provider_id: providerId }),
                     });
 
                     const data = await response.json();

@@ -9,7 +9,7 @@
         $statusEnum = $record->status instanceof ArtikelStatus ? $record->status : null;
         $statusLabel = $statusEnum?->label() ?? '—';
 
-        $kontenBersih = (string) $record->konten;
+        $kontenBersih = \App\Support\HtmlSanitizer::clean((string) $record->konten);
         do {
             $kontenPrev = $kontenBersih;
             $kontenBersih = preg_replace('/<(p|div|span)[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/i', '', $kontenBersih);

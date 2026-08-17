@@ -49,6 +49,9 @@ class AiProvider extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'priority'  => 'integer',
+        // API key disimpan terenkripsi di database (temuan audit keamanan);
+        // cast otomatis mendekripsi saat dibaca lewat model.
+        'api_key'   => 'encrypted',
     ];
 
     /**
