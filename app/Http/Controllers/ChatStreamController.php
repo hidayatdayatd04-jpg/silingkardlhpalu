@@ -53,8 +53,10 @@ class ChatStreamController extends Controller
         $apiMessages[] = ['role' => 'user', 'content' => $userMessage];
 
         try {
+            // Jangan log isi pesan warga (bisa memuat data pribadi/sensitif);
+            // cukup metadata panjang karakter untuk keperluan debugging.
             \Illuminate\Support\Facades\Log::info('ChatBot: Starting request', [
-                'user_message' => $userMessage,
+                'user_message_length' => strlen($userMessage),
             ]);
 
             // AiChatService mencoba provider aktif sesuai prioritas dan

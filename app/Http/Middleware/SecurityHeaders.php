@@ -15,9 +15,10 @@ use Symfony\Component\HttpFoundation\Response;
  * - Strict-Transport-Security: paksa HTTPS (hanya dikirim saat request
  *   sudah HTTPS; browser mengabaikan header ini di HTTP).
  * - Permissions-Policy: batasi akses fitur browser (kamera, mic, geolokasi).
- * - Content-Security-Policy-Report-Only: kebijakan CSP longgar yang baru
- *   dilaporkan (report-only) agar tidak memecah fitur pihak ketiga yang
- *   sudah ada; naikkan jadi Content-Security-Policy setelah dipantau.
+ * - Content-Security-Policy: kebijakan CSP aktif (enforced). Policy masih
+ *   memakai 'unsafe-inline'/'unsafe-eval' pada script-src karena banyak
+ *   inline script Blade/Livewire/Alpine; migrasi ke nonce adalah langkah
+ *   lanjutan agar proteksi XSS CSP benar-benar efektif.
  */
 class SecurityHeaders
 {
@@ -34,11 +35,11 @@ class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
-        // Report-only dulu: kebijakan sengaja longgar (self + inline) agar
-        // tidak memecah skrip/inline style yang sudah ada, sambil tetap
-        // mendapat laporan pelanggaran di log server.
+        // CSP enforced: memblokir sumber daya di luar policy. 'unsafe-inline'
+        // dan 'unsafe-eval' masih dipertahankan pada script-src karena
+        // inline script Blade/Livewire/Alpine; hapus bertahap via nonce.
         $response->headers->set(
-            'Content-Security-Policy-Report-Only',
+            'Content-Security-Policy',
             "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
         );
 

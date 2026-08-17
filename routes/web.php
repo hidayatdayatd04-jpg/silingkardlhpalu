@@ -218,8 +218,8 @@ Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
 Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middleware('throttle:30,1');
 
 // Sampah & LB3 Public Routes
-Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index']);
-Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers']);
+Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers'])->middleware('throttle:120,1');
 Route::get('/pengaduan-sampah', fn () => view('public.pengaduan-sampah'));
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-sampah', '/lacak');
@@ -256,7 +256,7 @@ Route::get('/api/armada-aktif', function () {
         'message' => 'Daftar armada berhasil diambil.',
         'data' => \App\Models\GpsVehicleCache::all(),
     ]);
-});
+})->middleware('throttle:60,1');
 
 // Chatbot streaming endpoint
 Route::post('/api/chatbot/stream', [App\Http\Controllers\ChatStreamController::class, 'stream'])
@@ -266,3 +266,12 @@ Route::post('/api/chatbot/stream', [App\Http\Controllers\ChatStreamController::c
 // Avoids short-lived signed URLs that break WhatsApp/Facebook previews.
 Route::get('/file/og', [App\Http\Controllers\OgImageProxyController::class, 'show'])
     ->name('og.image');
+
+// Kontak pelaporan kerentanan keamanan (praktik baik website pemerintah).
+Route::get('/.well-known/security.txt', function () {
+    return response(implode("\n", [
+        'Contact: mailto:admin@dlhpalu.go.id',
+        'Expires: '.now()->addYear()->format('Y-m-d\T00:00:00P'),
+        'Preferred-Languages: id, en',
+    ]), 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+});

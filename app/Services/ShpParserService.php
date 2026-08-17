@@ -177,6 +177,16 @@ class ShpParserService
     }
 
     /**
+     * Jumlah entri maksimum dalam satu arsip ZIP (proteksi zip bomb).
+     */
+    private const MAX_ZIP_ENTRIES = 5000;
+
+    /**
+     * Total ukuran uncompressed maksimum arsip ZIP: 1 GB (proteksi zip bomb).
+     */
+    private const MAX_TOTAL_UNCOMPRESSED_SIZE = 1073741824;
+
+    /**
      * Pure PHP ZIP extraction (stored + deflated methods)
      */
     private function extractZipPure(string $zipPath, string $destDir): void
@@ -203,8 +213,15 @@ class ShpParserService
         $cdSize = unpack('V', fread($handle, 4))[1];
         $cdOffset = unpack('V', fread($handle, 4))[1];
 
+        // Proteksi zip bomb: batasi jumlah entri arsip
+        if ($numEntries > self::MAX_ZIP_ENTRIES) {
+            fclose($handle);
+            throw new RuntimeException('ZIP archive contains too many entries (possible zip bomb)');
+        }
+
         // Read Central Directory
         $cdPos = $cdOffset;
+        $totalUncompressed = 0;
         for ($i = 0; $i < $numEntries; $i++) {
             fseek($handle, $cdPos);
             $entry = fread($handle, 46);
@@ -229,9 +246,27 @@ class ShpParserService
         // Advance CD position for next iteration
         $cdPos += 46 + $nameLen + $extraLen + $commentLen;
 
+            // Proteksi Zip Slip: validasi nama entri sebelum menulis apa pun.
+            // Tolak path traversal (..), path absolut, dan drive letter Windows.
+            $safeName = str_replace('\\', '/', $fileName);
+            if (
+                str_contains($safeName, '..')
+                || str_starts_with($safeName, '/')
+                || preg_match('/^[A-Za-z]:/', $safeName)
+            ) {
+                throw new RuntimeException("Unsafe entry name in ZIP archive: {$fileName}");
+            }
+
+            // Proteksi zip bomb: batasi total ukuran uncompressed
+            $totalUncompressed += $uncompSize;
+            if ($totalUncompressed > self::MAX_TOTAL_UNCOMPRESSED_SIZE) {
+                fclose($handle);
+                throw new RuntimeException('ZIP archive exceeds maximum uncompressed size (possible zip bomb)');
+            }
+
             // Skip directories
             if (substr($fileName, -1) === '/') {
-                $dirPath = $destDir . '/' . str_replace('\\', '/', $fileName);
+                $dirPath = $destDir . '/' . $safeName;
                 if (! is_dir($dirPath)) {
                     mkdir($dirPath, 0755, true);
                 }
@@ -266,12 +301,31 @@ class ShpParserService
                 throw new RuntimeException("Unsupported compression method {$compMethod} for: {$fileName}");
             }
 
+            // Verifikasi ukuran hasil dekompresi tidak melebihi deklarasi (zip bomb).
+            // uncompSize bisa 0 pada ZIP dengan data descriptor (streaming) — lewati
+            // pengecekan bila deklarasi tidak tersedia.
+            if ($uncompSize > 0 && strlen($data) > $uncompSize) {
+                throw new RuntimeException("Decompressed size exceeds declared size for: {$fileName}");
+            }
+
             // Write file
-            $filePath = $destDir . '/' . str_replace('\\', '/', $fileName);
+            $filePath = $destDir . '/' . $safeName;
             $fileDir = dirname($filePath);
             if (! is_dir($fileDir)) {
                 mkdir($fileDir, 0755, true);
             }
+
+            // Defense-in-depth: pastikan path hasil resolusi tetap di dalam $destDir
+            $realDest = realpath($destDir);
+            $realParent = realpath($fileDir);
+            if (
+                $realDest === false
+                || $realParent === false
+                || ($realParent !== $realDest && ! str_starts_with($realParent, $realDest . DIRECTORY_SEPARATOR))
+            ) {
+                throw new RuntimeException("Unsafe extraction path for entry: {$fileName}");
+            }
+
             file_put_contents($filePath, $data);
         }
 

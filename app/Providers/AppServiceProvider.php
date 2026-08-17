@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 
 class AppServiceProvider extends ServiceProvider
@@ -53,6 +54,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Kebijakan password terpusat untuk seluruh aplikasi (form admin,
+        // reset password, ubah password profil). Tanpa ->uncompromised()
+        // agar tidak bergantung pada API HaveIBeenPwned saat server
+        // tidak memiliki akses internet.
+        Password::defaults(function () {
+            return Password::min(10)->mixedCase()->numbers();
+        });
+
         // Tunda eksekusi Livewire JS keluar dari critical path render (defer).
         // Bootup Livewire (~1s) adalah biaya main-thread terbesar di halaman
         // publik; defer menggesernya setelah HTML selesai di-parse. Aman karena

@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class ResourceController extends Controller
@@ -39,6 +40,13 @@ class ResourceController extends Controller
         // Superadmin bisa akses semua
         if ($user->isSuperadmin()) {
             return;
+        }
+
+        // Resource "user" hanya untuk superadmin native — tidak boleh
+        // diakses lewat additional_access agar tidak terjadi eskalasi
+        // hak akses (admin bidang membuat user ber-role admin).
+        if (($meta['slug'] ?? '') === 'user') {
+            throw new AccessDeniedHttpException('Menu Pengguna Admin hanya dapat diakses oleh Admin.');
         }
 
         // Cek apakah user bisa akses group dari resource ini
@@ -108,15 +116,20 @@ class ResourceController extends Controller
         $this->storeDaftarHadir($request, $meta, $record);
         $this->storeSanksiIfPelanggaran($request, $record);
 
-        // Handle role assignment untuk user
-        if ($resource === 'user' && $request->filled('role')) {
-            $record->syncRoles([$request->input('role')]);
-        }
+        // Handle role assignment untuk user — hanya superadmin yang boleh
+        // mengubah role & additional_access (defense-in-depth di atas authorize()).
+        if ($resource === 'user') {
+            abort_unless(auth()->user()->isSuperadmin(), 403, 'Hanya Admin yang dapat mengelola role pengguna.');
 
-        // Handle additional_access untuk user
-        if ($resource === 'user' && $request->has('additional_access')) {
-            $record->additional_access = $request->input('additional_access', []);
-            $record->save();
+            if ($request->filled('role')) {
+                $record->syncRoles([$request->input('role')]);
+            }
+
+            // Handle additional_access untuk user
+            if ($request->has('additional_access')) {
+                $record->additional_access = $request->input('additional_access', []);
+                $record->save();
+            }
         }
 
         // Simpan foto profil user (bila diunggah) — otomatis dikompres & dikonversi ke WebP.
@@ -186,18 +199,23 @@ class ResourceController extends Controller
         $this->storeDaftarHadir($request, $meta, $model);
         $this->storeSanksiIfPelanggaran($request, $model);
 
-        // Handle role assignment untuk user
-        if ($resource === 'user' && $request->filled('role')) {
-            // Jangan update role jika user adalah superadmin (protection)
-            if (! $model->isSuperadmin()) {
-                $model->syncRoles([$request->input('role')]);
-            }
-        }
+        // Handle role assignment untuk user — hanya superadmin yang boleh
+        // mengubah role & additional_access (defense-in-depth di atas authorize()).
+        if ($resource === 'user') {
+            abort_unless(auth()->user()->isSuperadmin(), 403, 'Hanya Admin yang dapat mengelola role pengguna.');
 
-        // Handle additional_access untuk user
-        if ($resource === 'user' && $request->has('additional_access')) {
-            $model->additional_access = $request->input('additional_access', []);
-            $model->save();
+            if ($request->filled('role')) {
+                // Jangan update role jika user target adalah superadmin (protection)
+                if (! $model->isSuperadmin()) {
+                    $model->syncRoles([$request->input('role')]);
+                }
+            }
+
+            // Handle additional_access untuk user
+            if ($request->has('additional_access')) {
+                $model->additional_access = $request->input('additional_access', []);
+                $model->save();
+            }
         }
 
         // Foto profil: hapus bila diminta, atau ganti bila ada file baru.
@@ -234,10 +252,9 @@ class ResourceController extends Controller
         $target = User::findOrFail($record);
 
         $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', Password::defaults()],
         ], [
             'password.required' => 'Password baru wajib diisi.',
-            'password.min' => 'Password baru minimal 8 karakter.',
         ]);
 
         $target->password = Hash::make($validated['password']);
@@ -258,7 +275,19 @@ class ResourceController extends Controller
         $path = (string) $request->query('path', '');
         $name = (string) $request->query('name', '');
 
-        abort_unless($path !== '' && ! str_contains($path, '..'), 403, 'Akses file ditolak.');
+        // Validasi path: tolak kosong, traversal (..), path absolut,
+        // drive letter Windows, null byte, dan backslash.
+        abort_unless(
+            $path !== ''
+            && ! str_contains($path, '..')
+            && ! str_starts_with($path, '/')
+            && ! str_starts_with($path, '\\')
+            && ! str_contains($path, ':')
+            && ! str_contains($path, "\0")
+            && ! str_contains($path, '\\'),
+            403,
+            'Akses file ditolak.'
+        );
         abort_unless(Storage::disk('public')->exists($path), 404, 'File tidak ditemukan.');
 
         // Nama unduhan: gunakan nama yang dikirim (lebih mudah dibaca), lalu
@@ -908,7 +937,7 @@ class ResourceController extends Controller
             if ($type === 'password') {
                 $rule[] = ($required && ! $updating) ? 'required' : 'nullable';
                 $rule[] = 'string';
-                $rule[] = 'min:6';
+                $rule[] = Password::defaults();
             } elseif ($type === 'file') {
                 $rule[] = ($required && ! $updating) ? 'required' : 'nullable';
                 $rule[] = 'file';

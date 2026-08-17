@@ -51,30 +51,4 @@ class TicketGenerator
 
         return $code;
     }
-
-    /**
-     * Generate a sequential ticket number with format PREFIX-YYYY-XXXX.
-     *
-     * @param  class-string<Model>  $modelClass
-     */
-    public static function generateSequentialWithPrefix(string $prefix, string $modelClass, string $column = 'nomor_tiket'): string
-    {
-        $year = now()->year;
-        $prefixWithYear = $prefix.'-'.$year;
-
-        $numbers = $modelClass::query()
-            ->where($column, 'like', $prefixWithYear.'-%')
-            ->pluck($column)
-            ->map(function (string $code) {
-                $parts = explode('-', $code);
-
-                return (int) end($parts);
-            })
-            ->sortDesc()
-            ->values();
-
-        $nextNumber = $numbers->isEmpty() ? 1 : $numbers->first() + 1;
-
-        return $prefixWithYear.'-'.str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
-    }
 }

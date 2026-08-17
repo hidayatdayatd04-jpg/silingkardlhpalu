@@ -70,7 +70,9 @@ class PengajuanRintekPertek extends Model
             }
 
             if (empty($model->nomor_pengajuan)) {
-                $model->nomor_pengajuan = TicketGenerator::generateSequentialWithPrefix(
+                // Nomor acak (bukan sekuensial) agar tidak bisa dienumerasi —
+                // nomor ini dipakai sebagai satu-satunya kunci akses bukti PDF publik.
+                $model->nomor_pengajuan = TicketGenerator::generateWithPrefix(
                     'RPT',
                     static::class,
                     'nomor_pengajuan',
