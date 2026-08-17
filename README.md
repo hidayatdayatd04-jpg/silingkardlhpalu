@@ -293,21 +293,25 @@ Akses:
 `docker-compose.yml` mengatur: `app` (PHP-FPM), `nginx` (port 80), `db` (PostgreSQL 16), `queue` (worker), dan `scheduler`.
 
 ```bash
-# Build & jalankan seluruh service
+# 1. Siapkan .env produksi di root project (dari .env.example yang disanitasi)
+cp .env.example .env   # lalu isi kredensial & APP_KEY
+
+# 2. Build & jalankan seluruh service
 docker compose up -d --build
 
-# Migrasi + seeder dasar di dalam container app
+# 3. Migrasi + seeder dasar di dalam container app
 docker compose exec app php artisan migrate --seed
 docker compose exec app php artisan storage:link
 ```
 
-- Nginx diatur lewat `nginx.conf` (compression gzip, cache aset 30 hari, security headers, deny akses file tersembunyi).
-- `Dockerfile` multi-stage (base → build → production); image PHP 8.2-fpm + Node 18 untuk build aset.
-- Kredensial DB default ada di `docker-compose.yml` (variabel `POSTGRES_DB/POSTGRES_USER/POSTGRES_PASSWORD`), dapat di-override lewat file `.env` di root.
+- **Kode + vendor + aset frontend berasal dari image** (Dockerfile multi-stage: base → build → production; PHP 8.2-fpm + Node 18). Yang di-bind dari host hanya `.env`, `storage/`, dan `bootstrap/cache/` — jadi fresh clone di VPS langsung jalan tanpa `composer install`/`npm run build` di host.
+- Nginx diatur lewat `nginx.conf` (compression gzip, cache aset 30 hari, security headers, deny akses file tersembunyi) dan membaca kode/aset dari image `app` (`volumes_from`).
+- Kredensial DB default ada di `docker-compose.yml` (variabel `DB_DATABASE/DB_USERNAME/DB_PASSWORD`), otomatis di-override oleh `.env` di root.
+- Update kode: `git pull && docker compose up -d --build && docker compose exec app php artisan migrate --force`.
 
 ### Deployment ke VPS
 
-1. Siapkan `.env` produksi di server (salin dari `.env.example` yang sudah disanitasi — **jangan** menyalin `.env` lokal yang berisi kredensial asli). Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain-anda`, lalu `php artisan key:generate`.
+1. Siapkan `.env` produksi di server (salin dari `.env.example` yang sudah disanitasi — **jangan** menyalin `.env` lokal yang berisi kredensial asli). Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain-anda`, lalu generate key di container: `docker compose run --rm app php artisan key:generate`.
 2. Isi kredensial database (Neon atau PostgreSQL lokal), B2, GPS, dan Google Drive sesuai kebutuhan.
 3. `docker compose up -d --build`, lalu jalankan `migrate --seed` + `storage:link` seperti di atas.
 4. **HTTPS**: `nginx.conf` bawaan hanya listen port 80. Pasang reverse proxy dengan TLS otomatis di depannya (Caddy/Traefik/Nginx host + Certbot, atau arahkan lewat Cloudflare), lalu teruskan ke port 80 container.
