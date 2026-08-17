@@ -2,6 +2,7 @@
     'label' => null,
     'path' => null,
     'downloadName' => null,
+    'resource' => null,
 ])
 
 @php
@@ -26,6 +27,7 @@
         $downloadRoute = route('admin.file.download', [
             'path' => $path,
             'name' => $downloadName ?: basename((string) $path),
+            'resource' => $resource,
         ]);
     }
 @endphp

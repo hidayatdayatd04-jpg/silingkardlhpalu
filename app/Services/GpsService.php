@@ -41,7 +41,7 @@ class GpsService
         }
 
         try {
-            $response = Http::withoutVerifying()->post($this->loginUrl, [
+            $response = Http::post($this->loginUrl, [
                 'username' => $this->username,
                 'password' => $this->password,
                 'lat_lon' => "{$this->defaultLat}, {$this->defaultLng}",
@@ -96,7 +96,7 @@ class GpsService
     protected function fetchWithToken(string $token)
     {
         try {
-            return Http::withoutVerifying()->withToken($token)->get($this->monitoringUrl);
+            return Http::withToken($token)->get($this->monitoringUrl);
         } catch (\Exception $e) {
             Log::error('GPS Fetch Failed: '.$e->getMessage());
 

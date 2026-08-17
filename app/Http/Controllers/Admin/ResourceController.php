@@ -267,13 +267,25 @@ class ResourceController extends Controller
 
     /**
      * Unduh dokumen/lampiran (field file maupun relasi dokumen) dari storage publik.
-     * Path divalidasi agar tetap berada di dalam direktori storage/app/public
-     * sehingga tidak bisa digunakan untuk mengakses file di luar storage publik.
+     *
+     * Pengakses wajib menyertakan parameter `resource` (slug AdminRegistry):
+     * akses dicek lewat authorize() per-bidang (pola sama dengan destroy()),
+     * lalu path dibatasi hanya boleh berada di direktori penyimpanan resource
+     * tersebut ('admin/{slug}/' untuk field file langsung, atau direktori
+     * relasi dari AdminRegistry::relationUploads). Path juga divalidasi agar
+     * tetap berada di dalam direktori storage/app/public sehingga tidak bisa
+     * digunakan untuk mengakses file di luar storage publik.
      */
     public function downloadFile(Request $request)
     {
         $path = (string) $request->query('path', '');
         $name = (string) $request->query('name', '');
+        $resource = (string) $request->query('resource', '');
+
+        // Otorisasi per-bidang: resource wajib disertakan dan harus dikenal.
+        abort_unless($resource !== '', 403, 'Akses file ditolak.');
+        $meta = AdminRegistry::find($resource);
+        $this->authorize($meta);
 
         // Validasi path: tolak kosong, traversal (..), path absolut,
         // drive letter Windows, null byte, dan backslash.
@@ -288,6 +300,20 @@ class ResourceController extends Controller
             403,
             'Akses file ditolak.'
         );
+
+        // Batasi path ke direktori penyimpanan milik resource ini saja:
+        // 'admin/{slug}/' (field file langsung) atau direktori upload relasi
+        // (foto pengaduan, dokumen permohonan, file sosialisasi, dll).
+        $allowedPrefixes = ['admin/'.$meta['slug'].'/'];
+        foreach (AdminRegistry::relationUploads($meta['slug']) as $upload) {
+            $allowedPrefixes[] = $upload['directory'].'/';
+        }
+        abort_unless(
+            collect($allowedPrefixes)->contains(fn (string $prefix) => str_starts_with($path, $prefix)),
+            403,
+            'Akses file ditolak.'
+        );
+
         abort_unless(Storage::disk('public')->exists($path), 404, 'File tidak ditemukan.');
 
         // Nama unduhan: gunakan nama yang dikirim (lebih mudah dibaca), lalu

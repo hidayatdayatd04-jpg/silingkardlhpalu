@@ -239,6 +239,20 @@ window.DlhMarkers = (function () {
     // ═══════════════ Popup Component ═══════════════
 
     /**
+     * Escape string untuk disisipkan aman ke HTML/atribut popup.
+     * Semua data dinamis (nama, alamat, deskripsi, props GIS, data vendor GPS)
+     * wajib lewat sini sebelum digabung ke string HTML popup.
+     */
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
      * Buat popup HTML premium.
      * @param {object} cfg
      *   - nama: string
@@ -250,7 +264,7 @@ window.DlhMarkers = (function () {
      */
     function popup(cfg) {
         var def = ICONS[cfg.type || 'default'];
-        var color = cfg.color || def.color;
+        var color = escapeHtml(cfg.color || def.color);
         var bgColor = cfg.bg || def.bg;
         var markerSvg = def.svg;
 
@@ -263,24 +277,24 @@ window.DlhMarkers = (function () {
                 var iconHtml = ROW_ICONS[d.icon] || ROW_ICONS.lokasi;
                 rows += '<div class="dlh-popup-row">'
                     + '<span class="dlh-popup-row-icon">' + iconHtml + '</span>'
-                    + '<span class="dlh-popup-row-text">' + d.value + '</span>'
+                    + '<span class="dlh-popup-row-text">' + escapeHtml(d.value) + '</span>'
                     + '</div>';
             });
         }
 
         var statusHtml = '';
         if (cfg.status && cfg.status.text) {
-            var sc = cfg.status.color || '#6b728b';
+            var sc = escapeHtml(cfg.status.color || '#6b728b');
             statusHtml = '<div class="dlh-popup-status">'
                 + '<span class="dlh-popup-status-dot" style="background:' + sc + '"></span>'
-                + cfg.status.text
+                + escapeHtml(cfg.status.text)
                 + '</div>';
         }
 
         // Edit button (only if layerId and featureIndex are provided)
         var editBtnHtml = '';
         if (cfg.layerId !== undefined && cfg.featureIndex !== undefined) {
-            editBtnHtml = '<button class="dlh-popup-edit-btn" data-layer-id="' + cfg.layerId + '" data-feature-index="' + cfg.featureIndex + '" style="position:absolute;top:8px;right:30px;width:22px;height:22px;border-radius:50%;background:rgba(16,185,129,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101;transition:all 0.15s;" title="Edit marker">'
+            editBtnHtml = '<button class="dlh-popup-edit-btn" data-layer-id="' + escapeHtml(cfg.layerId) + '" data-feature-index="' + escapeHtml(cfg.featureIndex) + '" style="position:absolute;top:8px;right:30px;width:22px;height:22px;border-radius:50%;background:rgba(16,185,129,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101;transition:all 0.15s;" title="Edit marker">'
                 + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>'
                 + '</button>';
         }
@@ -290,8 +304,8 @@ window.DlhMarkers = (function () {
             + '<div class="dlh-popup-header" style="border-left:3px solid ' + color + '">'
             + '<div class="dlh-popup-marker-icon" style="background:' + color + '">' + markerSvg + '</div>'
             + '<div class="dlh-popup-title-group">'
-            + '<div class="dlh-popup-name">' + (cfg.nama || '-') + '</div>'
-            + '<div class="dlh-popup-cat">' + (cfg.kategori || '') + '</div>'
+            + '<div class="dlh-popup-name">' + escapeHtml(cfg.nama || '-') + '</div>'
+            + '<div class="dlh-popup-cat">' + escapeHtml(cfg.kategori || '') + '</div>'
             + '</div>'
             + '</div>'
             + (rows ? '<div class="dlh-popup-body">' + rows + '</div>' : '')
@@ -554,6 +568,7 @@ window.DlhMarkers = (function () {
         addToMap: addToMap,
         create: create,
         popup: popup,
+        escapeHtml: escapeHtml,
         renderAll: renderAll,
         detectType: detectType,
         getTypes: getTypes,

@@ -24,6 +24,15 @@ new class extends Component {
     {
         $validated = $this->validate((new StorePengaduanRthRequest())->rules());
 
+        $ip = request()->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pengaduan-rth:'.$ip, 5)) {
+            $this->addError('nomor_hp', __('Batas maksimal pengiriman tercapai (5 pengaduan per jam).'));
+
+            return;
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit('pengaduan-rth:'.$ip, 3600);
+
         $jenisPengaduan = $validated['jenis_pengaduan'];
 
         $pengaduan = PengaduanRth::create([

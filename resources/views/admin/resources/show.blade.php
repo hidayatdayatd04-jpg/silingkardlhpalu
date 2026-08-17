@@ -520,6 +520,7 @@
                                         :label="$field['label']"
                                         :path="$docPath"
                                         :downloadName="$docName"
+                                        :resource="$resource['slug']"
                                     />
                                 @endforeach
                             </div>
@@ -554,7 +555,7 @@
                                     <div class="space-y-3">
                                         @foreach($record->{$config['relation']} as $item)
                                             @php $path = $pathFor($item, $config); $label = $nameFor($item, $path, $config); @endphp
-                                            <x-admin.file-preview :label="$label" :path="$path" />
+                                            <x-admin.file-preview :label="$label" :path="$path" :resource="$resource['slug']" />
                                         @endforeach
                                     </div>
                                 @endif

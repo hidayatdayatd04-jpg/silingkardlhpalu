@@ -98,6 +98,16 @@ new class extends Component {
     public function submit(): void
     {
         $validated = $this->validate((new StorePermohonanPinjamTamanRequest())->rules());
+
+        $ip = request()->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pinjam-taman:'.$ip, 3)) {
+            $this->addError('nomor_hp', __('Batas maksimal pengiriman tercapai (3 permohonan per jam).'));
+
+            return;
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit('pinjam-taman:'.$ip, 3600);
+
         $this->checkConflict();
 
         if ($this->conflictWarning) {

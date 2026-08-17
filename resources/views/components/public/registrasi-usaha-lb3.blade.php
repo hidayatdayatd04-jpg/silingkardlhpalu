@@ -19,6 +19,15 @@ new class extends Component
     {
         $validated = $this->validate((new StoreRegistrasiUsahaLb3Request())->rules());
 
+        $ip = request()->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('registrasi-usaha-lb3:'.$ip, 3)) {
+            $this->addError('email', __('Batas maksimal pengiriman tercapai (3 registrasi per jam).'));
+
+            return;
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit('registrasi-usaha-lb3:'.$ip, 3600);
+
         if ($this->jenis_lb3 === 'Lainnya' && blank($this->jenis_lb3_lainnya)) {
             $this->addError('jenis_lb3_lainnya', __('Mohon isi jenis LB3 lainnya.'));
 

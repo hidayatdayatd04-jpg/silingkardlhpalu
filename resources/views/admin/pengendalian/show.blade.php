@@ -142,6 +142,7 @@
                                         :label="$field['label']"
                                         :path="$docPath"
                                         :downloadName="$docName"
+                                        :resource="$resource['slug']"
                                     />
                                 @endforeach
                             </div>

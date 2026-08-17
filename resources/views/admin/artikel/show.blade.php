@@ -172,7 +172,7 @@
             <div class="space-y-7">
                 <x-admin.section-card class="stagger-item" title="Thumbnail & File" icon="image" subtitle="Gambar utama artikel.">
                     @if ($record->thumbnail)
-                        <x-admin.file-preview :path="$record->thumbnail" :label="$record->judul" />
+                        <x-admin.file-preview :path="$record->thumbnail" :label="$record->judul" :resource="$resource['slug']" />
                     @else
                         <div class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center">
                             <x-admin.icon name="image" :size="30" class="text-slate-300" />

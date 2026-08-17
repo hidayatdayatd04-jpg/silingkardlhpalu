@@ -301,7 +301,7 @@
                                     @if($isReadonly)
                                         @if($currentFile)
                                             <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ $field['label'] }}</label>
-                                            <x-admin.file-preview :path="$currentFile" />
+                                            <x-admin.file-preview :path="$currentFile" :resource="$resource['slug']" />
                                         @else
                                             <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ $field['label'] }}</label>
                                             <p class="text-xs text-slate-400">Belum ada file diunggah.</p>
@@ -352,7 +352,7 @@
                                                                 </span>
                                                             @endif
                                                             <p class="min-w-0 flex-1 truncate text-xs font-semibold text-slate-600" title="{{ $label }}">{{ $label ?: 'Lampiran' }}</p>
-                                                            <a href="{{ route('admin.file.download', ['path' => $path, 'name' => $label ?: basename((string) $path)]) }}" target="_blank"
+                                                            <a href="{{ route('admin.file.download', ['path' => $path, 'name' => $label ?: basename((string) $path), 'resource' => $resource['slug']]) }}" target="_blank"
                                                                 class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-blue-600 ring-1 ring-slate-200 transition hover:bg-blue-50">
                                                                 <x-admin.icon name="eye" :size="14" /> Lihat
                                                             </a>

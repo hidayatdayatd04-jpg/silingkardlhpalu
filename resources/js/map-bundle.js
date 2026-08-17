@@ -435,17 +435,21 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
                 if (isNaN(lat) || isNaN(lng)) return;
                 var isTruck = (parseInt(v.veh_type) === 4);
                 var iu = isTruck ? '/assets/tracking/truck_blue.png' : '/assets/tracking/car_blue.png';
+                // Data berasal dari vendor GPS pihak ketiga — escape semua nilai
+                // dinamis sebelum digabung ke HTML popup (stored XSS).
+                var esc = window.DlhMarkers ? window.DlhMarkers.escapeHtml : function (s) { return String(s == null ? '' : s); };
+                var angle = parseFloat(v.angle) || 0;
                 var el = document.createElement('div');
                 el.className = 'custom-vehicle-icon';
-                el.innerHTML = '<img src="' + iu + '" alt="" style="width:36px;height:36px;transform:rotate(' + v.angle + 'deg);transition:transform 0.3s ease;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));cursor:pointer" onmouseover="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1.15)\'" onmouseout="this.style.transform=\'rotate(' + v.angle + 'deg) scale(1)\'" />';
+                el.innerHTML = '<img src="' + iu + '" alt="" style="width:36px;height:36px;transform:rotate(' + angle + 'deg);transition:transform 0.3s ease;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));cursor:pointer" onmouseover="this.style.transform=\'rotate(' + angle + 'deg) scale(1.15)\'" onmouseout="this.style.transform=\'rotate(' + angle + 'deg) scale(1)\'" />';
                 var sc = '#8BB2D8';
                 var stx = (parseInt(v.acc) === 1) ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
-                var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + v.title + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + v.speed + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + v.server_time + '</p></div></div>';
+                var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + esc(v.title) + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + esc(v.speed) + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + esc(v.server_time) + '</p></div></div>';
 
                 var ex = markers.find(function (m) { return m._imei === v.imei; });
                 if (ex) {
                     ex.setLngLat([lng, lat]);
-                    ex.getElement().querySelector('img').style.transform = 'rotate(' + v.angle + 'deg)';
+                    ex.getElement().querySelector('img').style.transform = 'rotate(' + angle + 'deg)';
                     ex.setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph));
                 } else {
                     var mk = new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -570,7 +574,9 @@ window.dlhPetaRth = function (containerId, mapData) {
             Object.keys(props).forEach(function (key) {
                 if (skipKeys.has(key) || key.indexOf('_') === 0) return;
                 if (props[key] === null || props[key] === '') return;
-                details.push({ icon: 'doc', value: key + ': ' + props[key] });
+                // Batasi panjang nilai props GIS impor agar popup tidak jebol
+                // oleh satu sel data yang sangat panjang.
+                details.push({ icon: 'doc', value: key + ': ' + String(props[key]).slice(0, 200) });
             });
 
             var statusObj = null;

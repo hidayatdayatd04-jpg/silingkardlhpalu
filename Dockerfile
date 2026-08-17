@@ -63,6 +63,11 @@ RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions \
 # PHP-FPM configuration
 RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 
+# Samakan batas upload PHP dengan batas aplikasi (restore backup maks 500MB,
+# file GIS 50MB, dokumen/foto 5MB). Default php.ini-production hanya 2M.
+RUN printf 'upload_max_filesize = 512M\npost_max_size = 512M\n' \
+    > /usr/local/etc/php/conf.d/uploads.ini
+
 # Expose port
 EXPOSE 9000
 
