@@ -34,11 +34,11 @@
                 <button
                     type="button"
                     x-on:click="show({{ $i }})"
-                    class="card-lift group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                    class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100 outline-none transition-[border-color,box-shadow] duration-150 hover:border-brand-300 focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-700"
                 >
-                    <img src="{{ $img['url'] }}" alt="{{ $img['caption'] ?: 'Foto '.($i+1) }}" loading="lazy" class="size-full object-cover transition duration-300 group-hover:scale-105">
-                    <div class="absolute inset-0 grid place-items-center bg-ink-900/0 transition group-hover:bg-ink-900/30">
-                        <span class="translate-y-1 text-white opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
+                    <img src="{{ $img['url'] }}" alt="{{ $img['caption'] ?: 'Foto '.($i+1) }}" loading="lazy" class="size-full object-cover transition-transform duration-200 group-hover:scale-[1.03] motion-reduce:transition-none">
+                    <div class="absolute inset-0 grid place-items-center bg-slate-950/0 transition-[background-color] duration-150 group-hover:bg-slate-950/35">
+                        <span class="translate-y-1 text-white opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none">
                             <x-admin.icon name="eye" :size="22" />
                         </span>
                     </div>
@@ -52,22 +52,23 @@
         <div
             x-show="open"
             x-cloak
-            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter="transition-[opacity] ease-out duration-200"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave="transition-[opacity] ease-in duration-150"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             class="fixed inset-0 z-[130] flex items-center justify-center bg-ink-950/90 p-4"
             x-on:click.self="open = false"
             role="dialog"
             aria-modal="true"
+            aria-label="Pratinjau foto"
         >
-            <button type="button" x-on:click="open = false" class="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Tutup">
+            <button type="button" x-on:click="open = false" class="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white/10 text-white outline-none transition-[background-color,color] duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Tutup">
                 <x-admin.icon name="x" :size="22" />
             </button>
 
-            <button type="button" x-show="images.length > 1" x-on:click.stop="prev()" class="absolute left-4 grid size-11 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Sebelumnya">
+            <button type="button" x-show="images.length > 1" x-on:click.stop="prev()" class="absolute left-4 grid size-11 place-items-center rounded-full bg-white/10 text-white outline-none transition-[background-color,color] duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Sebelumnya">
                 <x-admin.icon name="chevron-left" :size="24" />
             </button>
 
@@ -79,14 +80,14 @@
                     x-show="images[idx]?.url"
                     x-bind:href="images[idx]?.url"
                     download
-                    class="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                    class="mx-auto mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/15 px-4 text-sm font-semibold text-white outline-none backdrop-blur transition-[background-color] duration-150 hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white/70"
                     aria-label="Unduh foto"
                 >
                     <x-admin.icon name="download" :size="16" /> Unduh
                 </a>
             </figure>
 
-            <button type="button" x-show="images.length > 1" x-on:click.stop="next()" class="absolute right-4 grid size-11 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Berikutnya">
+            <button type="button" x-show="images.length > 1" x-on:click.stop="next()" class="absolute right-4 grid size-11 place-items-center rounded-full bg-white/10 text-white outline-none transition-[background-color,color] duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Berikutnya">
                 <x-admin.icon name="chevron-right" :size="24" />
             </button>
         </div>

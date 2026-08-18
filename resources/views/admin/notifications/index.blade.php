@@ -4,6 +4,7 @@
 @section('heading', 'Notifikasi')
 
 @section('content')
+<div class="admin-notifications">
     <x-admin.page-header
         title="Semua Notifikasi"
         subtitle="Daftar seluruh notifikasi yang masuk ke akun Anda."
@@ -21,11 +22,11 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    <div><x-admin.card :padding="false">
+    <x-admin.card :padding="false">
         <div class="divide-y divide-slate-100">
             @forelse($notifications as $n)
                 @php $data = $n->data; @endphp
-                <div class="flex items-start gap-3 px-5 py-4 transition hover:bg-slate-50 {{ $n->read_at ? 'opacity-60' : '' }}">
+                <div class="admin-notification-row flex items-start gap-3 px-5 py-4 {{ $n->read_at ? 'opacity-60' : '' }}">
                     <div class="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-100 text-brand-600">
                         <x-admin.icon :name="$data['icon'] ?? 'bell'" :size="18" />
                     </div>
@@ -38,14 +39,14 @@
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
                         @if(!empty($data['href']))
-                            <a href="{{ $data['href'] }}" class="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-info-50 hover:text-info-600" title="Buka">
+                            <a href="{{ $data['href'] }}" class="admin-icon-button text-slate-500 hover:bg-info-50 hover:text-info-600" aria-label="Buka notifikasi: {{ $data['title'] ?? 'Notifikasi' }}" title="Buka">
                                 <x-admin.icon name="eye" :size="16" />
                             </a>
                         @endif
                         @if(!$n->read_at)
                             <form method="POST" action="{{ route('admin.notifications.read', $n->id) }}">
                                 @csrf
-                                <button type="submit" class="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-brand-50 hover:text-brand-600" title="Tandai dibaca">
+                                <button type="submit" class="admin-icon-button text-slate-500 hover:bg-brand-50 hover:text-brand-600" aria-label="Tandai notifikasi sebagai dibaca" title="Tandai dibaca">
                                     <x-admin.icon name="check" :size="16" />
                                 </button>
                             </form>

@@ -36,15 +36,11 @@
     }
 @endphp
 
-<div x-data="{ preview: '{{ $user->photoUrl() ?? '' }}', fileName: '', removePhoto: false }">
+<div class="admin-profile" x-data="{ preview: '{{ $user->photoUrl() ?? '' }}', fileName: '', removePhoto: false }">
     {{-- ============================================================ --}}
     {{-- HERO BANNER --}}
     {{-- ============================================================ --}}
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-emerald-600 p-6 text-white shadow-[0_20px_60px_-15px_rgba(5,150,105,0.55)] sm:p-8">
-        <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.05]"></div>
-        <div class="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-20 right-32 size-56 rounded-full bg-emerald-300/20 blur-3xl"></div>
-        <div class="pointer-events-none absolute left-1/3 -top-12 size-40 rounded-full bg-yellow-200/15 blur-2xl"></div>
+    <div class="admin-dashboard-hero relative overflow-hidden rounded-3xl p-6 text-white sm:p-8">
 
         <div class="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center">
             <div class="group relative shrink-0">

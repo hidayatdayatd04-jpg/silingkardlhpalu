@@ -48,7 +48,7 @@ new class extends Component
                 <span class="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold"><span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>{{ $this->getActiveCount() }} {{ __('unit') }}</span>
             </div>
             <p class="text-xs text-slate-500 mt-1">{{ __('Menampilkan seluruh armada beserta status mesin (menyala / parkir).') }}</p>
-            @if($this->getLastSync())<p class="text-xs text-slate-400 dark:text-slate-500 mt-1"><svg xmlns="http://www.w3.org/2000/svg" style="display:inline;width:14px;height:14px;vertical-align:middle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> {{ __('Sinkronisasi terakhir:') }} {{ $this->getLastSync() }}</p>@endif
+            @if($this->getLastSync())<p class="text-xs text-slate-400 dark:text-slate-500 mt-1"><x-icons.ui name="calendar" class="inline-block h-3.5 w-3.5 align-middle" /> {{ __('Sinkronisasi terakhir:') }} {{ $this->getLastSync() }}</p>@endif
         </div>
         <input wire:model.live.debounce.300ms="search" type="text" placeholder="{{ __('Cari nama armada...') }}" class="w-full md:w-64 px-4 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm"/>
     </div>

@@ -12,10 +12,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen text-ink-900 antialiased" data-alpine-bootstrap>
-    <main class="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
+<body class="admin-login min-h-screen text-ink-900 antialiased" data-alpine-bootstrap>
+    <main class="admin-login-shell grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
         {{-- â•â•â•â•â•â•â•â•â•â• Brand panel (kiri) â•â•â•â•â•â•â•â•â•â• --}}
-        <section class="relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between" style="background: var(--gradient-header-hero);">
+        <section class="admin-login-brand relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
             <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.05]"></div>
 
             {{-- Floating decorative shapes (reduced-motion aman) --}}
@@ -67,7 +67,7 @@
         </section>
 
         {{-- â•â•â•â•â•â•â•â•â•â• Form panel (kanan) â•â•â•â•â•â•â•â•â•â• --}}
-        <section class="flex items-center justify-center px-5 py-10" style="background: var(--gradient-page);">
+        <section class="flex items-center justify-center px-5 py-10">
             <div class="login-card w-full max-w-md">
                 {{-- Mobile brand --}}
                 <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-white/80 bg-white p-8 shadow-[var(--shadow-modal)]">
+                <div class="admin-login-form-surface rounded-2xl border bg-white p-8 dark:bg-[#102019]">
                     <div class="mb-8">
                         <div class="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-600">
                             <x-admin.icon name="lock" :size="24" />
@@ -127,19 +127,19 @@
                                     name="password"
                                     autocomplete="current-password"
                                     placeholder=" "
-                                    @if($errors->has('password')) aria-invalid="true" @endif
-                                    class="peer block w-full rounded-lg border pl-11 pr-11 pt-5 pb-2 text-sm font-medium text-ink-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-slate-400 focus:ring-4 {{ $errors->has('password') ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100' : 'border-slate-300 hover:border-slate-400 focus:border-brand-500 focus:ring-brand-100' }} bg-white"
+                                    @if($errors->has('password')) aria-invalid="true" aria-describedby="password-error" @endif
+                                    class="peer block w-full rounded-lg border bg-white pb-2 pl-11 pr-11 pt-5 text-sm font-medium text-ink-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-slate-400 focus:ring-4 dark:bg-[#13261e] dark:text-white {{ $errors->has('password') ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100' : 'border-slate-300 hover:border-slate-400 focus:border-brand-500 focus:ring-brand-100' }}"
                                 >
                                 <label for="password" class="pointer-events-none absolute left-11 top-1.5 origin-left text-xs font-semibold text-slate-500 transition-all duration-150 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-brand-700">
                                     Password
                                 </label>
-                                <button type="button" x-on:click="showPassword = !showPassword" class="absolute inset-y-0 right-0 grid w-11 place-items-center text-slate-400 transition hover:text-slate-600" :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'">
+                                <button type="button" x-on:click="showPassword = !showPassword" class="admin-icon-button absolute inset-y-0 right-0 grid w-11 place-items-center text-slate-400 transition-colors duration-150 hover:text-slate-600" :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'">
                                     <x-admin.icon x-show="!showPassword" name="eye" :size="18" />
                                     <span x-show="showPassword" x-cloak><x-admin.icon name="eye" :size="18" class="opacity-50" /></span>
                                 </button>
                             </div>
                             @error('password')
-                                <p class="flex items-center gap-1 text-xs font-semibold text-danger-600">
+                                <p id="password-error" role="alert" class="flex items-center gap-1 text-xs font-semibold text-danger-600">
                                     <x-admin.icon name="alert-circle" :size="14" /> {{ $message }}
                                 </p>
                             @enderror
@@ -153,11 +153,8 @@
                             <span class="text-sm font-semibold text-slate-500" title="Hubungi administrator untuk reset password">Lupa password?</span>
                         </div>
 
-                        <button type="submit" :disabled="submitting" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-brand-glow)] transition hover:bg-brand-800 focus:outline-none focus:ring-4 focus:ring-brand-100 active:scale-[0.99] disabled:opacity-70">
-                            <svg x-show="submitting" x-cloak class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                        <button type="submit" :disabled="submitting" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-3 text-sm font-semibold text-white shadow-[0_2px_5px_rgb(5_120_83_/_0.25)] transition-[background-color,transform,box-shadow] duration-150 hover:bg-brand-800 focus:outline-none focus:ring-4 focus:ring-brand-100 active:scale-[0.99] disabled:opacity-70">
+                            <span x-show="submitting" x-cloak class="size-4 animate-spin rounded-full border-2 border-white/35 border-t-white" aria-hidden="true"></span>
                             <span x-text="submitting ? 'Memproses...' : 'Masuk ke Dashboard'"></span>
                             <x-admin.icon x-show="!submitting" name="chevron-right" :size="18" class="transition group-hover:translate-x-0.5" />
                         </button>
@@ -171,25 +168,6 @@
         </section>
     </main>
 
-    <style>
-        .login-card {
-            animation: loginCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        @keyframes loginCardIn {
-            from { transform: translateY(12px); }
-            to { transform: none; }
-        }
-        .login-float { animation: loginFloat 8s ease-in-out infinite; }
-        .login-float--2 { animation-duration: 11s; animation-delay: -3s; }
-        .login-float--3 { animation-duration: 9s; animation-delay: -5s; }
-        @keyframes loginFloat {
-            0%, 100% { transform: translateY(0) translateX(0); }
-            50% { transform: translateY(-24px) translateX(12px); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-card, .login-float { animation: none !important; }
-        }
-    </style>
     @livewireScripts
 </body>
 

@@ -5,38 +5,101 @@
 
 @push('styles')
 <style>
-    .map-container {
+    .peta-persampahan-page {
+        position: relative;
+    }
+    .peta-persampahan-page::before {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        top: 12rem;
+        right: -10rem;
+        width: 24rem;
+        height: 24rem;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(16, 185, 129, .1), transparent 68%);
+        filter: blur(5px);
+        pointer-events: none;
+    }
+    .persampahan-control-panel {
+        position: relative;
+        /* Menu select perlu melampaui kartu tanpa terpotong. */
+        overflow: visible;
+        z-index: 12;
+        border-color: rgba(16, 76, 51, .12) !important;
+        border-radius: 1.5rem !important;
+        box-shadow: 0 1px 2px rgba(10, 48, 30, .04), 0 22px 42px -30px rgba(10, 48, 30, .34) !important;
+    }
+    .persampahan-control-panel::before {
+        content: '';
+        position: absolute;
+        /* Tetap berada di sisi dalam border dan mengikuti lengkungan kartu.
+           Panel harus overflow-visible untuk dropdown, jadi garis aksen ini
+           perlu membentuk radiusnya sendiri agar tidak keluar di sudut atas. */
+        /* Sisakan ruang di kedua sisi: garis tidak memasuki area lengkung
+           sudut kartu meski panel perlu overflow-visible untuk dropdown. */
+        inset: 1px 1.5rem auto;
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #168953 0%, #22b78a 48%, #25a7c7 100%);
+    }
+    .persampahan-control-panel > * {
+        position: relative;
+    }
+    .persampahan-map-frame {
+        position: relative;
+        border-radius: 1.5rem;
+    }
+    .persampahan-map-frame::before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 1px 1px auto;
+        height: 4.5rem;
+        border-radius: 1.45rem 1.45rem 0 0;
+        background: linear-gradient(180deg, rgba(255, 255, 255, .22), transparent);
+        pointer-events: none;
+    }
+    .peta-persampahan-page .map-container {
         position: relative;
         width: 100%;
-        height: 550px;
-        border-radius: 16px;
+        height: clamp(23rem, 55vw, 37rem);
+        border-radius: 1.5rem;
         overflow: hidden;
-        border: 1px solid rgba(0,0,0,0.06);
-        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        isolation: isolate;
+        border: 1px solid rgba(16, 76, 51, .14);
+        background: #e7f2eb;
+        box-shadow: 0 1px 2px rgba(10, 48, 30, .05), 0 24px 48px -30px rgba(10, 48, 30, .38);
     }
-    .map-container .maplibregl-map {
+    .dark .peta-persampahan-page .map-container {
+        border-color: rgba(110, 231, 183, .2);
+        background: #0b241a;
+    }
+    .peta-persampahan-page .map-container .maplibregl-map {
         width: 100%;
         height: 100%;
     }
-    .map-container .maplibregl-ctrl-group {
-        border-radius: 10px !important;
+    .peta-persampahan-page .map-container .maplibregl-ctrl-group {
+        border: 1px solid rgba(16, 76, 51, .12) !important;
+        border-radius: 12px !important;
         overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 10px 24px -12px rgba(10, 48, 30, .35) !important;
     }
-    .map-container .maplibregl-ctrl {
+    .peta-persampahan-page .map-container .maplibregl-ctrl {
         margin: 12px !important;
     }
-    .map-container .maplibregl-ctrl-top-left {
+    .peta-persampahan-page .map-container .maplibregl-ctrl-top-left {
         top: 12px !important;
         left: 12px !important;
     }
-    .map-container .maplibregl-ctrl-bottom-right {
+    .peta-persampahan-page .map-container .maplibregl-ctrl-bottom-right {
         bottom: 12px !important;
         right: 12px !important;
     }
-    .map-container .maplibregl-popup-content {
-        border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+    .peta-persampahan-page .map-container .maplibregl-popup-content {
+        border: 1px solid rgba(16, 76, 51, .12) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 18px 40px -16px rgba(10, 48, 30, .34) !important;
         padding: 0 !important;
         overflow: hidden;
     }
@@ -147,9 +210,9 @@
     }
     .vehicle-card-active .vehicle-check { opacity: 1; transform: scale(1) rotate(0); }
 
-    .custom-vehicle-icon{background:transparent!important;border:none!important;box-shadow:none!important;cursor:pointer}
-    .custom-vehicle-icon img{filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));transition:transform .3s ease}
-    .custom-vehicle-icon:hover img{filter:drop-shadow(0 3px 10px rgba(0,0,0,0.4))}
+    .peta-persampahan-page .custom-vehicle-icon{background:transparent!important;border:none!important;box-shadow:none!important;cursor:pointer}
+    .peta-persampahan-page .custom-vehicle-icon img{filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));transition:transform .3s ease}
+    .peta-persampahan-page .custom-vehicle-icon:hover img{filter:drop-shadow(0 3px 10px rgba(0,0,0,0.4))}
     .filter-label {
         display: block;
         font-size: 11px;
@@ -160,20 +223,79 @@
         margin-bottom: 6px;
     }
     .dark .filter-label { color: #94a3b8; }
+
+    .persampahan-stats-card {
+        position: relative;
+        overflow: hidden;
+        border-color: rgba(16, 76, 51, .12) !important;
+        border-radius: 1.5rem !important;
+        box-shadow: 0 1px 2px rgba(10, 48, 30, .04), 0 20px 38px -30px rgba(10, 48, 30, .3) !important;
+    }
+    .persampahan-stats-card::after {
+        content: '';
+        position: absolute;
+        right: -3rem;
+        bottom: -4rem;
+        width: 13rem;
+        height: 13rem;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(37, 167, 199, .12), transparent 67%);
+        pointer-events: none;
+    }
+    .persampahan-stats-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    .persampahan-stats-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 1px solid rgba(16, 137, 83, .16);
+        border-radius: .9rem;
+        color: #168953;
+        background: linear-gradient(135deg, rgba(209, 247, 226, .88), rgba(233, 249, 243, .72));
+    }
+    .dark .persampahan-control-panel,
+    .dark .persampahan-stats-card {
+        border-color: rgba(110, 231, 183, .16) !important;
+        box-shadow: 0 20px 42px -32px rgba(0, 0, 0, .68) !important;
+    }
+    .dark .persampahan-stats-icon {
+        border-color: rgba(110, 231, 183, .18);
+        color: #6ee7b7;
+        background: rgba(16, 137, 83, .16);
+    }
+    @media (max-width: 640px) {
+        .peta-persampahan-page::before { right: -13rem; }
+        .peta-persampahan-page .map-container { height: 25rem; border-radius: 1.25rem; }
+        .persampahan-map-frame::before { border-radius: 1.2rem 1.2rem 0 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .peta-persampahan-page *,
+        .peta-persampahan-page *::before,
+        .peta-persampahan-page *::after {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="space-y-6">
-    <x-public.page-hero badge="{{ __('Sampah & LB3') }}" title="{{ __('Peta & Informasi Persampahan') }}" description="{{ __('Lihat lokasi fasilitas persampahan, lacak armada real-time, dan statistik timbulan sampah.') }}" />
+<div class="peta-persampahan-page space-y-7">
+    <x-public.page-hero badge="{{ __('Sampah & LB3') }}" icon="map-pin" title="{{ __('Peta & Informasi Persampahan') }}" description="{{ __('Lihat lokasi fasilitas persampahan, lacak armada real-time, dan statistik timbulan sampah.') }}" />
 
-    <div class="space-y-8">
-        <div>
-            <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+    <div class="space-y-6">
+        <div class="reveal">
+            <div class="persampahan-control-panel bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-4">
                 {{-- Header panel filter --}}
                 <div class="flex items-center gap-3">
                     <span class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-900/25 border border-brand-200 dark:border-brand-800/60 flex items-center justify-center text-brand-600 dark:text-brand-300 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        <x-icons.titik-tps class="h-[1.125rem] w-[1.125rem]" />
                     </span>
                     <div class="min-w-0">
                         <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ __('Pilih Tipe Kendaraan') }}</h2>
@@ -188,19 +310,13 @@
                         style="--vc: {{ $vt['color'] }}"
                         class="vehicle-card {{ $vt['key'] === $defaultType ? 'vehicle-card-active' : '' }}">
                         <span class="vehicle-icon">
-                            @if ($vt['key'] === 'pickup')
-                            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5h10.5v7.5H3z"/><path d="M13.5 8.5h3l3.5 4v3.5h-6.5"/><path d="M3 12.25h10.5"/><circle cx="7.2" cy="17.2" r="1.3"/><circle cx="16.8" cy="17.2" r="1.3"/></svg>
-                            @elseif ($vt['key'] === 'kaisar')
-                            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="11.5" height="8" rx="1"/><path d="M14 10.5h3.5l2.5 2.5v2h-6"/><circle cx="7.2" cy="17.2" r="1.3"/><circle cx="17.3" cy="17.2" r="1.3"/></svg>
-                            @else
-                            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5h11v8h-11z"/><path d="M13.5 11.5h4l2.5 2v3h-6.5"/><circle cx="7.2" cy="17.6" r="1.3"/><circle cx="17.5" cy="17.6" r="1.3"/></svg>
-                            @endif
+                            <x-icons.sampah class="h-[23px] w-[23px]" />
                         </span>
                         <span class="flex-1 min-w-0">
                             <span class="vehicle-name">{{ $vt['label'] }}</span>
                         </span>
                         <span class="vehicle-check">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <x-icons.ui name="check" class="h-3 w-3" />
                         </span>
                     </button>
                     @endforeach
@@ -251,7 +367,7 @@
                             >
                                 <span x-show="!value" class="fi-select-placeholder">{{ __('Semua Kelurahan') }}</span>
                                 <span x-show="value" x-text="selectedLabel" class="fi-select-value"></span>
-                                <svg class="fi-select-chevron" :class="{ 'fi-select-chevron--open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                <x-icons.ui name="chevron-down" class="fi-select-chevron" x-bind:class="{ 'fi-select-chevron--open': open }" />
                             </button>
                             <div
                                 x-show="open"
@@ -272,7 +388,7 @@
                             <div x-on:click="selectOption(option.id, option.nama)" class="fi-select-option" :class="{ 'fi-select-option--active': value === String(option.id) }">
                                 <span x-text="option.nama" class="fi-select-option-text"></span>
                                             <span x-show="value === String(option.id)" class="fi-select-check">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                <x-icons.ui name="check" />
                                             </span>
                                         </div>
                                     </template>
@@ -283,11 +399,11 @@
 
                     <button type="button" id="filter-reset"
                         class="inline-flex h-12 items-center gap-2 px-4 rounded-xl bg-brand-50 dark:bg-brand-900/25 border border-brand-200 dark:border-brand-800/60 text-sm font-bold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:border-brand-300 dark:hover:border-brand-700/70 hover:ring-2 hover:ring-brand-500/30 focus:outline-none transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4.58 15.5A7.5 7.5 0 0018.9 17M5.1 7A7.5 7.5 0 0118.9 7.5M19.42 8.5A7.5 7.5 0 005.1 7"/></svg>
+                        <x-icons.ui name="refresh" class="h-4 w-4" />
                         {{ __('Reset Filter') }}
                     </button>
                     <div class="ml-auto flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-500 dark:text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
+                        <x-icons.sampah class="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" />
                         <span id="armada-toggle-label" class="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{{ __('Sembunyikan Armada') }}</span>
                         <label class="ml-1 cursor-pointer flex-shrink-0">
                             <input type="checkbox" id="armada-toggle" class="sr-only" checked aria-label="{{ __('Sembunyikan Armada') }}">
@@ -297,16 +413,28 @@
                 </div>
             </div>
 
-            <div class="mt-4 map-container">
+            <div class="persampahan-map-frame mt-4 reveal reveal-scale">
+                <div class="map-container" role="region" aria-label="Peta fasilitas persampahan dan armada DLH Kota Palu">
                 <div id="peta-persampahan-map" style="width:100%;height:100%"></div>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-            <h3 class="text-lg font-bold mb-4">{{ __('Statistik Timbulan Sampah') }}</h3>
-            <canvas id="statistik-sampah-chart" height="200"
-                data-labels='@json($chartLabels)'
-                data-values='@json($chartValues)'></canvas>
+        <div class="persampahan-stats-card reveal bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 sm:p-6">
+            <div class="mb-5 flex items-center gap-3">
+                <span class="persampahan-stats-icon">
+                    <x-icons.ton-sampah class="h-5 w-5" />
+                </span>
+                <div>
+                    <h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">{{ __('Statistik Timbulan Sampah') }}</h3>
+                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{{ __('Ringkasan volume sampah berdasarkan data layanan yang tersedia.') }}</p>
+                </div>
+            </div>
+            <div class="min-h-[13rem]">
+                <canvas id="statistik-sampah-chart" height="200"
+                    data-labels='@json($chartLabels)'
+                    data-values='@json($chartValues)'></canvas>
+            </div>
         </div>
     </div>
 </div>

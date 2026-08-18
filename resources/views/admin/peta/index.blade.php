@@ -249,22 +249,22 @@
     @endpush
 
 @section('content')
-<div class="map-wrapper" x-data="petaAdmin()" x-init="$nextTick(() => setTimeout(() => init(), 300))">
+<div class="admin-map-page map-wrapper" x-data="petaAdmin()" x-init="$nextTick(() => setTimeout(() => init(), 300))">
     <div class="map-container">
         <!-- Map -->
         <div id="peta-map"></div>
 
         <!-- Draw Toolbar (Titik saja) -->
         <div x-show="showDrawToolbar" x-transition class="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl shadow-lg border border-slate-200 p-1.5 flex gap-1">
-            <button @click="drawMode === 'point' ? cancelDraw() : startPointDraw()" :class="drawMode === 'point' ? 'active' : ''" class="draw-btn" title="Tambah Titik">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <button @click="drawMode === 'point' ? cancelDraw() : startPointDraw()" :class="drawMode === 'point' ? 'active' : ''" class="draw-btn" title="Tambah Titik" aria-label="Tambah titik di peta">
+                <x-admin.icon name="map-pin" :size="16" />
             </button>
             <div class="w-px bg-slate-200 mx-0.5"></div>
-            <button @click="saveDrawn()" class="draw-btn" :class="tempMarker ? 'text-emerald-600' : 'opacity-40 cursor-not-allowed'" :disabled="!tempMarker" title="Simpan Titik">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <button @click="saveDrawn()" class="draw-btn" :class="tempMarker ? 'text-emerald-600' : 'opacity-40 cursor-not-allowed'" :disabled="!tempMarker" title="Simpan Titik" aria-label="Simpan titik peta">
+                <x-admin.icon name="check" :size="16" />
             </button>
-            <button @click="cancelDraw()" class="draw-btn" title="Batal">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button @click="cancelDraw()" class="draw-btn" title="Batal" aria-label="Batalkan penambahan titik">
+                <x-admin.icon name="x" :size="16" />
             </button>
         </div>
         <!-- Draw mode hint -->
@@ -283,10 +283,9 @@
         <button x-show="!sidebarOpen" @click="sidebarOpen = true"
             class="sidebar-toggle-btn"
             :style="{ right: '22px' }"
-            title="Tampilkan panel">
-            <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
+            title="Tampilkan panel"
+            aria-label="Tampilkan panel peta">
+            <x-admin.icon name="menu" :size="20" class="text-slate-600" />
         </button>
 
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REDESIGNED SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
@@ -296,7 +295,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0021 18.382V7.618a1 1 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            <x-admin.icon name="map-pin" :size="20" class="text-white" />
                         </div>
                         <div>
                             <h2 class="text-base font-bold text-slate-900 tracking-tight">Peta</h2>
@@ -314,8 +313,8 @@
                         <!-- Close panel -->
                         <button @click="sidebarOpen = false" type="button"
                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="Tutup panel">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            title="Tutup panel" aria-label="Tutup panel peta">
+                            <x-admin.icon name="x" :size="16" />
                         </button>
                     </div>
                 </div>
@@ -325,23 +324,23 @@
             <div class="px-5 py-3 border-b border-slate-100">
                 <div class="grid grid-cols-3 gap-2">
                     <!-- Buat Layer -->
-                    <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong"
+                    <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong" aria-label="Buat layer kosong"
                         class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                        <x-admin.icon name="layers" :size="20" class="text-emerald-600" />
                         <span class="text-[10.5px] font-semibold text-slate-700 leading-none">Buat Layer</span>
                     </button>
                     <!-- Titik -->
                     <button @click="showDrawToolbar = !showDrawToolbar; if(!showDrawToolbar) cancelDraw()" type="button"
                         :class="showDrawToolbar ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:border-slate-300'"
-                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Tambah Titik">
-                        <svg class="w-5 h-5" :class="showDrawToolbar ? 'text-emerald-600' : 'text-slate-500 group-hover:text-slate-700'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><path d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Tambah Titik" aria-label="Buka alat tambah titik">
+                        <x-admin.icon name="map-pin" :size="20" x-bind:class="showDrawToolbar ? 'text-emerald-600' : 'text-slate-500 group-hover:text-slate-700'" />
                         <span class="text-[10.5px] font-semibold leading-none" :class="showDrawToolbar ? 'text-emerald-700' : 'text-slate-700'">Titik</span>
                     </button>
                     <!-- Hapus Massal -->
                     <button @click="isSelectionMode = !isSelectionMode; selectedLayers = []" type="button"
                         :class="isSelectionMode ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'"
-                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Pilih Layer untuk Hapus Massal">
-                        <svg class="w-5 h-5" :class="isSelectionMode ? 'text-red-600' : 'text-slate-500 group-hover:text-slate-700'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"/></svg>
+                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Pilih Layer untuk Hapus Massal" aria-label="Pilih layer untuk dihapus massal">
+                        <x-admin.icon name="trash" :size="20" x-bind:class="isSelectionMode ? 'text-red-600' : 'text-slate-500 group-hover:text-slate-700'" />
                         <span class="text-[10.5px] font-semibold leading-none" :class="isSelectionMode ? 'text-red-700' : 'text-slate-700'">Hapus Massal</span>
                     </button>
                 </div>
@@ -357,7 +356,7 @@
                     <span class="text-[11px] text-slate-500 font-semibold"><span x-text="selectedLayers.length"></span> terpilih</span>
                     <button @click="bulkDeleteLayers()" :disabled="selectedLayers.length === 0"
                         class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <x-admin.icon name="trash" :size="12" />
                         Hapus
                     </button>
                 </div>
@@ -402,11 +401,11 @@
                                             :title="layer.is_public ? 'Klik untuk sembunyikan dari publik' : 'Klik untuk tampilkan ke publik'">
                                             <!-- Eye icon when public -->
                                             <template x-if="layer.is_public">
-                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                <x-admin.icon name="eye" :size="12" />
                                             </template>
                                             <!-- Eye-off icon when hidden -->
                                             <template x-if="!layer.is_public">
-                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                                                <x-admin.icon name="eye-off" :size="12" />
                                             </template>
                                             <span x-text="layer.is_public ? 'Publik' : 'Disembunyikan'"></span>
                                         </button>
@@ -415,14 +414,14 @@
                                         <button @click.stop="toggleLayerFilter(layer)"
                                             :class="layer.show_in_filter ? 'filter-toggle in-filter' : 'filter-toggle out-filter'"
                                             :title="layer.show_in_filter ? 'Klik untuk sembunyikan dari filter publik' : 'Klik untuk tampilkan di filter publik'">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                            <x-admin.icon name="filter" :size="12" />
                                             <span x-text="layer.show_in_filter ? 'Di Filter' : 'Tanpa Filter'"></span>
                                         </button>
 
                                         <!-- Public page badge (only if layer has a public page) -->
                                         <template x-if="layer.public_page">
                                             <a :href="layer.public_page.url" target="_blank" class="page-badge" :title="'Tampil di: ' + layer.public_page.label">
-                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                <x-admin.icon name="external-link" :size="10" />
                                                 <span x-text="layer.public_page.label"></span>
                                             </a>
                                         </template>
@@ -439,16 +438,16 @@
                                 </div>
                                 <div class="flex items-center gap-0.5" x-show="!isSelectionMode">
                                     <!-- Expand/Collapse -->
-<button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker">
-<svg class="w-3.5 h-3.5 transition-transform duration-200" :class="isExpanded(layer) ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+<button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker" aria-label="Tampilkan marker layer">
+<x-admin.icon name="chevron-down" :size="14" class="transition-transform duration-200" x-bind:class="isExpanded(layer) ? 'rotate-180' : ''" />
 </button>
                                     <!-- Edit Layer -->
-                                    <button @click="editLayer(layer)" class="action-icon edit" title="Edit layer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    <button @click="editLayer(layer)" class="action-icon edit" title="Edit layer" aria-label="Edit layer">
+                                        <x-admin.icon name="edit" :size="14" />
                                     </button>
                                     <!-- Delete Layer -->
-                                    <button @click="deleteLayer(layer)" class="action-icon danger" title="Hapus layer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    <button @click="deleteLayer(layer)" class="action-icon danger" title="Hapus layer" aria-label="Hapus layer">
+                                        <x-admin.icon name="trash" :size="14" />
                                     </button>
                                 </div>
                             </div>
@@ -461,22 +460,22 @@
                                 <div class="px-3.5 pt-3 pb-1.5 flex gap-2 border-b border-slate-100/50">
                                     <button @click="exportLayer(layer, 'geojson')" type="button" title="Export GeoJSON"
                                         class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-slate-100 text-slate-600 text-[9px] font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        <x-admin.icon name="download" :size="14" class="shrink-0" />
                                         GeoJSON
                                     </button>
                                     <button @click="exportLayer(layer, 'csv')" type="button" title="Export CSV"
                                         class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-slate-100 text-slate-600 text-[9px] font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        <x-admin.icon name="table" :size="14" class="shrink-0" />
                                         CSV
                                     </button>
                                     <button @click="importToLayer(layer)" type="button" title="Import data ke layer ini"
                                         class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold transition-colors hover:from-emerald-600 hover:to-teal-600">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0-12L8 8m4-4l4 4"/></svg>
+                                        <x-admin.icon name="upload" :size="14" class="shrink-0" />
                                         Import
                                     </button>
                                     <button @click="createSubLayer(layer)" type="button" title="Buat sub-layer di dalam layer ini"
                                         class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-white border border-emerald-300 text-emerald-700 text-[9px] font-bold transition-colors hover:bg-emerald-50">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7zm9 0v6m-3-3h6"/></svg>
+                                        <x-admin.icon name="folder-plus" :size="14" class="shrink-0" />
                                         Sub-Layer
                                     </button>
                                 </div>
@@ -485,7 +484,7 @@
 <template x-if="childrenOf(layer).length === 0">
 <!-- Search -->
 <div class="px-3.5 pt-3 pb-2 relative">
-                                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-6 top-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <x-admin.icon name="search" :size="14" class="absolute left-6 top-[22px] text-slate-400" />
                                     <input type="text" class="marker-search" placeholder="Cari marker..." x-model="markerSearch" />
                                 </div>
 
@@ -505,24 +504,24 @@
                                             <!-- Actions -->
                                             <div class="marker-actions flex items-center gap-0.5">
                                                 <!-- Fly to -->
-                                                <button @click="flyToMarker(item)" class="action-icon" title="Lihat di peta">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                <button @click="flyToMarker(item)" class="action-icon" title="Lihat di peta" aria-label="Lihat marker di peta">
+                                                    <x-admin.icon name="eye" :size="12" />
                                                 </button>
                                                 <!-- Detail -->
-                                                <button @click="showMarkerDetail(layer, item)" class="action-icon" title="Detail">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                <button @click="showMarkerDetail(layer, item)" class="action-icon" title="Detail" aria-label="Lihat detail marker">
+                                                    <x-admin.icon name="info-circle" :size="12" />
                                                 </button>
                                                 <!-- Ubah Ikon -->
-                                                <button @click="showMarkerIconEdit(layer, item)" class="action-icon edit" title="Ubah Ikon Marker">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 2v4m0 12v4m-8-8h4m8 0h4"/><circle cx="12" cy="12" r="3"/></svg>
+                                                <button @click="showMarkerIconEdit(layer, item)" class="action-icon edit" title="Ubah Ikon Marker" aria-label="Ubah ikon marker">
+                                                    <x-admin.icon name="settings" :size="12" />
                                                 </button>
                                                 <!-- Edit -->
-                                                <button @click="showMarkerEdit(layer, item)" class="action-icon edit" title="Edit">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                <button @click="showMarkerEdit(layer, item)" class="action-icon edit" title="Edit" aria-label="Edit marker">
+                                                    <x-admin.icon name="edit" :size="12" />
                                                 </button>
                                                 <!-- Delete -->
-                                                <button @click="deleteFeature(layer, item)" class="action-icon danger" title="Hapus">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <button @click="deleteFeature(layer, item)" class="action-icon danger" title="Hapus" aria-label="Hapus marker">
+                                                    <x-admin.icon name="trash" :size="12" />
                                                 </button>
                                             </div>
                                         </div>
@@ -548,7 +547,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 @if($layers->isEmpty())
                 <div class="flex flex-col items-center justify-center py-12 text-center">
                     <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0021 18.382V7.618a1 1 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        <x-admin.icon name="map-pin" :size="32" class="text-slate-300" />
                     </div>
                     <p class="text-sm font-semibold text-slate-500">Belum ada layer</p>
                     <p class="text-xs text-slate-400 mt-1">Klik "Import" untuk menambah data GIS</p>
@@ -563,17 +562,17 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             
             <!-- Icon if collapsed -->
             <template x-if="legendCollapsed">
-                <div class="flex items-center justify-center w-full h-full text-slate-700" title="Tampilkan Legenda">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
+                <button type="button" @click.stop="legendCollapsed = false" class="flex h-full w-full items-center justify-center text-slate-700" title="Tampilkan Legenda" aria-label="Tampilkan legenda peta">
+                    <x-admin.icon name="chart" :size="20" />
+                </button>
             </template>
 
             <!-- Content if expanded -->
             <div x-show="!legendCollapsed" style="display:none;" @click.stop>
                 <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
                     <span class="text-xs font-bold text-slate-800 tracking-wider uppercase">Legenda Peta</span>
-                    <button @click="legendCollapsed = true" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button @click="legendCollapsed = true" class="text-slate-400 hover:text-slate-600 transition-colors" aria-label="Sembunyikan legenda peta">
+                            <x-admin.icon name="x" :size="16" />
                     </button>
                 </div>
                 <div class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
@@ -594,7 +593,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
     <template x-if="detailModal.show">
         <div class="peta-modal-backdrop" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
             <div class="peta-modal-overlay" @click="detailModal.show = false"></div>
-            <div class="peta-modal" @click.stop>
+            <div class="peta-modal" @click.stop role="dialog" aria-modal="true" aria-labelledby="peta-detail-title" tabindex="-1" @keydown.escape.window="detailModal.show = false" x-init="$nextTick(() => $el.focus())">
                 <!-- Header -->
                 <div class="sticky top-0 bg-white z-10 px-6 pt-5 pb-4 border-b border-slate-100">
                     <div class="flex items-center justify-between">
@@ -603,12 +602,12 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                 <div class="w-4 h-4 rounded-full" :style="'background:' + (detailModal.color || '#6b7280')"></div>
                             </div>
                             <div>
-                                <h3 class="text-base font-bold text-slate-900" x-text="detailModal.name"></h3>
+                                <h3 id="peta-detail-title" class="text-base font-bold text-slate-900" x-text="detailModal.name"></h3>
                                 <p class="text-[11px] text-slate-400 font-medium" x-text="detailModal.layerName"></p>
                             </div>
                         </div>
-                        <button @click="detailModal.show = false" class="action-icon">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <button @click="detailModal.show = false" class="action-icon" aria-label="Tutup detail marker">
+                            <x-admin.icon name="x" :size="16" />
                         </button>
                     </div>
                 </div>
@@ -629,7 +628,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 <!-- Footer -->
                 <div class="px-6 py-4 border-t border-slate-100 flex gap-2">
                     <button @click="detailModal.show = false; showMarkerEdit(detailModal.layerRef, detailModal.itemRef)" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            <x-admin.icon name="edit" :size="16" />
                         Edit Marker
                     </button>
                     <button @click="detailModal.show = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">Tutup</button>
@@ -642,16 +641,16 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
     <template x-if="editModal.show">
         <div class="peta-modal-backdrop" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
             <div class="peta-modal-overlay" @click="editModal.show = false"></div>
-            <div class="peta-modal" @click.stop>
+            <div class="peta-modal" @click.stop role="dialog" aria-modal="true" aria-labelledby="peta-edit-title" tabindex="-1" @keydown.escape.window="editModal.show = false" x-init="$nextTick(() => $el.focus())">
                 <!-- Header -->
                 <div class="sticky top-0 bg-white z-10 px-6 pt-5 pb-4 border-b border-slate-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-base font-bold text-slate-900">Edit Marker</h3>
+                            <h3 id="peta-edit-title" class="text-base font-bold text-slate-900">Edit Marker</h3>
                             <p class="text-[11px] text-slate-400 font-medium" x-text="editModal.layerName"></p>
                         </div>
-                        <button @click="editModal.show = false" class="action-icon">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <button @click="editModal.show = false" class="action-icon" aria-label="Tutup dialog edit marker">
+                            <x-admin.icon name="x" :size="16" />
                         </button>
                     </div>
                 </div>
@@ -687,7 +686,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                 <template x-if="!editModal.markerType">
                                     <div class="flex items-center gap-2">
                                         <div class="w-6 h-6 rounded flex items-center justify-center bg-slate-200 text-slate-500">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
+                                            <x-admin.icon name="info-circle" :size="14" />
                                         </div>
                                         <span class="text-sm text-slate-500">Auto-detect</span>
                                     </div>
@@ -702,9 +701,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                     </div>
                                 </template>
                             </div>
-                            <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform" :class="markerDropOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                            <x-admin.icon name="chevron-down" :size="16" class="shrink-0 text-slate-400 transition-transform" x-bind:class="markerDropOpen ? 'rotate-180' : ''" />
                         </button>
                         <!-- Dropdown Options -->
                         <div x-show="markerDropOpen" @click.away="markerDropOpen = false"
@@ -716,11 +713,11 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                 class="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 transition-colors"
                                 :class="!editModal.markerType ? 'bg-emerald-50' : ''">
                                 <div class="w-6 h-6 rounded bg-slate-200 flex items-center justify-center text-slate-500 flex-shrink-0">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
+                                            <x-admin.icon name="info-circle" :size="14" />
                                 </div>
                                 <span class="text-xs font-semibold" :class="!editModal.markerType ? 'text-emerald-700' : 'text-slate-700'">Auto-detect</span>
                                 <template x-if="!editModal.markerType">
-                                    <svg class="w-3.5 h-3.5 text-emerald-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <x-admin.icon name="check" :size="16" />
                                 </template>
                             </button>
                             <div class="h-px bg-slate-100 my-0.5 mx-3"></div>
@@ -735,7 +732,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                         x-html="_def ? _def.svg : ''"></div>
                                     <span class="text-xs font-semibold" :class="editModal.markerType === t ? 'text-emerald-700' : 'text-slate-700'" x-text="humanizeKey(t)"></span>
                                     <template x-if="editModal.markerType === t">
-                                        <svg class="w-3.5 h-3.5 text-emerald-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <x-admin.icon name="check" :size="16" />
                                     </template>
                                 </button>
                             </template>
@@ -749,7 +746,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                             <input type="text" class="field-input flex-1" placeholder="Nama field" x-model="newFieldKey" />
                             <input type="text" class="field-input flex-1" placeholder="Nilai" x-model="newFieldValue" />
                             <button @click="addNewField()" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-all flex-shrink-0">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+                                <x-admin.icon name="plus" :size="16" />
                             </button>
                         </div>
                     </div>
@@ -777,14 +774,14 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="showImport = false">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                    <x-admin.icon name="upload" :size="20" class="text-teal-600" />
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3 class="text-base font-bold text-slate-900 leading-tight">Import Data GIS</h3>
                     <p class="text-[12px] text-slate-400">Tambah fitur dari file ke layer</p>
                 </div>
-                <button @click="showImport = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button @click="showImport = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup" aria-label="Tutup dialog impor">
+                            <x-admin.icon name="x" :size="16" />
                 </button>
             </div>
 
@@ -825,7 +822,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 
                     <template x-if="importForm.layer_id">
                         <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-2 text-sm text-emerald-800 font-medium">
-                            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                <x-admin.icon name="plus" :size="16" />
                             <span>Import ke layer: <span class="font-bold" x-text="getLayerName(importForm.layer_id)"></span></span>
                         </div>
                     </template>
@@ -838,20 +835,20 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                             :class="dragover ? 'dragover' : ''">
                             <template x-if="!importForm.file">
                                 <div>
-                                    <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    <x-admin.icon name="upload" :size="40" class="mx-auto text-slate-300" />
                                     <p class="text-sm text-slate-500 mt-2">Klik atau drag file ke sini</p>
                                     <p class="text-xs text-slate-400 mt-1">Format: .zip (SHP), .geojson, .json, .kml, .csv</p>
                                 </div>
                             </template>
                             <template x-if="importForm.file">
                                 <div class="flex items-center gap-3">
-                                    <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <x-admin.icon name="check-circle" :size="32" class="text-emerald-500" />
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-slate-900 truncate" x-text="importForm.file?.name"></p>
                                         <p class="text-xs text-slate-500" x-text="formatSize(importForm.file?.size)"></p>
                                     </div>
                                     <button type="button" @click="importForm.file = null" class="text-slate-400 hover:text-red-500">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <x-admin.icon name="x" :size="16" />
                                     </button>
                                 </div>
                             </template>
@@ -886,14 +883,14 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="showCreateLayer = false">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                    <x-admin.icon name="layers" :size="20" class="text-emerald-600" />
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3 class="text-base font-bold text-slate-900 leading-tight">Buat Layer Baru</h3>
                     <p class="text-[12px] text-slate-400">Layer kosong &mdash; impor data nanti</p>
                 </div>
-                <button @click="showCreateLayer = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button @click="showCreateLayer = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup" aria-label="Tutup dialog buat layer">
+                            <x-admin.icon name="x" :size="16" />
                 </button>
             </div>
             <div class="space-y-4">
@@ -950,14 +947,14 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" @click.away="layerEditModal.show = false">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            <x-admin.icon name="edit" :size="16" />
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3 class="text-base font-bold text-slate-900 leading-tight">Edit Layer</h3>
                     <p class="text-[12px] text-slate-400">Ubah nama &amp; warna layer</p>
                 </div>
-                <button @click="layerEditModal.show = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button @click="layerEditModal.show = false" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Tutup" aria-label="Tutup dialog edit layer">
+                            <x-admin.icon name="x" :size="16" />
                 </button>
             </div>
             <div class="space-y-4">
@@ -1002,7 +999,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-start gap-4">
                 <div class="w-12 h-12 shrink-0 rounded-full bg-red-50 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    <x-admin.icon name="alert-triangle" :size="24" class="text-red-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3 class="text-base font-bold text-slate-900 leading-tight">Hapus Layer?</h3>
@@ -1035,10 +1032,10 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             <span class="shrink-0 flex items-center justify-center w-6 h-6 rounded-full"
                 :class="toast.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
                 <template x-if="toast.type === 'success'">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <x-admin.icon name="check" :size="16" />
                 </template>
                 <template x-if="toast.type !== 'success'">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <x-admin.icon name="x" :size="16" />
                 </template>
             </span>
             <span x-text="toast.message" class="flex-1 text-sm font-medium text-slate-700 leading-snug"></span>
@@ -2560,7 +2557,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             getStatusDot(status) {
                 const c = { 'Aktif': '#22c55e', 'Non-aktif': '#ef4444', 'Perlu Perbaikan': '#f59e0b' };
                 const color = c[status] || '#6b7280';
-                return `<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="${color}"/></svg>`;
+                return `<span aria-hidden="true" style="display:inline-block;width:8px;height:8px;border-radius:9999px;background:${color}"></span>`;
             },
         };
     }

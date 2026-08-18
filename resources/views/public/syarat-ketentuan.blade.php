@@ -95,7 +95,7 @@
         <div class="mx-auto grid max-w-[85rem] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_22rem] lg:px-8 lg:py-20">
             <div class="reveal max-w-3xl">
                 <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-brand-700 dark:bg-brand-900/25 dark:text-brand-300">
-                    <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <x-icons.ui name="check" class="size-3.5" />
                     {{ __('Ketentuan Penggunaan') }}
                 </span>
                 <h1 class="mt-5 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{{ __('Syarat & Ketentuan') }}</h1>
@@ -108,7 +108,7 @@
                 <div class="mt-1 text-lg font-bold text-slate-900 dark:text-white">{{ $updatedAt }}</div>
                 <a href="/kebijakan-privasi" class="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-700">
                     {{ __('Baca Kebijakan Privasi') }}
-                    <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    <x-icons.ui name="arrow-right" class="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </a>
             </aside>
         </div>
@@ -142,7 +142,7 @@
                                     @foreach ($section['list'] as $item)
                                         <li class="flex gap-3">
                                             <span class="mt-2.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/40">
-                                                <svg class="size-2.5 text-brand-600 dark:text-brand-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+                                                <x-icons.ui name="check" class="size-2.5 text-brand-600 dark:text-brand-300" />
                                             </span>
                                             <span>{{ $item }}</span>
                                         </li>

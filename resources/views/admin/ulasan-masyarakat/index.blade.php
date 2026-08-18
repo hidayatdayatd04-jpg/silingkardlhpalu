@@ -48,10 +48,7 @@
                         <div class="flex items-center gap-2 mb-1">
                             <div class="flex items-center gap-0.5">
                                 @for ($i = 1; $i <= 5; $i++)
-                                    <svg class="h-4 w-4 {{ $i <= round($data['avg_rating']) ? 'text-amber-400' : 'text-slate-300' }}"
-                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
+                                    <x-admin.icon name="star" :size="16" filled class="{{ $i <= round($data['avg_rating']) ? 'text-amber-400' : 'text-slate-300' }}" />
                                 @endfor
                             </div>
                             <span class="text-lg font-bold text-ink-900">{{ $data['avg_rating'] }}</span>
@@ -80,10 +77,7 @@
                         <div class="flex items-center gap-2 mb-1">
                             <div class="flex items-center gap-0.5">
                                 @for ($i = 1; $i <= 5; $i++)
-                                    <svg class="h-3.5 w-3.5 {{ $i <= $fb['rating'] ? 'text-amber-400' : 'text-slate-300' }}"
-                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
+                                    <x-admin.icon name="star" :size="14" filled class="{{ $i <= $fb['rating'] ? 'text-amber-400' : 'text-slate-300' }}" />
                                 @endfor
                             </div>
                             <span class="text-xs font-mono font-bold text-slate-600">{{ $fb['ticket_number'] }}</span>

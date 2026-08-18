@@ -47,22 +47,15 @@ class SetupSeederCommand extends Command
         $this->info('==============================================');
         $this->newLine();
         
-        $this->table(
-            ['Username', 'Password', 'Role'],
-            [
-                ['admin', 'admin123', 'Admin (akses penuh)'],
-                ['pengendalian', 'pengendalian123', 'Admin Pengendalian'],
-                ['sampah-lb3', 'sampah123', 'Admin Sampah & LB3'],
-                ['tata-penataan', 'tata123', 'Admin Tata Penataan'],
-                ['rth', 'rth123', 'Admin RTH'],
-            ]
-        );
+        $this->warn('Password akun tidak ditetapkan sebagai nilai bawaan oleh seeder.');
+        $this->line('Untuk akun baru, password acak yang kuat dicetak sekali saat proses seeding.');
+        $this->line('Untuk akun yang sudah ada, password lama sengaja tidak diubah.');
 
         $this->newLine();
         $this->info('📋 Langkah Selanjutnya:');
         $this->line('1. (Opsional) Copy file gambar ke: storage/app/public/seeder-images/');
         $this->line('2. (Opsional) Copy file dokumen ke: storage/app/public/seeder-documents/');
-        $this->line('3. Login ke admin panel dengan salah satu user di atas');
+        $this->line('3. Login ke admin panel dengan kredensial yang telah ditetapkan administrator');
         $this->line('4. Verifikasi data sudah muncul di semua menu admin');
         $this->newLine();
         

@@ -1,29 +1,30 @@
 @extends('layouts.app')
 
 @section('title', 'Tata Lingkungan - DLH Kota Palu')
-@section('description', 'Dokumen kajian lingkungan Dinas Lingkungan Hidup Kota Palu: KLHS, RPPLH, IKPLHD, daya dukung daya tampung, pemantauan lingkungan, persampahan, RTH, dan dokumen lainnya — dapat dipratinjau dan diunduh secara langsung.')
+@section('description', 'Dokumen kajian lingkungan Dinas Lingkungan Hidup Kota Palu: KLHS, RPPLH, IKPLHD, daya dukung daya tampung, pemantauan lingkungan, persampahan, RTH, dan dokumen lainnya - dapat dipratinjau dan diunduh secara langsung.')
 
 @section('content')
-<div class="space-y-8 tl-wrap">
+<div class="tl-page-shell space-y-8 tl-wrap">
     <x-public.page-hero
         badge="{{ __('Bidang Tata Penataan') }}"
+        icon="leaf"
         title="{{ __('Tata Lingkungan') }}"
         description="{{ __('Kumpulan dokumen kajian lingkungan hidup Kota Palu yang tersinkron otomatis dengan Google Drive DLH. Pilih folder dan file untuk membaca dokumen secara langsung.') }}"
     />
 
     {{-- Penjelajah dokumen --}}
-    <div x-data="tataLingkunganExplorer()" class="tl-explorer">
+    <div x-data="tataLingkunganExplorer()" class="tl-explorer reveal">
         <div class="tl-accent" aria-hidden="true"></div>
 
         {{-- ── Error state ── --}}
         <section x-show="error" x-cloak class="tl-state-card" x-transition.opacity>
             <span class="tl-state-icon tl-state-icon--error">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <x-icons.ui name="alert" />
             </span>
             <h3 class="tl-state-title">{{ __('Dokumen Tidak Dapat Dimuat') }}</h3>
             <p class="tl-state-desc" x-text="error"></p>
             <button @click="retry()" class="tl-btn tl-btn--primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M3 12a9 9 0 0 1 15.36-6.36L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 16M3 21v-5h5"/></svg>
+                <x-icons.ui name="refresh" class="size-4" />
                 {{ __('Coba Lagi') }}
             </button>
         </section>
@@ -33,7 +34,7 @@
                 <section class="tl-head">
                     <div class="tl-head-left">
                         <span class="tl-head-logo">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg>
+                            <x-icons.ui name="document" />
                         </span>
                         <div class="min-w-0">
                             <h2 class="tl-head-title">{{ __('Dokumen Tata Lingkungan') }}</h2>
@@ -46,7 +47,7 @@
                                         <template x-if="idx === crumbs.length - 1">
                                             <span class="tl-crumb tl-crumb--current" x-text="seg.name"></span>
                                         </template>
-                                        <svg x-show="idx < crumbs.length - 1" class="tl-crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                        <x-icons.ui name="chevron-right" x-show="idx < crumbs.length - 1" class="tl-crumb-sep" />
                                     </span>
                                 </template>
                             </nav>
@@ -55,11 +56,11 @@
 
                     <div class="tl-head-right">
                         <span class="tl-count" x-show="!loadingFolders" x-cloak>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                            <x-icons.ui name="document" />
                             <span x-text="total.toLocaleString('id-ID')"></span>
                         </span>
                         <button @click="refresh()" class="tl-refresh" :disabled="loadingFolders || loading" :title="'Sinkronkan dengan Google Drive'" aria-label="Sinkronkan dengan Google Drive">
-                            <svg :class="{ 'tl-spin': loadingFolders || loading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.36-6.36L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 16M3 21v-5h5"/></svg>
+                            <x-icons.ui name="refresh" x-bind:class="{ 'tl-spin': loadingFolders || loading }" />
                         </button>
                     </div>
                 </section>
@@ -69,7 +70,7 @@
                     {{-- Pohon folder --}}
                     <aside class="tl-tree" aria-label="Daftar folder">
                         <div class="tl-tree-head">
-                            <svg class="tl-tree-head-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            <x-icons.ui name="folder" class="tl-tree-head-icon" />
                             <span>{{ __('Folder') }}</span>
                         </div>
 
@@ -84,7 +85,7 @@
                                     class="tl-tree-row tl-tree-row--root"
                                     :class="{ 'tl-tree-row--active': activeFolderId === root.id }">
                                     <span class="tl-tree-folder-tile">
-                                        <svg class="tl-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                        <x-icons.ui name="folder" class="tl-folder-icon" />
                                     </span>
                                     <span class="tl-tree-label" x-text="root.name || 'Tata Lingkungan'"></span>
                                 </button>
@@ -97,14 +98,14 @@
                                             :class="{ 'tl-caret--open': expandedIds[row.folder.id] }"
                                             x-show="childrenCount(row.folder.id) > 0"
                                             aria-label="Perluas folder">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                            <x-icons.ui name="chevron-right" />
                                         </button>
                                         <button
                                             @click="selectFolder(row.folder.id)"
                                             class="tl-tree-row"
                                             :class="{ 'tl-tree-row--active': activeFolderId === row.folder.id }">
                                             <span class="tl-tree-folder-tile">
-                                                <svg class="tl-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                                <x-icons.ui name="folder" class="tl-folder-icon" />
                                             </span>
                                             <span class="tl-tree-label" x-text="row.folder.name"></span>
                                         </button>
@@ -136,7 +137,7 @@
                                         <span class="tl-file-icon" :class="iconClass(file.category)" x-html="iconSvg(file.category)"></span>
                                         <span class="tl-file-name" x-text="file.name" :title="file.name"></span>
                                         <span class="tl-file-eye">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            <x-icons.ui name="eye" />
                                         </span>
                                     </button>
                                 </template>
@@ -146,7 +147,7 @@
                         {{-- Empty: folder tidak berisi file --}}
                         <div x-show="!loadingFolders && !loading && files.length === 0" x-cloak class="tl-files-empty">
                             <span class="tl-state-icon tl-state-icon--sm">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                <x-icons.ui name="document" />
                             </span>
                             <p class="tl-files-empty-text">{{ __('Folder ini belum memiliki dokumen.') }}</p>
                         </div>
@@ -157,7 +158,7 @@
                         {{-- Loader halaman berikutnya --}}
                         <div x-show="loading && !loadingFolders" x-cloak class="tl-load-more" x-transition.opacity>
                             <span class="tl-spinner"></span>
-                            <span>{{ __('Memuat dokumen lainnya…') }}</span>
+                            <span>{{ __('Memuat dokumen lainnya...') }}</span>
                         </div>
                     </section>
                 </div>
@@ -179,22 +180,22 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <a :href="selectedFile ? webView(selectedFile) : '#'" target="_blank" rel="noopener" class="tl-btn tl-btn--ghost tl-btn--sm" x-show="selectedFile">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></svg>
+                            <x-icons.ui name="arrow-right" />
                             {{ __('Buka di Drive') }}
                         </a>
                         <a :href="selectedFile ? downloadUrl(selectedFile) : '#'" target="_blank" rel="noopener" class="tl-btn tl-btn--primary tl-btn--sm" x-show="selectedFile">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            <x-icons.ui name="download" />
                             {{ __('Download') }}
                         </a>
                         <button @click="closePreview()" class="tl-btn tl-btn--icon" aria-label="Tutup pratinjau">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            <x-icons.ui name="close" />
                         </button>
                     </div>
                 </header>
                 <div class="tl-modal-body">
                     <div x-show="previewLoading" class="tl-preview-loading">
                         <span class="tl-spinner tl-spinner--lg"></span>
-                        <p>{{ __('Memuat pratinjau…') }}</p>
+                        <p>{{ __('Memuat pratinjau...') }}</p>
                     </div>
                     <iframe
                         x-show="previewUrl !== ''"
@@ -212,16 +213,45 @@
 
     <style>
 
-        .tl-wrap { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
+        .tl-wrap {
+            position: relative;
+            font-family: 'Plus Jakarta Sans Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+        }
+        .tl-page-shell::before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            top: 13rem;
+            left: -12rem;
+            width: 27rem;
+            height: 27rem;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(16, 185, 129, .09), transparent 68%);
+            filter: blur(7px);
+            pointer-events: none;
+        }
 
         /* ── Wadah utama ── */
         .tl-explorer {
             position: relative;
-            background: #fff;
-            border: 1px solid #e8efe9;
-            border-radius: 24px;
+            isolation: isolate;
+            background: linear-gradient(145deg, #ffffff 0%, #fbfefc 100%);
+            border: 1px solid rgba(22, 137, 83, .13);
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(13,43,29,0.04), 0 24px 48px -24px rgba(13,43,29,0.16);
+            box-shadow: 0 1px 3px rgba(13,43,29,0.04), 0 28px 54px -32px rgba(13,43,29,0.26);
+        }
+        .tl-explorer::before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            right: -7rem;
+            top: -9rem;
+            width: 20rem;
+            height: 20rem;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(34, 183, 138, .11), transparent 66%);
+            pointer-events: none;
         }
         .tl-accent {
             height: 3px;
@@ -299,10 +329,10 @@
             color: #475569;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            transition: all .15s ease;
+            transition: color .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
             box-shadow: 0 1px 2px rgba(13,43,29,0.05);
         }
-        .tl-refresh:hover { border-color: #1ea567; color: #146a44; background: #f4faf6; box-shadow: 0 4px 12px -4px rgba(20,106,68,0.25); }
+        .tl-refresh:hover { border-color: #1ea567; color: #146a44; background: #f4faf6; box-shadow: 0 4px 12px -4px rgba(20,106,68,0.25); transform: translateY(-1px); }
         .tl-refresh:disabled { opacity: 0.55; cursor: wait; }
         .tl-refresh svg { width: 16px; height: 16px; }
         .tl-spin { animation: tl-spin 1s linear infinite; }
@@ -370,7 +400,7 @@
             text-align: left;
             transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
         }
-        .tl-tree-row:hover { background: #edf4ef; }
+        .tl-tree-row:hover { background: #edf4ef; transform: translateX(2px); }
         .tl-tree-row--active {
             background: linear-gradient(135deg, #178a53, #146a44);
             color: #fff;
@@ -422,7 +452,7 @@
             text-align: left;
             transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
         }
-        .tl-file-row:hover { background: #f2f7f4; box-shadow: inset 0 0 0 1px #e3efe7; }
+        .tl-file-row:hover { background: #f2f7f4; box-shadow: inset 0 0 0 1px #e3efe7; transform: translateX(2px); }
         .tl-file-row--active { background: #e9f6ee; box-shadow: inset 0 0 0 1.5px #a8dcc0; }
         .tl-file-icon {
             flex-shrink: 0;
@@ -523,7 +553,7 @@
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all .15s ease;
+            transition: color .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
             text-decoration: none;
         }
         .tl-btn svg { width: 15px; height: 15px; }
@@ -549,6 +579,15 @@
         }
         .tl-btn--icon:hover { background: #fee2e2; color: #b91c1c; transform: translateY(-1px); }
         .tl-btn--icon svg { width: 16px; height: 16px; }
+        .tl-crumb:focus-visible,
+        .tl-refresh:focus-visible,
+        .tl-caret:focus-visible,
+        .tl-tree-row:focus-visible,
+        .tl-file-row:focus-visible,
+        .tl-btn:focus-visible {
+            outline: 3px solid rgba(22, 137, 83, .32);
+            outline-offset: 2px;
+        }
 
         /* ── Infinite scroll ── */
         .tl-sentinel { height: 1px; }
@@ -625,7 +664,7 @@
         }
 
         /* ── Dark mode ── */
-        .dark .tl-explorer { background: #1e293b; border-color: #334155; }
+        .dark .tl-explorer { background: linear-gradient(145deg, #152234 0%, #101b2a 100%); border-color: rgba(110,231,183,0.16); }
         .dark .tl-head { background: linear-gradient(180deg, #0f172a 0%, #111c2c 100%); border-color: #334155; }
         .dark .tl-head-title { color: #e2e8f0; }
         .dark .tl-crumb { color: #94a3b8; }
@@ -680,8 +719,19 @@
             .tl-files { max-height: 60vh; }
         }
         @media (max-width: 640px) {
+            .tl-page-shell::before { left: -18rem; }
             .tl-head { padding: 14px 16px; }
             .tl-modal-panel { margin-top: 0; width: 100%; height: 100vh; border-radius: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .tl-page-shell *,
+            .tl-page-shell *::before,
+            .tl-page-shell *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+            }
         }
     </style>
 </div>

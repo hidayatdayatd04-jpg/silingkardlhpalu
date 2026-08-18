@@ -13,10 +13,16 @@
 
 @php
     $id = $attributes->get('id', 'pub-select-' . Str::random(8));
+    $panelId = $id . '-options';
     $hasError = $error || $errors->has($name);
     $errorMessage = $error ?? $errors->first($name);
+    $decodeDisplayText = static fn ($value): string => html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $displayLabel = $decodeDisplayText($label);
+    $displayPlaceholder = $decodeDisplayText($placeholder);
+    $displayHint = $hint === null ? null : $decodeDisplayText($hint);
+    $displayErrorMessage = $errorMessage === null ? null : $decodeDisplayText($errorMessage);
     $normalizedOptions = collect($options)
-        ->map(fn ($label, $value) => ['value' => (string) $value, 'label' => (string) $label])
+        ->map(fn ($optionLabel, $value) => ['value' => (string) $value, 'label' => $decodeDisplayText($optionLabel)])
         ->values();
 @endphp
 
@@ -24,7 +30,8 @@
     {{ $attributes->whereStartsWith('wire:model') }}
     {{ $attributes->whereStartsWith('wire:key') }}
     x-modelable="selected"
-    class="fi-field"
+    class="fi-field fi-select-field"
+    x-bind:class="{ 'fi-select-field--open': open }"
     x-data="{
         open: false,
         search: '',
@@ -82,8 +89,8 @@
 >
     {{-- Label --}}
     @if($label)
-        <label for="{{ $id }}" class="fi-label">
-            {{ $label }}
+        <label for="{{ $id }}" class="fi-label" x-on:click.prevent="$refs.trigger.focus(); open = true">
+            {{ $displayLabel }}
             @if($required)<span class="fi-required">*</span>@endif
         </label>
     @endif
@@ -106,14 +113,15 @@
             x-ref="trigger"
             x-on:click="open = !open"
             :disabled="{{ $disabled ? 'true' : 'false' }}"
-            aria-label="{{ $label ?: $placeholder }}"
+            aria-label="{{ $displayLabel ?: $displayPlaceholder }}"
+            aria-haspopup="listbox"
+            :aria-expanded="open ? 'true' : 'false'"
+            aria-controls="{{ $panelId }}"
             class="fi-select-trigger {{ $hasError ? 'fi-select-trigger--error' : '' }} {{ $disabled ? 'fi-select-trigger--disabled' : '' }}"
         >
-            <span x-show="!selected" class="fi-select-placeholder">{{ $placeholder }}</span>
+            <span x-show="!selected" class="fi-select-placeholder">{{ $displayPlaceholder }}</span>
             <span x-show="selected" x-text="selectedLabel" class="fi-select-value"></span>
-            <svg class="fi-select-chevron" :class="{ 'fi-select-chevron--open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9l6 6 6-6"/>
-            </svg>
+            <x-icons.ui name="chevron-down" class="fi-select-chevron" x-bind:class="{ 'fi-select-chevron--open': open }" />
         </button>
 
         {{-- Panel --}}
@@ -127,6 +135,8 @@
             x-transition:leave-end="fi-select-leave-end"
             x-on:click.outside="open = false"
             class="fi-select-panel"
+            id="{{ $panelId }}"
+            role="listbox"
         >
             {{-- Search --}}
             @if($searchable)
@@ -146,8 +156,10 @@
                 x-on:click="selectOption('', '')"
                 class="fi-select-option"
                 :class="{ 'fi-select-option--active': selected === '' }"
+                role="option"
+                :aria-selected="selected === '' ? 'true' : 'false'"
             >
-                <span>{{ $placeholder }}</span>
+                <span>{{ $displayPlaceholder }}</span>
             </div>
 
             {{-- Options --}}
@@ -157,10 +169,12 @@
                         x-on:click="selectOption(option.value, option.label)"
                         class="fi-select-option"
                         :class="{ 'fi-select-option--active': selected === option.value }"
+                        role="option"
+                        :aria-selected="selected === option.value ? 'true' : 'false'"
                     >
                         <span x-text="option.label" class="fi-select-option-text"></span>
                         <span x-show="selected === option.value" class="fi-select-check">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                            <x-icons.ui name="check" />
                         </span>
                     </div>
                 </template>
@@ -176,11 +190,11 @@
     {{-- Error / Hint --}}
     @if($hasError)
         <p class="fi-error">
-            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-            {{ $errorMessage }}
+            <x-icons.ui name="alert" />
+            {{ $displayErrorMessage }}
         </p>
     @elseif($hint)
-        <p class="fi-hint-sub">{{ $hint }}</p>
+        <p class="fi-hint-sub">{{ $displayHint }}</p>
     @endif
 
     <style>
@@ -211,6 +225,11 @@
         /* ── Select Shell ── */
         .fi-select-shell {
             position: relative;
+        }
+
+        .fi-select-field--open,
+        .fi-select-shell--open {
+            z-index: 80;
         }
 
         .fi-select-trigger {
@@ -286,17 +305,18 @@
             border-radius: 18px;
             box-shadow: 0 12px 32px -10px rgba(13, 43, 29, 0.18);
             padding: 8px;
-            z-index: 50;
+            z-index: 1000;
             max-height: 360px;
             overflow: visible;
             overscroll-behavior: contain;
+            transform-origin: top center;
         }
 
         /* ── Transition classes ── */
-        .fi-select-enter { transition: opacity .15s ease, transform .15s ease; }
+        .fi-select-enter { transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1); }
         .fi-select-enter-start { opacity: 0; transform: translateY(-4px) scale(0.98); }
         .fi-select-enter-end { opacity: 1; transform: translateY(0) scale(1); }
-        .fi-select-leave { transition: opacity .1s ease, transform .1s ease; }
+        .fi-select-leave { transition: opacity 120ms cubic-bezier(0.22, 1, 0.36, 1), transform 120ms cubic-bezier(0.22, 1, 0.36, 1); }
         .fi-select-leave-start { opacity: 1; transform: translateY(0) scale(1); }
         .fi-select-leave-end { opacity: 0; transform: translateY(-4px) scale(0.98); }
 
@@ -433,5 +453,13 @@
         .dark .fi-select-option--active { background: #178a53; }
         .dark .fi-select-option--active:hover { background: #146a44; }
         .dark .fi-hint-sub { color: #94a3b8; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fi-select-enter,
+            .fi-select-leave,
+            .fi-select-chevron {
+                transition: none !important;
+            }
+        }
     </style>
 </div>

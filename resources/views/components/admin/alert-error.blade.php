@@ -7,50 +7,38 @@
 @php
     $messages = [];
     if ($errors instanceof \Illuminate\Support\MessageBag) {
-        foreach ($errors->all() as $msg) {
-            $messages[] = $msg;
-        }
+        $messages = $errors->all();
     } elseif (is_iterable($errors)) {
         foreach ($errors as $item) {
-            if (is_iterable($item)) {
-                foreach ($item as $msg) {
-                    $messages[] = $msg;
-                }
-            } else {
-                $messages[] = $item;
-            }
+            foreach (is_iterable($item) ? $item : [$item] as $message) $messages[] = $message;
         }
     }
 @endphp
 
 @if(count($messages))
-    <div x-data="{ show: true }" x-show="show"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 -translate-y-2"
+    <div
+        x-data="{ show: true }"
+        x-show="show"
+        x-transition:enter="transition-[opacity,transform] ease-out duration-150"
+        x-transition:enter-start="opacity-0 -translate-y-1"
         x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave="transition-[opacity,transform] ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 -translate-y-2"
-        {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50 to-red-50 px-5 py-4 shadow-[0_12px_30px_-12px_rgba(225,29,72,0.35)] dark:border-rose-500/30 dark:from-rose-500/10 dark:to-red-500/5']) }}>
-        <div class="pointer-events-none absolute -right-8 -top-8 size-28 rounded-full bg-rose-300/20 blur-2xl"></div>
-        <div class="relative flex items-start gap-3.5">
-            <div class="grid size-9 shrink-0 place-items-center rounded-xl bg-rose-500/15 text-rose-600 ring-1 ring-inset ring-rose-300/40 dark:bg-rose-500/20 dark:text-rose-300">
-                <x-admin.icon :name="$icon" :size="20" />
-            </div>
+        x-transition:leave-end="opacity-0 -translate-y-1"
+        {{ $attributes->merge(['class' => 'rounded-2xl border border-danger-200 bg-danger-50 px-4 py-3.5 dark:border-danger-900/70 dark:bg-danger-950/35']) }}
+        role="alert"
+    >
+        <div class="flex items-start gap-3">
+            <div class="grid size-8 shrink-0 place-items-center rounded-xl bg-danger-100 text-danger-700 dark:bg-danger-900/45 dark:text-danger-300"><x-admin.icon :name="$icon" :size="18" aria-hidden="true" /></div>
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-rose-800 dark:text-rose-200">{{ $title }}</p>
-                <ul class="mt-1.5 space-y-1 text-sm text-rose-700/90 dark:text-rose-300/90">
-                    @foreach($messages as $msg)
-                        <li class="flex items-start gap-2">
-                            <x-admin.icon name="alert-circle" :size="16" class="mt-0.5 shrink-0 text-rose-400" />
-                            <span>{{ $msg }}</span>
-                        </li>
+                <p class="text-sm font-bold text-danger-800 dark:text-danger-200">{{ $title }}</p>
+                <ul class="mt-1.5 space-y-1 text-sm leading-5 text-danger-700 dark:text-danger-300">
+                    @foreach($messages as $message)
+                        <li class="flex items-start gap-1.5"><x-admin.icon name="alert-circle" :size="14" class="mt-0.5 shrink-0" aria-hidden="true" /><span>{{ $message }}</span></li>
                     @endforeach
                 </ul>
             </div>
-            <button type="button" @click="show = false" class="shrink-0 rounded-lg p-1 text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-300" aria-label="Tutup">
-                <x-admin.icon name="x" :size="16" />
-            </button>
+            <button type="button" x-on:click="show = false" class="grid size-8 shrink-0 place-items-center rounded-lg text-danger-600 outline-none transition-colors duration-150 hover:bg-danger-100 focus-visible:bg-danger-100 dark:text-danger-300 dark:hover:bg-danger-900/45 dark:focus-visible:bg-danger-900/45" aria-label="Tutup ringkasan kesalahan"><x-admin.icon name="x" :size="17" aria-hidden="true" /></button>
         </div>
     </div>
 @endif

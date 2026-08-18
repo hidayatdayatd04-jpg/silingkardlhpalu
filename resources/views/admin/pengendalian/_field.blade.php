@@ -154,6 +154,19 @@
             <p class="text-xs text-slate-500">Belum ada foto lampiran dari masyarakat.</p>
         @endif
     </div>
+@elseif ($field['type'] === 'date')
+    <div class="{{ $isWide ? 'sm:col-span-2' : '' }}" {!! $xShowAttr !!}>
+        <x-admin.date-field
+            id="peng-{{ $name }}"
+            name="{{ $name }}"
+            type="date"
+            :label="$field['label']"
+            :value="$value"
+            :error="$err"
+            :required="$isRequired"
+            :readonly="$isReadonly"
+        />
+    </div>
 @else
     @php
         $isLatLng = in_array($name, ['latitude', 'longitude'], true);

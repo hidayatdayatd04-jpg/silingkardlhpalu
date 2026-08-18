@@ -82,8 +82,9 @@ Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->mi
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['guest'])->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->middleware('throttle:30,1')->name('login');
-        // Percobaan login dibatasi ketat (5/menit per IP) untuk meredam brute-force.
-        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.store');
+        // Batasi percobaan login per identitas + IP, dengan batas IP global.
+        // Ini mencegah satu admin di jaringan/proxy yang sama mengunci admin lain.
+        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:admin-login')->name('login.store');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');

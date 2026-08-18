@@ -295,6 +295,19 @@
                                         :error="$error"
                                     />
                                 </div>
+                            @elseif($type === 'date')
+                                <div class="{{ $fullClass }}" {!! $xShowAttr !!}>
+                                    <x-admin.date-field
+                                        id="field-{{ $name }}"
+                                        name="{{ $name }}"
+                                        type="date"
+                                        :label="$field['label']"
+                                        :value="$value"
+                                        :error="$error"
+                                        :required="$isRequired"
+                                        :readonly="$isReadonly"
+                                    />
+                                </div>
                             @elseif($type === 'file')
                                 @php $currentFile = $record->{$name} ?? null; @endphp
                                 <div class="{{ $fullClass }}" {!! $xShowAttr !!}>
@@ -430,8 +443,7 @@
                                                                     class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
                                                             </td>
                                                             <td class="px-3 py-2">
-                                                                <input type="date" name="daftar_hadir[][tanggal]" x-model="row.tanggal"
-                                                                    class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
+                                                                <x-admin.date-field name="daftar_hadir[][tanggal]" x-model="row.tanggal" />
                                                             </td>
                                                             <td class="px-3 py-2">
                                                                 <input type="text" name="daftar_hadir[][lokasi]" x-model="row.lokasi" placeholder="Lokasi kegiatan"

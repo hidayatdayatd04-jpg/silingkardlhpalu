@@ -12,7 +12,7 @@
         <div class="pl-filter">
             <div class="pl-filter-head">
                 <div class="pl-filter-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <x-admin.icon name="calendar" :size="18" />
                     Filter Periode Laporan
                 </div>
                 <div class="pl-live">
@@ -26,14 +26,14 @@
                     <label class="pl-field-label" for="sp-from">Dari Tanggal</label>
                     <div class="pl-input-wrap">
                         <input type="text" id="sp-from" value="{{ $from ?? now()->startOfMonth()->toDateString() }}" class="pl-input pl-date" placeholder="Pilih tanggal mulai" readonly />
-                        <svg class="pl-input-icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <x-admin.icon name="calendar" :size="16" class="pl-input-icon-right" />
                     </div>
                 </div>
                 <div class="pl-field">
                     <label class="pl-field-label" for="sp-to">Sampai Tanggal</label>
                     <div class="pl-input-wrap">
                         <input type="text" id="sp-to" value="{{ $to ?? now()->endOfMonth()->toDateString() }}" class="pl-input pl-date" placeholder="Pilih tanggal akhir" readonly />
-                        <svg class="pl-input-icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <x-admin.icon name="calendar" :size="16" class="pl-input-icon-right" />
                     </div>
                 </div>
                 <div class="pl-actions">
@@ -64,19 +64,19 @@
             <div class="pl-legend">
                 <p class="pl-legend-title">Panduan Bidang</p>
                 <div class="pl-legend-row">
-                    <span class="pl-legend-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V7a3 3 0 016 0v4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M12 15v2"/><path d="M8 15v2"/><path d="M16 15v2"/></svg></span>
+                    <span class="pl-legend-icon"><x-icons.pengendalian class="size-4" /></span>
                     <span class="pl-legend-text">Pengendalian</span>
                 </div>
                 <div class="pl-legend-row">
-                    <span class="pl-legend-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6"/><path d="M10 11v5"/><path d="M14 11v5"/><path d="M12 12V8"/></svg></span>
+                    <span class="pl-legend-icon"><x-icons.sampah class="size-4" /></span>
                     <span class="pl-legend-text">Sampah &amp; LB3</span>
                 </div>
                 <div class="pl-legend-row">
-                    <span class="pl-legend-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0020 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/><circle cx="12" cy="8" r="2"/><path d="M17 2h-2v4h2V2z"/><path d="M9 2H7v4h2V2z"/></svg></span>
+                    <span class="pl-legend-icon"><x-icons.rth class="size-4" /></span>
                     <span class="pl-legend-text">RTH</span>
                 </div>
                 <div class="pl-legend-row">
-                    <span class="pl-legend-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h12"/><rect x="15" y="12" width="6" height="8" rx="1"/><rect x="16" y="9" width="4" height="3" rx="0.5"/><circle cx="17" cy="14" r="1"/><circle cx="19" cy="17" r="1"/></svg></span>
+                    <span class="pl-legend-icon"><x-icons.tata-penataan class="size-4" /></span>
                     <span class="pl-legend-text">Tata Penataan</span>
                 </div>
                 <div class="pl-count">

@@ -1,20 +1,9 @@
 @props(['title', 'description' => null, 'icon' => null])
 
-<div class="space-y-8">
-    <div class="flex items-start gap-4 border-b-2 border-emerald-100 pb-6">
-        @if($icon)
-            <div class="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30">
-                <x-admin.icon :name="$icon" :size="24" />
-            </div>
-        @endif
-        <div class="min-w-0">
-            <h3 class="text-lg font-bold text-slate-900">{{ $title }}</h3>
-            @if($description)
-                <p class="mt-2 text-sm leading-relaxed text-slate-500">{{ $description }}</p>
-            @endif
-        </div>
+<section {{ $attributes->merge(['class' => 'space-y-5']) }}>
+    <div class="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
+        @if($icon)<div class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/55 dark:text-brand-300"><x-admin.icon :name="$icon" :size="20" aria-hidden="true" /></div>@endif
+        <div class="min-w-0"><h2 class="text-base font-bold text-slate-950 dark:text-white">{{ $title }}</h2>@if($description)<p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $description }}</p>@endif</div>
     </div>
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {{ $slot }}
-    </div>
-</div>
+    <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">{{ $slot }}</div>
+</section>

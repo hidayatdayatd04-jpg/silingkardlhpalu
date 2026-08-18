@@ -93,7 +93,7 @@ new class extends Component
                 label="{{ __('Nama Perusahaan / Pelaku Usaha') }}"
                 placeholder="{{ __('Nama lengkap perusahaan atau pelaku usaha') }}"
                 required
-                icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>'
+                icon="building"
             />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -104,7 +104,7 @@ new class extends Component
                     label="{{ __('Nomor Telepon') }}"
                     placeholder="{{ __('Contoh: 08123456789') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>'
+                    icon="phone"
                 />
 
                 <x-public.input
@@ -115,7 +115,7 @@ new class extends Component
                     placeholder="contoh@email.com"
                     required
                     hint="{{ __('Untuk notifikasi update status registrasi') }}"
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+                    icon="mail"
                 />
             </div>
 
@@ -126,7 +126,7 @@ new class extends Component
                 placeholder="{{ __('Alamat lengkap perusahaan/pelaku usaha, sertakan patokan terdekat') }}"
                 rows="3"
                 required
-                icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>'
+                icon="map-pin"
             />
 
             <x-public.select
@@ -151,7 +151,7 @@ new class extends Component
 
             @error('form')
                 <div class="dlh-limit-alert" role="alert">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <x-icons.ui name="alert" />
                     <span>{{ $message }}</span>
                 </div>
             @enderror
@@ -160,7 +160,7 @@ new class extends Component
 
             <button type="submit" class="fi-submit-btn">
                 {{ __('Kirim Registrasi') }}
-                <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M12 5l7 7-7 7"/></svg>
+                <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
             </button>
         </form>
     @endif

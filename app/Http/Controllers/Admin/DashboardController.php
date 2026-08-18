@@ -96,6 +96,7 @@ class DashboardController extends Controller
 
         if (in_array('pengendalian', $allowedGroups)) {
             $cards[] = ['label' => 'Laporan Pengendalian', 'value' => $bidangTotal('pengendalian'), 'tone' => 'emerald', 'icon' => 'alert-circle'];
+            $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text'];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
             $cards[] = ['label' => 'Laporan Sampah', 'value' => $bidangTotal('sampah-lb3'), 'tone' => 'sky', 'icon' => 'recycle'];
@@ -103,7 +104,6 @@ class DashboardController extends Controller
         }
         if (in_array('rth', $allowedGroups)) {
             $cards[] = ['label' => 'Laporan RTH', 'value' => $bidangTotal('rth'), 'tone' => 'teal', 'icon' => 'tree'];
-            $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text'];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
             $cards[] = ['label' => 'Laporan Tata Penataan', 'value' => $bidangTotal('tata-penataan'), 'tone' => 'purple', 'icon' => 'building'];
@@ -165,6 +165,7 @@ class DashboardController extends Controller
 
         if (in_array('pengendalian', $allowedGroups)) {
             $tasks[] = ['label' => 'Laporan Pengendalian belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'pengendalian', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-pengendalian'])];
+            $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi'])];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
             $tasks[] = ['label' => 'Laporan Sampah belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'sampah-lb3', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-sampah'])];
@@ -172,7 +173,6 @@ class DashboardController extends Controller
         }
         if (in_array('rth', $allowedGroups)) {
             $tasks[] = ['label' => 'Laporan RTH belum ditinjau', 'count' => $this->aggCount($agg, 'rth', ['Belum Ditinjau']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-rth'])];
-            $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi'])];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
             $tasks[] = ['label' => 'Laporan Tata Penataan menunggu tindak lanjut', 'count' => $this->aggCount($agg, 'tata-penataan', ['menunggu']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
@@ -215,8 +215,10 @@ class DashboardController extends Controller
                 ->take(5)
                 ->values();
         }
-        if (in_array('rth', $allowedGroups)) {
+        if (in_array('pengendalian', $allowedGroups)) {
             $recent['permohonan'] = PermohonanRekomendasi::latest()->take(5)->get();
+        }
+        if (in_array('rth', $allowedGroups)) {
             $recent['pinjam_taman'] = \App\Models\PermohonanPinjamTaman::latest()->take(5)->get();
             $recent['tanam_pohon'] = \App\Models\DataTanamPohon::latest()->take(5)->get();
         }

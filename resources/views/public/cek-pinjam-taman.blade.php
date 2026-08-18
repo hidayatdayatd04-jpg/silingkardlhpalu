@@ -4,9 +4,13 @@
 @section('description', 'Lacak status permohonan penyewaan taman menggunakan nomor tiket atau email.')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
-    <x-public.page-hero badge="{{ __('Bidang RTH') }}" title="{{ __('Cek Status Penyewaan Taman') }}" description="{{ __('Masukkan nomor tiket atau email untuk melihat status penyewaan taman.') }}" />
+<div class="public-service-page max-w-3xl mx-auto space-y-6 md:space-y-8">
+    <x-public.page-hero badge="{{ __('Bidang RTH') }}" title="{{ __('Cek Status Penyewaan Taman') }}" description="{{ __('Masukkan nomor tiket atau email untuk melihat status penyewaan taman.') }}" icon="search" />
 
-    <livewire:public.cek-pinjam-taman />
+    <x-public.ticket-search-guide class="reveal" />
+
+    <div class="reveal">
+        <livewire:public.cek-pinjam-taman />
+    </div>
 </div>
 @endsection

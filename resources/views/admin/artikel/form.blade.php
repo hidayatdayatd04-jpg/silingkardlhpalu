@@ -11,11 +11,10 @@
 @endphp
 
 @section('content')
-<div class="mx-auto max-w-6xl pb-28"
+<div class="mx-auto max-w-6xl pb-24"
     x-data="artikelForm(@js($isEdit), @js((bool) ($record->thumbnail ?? null)), @js($selectedStatus), @js($selectedTanggal), @js($artikelStatusOptions))"
     x-on:submit="handleSubmit($event)"
-    x-on:change="onFieldChange($event)"
-    x-init="window.staggerReveal($el.querySelectorAll('.stagger-item'), 70)">
+    x-on:change="onFieldChange($event)">
 
     <form id="artikel-form" method="POST" action="{{ $action }}" enctype="multipart/form-data" novalidate>
         @csrf
@@ -26,7 +25,6 @@
         <div class="space-y-7">
             {{-- Header + breadcrumb navigasi --}}
             <x-admin.page-header
-                class="stagger-item"
                 :title="$isEdit ? 'Edit Artikel' : 'Tambah Artikel Baru'"
                 subtitle="Lengkapi seluruh kolom bertanda * untuk menyimpan artikel."
                 :icon="$isEdit ? 'edit' : 'plus'"
@@ -43,7 +41,13 @@
             {{-- Error banner --}}
             <template x-if="errorCount > 0">
                 <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700"
-                    x-transition>
+                    x-transition:enter="transition-[opacity,transform] ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition-[opacity,transform] ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    role="alert">
                     <x-admin.icon name="alert-triangle" :size="18" class="mt-0.5 shrink-0" />
                     <div>
                         <p class="font-semibold">Terdapat <span x-text="errorCount"></span> field yang belum diisi.</p>
@@ -56,7 +60,7 @@
                 {{-- ═══════════ Kolom kiri: konten utama ═══════════ --}}
                 <div class="min-w-0 space-y-7 lg:col-span-2">
                     {{-- Section: Informasi Artikel --}}
-                    <x-admin.section-card class="stagger-item" title="Informasi Artikel" icon="file-text" number="1" subtitle="Judul dan gambar unggulan artikel.">
+                    <x-admin.section-card title="Informasi Artikel" icon="file-text" number="1" subtitle="Judul dan gambar unggulan artikel.">
                         <div class="space-y-7">
                             <div data-error-key="judul">
                                 <x-admin.form-input
@@ -88,7 +92,7 @@
                     </x-admin.section-card>
 
                     {{-- Section: Konten --}}
-                    <x-admin.section-card class="stagger-item" title="Konten Artikel" icon="news" number="2" subtitle="Tulis isi artikel yang akan tampil di halaman publik.">
+                    <x-admin.section-card title="Konten Artikel" icon="news" number="2" subtitle="Tulis isi artikel yang akan tampil di halaman publik.">
                         <div data-error-key="konten">
                             <x-admin.jodit-editor
                                 id="artikel_konten"
@@ -106,7 +110,7 @@
                 {{-- ═══════════ Kolom kanan: pengaturan publikasi ═══════════ --}}
                 <div class="space-y-7 lg:sticky lg:top-24 lg:self-start">
                     {{-- Section: Pengaturan Publikasi --}}
-                    <x-admin.section-card class="stagger-item" title="Pengaturan Publikasi" icon="send" number="3" subtitle="Kapan artikel tayang dan statusnya.">
+                    <x-admin.section-card title="Pengaturan Publikasi" icon="send" number="3" subtitle="Kapan artikel tayang dan statusnya.">
                         <div class="space-y-7">
                             <div data-error-key="tanggal_publish">
                                 <x-admin.date-field
@@ -138,35 +142,34 @@
                     </x-admin.section-card>
 
                     {{-- Ringkasan publikasi (live) --}}
-                    <section class="stagger-item relative overflow-hidden rounded-xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 p-6 shadow-[var(--shadow-soft)]">
-                        <div class="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-emerald-200/40 blur-2xl"></div>
-                        <div class="relative">
+                    <section class="rounded-2xl border border-brand-200 bg-brand-50/55 p-5 dark:border-brand-900 dark:bg-brand-950/30">
+                        <div>
                             <div class="flex items-center gap-3">
-                                <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200/70">
+                                <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-200 dark:bg-slate-900 dark:text-brand-300 dark:ring-brand-900">
                                     <x-admin.icon name="eye" :size="19" />
                                 </div>
                                 <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Ringkasan Publikasi</h3>
-                                    <p class="text-xs text-slate-500">Pratinjau pengaturan artikel Anda.</p>
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Ringkasan publikasi</h3>
+                                    <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">Pratinjau pengaturan artikel Anda.</p>
                                 </div>
                             </div>
 
                             <dl class="mt-5 space-y-2.5">
-                                <div class="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 ring-1 ring-slate-200/60">
-                                    <dt class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                        <x-admin.icon name="send" :size="14" class="text-emerald-500" /> Status
+                                <div class="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white/80 px-3.5 py-3 dark:border-brand-900/70 dark:bg-slate-900/80">
+                                    <dt class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                        <x-admin.icon name="send" :size="14" class="text-brand-600 dark:text-brand-300" aria-hidden="true" /> Status
                                     </dt>
                                     <dd class="text-sm font-bold text-slate-800" x-text="statusOptions[summaryStatus] || '—'"></dd>
                                 </div>
-                                <div class="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 ring-1 ring-slate-200/60">
-                                    <dt class="flex shrink-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                        <x-admin.icon name="calendar" :size="14" class="text-emerald-500" /> Tanggal
+                                <div class="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white/80 px-3.5 py-3 dark:border-brand-900/70 dark:bg-slate-900/80">
+                                    <dt class="flex shrink-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                        <x-admin.icon name="calendar" :size="14" class="text-brand-600 dark:text-brand-300" aria-hidden="true" /> Tanggal
                                     </dt>
                                     <dd class="text-right text-sm font-bold text-slate-800" x-text="summaryTanggalLabel"></dd>
                                 </div>
-                                <div class="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 ring-1 ring-slate-200/60">
-                                    <dt class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                        <x-admin.icon name="image" :size="14" class="text-emerald-500" /> Thumbnail
+                                <div class="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white/80 px-3.5 py-3 dark:border-brand-900/70 dark:bg-slate-900/80">
+                                    <dt class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                        <x-admin.icon name="image" :size="14" class="text-brand-600 dark:text-brand-300" aria-hidden="true" /> Thumbnail
                                     </dt>
                                     <dd class="text-sm font-bold" :class="summaryThumb ? 'text-emerald-600' : 'text-amber-600'"
                                         x-text="summaryThumb ? 'Sudah terisi' : 'Belum diunggah'"></dd>
@@ -179,14 +182,14 @@
         </div>
 
         {{-- Floating action buttons --}}
-        <div class="fixed bottom-6 right-6 z-40 flex items-center gap-3" x-data="{ show: false }" x-init="setTimeout(() => show = true, 300)" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="fixed inset-x-4 bottom-4 z-40 flex items-center justify-end gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_32px_-16px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:left-auto sm:right-6" aria-label="Aksi formulir">
             <a href="{{ route('admin.resources.index', $resource['slug']) }}"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg transition hover:bg-slate-50 hover:shadow-xl">
+                class="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-[background-color,border-color,color] duration-150 hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-600/25 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
                 <x-admin.icon name="x" :size="16" />
                 Batal
             </a>
             <button type="submit" :disabled="submitting"
-                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl disabled:opacity-60">
+                class="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white outline-none transition-[background-color,box-shadow] duration-150 hover:bg-brand-800 focus-visible:ring-2 focus-visible:ring-brand-600/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-60 dark:focus-visible:ring-offset-slate-950">
                 <template x-if="!submitting"><span class="flex items-center gap-2"><x-admin.icon name="device-floppy" :size="16" />{{ $isEdit ? 'Perbarui Artikel' : 'Simpan Artikel' }}</span></template>
                 <template x-if="submitting"><span class="flex items-center gap-2"><svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Menyimpan…</span></template>
             </button>

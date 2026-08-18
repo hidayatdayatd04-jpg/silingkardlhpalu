@@ -174,7 +174,7 @@ new class extends Component
             <section class="space-y-5">
                 <header class="fi-section-head">
                     <span class="fi-section-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                        <x-icons.ui name="building" />
                     </span>
                     <div>
                         <h3 class="fi-section-title">{{ __('Data Perusahaan') }}</h3>
@@ -201,7 +201,7 @@ new class extends Component
                                 placeholder="{{ __('PT Contoh Indonesia') }}"
                                 required
                                 hint="{{ __('Tulis nama lengkap badan usaha secara manual karena belum terdaftar LB3.') }}"
-                                icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>'
+                                icon="building"
                             />
                         @endif
                     </div>
@@ -215,7 +215,7 @@ new class extends Component
                                 placeholder="{{ __('PT Contoh Indonesia') }}"
                                 required
                                 hint="{{ __('Nama lengkap badan usaha sesuai izin/akta pendirian.') }}"
-                                icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>'
+                                icon="building"
                             />
                         </div>
                     @endif
@@ -227,7 +227,7 @@ new class extends Component
                         placeholder="{{ __('Nama lengkap penanggung jawab') }}"
                         required
                         hint="{{ __('Orang yang bertanggung jawab atas pengelolaan LB3 di perusahaan.') }}"
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+                        icon="user"
                     />
 
                     <x-public.input
@@ -237,7 +237,7 @@ new class extends Component
                         placeholder="{{ __('Nomor Induk Berusaha') }}"
                         required
                         hint="{{ __('Nomor Induk Berusaha dari sistem OSS.') }}"
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>'
+                        icon="id-card"
                     />
 
                     <x-public.input
@@ -246,7 +246,7 @@ new class extends Component
                         label="NPWP"
                         placeholder="12.345.678.9-012.345"
                         hint="{{ __('Opsional — Nomor Pokok Wajib Pajak perusahaan.') }}"
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>'
+                        icon="id-card"
                     />
 
                     <x-public.select
@@ -269,7 +269,7 @@ new class extends Component
                             rows="3"
                             required
                             hint="{{ __('Sertakan patokan/landmark terdekat agar lokasi mudah ditemukan petugas.') }}"
-                            icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>'
+                            icon="map-pin"
                         />
                     </div>
 
@@ -281,7 +281,7 @@ new class extends Component
                         placeholder="08123456789"
                         required
                         hint="{{ __('Nomor yang aktif dan bisa dihubungi (WhatsApp).') }}"
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>'
+                        icon="phone"
                     />
 
                     <x-public.input
@@ -292,7 +292,7 @@ new class extends Component
                         placeholder="email@perusahaan.com"
                         required
                         hint="{{ __('Email aktif untuk menerima nomor pengajuan & informasi status.') }}"
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+                        icon="mail"
                     />
                 </div>
             </section>
@@ -301,7 +301,7 @@ new class extends Component
             <section class="space-y-5">
                 <header class="fi-section-head">
                     <span class="fi-section-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h3"/></svg>
+                        <x-icons.ui name="document" />
                     </span>
                     <div>
                         <h3 class="fi-section-title">{{ __('Data Pengajuan') }}</h3>
@@ -331,7 +331,7 @@ new class extends Component
                     ] as $field => $label)
                         <div class="fi-field" x-data="{ dragging: false }">
                             <label class="fi-label">
-                                <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                                <span class="fi-icon-badge"><x-icons.ui name="document" /></span>
                                 {{ $label }} <span class="fi-required">*</span>
                             </label>
                             <div
@@ -352,7 +352,7 @@ new class extends Component
                                 <div class="fi-file-content">
                                     @if (${$field})
                                         <span class="fi-file-done">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                            <x-icons.ui name="check" />
                                         </span>
                                         <div class="fi-file-meta">
                                             <span class="fi-file-name">{{ ${$field}->getClientOriginalName() }}</span>
@@ -360,7 +360,7 @@ new class extends Component
                                         </div>
                                     @else
                                         <span class="fi-file-upload-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16.5V9.75m0 0-3 3m3-3 3 3M6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-10.5a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v10.5a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                            <x-icons.ui name="upload" />
                                         </span>
                                         <div class="fi-file-meta">
                                             <span class="fi-file-hint">{{ __('Klik atau seret file ke sini') }}</span>
@@ -375,7 +375,7 @@ new class extends Component
                                 </div>
                             </div>
 
-                            @error($field) <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                            @error($field) <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
                         </div>
                     @endforeach
                 </div>
@@ -387,14 +387,14 @@ new class extends Component
                     placeholder="{{ __('Tambahkan keterangan jika diperlukan') }}"
                     rows="3"
                     hint="{{ __('Opsional — tambahkan informasi bila diperlukan.') }}"
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>'
+                    icon="message"
                 />
             </section>
 
             {{-- Info box --}}
             <div class="fi-info-box">
                 <span class="fi-info-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+                    <x-icons.ui name="alert" />
                     {{ __('Ketentuan Upload Dokumen') }}
                 </span>
                 <ul>
@@ -407,7 +407,7 @@ new class extends Component
 
             @error('form')
                 <div class="dlh-limit-alert" role="alert">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <x-icons.ui name="alert" />
                     <span>{{ $message }}</span>
                 </div>
             @enderror
@@ -417,7 +417,7 @@ new class extends Component
             <button type="submit" wire:loading.attr="disabled" wire:target="submit" class="fi-submit-btn">
                 <span wire:loading.remove wire:target="submit" class="inline-flex items-center justify-center gap-2">
                     {{ __('Kirim Pengajuan') }}
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M12 5l7 7-7 7"/></svg>
+                    <x-icons.ui name="arrow-right" class="h-4 w-4" />
                 </span>
                 <span wire:loading wire:target="submit" class="inline-flex items-center justify-center gap-2">
                     <span class="fi-spinner"></span>

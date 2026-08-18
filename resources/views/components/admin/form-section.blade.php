@@ -4,20 +4,20 @@
     'description' => null,
 ])
 
-<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+<section {{ $attributes->merge(['class' => 'rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.32)] dark:border-slate-800 dark:bg-slate-900 sm:p-6']) }}>
     <div class="mb-5 flex items-start gap-3">
-        <div class="grid size-12 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600">
-            <x-admin.icon :name="$icon" :size="20" />
+        <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/55 dark:text-brand-300">
+            <x-admin.icon :name="$icon" :size="19" aria-hidden="true" />
         </div>
         <div class="min-w-0 flex-1">
-            <h3 class="text-lg font-bold text-slate-900">{{ $title }}</h3>
+            <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ $title }}</h2>
             @if($description)
-                <p class="mt-1 text-sm text-slate-600">{{ $description }}</p>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $description }}</p>
             @endif
         </div>
     </div>
-    
+
     <div class="space-y-4">
         {{ $slot }}
     </div>
-</div>
+</section>

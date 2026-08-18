@@ -225,7 +225,7 @@ window.showToast = function(message, type = 'info') {
         info: 'bg-blue-600'
     };
 
-    toast.className = `fixed bottom-6 right-6 z-50 ${colors[type] || colors.info} text-white px-6 py-3 rounded-lg shadow-lg font-semibold text-sm transform transition-all duration-300 translate-y-0 opacity-100`;
+    toast.className = `fixed bottom-6 right-6 z-50 ${colors[type] || colors.info} text-white px-6 py-3 rounded-lg shadow-lg font-semibold text-sm transform transition-[opacity,transform] duration-200 translate-y-0 opacity-100`;
     toast.setAttribute('role', 'status');
     toast.textContent = message;
 

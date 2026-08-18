@@ -4,9 +4,13 @@
 @section('description', 'Lacak status permohonan/rekomendasi lingkungan menggunakan nomor tiket atau email.')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
-    <x-public.page-hero title="{{ __('Cek Status Permohonan') }}" description="{{ __('Masukkan nomor tiket atau email untuk melihat status permohonan.') }}" />
+<div class="public-service-page max-w-3xl mx-auto space-y-6 md:space-y-8">
+    <x-public.page-hero badge="{{ __('Pelacakan Pengendalian') }}" title="{{ __('Cek Status Permohonan') }}" description="{{ __('Masukkan nomor tiket atau email untuk melihat status permohonan.') }}" icon="search" />
 
-    <livewire:public.cek-permohonan-rekomendasi />
+    <x-public.ticket-search-guide class="reveal" />
+
+    <div class="reveal">
+        <livewire:public.cek-permohonan-rekomendasi />
+    </div>
 </div>
 @endsection

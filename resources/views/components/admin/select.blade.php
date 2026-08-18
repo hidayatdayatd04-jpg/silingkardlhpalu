@@ -102,9 +102,7 @@
         >
             <span x-show="!selected" class="fi-select-placeholder">{{ $placeholder }}</span>
             <span x-show="selected" x-text="selectedLabel" class="fi-select-value"></span>
-            <svg class="fi-select-chevron" :class="{ 'fi-select-chevron--open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9l6 6 6-6"/>
-            </svg>
+            <x-icons.ui name="chevron-down" class="fi-select-chevron" x-bind:class="{ 'fi-select-chevron--open': open }" />
         </button>
 
         <div
@@ -147,7 +145,7 @@
                     >
                         <span x-text="option.label" class="fi-select-option-text"></span>
                         <span x-show="selected === option.value" class="fi-select-check">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                            <x-icons.ui name="check" />
                         </span>
                     </div>
                 </template>
@@ -161,7 +159,7 @@
 
     @if($hasError)
         <p class="fi-error">
-            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            <x-icons.ui name="alert" />
             {{ $errorMessage }}
         </p>
     @elseif($hint)
@@ -182,7 +180,7 @@
         .fi-select-value { font-weight: 500; color: #12201a; }
         .fi-select-chevron { width: 16px; height: 16px; color: #5b6b63; transition: transform .18s ease; flex-shrink: 0; }
         .fi-select-chevron--open { transform: rotate(180deg); }
-        .fi-select-panel { position: absolute; left: 0; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #dfe9e3; border-radius: 18px; box-shadow: 0 12px 32px -10px rgba(13, 43, 29, 0.18); padding: 8px; z-index: 999; max-height: 360px; overflow: visible; overscroll-behavior: contain; }
+        .fi-select-panel { position: absolute; left: 0; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #dfe9e3; border-radius: 18px; box-shadow: 0 12px 32px -10px rgba(13, 43, 29, 0.18); padding: 8px; z-index: var(--admin-z-dropdown, 1000); max-height: 360px; overflow: visible; overscroll-behavior: contain; }
         .fi-select-enter { transition: opacity .15s ease, transform .15s ease; }
         .fi-select-enter-start { opacity: 0; transform: translateY(-4px) scale(0.98); }
         .fi-select-enter-end { opacity: 1; transform: translateY(0) scale(1); }

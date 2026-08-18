@@ -3,28 +3,34 @@
 @section('title', 'Berita - DLH Kota Palu')
 
 @section('content')
-<div class="space-y-8">
-    <x-public.page-hero title="{{ __('Berita & Artikel') }}" description="{{ __('Informasi terbaru dari Dinas Lingkungan Hidup Kota Palu.') }}" />
+<div class="space-y-10 pb-8">
+    <x-public.page-hero badge="{{ __('Informasi Publik') }}" icon="document" title="{{ __('Berita & Artikel') }}" description="{{ __('Informasi terbaru, kegiatan, dan pengumuman dari Dinas Lingkungan Hidup Kota Palu.') }}" />
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse ($artikels as $artikel)
-            <a href="/berita/{{ $artikel->slug }}" class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-lg transition">
-                @if ($artikel->thumbnail)
-                    <img src="{{ Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) }}" alt="{{ $artikel->judul }}" class="h-48 w-full object-cover group-hover:scale-105 transition duration-300">
-                @else
-                    <div class="h-48 bg-gradient-to-br from-brand-500 to-emerald-400"></div>
-                @endif
-                <div class="p-5 space-y-2">
-                    <h2 class="font-bold text-lg dark:text-slate-100 line-clamp-2">{{ $artikel->judul }}</h2>
-                    <p class="text-xs text-slate-500">{{ $artikel->tanggal_publish?->format('d M Y') }}</p>
+            <a href="/berita/{{ $artikel->slug }}" class="reveal group overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_3px_14px_-8px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-[0_24px_46px_-24px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-800">
+                <div class="relative h-52 overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-bay-600">
+                    @if ($artikel->thumbnail)
+                        <img src="{{ Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) }}" alt="{{ $artikel->judul }}" class="size-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    @else
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,.3),transparent_24%),linear-gradient(135deg,rgba(255,255,255,.08),transparent)]"></div>
+                        <span class="absolute bottom-5 left-5 grid size-12 place-items-center rounded-2xl border border-white/20 bg-white/15 text-white backdrop-blur-sm">
+                            <x-icons.ui name="document" class="size-6" />
+                        </span>
+                    @endif
+                </div>
+                <div class="space-y-3 p-6">
+                    <h2 class="line-clamp-2 text-lg font-extrabold leading-7 tracking-[-0.02em] text-slate-900 dark:text-slate-100">{{ $artikel->judul }}</h2>
+                    <p class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        <x-icons.ui name="calendar" class="size-4 text-brand-600 dark:text-brand-400" />
+                        {{ $artikel->tanggal_publish?->translatedFormat('d F Y') }}
+                    </p>
                 </div>
             </a>
         @empty
             <section class="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900 sm:px-10" aria-labelledby="empty-news-title">
                 <div class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-400">
-                    <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8Z" />
-                    </svg>
+                    <x-icons.ui name="document" class="size-7" />
                 </div>
                 <h2 id="empty-news-title" class="mt-4 text-lg font-bold text-slate-900 dark:text-white">{{ __('Belum ada berita dipublikasikan') }}</h2>
                 <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ __('Informasi dan kegiatan terbaru DLH Kota Palu akan tampil di halaman ini setelah dipublikasikan.') }}</p>

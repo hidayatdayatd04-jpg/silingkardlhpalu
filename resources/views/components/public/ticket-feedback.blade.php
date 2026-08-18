@@ -9,16 +9,12 @@
 @if ($feedbackSent || $feedback)
     <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mt-4">
         <div class="flex items-center gap-2 mb-2">
-            <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            <x-icons.ui name="check" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             <span class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{{ __('Terima kasih atas penilaian Anda!') }}</span>
         </div>
         <div class="flex items-center gap-1">
             @for ($i = 1; $i <= 5; $i++)
-                <svg class="h-5 w-5 {{ $i <= ($feedback->rating ?? 0) ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
+                <x-icons.ui name="star" class="h-5 w-5 {{ $i <= ($feedback->rating ?? 0) ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600' }}" />
             @endfor
         </div>
         @if ($feedback->komentar ?? null)
@@ -34,10 +30,7 @@
                 @for ($i = 1; $i <= 5; $i++)
                     <button type="button" x-on:mouseenter="hover = {{ $i }}" x-on:mouseleave="hover = 0" x-on:click="rating = {{ $i }}"
                         class="focus:outline-none transition">
-                        <svg class="h-7 w-7 transition" :class="hover >= {{ $i }} || rating >= {{ $i }} ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'"
-                            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
+                        <x-icons.ui name="star" class="h-7 w-7 transition" x-bind:class="hover >= {{ $i }} || rating >= {{ $i }} ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'" />
                     </button>
                 @endfor
                 <input type="hidden" name="rating" :value="rating" x-model="rating" />

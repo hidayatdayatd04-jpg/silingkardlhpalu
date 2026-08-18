@@ -4,11 +4,9 @@
 @section('heading', 'Pengaturan')
 
 @section('content')
+<div class="admin-settings">
     {{-- Hero Header --}}
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 p-6 text-white shadow-xl sm:p-8">
-        <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.04]"></div>
-        <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-brand-400/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-16 left-1/4 size-48 rounded-full bg-emerald-400/10 blur-3xl"></div>
+    <div class="admin-dashboard-hero relative overflow-hidden p-6 text-white sm:p-8">
 
         <div class="relative flex items-center gap-4">
             <div class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/10 backdrop-blur-sm">
@@ -57,6 +55,7 @@
         </div>
     @endif
 
+    @if($isSuperadmin)
     <form method="POST" action="{{ route('admin.settings.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('PUT')
@@ -99,9 +98,7 @@
                             aria-label="Aktifkan mode pemeliharaan">
                             <span class="spring-track"></span>
                             <span class="spring-thumb">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                                <x-admin.icon name="check" :size="16" />
                             </span>
                         </button>
                     </div>
@@ -129,6 +126,20 @@
             </x-admin.button>
         </div>
     </form>
+    @else
+        <x-admin.card class="mt-6">
+            <div class="flex items-start gap-3">
+                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                    <x-admin.icon name="lock" :size="18" />
+                </span>
+                <div>
+                    <h2 class="text-base font-bold text-ink-900 dark:text-white">Pengaturan sistem</h2>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Mode pemeliharaan dan konfigurasi AI hanya dapat diubah oleh superadmin.</p>
+                    <p class="mt-2 text-xs font-medium text-slate-500">Status pemeliharaan saat ini: <span class="{{ $maintenanceEnabled ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300' }}">{{ $maintenanceEnabled ? 'Aktif' : 'Nonaktif' }}</span>.</p>
+                </div>
+            </div>
+        </x-admin.card>
+    @endif
 
     @if($isSuperadmin)
         {{-- Konfigurasi AI Assistant --}}
@@ -273,7 +284,7 @@
                                             class="fi-select-trigger {{ $showErr && $errors->has('model') ? 'fi-select-trigger--error' : '' }}">
                                         <span x-show="!modelChoice" class="fi-select-placeholder">Pilih model</span>
                                         <span x-show="modelChoice" x-text="modelChoiceLabel" class="fi-select-value"></span>
-                                        <svg class="fi-select-chevron" :class="{ 'fi-select-chevron--open': modelOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                        <x-admin.icon name="chevron-down" :size="16" class="fi-select-chevron" x-bind:class="{ 'fi-select-chevron--open': modelOpen }" />
                                     </button>
 
                                     <div x-show="modelOpen" x-cloak
@@ -292,7 +303,7 @@
                                                      :class="{ 'fi-select-option--active': modelChoice === option.value }">
                                                     <span x-text="option.label" class="fi-select-option-text"></span>
                                                     <span x-show="modelChoice === option.value" class="fi-select-check">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                        <x-admin.icon name="check" :size="16" />
                                                     </span>
                                                 </div>
                                             </template>
@@ -308,7 +319,7 @@
 
                                 @if($showErr && $errors->has('model'))
                                     <p class="fi-error">
-                                        <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                        <x-admin.icon name="alert-circle" :size="16" />
                                         {{ $errors->first('model') }}
                                     </p>
                                 @else
@@ -324,9 +335,7 @@
                                     aria-label="Aktifkan provider">
                                     <span class="spring-track"></span>
                                     <span class="spring-thumb">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
+                                        <x-admin.icon name="check" :size="16" />
                                     </span>
                                 </button>
                                 <span class="text-sm font-medium text-slate-600">Aktif</span>
@@ -439,7 +448,7 @@
                                         class="fi-select-trigger {{ $showAddErr && $errors->has('model') ? 'fi-select-trigger--error' : '' }}">
                                     <span x-show="!modelChoice" class="fi-select-placeholder">Pilih model</span>
                                     <span x-show="modelChoice" x-text="modelChoiceLabel" class="fi-select-value"></span>
-                                    <svg class="fi-select-chevron" :class="{ 'fi-select-chevron--open': modelOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                    <x-admin.icon name="chevron-down" :size="16" class="fi-select-chevron" x-bind:class="{ 'fi-select-chevron--open': modelOpen }" />
                                 </button>
 
                                 <div x-show="modelOpen" x-cloak
@@ -458,7 +467,7 @@
                                                  :class="{ 'fi-select-option--active': modelChoice === option.value }">
                                                 <span x-text="option.label" class="fi-select-option-text"></span>
                                                 <span x-show="modelChoice === option.value" class="fi-select-check">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                    <x-admin.icon name="check" :size="16" />
                                                 </span>
                                             </div>
                                         </template>
@@ -474,7 +483,7 @@
 
                             @if($showAddErr && $errors->has('model'))
                                 <p class="fi-error">
-                                    <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                    <x-admin.icon name="alert-circle" :size="16" />
                                     {{ $errors->first('model') }}
                                 </p>
                             @else
@@ -490,9 +499,7 @@
                                 aria-label="Aktifkan provider">
                                 <span class="spring-track"></span>
                                 <span class="spring-thumb">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
+                                    <x-admin.icon name="check" :size="16" />
                                 </span>
                             </button>
                             <span class="text-sm font-medium text-slate-600">Aktif</span>
@@ -620,6 +627,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('styles')

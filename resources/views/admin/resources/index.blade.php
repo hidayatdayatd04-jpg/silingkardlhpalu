@@ -116,7 +116,7 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    <x-admin.card :padding="false" style="opacity: 1 !important; transform: none !important;">
+    <x-admin.card :padding="false" class="overflow-hidden">
         <x-admin.bulk-actions-bar :resource="$resource" />
 
         {{-- Toolbar --}}
@@ -134,8 +134,8 @@
                 return is_array($v) ? count(array_filter($v)) > 0 : filled($v);
             })->count();
         @endphp
-        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50/50 px-6 py-3">
-            <form method="GET" class="flex flex-1 items-center gap-2 lg:max-w-sm">
+        <div class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/35 sm:px-6 lg:flex-row lg:items-center">
+            <form method="GET" role="search" class="flex w-full flex-1 items-center gap-2 lg:max-w-md">
                 @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
                 @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
                 @foreach($resource['filters'] as $f)
@@ -151,15 +151,17 @@
                     @endif
                 @endforeach
 
-<div class="relative flex-1">
-                    <input name="q" value="{{ $search }}" placeholder="Cari {{ Str::lower($resource['label']) }}..."
-                        class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10">
+                <div class="relative flex-1">
+                    <label for="resource-search" class="sr-only">Cari {{ $resource['label'] }}</label>
+                    <x-admin.icon name="search" :size="17" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+                    <input id="resource-search" name="q" value="{{ $search }}" placeholder="Cari {{ Str::lower($resource['label']) }}..."
+                        class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-950 outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-brand-400 dark:focus:ring-brand-400/20">
                 </div>
             </form>
 
             <div class="hidden flex-1 lg:block"></div>
 
-            <form method="GET" class="contents">
+            <form method="GET" class="flex flex-wrap items-center gap-2">
                 @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
                 @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
                 @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
@@ -239,21 +241,20 @@
         @endphp
 
         @if($activeFilters->isNotEmpty())
-            <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-emerald-50/30 px-6 py-3">
-                <span class="text-sm font-semibold text-slate-600">Filter aktif:</span>
+            <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-brand-50/60 px-4 py-3 dark:border-slate-800 dark:bg-brand-950/25 sm:px-6">
+                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Filter aktif:</span>
                 @foreach($activeFilters as $filter)
                     <x-admin.filter-badge :label="$filter['label']" :removeUrl="$filter['removeUrl']" />
                 @endforeach
-                <a href="{{ route('admin.resources.index', $resource['slug']) }}" class="ml-2 text-sm font-bold text-slate-500 transition hover:text-danger-600">
+                <a href="{{ route('admin.resources.index', $resource['slug']) }}" class="ml-1 rounded px-1 text-sm font-semibold text-slate-600 outline-none transition-colors duration-150 hover:text-danger-600 focus-visible:text-danger-600 dark:text-slate-300 dark:hover:text-danger-300 dark:focus-visible:text-danger-300">
                     Hapus Semua
                 </a>
             </div>
         @endif
 
         {{-- Data table --}}
-        <div style="opacity: 1 !important; transform: none !important; display: block !important;">
-        <x-admin.table>
-            <thead class="bg-slate-50">
+        <x-admin.table aria-label="Daftar {{ $resource['label'] }}">
+            <thead class="bg-slate-50 dark:bg-slate-900">
                 <tr>
                     <x-admin.table.checkbox-header />
                     @foreach ($resource['columns'] as $column)
@@ -265,9 +266,9 @@
                     <x-admin.table.header class="text-center">Aksi</x-admin.table.header>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 @forelse ($records as $record)
-                    <x-admin.table.row class="transition hover:bg-emerald-50/30">
+                    <x-admin.table.row>
                         <x-admin.table.checkbox-cell :value="$record->id" />
                         @foreach ($resource['columns'] as $column)
                             <x-admin.table.cell>
@@ -353,17 +354,17 @@
                         <x-admin.table.cell class="text-center">
                             <div class="flex items-center justify-center gap-1">
                                 <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm" title="Detail" aria-label="Detail">
-                                    <x-admin.icon name="eye" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
+                                     <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                 </a>
                                 <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
-                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 hover:shadow-sm" title="Edit" aria-label="Edit">
-                                    <x-admin.icon name="edit" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
+                                     <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                 </a>
                                 <button type="button"
                                     x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
-                                    class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-sm" title="Hapus" aria-label="Hapus">
-                                    <x-admin.icon name="trash" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                    class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
+                                     <x-admin.icon name="trash" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                 </button>
                             </div>
 
@@ -390,9 +391,8 @@
                 @endforelse
             </tbody>
         </x-admin.table>
-        </div>
 
-        <div class="border-t border-slate-100 px-6 py-4">
+        <div class="border-t border-slate-100 px-4 py-4 dark:border-slate-800 sm:px-6">
             {{ $records->links() }}
         </div>
     </x-admin.card>

@@ -1,9 +1,11 @@
 /* Font dilayani LOKAL (self-hosted via @fontsource) agar siap di first paint:
    menghilangkan layout shift (CLS) dari swap font eksternal & request jaringan. */
 @import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
 @import '@fontsource/jetbrains-mono';
 @import 'tailwindcss';
 @import './admin-utilities.css';
+@import './admin-redesign.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -331,6 +333,138 @@
 
 .dark .dlh-public-page::-webkit-scrollbar-thumb:hover {
     background: var(--color-brand-600);
+}
+
+/* Public site refresh: shared visual language for public information and services. */
+.public-site {
+    font-family: 'Plus Jakarta Sans Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    background:
+        radial-gradient(900px 520px at 4% -12%, rgb(16 185 129 / 0.09), transparent 66%),
+        radial-gradient(800px 460px at 96% 8%, rgb(13 171 206 / 0.07), transparent 64%),
+        #f8fbfa;
+}
+
+html.dark .public-site {
+    background:
+        radial-gradient(820px 500px at 4% -12%, rgb(52 211 153 / 0.08), transparent 66%),
+        radial-gradient(800px 480px at 96% 8%, rgb(13 171 206 / 0.08), transparent 64%),
+        #071a14;
+}
+
+.public-site :focus-visible {
+    outline: 3px solid rgb(16 185 129 / 0.48);
+    outline-offset: 3px;
+}
+
+.public-site-header {
+    transition:
+        border-color 180ms ease,
+        background-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.public-main {
+    position: relative;
+    isolation: isolate;
+}
+
+html.js .public-main[data-public-page] {
+    animation: publicPageEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes publicPageEnter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.page-hero {
+    min-height: 12.5rem;
+    background:
+        radial-gradient(600px 340px at 100% 0%, rgb(13 171 206 / 0.28), transparent 64%),
+        radial-gradient(540px 360px at 0% 110%, rgb(52 211 153 / 0.19), transparent 65%),
+        linear-gradient(125deg, #064e3b 0%, #075f4a 48%, #0e6d8c 130%);
+}
+
+.page-hero__orb {
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+    filter: blur(1px);
+}
+
+.page-hero__orb--top {
+    top: -6.5rem;
+    right: 8%;
+    width: 17rem;
+    height: 17rem;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    background: rgb(255 255 255 / 0.035);
+}
+
+.page-hero__orb--bottom {
+    bottom: -8rem;
+    left: -3.5rem;
+    width: 18rem;
+    height: 18rem;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background: rgb(16 185 129 / 0.1);
+}
+
+.page-hero__contour {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.18;
+    background-image:
+        linear-gradient(120deg, transparent 0 46%, rgb(255 255 255 / 0.24) 46.2% 46.35%, transparent 46.55% 100%),
+        linear-gradient(55deg, transparent 0 73%, rgb(255 255 255 / 0.16) 73.2% 73.35%, transparent 73.55% 100%);
+    background-size: 16rem 16rem, 22rem 22rem;
+    mix-blend-mode: screen;
+}
+
+.dlh-public .fi-form-card {
+    position: relative;
+    /* Panel select/kalender harus dapat melewati tepi kartu saat terbuka. */
+    overflow: visible;
+    border: 1px solid rgb(203 213 225 / 0.86);
+    border-radius: 1.75rem;
+    box-shadow: 0 22px 56px -38px rgb(15 23 42 / 0.34);
+}
+
+.dlh-public .fi-form-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, #059669, #0dabce);
+    opacity: 0.78;
+}
+
+.dark .dlh-public .fi-form-card {
+    border-color: rgb(51 65 85 / 0.92);
+    box-shadow: 0 22px 60px -40px rgb(0 0 0 / 0.72);
+}
+
+/* Lapisan kontrol formulir publik. Berlaku juga untuk filter peta yang
+   memakai komponen select yang sama, tanpa memengaruhi halaman admin. */
+.dlh-public .fi-select-shell--open,
+.dlh-public .fi-select-field--open {
+    z-index: 80;
+}
+
+.dlh-public .fi-select-panel,
+.dlh-public .df-popover {
+    z-index: 1000;
+}
+
+@media (max-width: 639px) {
+    .page-hero { min-height: 11.75rem; }
+    .page-hero__orb--top { right: -5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.js .public-main[data-public-page] { animation: none; }
+    .public-site-header { transition: none; }
 }
 
 /* Textarea — sembunyikan scrollbar, hide resize handle */

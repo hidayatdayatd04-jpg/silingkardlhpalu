@@ -4,6 +4,7 @@
 @section('heading', 'Dashboard')
 
 @section('content')
+<div class="admin-dashboard">
     @php
         $hour = (int) now()->format('H');
         $greet = $hour < 11 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 19 ? 'Selamat sore' : 'Selamat malam'));
@@ -18,17 +19,13 @@
     @endphp
 
     {{-- Hero --}}
-    <section class="relative overflow-hidden rounded-2xl border border-forest-800/40 text-white shadow-[var(--shadow-lift)]" style="background: var(--gradient-header-hero);">
-        <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.05]"></div>
-        <div class="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-brand-400/20 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-24 right-24 size-56 rounded-full bg-bay-400/20 blur-3xl"></div>
-        <div class="pointer-events-none absolute -left-10 top-1/2 size-48 rounded-full bg-emerald-500/10 blur-3xl"></div>
+    <section class="admin-dashboard-hero relative overflow-hidden text-white">
 
         <div class="relative flex flex-col gap-6 p-7 sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
                 <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">{{ $roleLabel }}</p>
                 <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                    {{ $greet }}, {{ $firstName }} <x-icons.sapa class="inline-block size-6 animate-pulse align-middle" />
+                    {{ $greet }}, {{ $firstName }} <x-icons.sapa class="inline-block size-6 align-middle" />
                 </h1>
                 <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/75">
                     <span class="inline-flex items-center gap-1.5">
@@ -109,7 +106,7 @@
                         <p class="text-xs text-slate-500">{{ number_format($statusStats['selesai'], 0, ',', '.') }} dari {{ number_format($statusStats['total'], 0, ',', '.') }} pengaduan selesai</p>
                     </div>
                     <div class="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-emerald-400 transition-all duration-700" style="width: {{ $statusStats['selesai_pct'] }}%;"></div>
+                        <div class="admin-progress-fill h-full rounded-full" style="width: {{ $statusStats['selesai_pct'] }}%;"></div>
                     </div>
 
                     <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -222,9 +219,8 @@
         <div class="space-y-6 lg:col-span-4">
             {{-- Status sistem (superadmin only) --}}
             @if($activeUsers !== null || $visits !== null)
-                <x-admin.card :padding="false" class="overflow-hidden text-white" style="background: var(--gradient-header-hero);">
+                <x-admin.card :padding="false" class="admin-dashboard-hero overflow-hidden text-white">
                     <div class="relative p-6">
-                        <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.05]"></div>
                         <div class="relative flex items-center gap-3">
                             <div class="grid size-12 place-items-center rounded-xl bg-white/10">
                                 <x-admin.icon name="chart" :size="24" />
@@ -474,6 +470,7 @@
         </x-admin.card>
     </section>
     @endif
+</div>
 @endsection
 
 @push('scripts')

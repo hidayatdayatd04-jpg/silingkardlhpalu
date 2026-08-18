@@ -56,7 +56,7 @@ new class extends Component
     <div class="ck-card max-w-4xl mx-auto">
         <div class="ck-card-head">
             <span class="ck-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <x-icons.ui name="search" />
             </span>
             <div class="flex-1">
                 <h3 class="ck-card-title">{{ __('Cek Status Permohonan Rekomendasi') }}</h3>
@@ -74,14 +74,14 @@ new class extends Component
             </div>
 
             <button type="submit" class="ck-search-btn md:w-auto">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <x-icons.ui name="search" class="h-4 w-4" />
                 {{ __('Cari Permohonan') }}
             </button>
         </form>
 
         @error('form')
             <div class="dlh-limit-alert" role="alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <x-icons.ui name="alert" />
                 <span>{{ $message }}</span>
             </div>
         @enderror
@@ -95,7 +95,7 @@ new class extends Component
                 <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
                     <div class="flex items-start gap-3">
                         <span class="ck-result-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                            <x-icons.ui name="document" />
                         </span>
                         <div>
                             <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">{{ __('Nomor Tiket') }}</span>
@@ -109,7 +109,7 @@ new class extends Component
                     @endphp
                     <span class="ck-status-badge {{ $isDone ? 'ck-status-badge--done' : 'ck-status-badge--pending' }}">
                         @if ($isDone)
-                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                            <x-icons.ui name="check" class="h-3 w-3" />
                         @else
                             <span class="ck-status-dot"></span>
                         @endif
@@ -124,7 +124,7 @@ new class extends Component
                 @if ($isDone && filled($permohonan->catatan_verifikasi))
                     <div class="ck-note-box mt-5">
                         <span class="ck-note-label">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            <x-icons.ui name="message" class="h-4 w-4" />
                             {{ __('Catatan Admin') }}
                         </span>
                         <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $permohonan->catatan_verifikasi }}</p>
@@ -143,7 +143,7 @@ new class extends Component
                 <div class="mt-5">
                     <a href="{{ url('/permohonan-rekomendasi/'.$permohonan->nomor_tiket.'/bukti-pdf') }}"
                         class="ck-download-link">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <x-icons.ui name="download" class="h-4 w-4" />
                         {{ __('Unduh Bukti PDF') }}
                     </a>
                 </div>

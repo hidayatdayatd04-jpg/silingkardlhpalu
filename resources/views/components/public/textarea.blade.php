@@ -12,14 +12,66 @@
     'hint' => null,
     'showCharCount' => true,
     'minHeight' => null,
+    'icon' => null,
 ])
 
 @php
+    // Attributes written as label="{{ ... }}" arrive already entity-escaped.
+    // Decode that attribute layer, while keeping the normal Blade escaping at
+    // the output point so user-visible ampersands are not shown as "&amp;".
+    $decodeDisplayText = static fn ($text) => is_string($text)
+        ? html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        : $text;
+
+    $label = $decodeDisplayText($label);
+    $placeholder = $decodeDisplayText($placeholder);
+    $hint = $decodeDisplayText($hint);
+
     $id = $attributes->get('id', 'pub-textarea-' . Str::random(6));
     $hasError = $error || $errors->has($name);
     $errorMessage = $error ?? $errors->first($name);
     $currentValue = old($name, $value);
     $charCount = strlen($currentValue);
+    $errorId = $hasError ? $id . '-error' : null;
+    $hintId = $hint ? $id . '-hint' : null;
+    $providedDescribedBy = trim((string) $attributes->get('aria-describedby', ''));
+    $describedBy = trim(implode(' ', array_filter([$providedDescribedBy, $errorId ?? $hintId])));
+
+    // Pertahankan kompatibilitas atribut icon lama, tetapi gunakan hanya nama
+    // ikon registry. String SVG lama tidak diinjeksikan ke markup lagi.
+    $fieldContext = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii(implode(' ', [
+        (string) $name,
+        (string) $label,
+        (string) $placeholder,
+    ])));
+
+    $semanticIcon = match (true) {
+        \Illuminate\Support\Str::contains($fieldContext, ['upload', 'unggah', 'lampiran', 'berkas', 'surat', 'dokumen', 'file', 'foto']) => 'upload',
+        \Illuminate\Support\Str::contains($fieldContext, ['search', 'cari', 'lacak', 'track', 'tiket']) => 'search',
+        \Illuminate\Support\Str::contains($fieldContext, ['email', 'e-mail']) => 'mail',
+        \Illuminate\Support\Str::contains($fieldContext, ['telepon', 'telpon', 'nomor hp', 'nomor_hp', 'handphone', 'ponsel', 'whatsapp']) => 'phone',
+        \Illuminate\Support\Str::contains($fieldContext, ['tanggal', 'date', 'waktu', 'jam', 'agenda', 'jadwal']) => 'calendar',
+        \Illuminate\Support\Str::contains($fieldContext, ['alamat', 'lokasi', 'koordinat', 'kecamatan', 'kelurahan', 'wilayah']) => 'map-pin',
+        \Illuminate\Support\Str::contains($fieldContext, ['npwp', 'nib', 'nik', 'ktp', 'identitas', 'identity']) => 'id-card',
+        \Illuminate\Support\Str::contains($fieldContext, ['kegiatan', 'acara', 'event']) => 'calendar',
+        \Illuminate\Support\Str::contains($fieldContext, ['taman', 'ruang terbuka']) => 'map-pin',
+        \Illuminate\Support\Str::contains($fieldContext, ['perusahaan', 'usaha', 'instansi', 'organisasi']) => 'building',
+        \Illuminate\Support\Str::contains($fieldContext, ['nama', 'pemohon', 'pelapor', 'pemilik', 'penanggung', 'kontak']) => 'user',
+        \Illuminate\Support\Str::contains($fieldContext, ['deskripsi', 'keterangan', 'catatan', 'pesan', 'pengaduan', 'keluhan']) => 'message',
+        \Illuminate\Support\Str::contains($fieldContext, ['jenis', 'bidang', 'kategori', 'lb3', 'pertek', 'rintek', 'rekomendasi']) => 'document',
+        default => null,
+    };
+
+    $namedIcon = is_string($icon)
+        ? \Illuminate\Support\Str::of($icon)->trim()->lower()->replace(['_', ' '], '-')->toString()
+        : null;
+    $allowedIcons = [
+        'alert', 'arrow-right', 'building', 'calendar', 'check',
+        'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons',
+        'document', 'id-card', 'mail', 'map-pin', 'message', 'moon',
+        'phone', 'search', 'sun', 'upload', 'user',
+    ];
+    $resolvedIcon = in_array($namedIcon, $allowedIcons, true) ? $namedIcon : $semanticIcon;
 @endphp
 
 <div class="ta-field"
@@ -42,8 +94,8 @@
     @if($label)
         <div class="ta-field-head">
             <label for="{{ $id }}" class="ta-field-label">
-                @if($attributes->get('icon'))
-                    <span class="ta-icon-badge">{!! $attributes->get('icon') !!}</span>
+                @if($resolvedIcon)
+                    <span class="ta-icon-badge"><x-icons.ui :name="$resolvedIcon" /></span>
                 @endif
                 {{ $label }}
                 @if($required)<span class="ta-required">*</span>@endif
@@ -65,11 +117,13 @@
             {{ $disabled ? 'disabled' : '' }}
             {{ $readonly ? 'readonly' : '' }}
             {{ $maxlength ? 'maxlength=' . $maxlength : '' }}
+            {{ $hasError ? 'aria-invalid="true"' : '' }}
+            @if($describedBy) aria-describedby="{{ $describedBy }}" @endif
             x-ref="ta"
             x-on:focus="focused = true"
             x-on:blur="focused = false"
             x-on:input="{{ $maxlength ? 'updateCount()' : '' }}"
-            {{ $attributes->except(['id', 'class', 'icon']) }}
+            {{ $attributes->except(['id', 'class', 'icon', 'aria-describedby']) }}
             class="ta-input
                 {{ $disabled ? 'ta-input--disabled' : '' }}
                 {{ $readonly ? 'ta-input--readonly' : '' }}"
@@ -80,8 +134,8 @@
         @if($hint || ($maxlength && $showCharCount))
             <div class="ta-footer">
                 @if($hint)
-                    <span class="ta-hint">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+                    <span id="{{ $hintId }}" class="ta-hint">
+                        <x-icons.ui name="message" />
                         {{ $hint }}
                     </span>
                 @else
@@ -100,8 +154,8 @@
 
     {{-- Error --}}
     @if($hasError)
-        <p class="ta-error">
-            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+        <p id="{{ $errorId }}" class="ta-error">
+            <x-icons.ui name="alert" />
             {{ $errorMessage }}
         </p>
     @endif

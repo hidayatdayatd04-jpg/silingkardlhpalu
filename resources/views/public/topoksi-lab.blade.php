@@ -4,127 +4,156 @@
 @section('description', 'Tugas pokok dan fungsi UPTD Laboratorium Lingkungan Dinas Lingkungan Hidup Kota Palu: pemantauan kualitas lingkungan, pengambilan sampel, pengujian, dan penjaminan mutu laboratorium.')
 
 @section('content')
-<div class="space-y-16 pb-16">
+<div class="lab-page space-y-8 pb-20 sm:space-y-10">
+    <x-public.page-hero
+        title="{{ __('Topoksi Lab') }}"
+        description="{{ __('UPTD Laboratorium Lingkungan melaksanakan sebagian kegiatan teknis operasional dinas dalam lingkup penyelenggaraan pemantauan kualitas lingkungan dalam rangka peningkatan kualitas lingkungan.') }}"
+        badge="{{ __('UPTD Laboratorium Lingkungan') }}"
+        icon="tool"
+    />
 
-    {{-- Hero Section --}}
-    <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-8 sm:p-12 lg:p-16 text-white">
-        <div class="absolute inset-0 opacity-10 mix-blend-overlay" style="background-image: radial-gradient(circle at 20% 30%, rgba(16,185,129,.6) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(16,185,129,.4) 0, transparent 45%);"></div>
-        <div class="absolute -right-20 -top-20 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl"></div>
-        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-brand-500/15 rounded-full blur-3xl"></div>
-        <div class="relative z-10 max-w-3xl mx-auto text-center">
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm font-semibold mb-6 ring-1 ring-white/20">
-                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
-                UPTD Laboratorium Lingkungan
+    <section class="reveal grid gap-3 rounded-[1.75rem] border border-brand-100 bg-white p-4 shadow-[0_20px_46px_-34px_rgba(15,23,42,0.45)] dark:border-brand-900/60 dark:bg-slate-900 sm:grid-cols-3 sm:p-5" aria-label="{{ __('Ruang layanan laboratorium') }}">
+        <div class="flex items-center gap-3 rounded-2xl bg-brand-50/70 p-4 dark:bg-brand-950/30">
+            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 dark:bg-slate-900 dark:text-brand-200 dark:ring-brand-800">
+                <x-icons.ui name="leaf" class="size-5" />
             </span>
-            <h1 class="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight">
-                Topoksi Lab<br>
-                <span class="text-emerald-400">Tugas Pokok &amp; Fungsi</span>
-            </h1>
-            <p class="mt-6 text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                UPTD Laboratorium Lingkungan melaksanakan sebagian kegiatan teknis operasional dinas dalam lingkup penyelenggaraan pemantauan kualitas lingkungan dalam rangka peningkatan kualitas lingkungan.
-            </p>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-600 dark:text-brand-300">{{ __('Fokus') }}</p>
+                <p class="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ __('Kualitas lingkungan') }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl bg-sky-50/70 p-4 dark:bg-sky-950/25">
+            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-sky-700 shadow-sm ring-1 ring-sky-100 dark:bg-slate-900 dark:text-sky-200 dark:ring-sky-800">
+                <x-icons.ui name="tool" class="size-5" />
+            </span>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky-600 dark:text-sky-300">{{ __('Layanan') }}</p>
+                <p class="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ __('Sampel dan pengujian') }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl bg-amber-50/70 p-4 dark:bg-amber-950/25">
+            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 shadow-sm ring-1 ring-amber-100 dark:bg-slate-900 dark:text-amber-200 dark:ring-amber-800">
+                <x-icons.ui name="shield" class="size-5" />
+            </span>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">{{ __('Standar') }}</p>
+                <p class="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ __('Penjaminan mutu') }}</p>
+            </div>
         </div>
     </section>
 
-    {{-- Galeri UPTD --}}
-    <section class="grid lg:grid-cols-2 gap-8">
-        <figure class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl transition-shadow duration-300">
+    <section class="grid gap-5 lg:grid-cols-2" aria-label="{{ __('Aktivitas dan fasilitas laboratorium') }}">
+        <figure class="reveal group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_46px_-34px_rgba(15,23,42,0.5)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_28px_54px_-34px_rgba(5,150,105,0.34)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700">
             <div class="relative h-64 shrink-0 overflow-hidden sm:h-80">
-                <img src="{{ asset('assets/images/lab-lingkungan-1.jpeg') }}" alt="Aktivitas pengujian sampel di UPTD Laboratorium Lingkungan"
-                     class="size-full object-cover transition duration-500 group-hover:scale-105" loading="lazy">
+                <img src="{{ asset('assets/images/lab-lingkungan-1.jpeg') }}" alt="{{ __('Aktivitas pengujian sampel di UPTD Laboratorium Lingkungan') }}" class="size-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/50 to-transparent" aria-hidden="true"></div>
+                <span class="absolute bottom-4 left-4 inline-flex size-11 items-center justify-center rounded-2xl bg-white/90 text-brand-700 shadow-lg backdrop-blur-sm dark:bg-slate-900/90 dark:text-brand-200">
+                    <x-icons.ui name="tool" class="size-5" />
+                </span>
             </div>
-            <figcaption class="flex flex-1 items-center gap-4 p-6">
-                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg shadow-brand-500/20">
-                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
+            <figcaption class="flex flex-1 items-start gap-4 p-6 sm:p-7">
+                <span class="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
+                    <x-icons.ui name="check" class="size-4" />
                 </span>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Kegiatan Pengujian Sampel</h3>
-                    <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Pengambilan dan pengujian contoh uji sesuai standar, verifikasi data hasil uji, hingga penerbitan laporan hasil pengujian.</p>
+                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-600 dark:text-brand-300">{{ __('Proses terstandar') }}</p>
+                    <h2 class="mt-2 text-xl font-extrabold tracking-[-0.025em] text-slate-900 dark:text-white">{{ __('Kegiatan Pengujian Sampel') }}</h2>
+                    <p class="mt-2.5 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ __('Pengambilan dan pengujian contoh uji sesuai standar, verifikasi data hasil uji, hingga penerbitan laporan hasil pengujian.') }}</p>
                 </div>
             </figcaption>
         </figure>
-        <figure class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl transition-shadow duration-300">
+
+        <figure class="reveal group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_46px_-34px_rgba(15,23,42,0.5)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-[0_28px_54px_-34px_rgba(2,132,199,0.3)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700">
             <div class="relative h-64 shrink-0 overflow-hidden sm:h-80">
-                <img src="{{ asset('assets/images/lab-lingkungan-2.jpeg') }}" alt="Peralatan dan kegiatan UPTD Laboratorium Lingkungan"
-                     class="size-full object-cover transition duration-500 group-hover:scale-105" loading="lazy">
+                <img src="{{ asset('assets/images/lab-lingkungan-2.jpeg') }}" alt="{{ __('Peralatan dan kegiatan UPTD Laboratorium Lingkungan') }}" class="size-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/50 to-transparent" aria-hidden="true"></div>
+                <span class="absolute bottom-4 left-4 inline-flex size-11 items-center justify-center rounded-2xl bg-white/90 text-sky-700 shadow-lg backdrop-blur-sm dark:bg-slate-900/90 dark:text-sky-200">
+                    <x-icons.ui name="tool" class="size-5" />
+                </span>
             </div>
-            <figcaption class="flex flex-1 items-center gap-4 p-6">
-                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg shadow-brand-500/20">
-                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+            <figcaption class="flex flex-1 items-start gap-4 p-6 sm:p-7">
+                <span class="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
+                    <x-icons.ui name="folder" class="size-4" />
                 </span>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Fasilitas &amp; Peralatan Laboratorium</h3>
-                    <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Peralatan dan instrumen laboratorium yang direncanakan, dipelihara, dan diverifikasi guna mendukung pelayanan pengujian.</p>
+                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-sky-600 dark:text-sky-300">{{ __('Fasilitas terkelola') }}</p>
+                    <h2 class="mt-2 text-xl font-extrabold tracking-[-0.025em] text-slate-900 dark:text-white">{{ __('Fasilitas & Peralatan Laboratorium') }}</h2>
+                    <p class="mt-2.5 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ __('Peralatan dan instrumen laboratorium yang direncanakan, dipelihara, dan diverifikasi guna mendukung pelayanan pengujian.') }}</p>
                 </div>
             </figcaption>
         </figure>
     </section>
 
-    {{-- Tugas Pokok --}}
-    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-8 sm:p-12 shadow-sm relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-50 rounded-full blur-3xl -z-10 dark:bg-brand-900/20 opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-        <div class="flex items-center gap-3 mb-6">
-            <span class="p-2 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-lg">
-                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-            </span>
-            <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-200">Tugas Pokok &amp; Fungsi Utama</h2>
-        </div>
-        <p class="text-slate-600 dark:text-slate-400 leading-relaxed text-base sm:text-lg max-w-4xl">
-            UPTD Laboratorium Lingkungan melaksanakan sebagian kegiatan teknis operasional dinas dalam lingkup penyelenggaraan pemantauan kualitas lingkungan dalam rangka peningkatan kualitas lingkungan, meliputi:
-        </p>
-    </section>
-
-    {{-- Ruang Lingkup --}}
-    <section class="grid md:grid-cols-2 gap-6">
-        @php
-            $ruangLingkup = [
-                [
-                    'title' => 'Perencanaan & Sistem Manajemen Mutu',
-                    'desc' => 'Menyusun rencana program kegiatan, mengesahkan panduan mutu, serta melakukan kaji ulang dan perbaikan Sistem Manajemen Mutu Laboratorium secara berkala.',
-                    'icon' => 'M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25',
-                ],
-                [
-                    'title' => 'Teknis Pengambilan Sampel & Pengujian',
-                    'desc' => 'Melaksanakan pengambilan contoh uji sesuai standar (Good Sampling Practice), melakukan pengujian dan kalibrasi, memverifikasi data hasil uji, hingga menerbitkan laporan/sertifikat hasil pengujian.',
-                    'icon' => 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z',
-                ],
-                [
-                    'title' => 'Penjaminan Mutu (QA/QC) & Audit',
-                    'desc' => 'Menerapkan dan mengawasi Quality Assurance/Quality Control (QA/QC), menyelenggarakan audit internal, memvalidasi metode uji, serta berpartisipasi dalam uji profisiensi/uji banding antar laboratorium.',
-                    'icon' => 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-                ],
-                [
-                    'title' => 'Pengelolaan Fasilitas & Logistik',
-                    'desc' => 'Merencanakan, mengadakan, memverifikasi, dan memelihara peralatan, instrumen, serta bahan habis pakai laboratorium beserta rekaman pemasoknya.',
-                    'icon' => 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z',
-                ],
-                [
-                    'title' => 'Pelayanan & Penanganan Keluhan',
-                    'desc' => 'Menangani administrasi penerimaan sampel, merespons pengaduan pelanggan, serta melakukan penelusuran atau pengujian ulang (terhadap retained sample) jika diperlukan.',
-                    'icon' => 'M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75',
-                ],
-                [
-                    'title' => 'Ketatausahaan & Pelaporan',
-                    'desc' => 'Melaksanakan urusan tata usaha, rumah tangga, koordinasi lintas instansi, penyusunan laporan evaluasi, serta melaksanakan tugas kedinasan lain dari Kepala Dinas.',
-                    'icon' => 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
-                ],
-            ];
-        @endphp
-        @foreach ($ruangLingkup as $i => $item)
-            <div class="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-7 sm:p-8 shadow-sm hover:shadow-lg hover:border-brand-300 dark:hover:border-brand-700 transition-all duration-300">
-                <div class="flex items-start gap-4">
-                    <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg shadow-brand-500/20 group-hover:scale-110 transition-transform duration-300">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}"/></svg>
+    <section class="reveal relative isolate overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_46px_-34px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900 sm:p-8 lg:p-10">
+        <div class="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-brand-100/70 blur-3xl dark:bg-brand-900/20" aria-hidden="true"></div>
+        <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="max-w-4xl">
+                <div class="flex items-center gap-4">
+                    <span class="inline-flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-100 dark:bg-brand-900/30 dark:text-brand-200 dark:ring-brand-800/70">
+                        <x-icons.ui name="shield" class="size-6" />
                     </span>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                            <span class="text-brand-500 text-sm font-bold">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
-                            {{ $item['title'] }}
-                        </h3>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ $item['desc'] }}</p>
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">{{ __('Mandat pelayanan') }}</p>
+                        <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.03em] text-slate-900 dark:text-white sm:text-3xl">{{ __('Tugas Pokok & Fungsi Utama') }}</h2>
                     </div>
                 </div>
+                <p class="mt-6 text-base leading-8 text-slate-600 dark:text-slate-300 sm:text-lg">{{ __('UPTD Laboratorium Lingkungan melaksanakan sebagian kegiatan teknis operasional dinas dalam lingkup penyelenggaraan pemantauan kualitas lingkungan dalam rangka peningkatan kualitas lingkungan, meliputi:') }}</p>
             </div>
+            <span class="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/25 dark:text-emerald-200 dark:ring-emerald-800/60">
+                <x-icons.ui name="leaf" class="size-4" />
+                {{ __('Data yang dapat dipertanggungjawabkan') }}
+            </span>
+        </div>
+    </section>
+
+    @php
+        $ruangLingkup = [
+            [
+                'title' => 'Perencanaan & Sistem Manajemen Mutu',
+                'desc' => 'Menyusun rencana program kegiatan, mengesahkan panduan mutu, serta melakukan kaji ulang dan perbaikan Sistem Manajemen Mutu Laboratorium secara berkala.',
+                'icon' => 'document',
+            ],
+            [
+                'title' => 'Teknis Pengambilan Sampel & Pengujian',
+                'desc' => 'Melaksanakan pengambilan contoh uji sesuai standar (Good Sampling Practice), melakukan pengujian dan kalibrasi, memverifikasi data hasil uji, hingga menerbitkan laporan/sertifikat hasil pengujian.',
+                'icon' => 'tool',
+            ],
+            [
+                'title' => 'Penjaminan Mutu (QA/QC) & Audit',
+                'desc' => 'Menerapkan dan mengawasi Quality Assurance/Quality Control (QA/QC), menyelenggarakan audit internal, memvalidasi metode uji, serta berpartisipasi dalam uji profisiensi/uji banding antar laboratorium.',
+                'icon' => 'shield',
+            ],
+            [
+                'title' => 'Pengelolaan Fasilitas & Logistik',
+                'desc' => 'Merencanakan, mengadakan, memverifikasi, dan memelihara peralatan, instrumen, serta bahan habis pakai laboratorium beserta rekaman pemasoknya.',
+                'icon' => 'folder',
+            ],
+            [
+                'title' => 'Pelayanan & Penanganan Keluhan',
+                'desc' => 'Menangani administrasi penerimaan sampel, merespons pengaduan pelanggan, serta melakukan penelusuran atau pengujian ulang (terhadap retained sample) jika diperlukan.',
+                'icon' => 'message',
+            ],
+            [
+                'title' => 'Ketatausahaan & Pelaporan',
+                'desc' => 'Melaksanakan urusan tata usaha, rumah tangga, koordinasi lintas instansi, penyusunan laporan evaluasi, serta melaksanakan tugas kedinasan lain dari Kepala Dinas.',
+                'icon' => 'document',
+            ],
+        ];
+    @endphp
+
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="{{ __('Ruang lingkup tugas UPTD Laboratorium Lingkungan') }}">
+        @foreach ($ruangLingkup as $i => $item)
+            <article class="reveal group relative flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.46)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_24px_42px_-30px_rgba(5,150,105,0.36)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700">
+                <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 via-emerald-400 to-teal-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden="true"></span>
+                <div class="flex items-start justify-between gap-4">
+                    <span class="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition-transform duration-300 group-hover:scale-105 dark:bg-brand-900/30 dark:text-brand-200 dark:ring-brand-800/70">
+                        <x-icons.ui :name="$item['icon']" class="size-5" />
+                    </span>
+                    <span class="text-xs font-extrabold tracking-[0.14em] text-brand-500/80 dark:text-brand-300/80">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                </div>
+                <h2 class="mt-5 text-lg font-extrabold leading-7 tracking-[-0.02em] text-slate-900 dark:text-white">{{ $item['title'] }}</h2>
+                <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $item['desc'] }}</p>
+            </article>
         @endforeach
     </section>
 </div>

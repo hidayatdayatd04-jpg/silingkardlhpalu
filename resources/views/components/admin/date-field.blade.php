@@ -1,6 +1,6 @@
 @props([
     'name' => '',
-    'type' => 'date',            // 'date' | 'datetime-local'
+    'type' => 'date',            // 'date' | 'datetime' (kalender + jam) | 'datetime-local'
     'label' => '',
     'placeholder' => '',
     'value' => '',
@@ -9,7 +9,7 @@
     'readonly' => false,
     'error' => null,
     'hint' => null,
-    'icon' => null,              // default: clock (datetime-local) / calendar (date)
+    'icon' => null,              // default: clock (datetime/datetime-local) / calendar (date)
     'min' => null,
     'max' => null,
     'step' => null,
@@ -20,8 +20,19 @@
     $hasError = $error || $errors->has($name);
     $errorMessage = $error ?? $errors->first($name);
     $currentValue = (string) old($name, $value);
-    $resolvedIcon = $icon ?? ($type === 'datetime-local' ? 'clock' : 'calendar');
+    $resolvedIcon = $icon ?? (in_array($type, ['datetime', 'datetime-local'], true) ? 'clock' : 'calendar');
     $isDatePicker = $type === 'date';
+    $isDateTimePicker = $type === 'datetime';
+
+    // Component string attributes can arrive with one HTML-escaped layer from
+    // Blade. Decode it once, then keep the regular escaped output below.
+    $decodeDisplayText = static fn ($text) => is_string($text)
+        ? html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        : $text;
+    $label = $decodeDisplayText($label);
+    $placeholder = $decodeDisplayText($placeholder);
+    $errorMessage = $decodeDisplayText($errorMessage);
+    $hint = $decodeDisplayText($hint);
 @endphp
 
 @if($isDatePicker)
@@ -30,6 +41,8 @@
      ═══════════════════════════════════════════════════════════ --}}
 <div class="df-field"
      x-data="datePicker(@js($currentValue), @js($min), @js($max), {{ $hasError ? 'true' : 'false' }}, {{ ($disabled || $readonly) ? 'true' : 'false' }})"
+     x-modelable="value"
+     {{ $attributes->whereStartsWith(['x-model']) }}
      x-on:keydown.escape.window="open = false">
 
     @if($label)
@@ -50,7 +63,7 @@
             @if($required) required @endif
             @if($disabled) disabled @endif
             @if($hasError) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
-            {{ $attributes->except(['id', 'class']) }}
+            {{ $attributes->except(['id', 'class', 'x-model']) }}
         >
 
         {{-- Trigger --}}
@@ -162,6 +175,160 @@
     @endif
 </div>
 
+@elseif($isDateTimePicker)
+{{-- Kalender kustom yang sama dengan field artikel, dengan kontrol jam terpisah. --}}
+<div class="df-field"
+     x-data="datePicker(@js($currentValue), @js($min), @js($max), {{ $hasError ? 'true' : 'false' }}, {{ ($disabled || $readonly) ? 'true' : 'false' }}, true)"
+     x-modelable="value"
+     {{ $attributes->whereStartsWith(['x-model']) }}
+     x-on:keydown.escape.window="open = false">
+
+    @if($label)
+        <label for="{{ $id }}" class="df-label" x-on:click.prevent="toggle()">
+            {{ $label }}@if($required)<span class="df-required">*</span>@endif
+        </label>
+    @endif
+
+    <div class="df-datetime-grid">
+        <div class="relative" x-ref="field">
+            <input
+                type="hidden"
+                id="{{ $id }}"
+                name="{{ $name }}"
+                :value="inputValue"
+                x-ref="input"
+                @if($disabled) disabled @endif
+                @if($hasError) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
+                {{ $attributes->except(['id', 'class', 'type', 'value', 'x-model']) }}
+            >
+
+            <button
+                type="button"
+                x-on:click="toggle()"
+                @if($disabled || $readonly) disabled @endif
+                class="df-trigger {{ $hasError ? 'df-trigger--error' : '' }}"
+                :class="{ 'df-trigger--open': open }"
+                aria-haspopup="dialog"
+                :aria-expanded="open ? 'true' : 'false'"
+            >
+                <span class="df-trigger-icon">
+                    <x-admin.icon name="calendar" :size="17" />
+                </span>
+                <span class="df-trigger-value" x-show="value" x-text="displayLabel" x-cloak></span>
+                <span class="df-trigger-placeholder" x-show="!value">{{ $placeholder ?: 'Pilih tanggal' }}</span>
+                <span class="df-trigger-chevron">
+                    <x-admin.icon name="chevron-down" :size="16" />
+                </span>
+            </button>
+
+            <div
+                x-show="open"
+                x-cloak
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 -translate-y-1 scale-[0.98]"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-1"
+                x-on:click.outside="open = false"
+                class="df-popover"
+                role="dialog"
+                aria-label="Pilih tanggal"
+            >
+                <div class="df-pop-header">
+                    <div class="flex items-center gap-0.5">
+                        <button type="button" class="df-nav-btn" x-on:click="prevYear()" title="Tahun sebelumnya">
+                            <span class="flex -space-x-1.5">
+                                <x-admin.icon name="chevron-left" :size="13" />
+                                <x-admin.icon name="chevron-left" :size="13" />
+                            </span>
+                        </button>
+                        <button type="button" class="df-nav-btn" x-on:click="prevMonth()" title="Bulan sebelumnya">
+                            <x-admin.icon name="chevron-left" :size="15" />
+                        </button>
+                    </div>
+
+                    <div class="df-pop-title" x-text="monthLabel"></div>
+
+                    <div class="flex items-center gap-0.5">
+                        <button type="button" class="df-nav-btn" x-on:click="nextMonth()" title="Bulan berikutnya">
+                            <x-admin.icon name="chevron-right" :size="15" />
+                        </button>
+                        <button type="button" class="df-nav-btn" x-on:click="nextYear()" title="Tahun berikutnya">
+                            <span class="flex -space-x-1.5">
+                                <x-admin.icon name="chevron-right" :size="13" />
+                                <x-admin.icon name="chevron-right" :size="13" />
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="df-weekdays">
+                    <template x-for="d in dayNames" :key="d">
+                        <span x-text="d"></span>
+                    </template>
+                </div>
+
+                <div class="df-days">
+                    <template x-for="cell in weeks" :key="cell.iso">
+                        <button
+                            type="button"
+                            class="df-day"
+                            :class="{
+                                'df-day--outside': !cell.inMonth,
+                                'df-day--today': cell.isToday && !cell.isSelected,
+                                'df-day--selected': cell.isSelected,
+                                'df-day--disabled': cell.isDisabled
+                            }"
+                            :disabled="cell.isDisabled"
+                            x-on:click="select(cell.iso)"
+                            x-text="cell.day"
+                        ></button>
+                    </template>
+                </div>
+
+                <div class="df-pop-footer">
+                    <button type="button" class="df-today-btn" x-on:click="selectToday()">
+                        <x-admin.icon name="calendar" :size="14" />
+                        Hari Ini
+                    </button>
+                    <button type="button" class="df-clear-btn" x-show="value" x-cloak x-on:click="clearValue()">
+                        Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="df-time-control">
+            <label class="sr-only" for="{{ $id }}-time">{{ __('Jam') }}</label>
+            <span class="df-native-icon" aria-hidden="true">
+                <x-admin.icon :name="$resolvedIcon" :size="18" />
+            </span>
+            <input
+                type="time"
+                id="{{ $id }}-time"
+                :value="time"
+                x-on:change="setTime($event.target.value)"
+                @if($required) required @else x-bind:required="!!value" @endif
+                @if($disabled) disabled @endif
+                @if($readonly) readonly @endif
+                step="{{ $step ?? 60 }}"
+                class="df-native-input {{ $hasError ? 'df-native-input--error' : '' }}"
+                aria-label="{{ __('Jam') }}"
+            >
+        </div>
+    </div>
+
+    @if($hasError)
+        <p id="{{ $id }}-error" class="df-error">
+            <x-admin.icon name="alert-circle" :size="14" />
+            {{ $errorMessage }}
+        </p>
+    @elseif($hint)
+        <p class="df-hint">{{ $hint }}</p>
+    @endif
+</div>
+
 @else
 {{-- ═══════════════════════════════════════════════════════════
      datetime-local — tetap native, styling disamakan
@@ -228,7 +395,7 @@
     .df-trigger--open .df-trigger-chevron { transform: rotate(180deg); }
 
     /* ── Popover kalender ── */
-    .df-popover { position: absolute; left: 0; top: calc(100% + 8px); z-index: 60; width: 320px; max-width: calc(100vw - 2rem); background: #fff; border: 1px solid #e3ede6; border-radius: 18px; box-shadow: 0 16px 40px -12px rgba(13, 43, 29, 0.22); padding: 14px; }
+    .df-popover { position: absolute; left: 0; top: calc(100% + 8px); z-index: var(--admin-z-dropdown, 1000); width: 320px; max-width: calc(100vw - 2rem); background: #fff; border: 1px solid #e3ede6; border-radius: 18px; box-shadow: 0 16px 40px -12px rgba(13, 43, 29, 0.22); padding: 14px; }
     .df-pop-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
     .df-pop-title { font-size: 14px; font-weight: 700; color: #12201a; letter-spacing: 0.01em; }
     .df-nav-btn { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; border: none; background: transparent; color: #5b6b63; cursor: pointer; transition: background .15s ease, color .15s ease; }
@@ -250,6 +417,9 @@
     .df-clear-btn:hover { color: #e0533d; background: #fef2f0; }
 
     /* ── Input native (datetime-local) ── */
+    .df-datetime-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8.5rem, .42fr); gap: 8px; align-items: start; }
+    .df-time-control { position: relative; min-width: 0; }
+    .df-time-control .df-native-input { font-variant-numeric: tabular-nums; }
     .df-native-input { width: 100%; height: 48px; border-radius: 14px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 14px 0 44px; font-family: inherit; font-size: 13.5px; font-weight: 500; color: #12201a; outline: none; transition: border-color .18s ease, box-shadow .18s ease; }
     .df-native-input:hover:not(:focus):not(.df-native-input--error) { border-color: #c3d8cc; }
     .df-native-input:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
@@ -271,6 +441,10 @@
     .dark .df-day:hover:not(.df-day--selected):not(.df-day--disabled) { background: #334155; }
     .dark .df-native-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
     .dark .df-hint { color: #94a3b8; }
+
+    @media (max-width: 420px) {
+        .df-datetime-grid { grid-template-columns: 1fr; }
+    }
 </style>
 
 @once
@@ -281,9 +455,12 @@
          * Menyimpan nilai format Y-m-d pada hidden input & men-dispatch event
          * `input` + `change` (bubbles) agar validasi/clearError form tetap jalan.
          */
-        function datePicker(initialValue, minIso, maxIso, hasError, isDisabled) {
+        function datePicker(initialValue, minIso, maxIso, hasError, isDisabled, withTime) {
             var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
             var DAYS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+            var initialText = String(initialValue || '');
+            var initialDate = (initialText.match(/^(\d{4}-\d{2}-\d{2})/) || [])[1] || '';
+            var initialTime = (initialText.match(/T(\d{2}:\d{2})/) || [])[1] || '';
 
             function parse(s) {
                 if (!s) return null;
@@ -300,7 +477,9 @@
                 open: false,
                 shake: !!hasError,
                 isDisabled: !!isDisabled,
-                value: initialValue || '',
+                value: initialDate,
+                time: initialTime,
+                withTime: !!withTime,
                 viewYear: new Date().getFullYear(),
                 viewMonth: new Date().getMonth(),
                 minDate: parse(minIso),
@@ -319,6 +498,11 @@
                 },
 
                 get selectedDate() { return parse(this.value); },
+
+                get inputValue() {
+                    if (!this.value) return '';
+                    return this.withTime && this.time ? this.value + 'T' + this.time : this.value;
+                },
 
                 get displayLabel() {
                     var d = this.selectedDate;
@@ -371,9 +555,15 @@
                     this.$nextTick(() => {
                         var input = this.$refs.input;
                         if (!input) return;
+                        input.value = this.inputValue;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                     });
+                },
+
+                setTime(time) {
+                    this.time = time || '';
+                    this.emitChange();
                 },
 
                 select(iso) {
@@ -388,6 +578,7 @@
 
                 clearValue() {
                     this.value = '';
+                    if (this.withTime) this.time = '';
                     this.open = false;
                     this.emitChange();
                 },

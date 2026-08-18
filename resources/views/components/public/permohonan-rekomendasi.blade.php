@@ -187,7 +187,7 @@ new class extends Component {
                             label="{{ __('Nama Perusahaan') }}"
                             placeholder="{{ __('Nama lengkap perusahaan/instansi') }}"
                             required
-                            icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>'
+                            icon="building"
                         />
                     </div>
 
@@ -197,7 +197,7 @@ new class extends Component {
                         label="{{ __('Nama Pemilik / Penanggung Jawab') }}"
                         placeholder="{{ __('Nama lengkap pemilik/PIC') }}"
                         required
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+                        icon="user"
                     />
 
                     <x-public.input
@@ -206,7 +206,7 @@ new class extends Component {
                         label="{{ __('NPWP') }}"
                         placeholder="12.345.678.9-012.345"
                         required
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>'
+                        icon="id-card"
                     />
 
                     <x-public.select
@@ -236,7 +236,7 @@ new class extends Component {
                         label="{{ __('Nomor Telepon') }}"
                         placeholder="{{ __('Contoh: 08123456789') }}"
                         required
-                        icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>'
+                        icon="phone"
                     />
 
                     <div class="md:col-span-2">
@@ -248,7 +248,7 @@ new class extends Component {
                             placeholder="contoh@gmail.com"
                             required
                             hint="{{ __('Email untuk menerima notifikasi update status permohonan') }}"
-                            icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+                            icon="mail"
                         />
                     </div>
 
@@ -260,21 +260,21 @@ new class extends Component {
                             placeholder="{{ __('Alamat lengkap lokasi perusahaan/usaha, sertakan patokan terdekat') }}"
                             rows="3"
                             required
-                            icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>'
+                            icon="map-pin"
                         />
                     </div>
                 </div>
 
                 <button type="submit" class="fi-submit-btn">
                     {{ __('Lanjut ke Step 2') }}
-                    <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
                 </button>
             </form>
         @else
             <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-6">
                 <div class="fi-field">
                     <label class="fi-label">
-                        <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h3"/></svg></span>
+                        <span class="fi-icon-badge"><x-icons.ui name="document" /></span>
                         {{ __('Surat Permohonan') }} <span class="fi-required">*</span>
                         <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF, max 5MB)</span>
                     </label>
@@ -292,12 +292,12 @@ new class extends Component {
                         <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                     </div>
-                    @error('surat_permohonan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                    @error('surat_permohonan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
                 </div>
 
                 <div class="fi-field">
                     <label class="fi-label">
-                        <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>
+                        <span class="fi-icon-badge"><x-icons.ui name="upload" /></span>
                         {{ __('Dokumen Pendukung') }}
                         <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF/Gambar, min 1, max 5, max 5MB/file)</span>
                     </label>
@@ -313,20 +313,20 @@ new class extends Component {
                         <input wire:model="dokumen_pendukung" x-ref="dokumenInput" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/jpg"
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                     </div>
-                    @error('dokumen_pendukung') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                    @error('dokumen_pendukung.*') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                    @error('dokumen_pendukung') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
+                    @error('dokumen_pendukung.*') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
                     @if (count($dokumen_pendukung))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3">
                             @foreach ($dokumen_pendukung as $index => $dok)
                                 <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                                     <span class="flex-shrink-0 h-8 w-8 rounded-lg bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                        <x-icons.ui name="document" class="h-4 w-4" />
                                     </span>
                                     <span class="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{{ $dok->getClientOriginalName() }}</span>
                                     <button type="button" wire:click="removeDokumen({{ $index }})"
                                         class="flex-shrink-0 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
-                                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                        <x-icons.ui name="close" class="h-3 w-3" />
                                     </button>
                                 </div>
                             @endforeach
@@ -337,14 +337,14 @@ new class extends Component {
                 <div class="flex gap-3 pt-2">
                     <button type="button" wire:click="previousStep"
                         class="inline-flex items-center justify-center rounded-full text-sm font-semibold border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-12 px-6 transition-colors">
-                        <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        <x-icons.ui name="chevron-left" class="mr-2 h-4 w-4" />
                         {{ __('Kembali') }}
                     </button>
                 </div>
 
                 @error('form')
                     <div class="dlh-limit-alert" role="alert">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                        <x-icons.ui name="alert" />
                         <span>{{ $message }}</span>
                     </div>
                 @enderror
@@ -352,7 +352,7 @@ new class extends Component {
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="fi-submit-btn flex-1">
                         {{ __('Kirim Permohonan') }}
-                        <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M12 5l7 7-7 7"/></svg>
+                        <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
                     </button>
                 </div>
             </form>

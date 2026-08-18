@@ -79,12 +79,10 @@
         }
     }"
     x-on:bulk-export.window="bulkExport()"
-    x-init="window.staggerReveal($el.querySelectorAll('.stagger-item'), 70)"
 >
     <div class="space-y-6">
         {{-- ═══════════ Header + breadcrumb navigasi ═══════════ --}}
         <x-admin.page-header
-            class="stagger-item"
             :title="$resource['label']"
             subtitle="Kelola artikel berita dan publikasi resmi dinas."
             icon="news"
@@ -94,21 +92,9 @@
             ]"
         >
             <x-slot:actions>
-                <div class="hidden items-center gap-2 sm:flex">
-                    <div class="flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5">
-                        <span class="relative flex size-2">
-                            <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-                        </span>
-                        <span class="text-xs font-bold text-emerald-700">{{ number_format($totalPublished) }} Tayang</span>
-                    </div>
-                </div>
+                <x-admin.status-pill class="hidden sm:inline-flex" variant="success" :label="number_format($totalPublished).' tayang'" />
                 @if(($resource['can_create'] ?? true))
-                    <a href="{{ route('admin.resources.create', $resource['slug']) }}"
-                       class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:from-emerald-600 hover:to-emerald-700">
-                        <x-admin.icon name="plus" :size="16" />
-                        Tambah Artikel
-                    </a>
+                    <x-admin.button variant="primary" size="sm" icon="plus" :href="route('admin.resources.create', $resource['slug'])">Tambah artikel</x-admin.button>
                 @endif
             </x-slot:actions>
         </x-admin.page-header>
@@ -116,7 +102,6 @@
         {{-- ═══════════ Kartu statistik ═══════════ --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <x-admin.stat-card
-                class="stagger-item"
                 label="Total Artikel"
                 :value="$totalArtikel"
                 icon="news"
@@ -125,7 +110,6 @@
                 :href="route('admin.resources.index', $resource['slug'])"
             />
             <x-admin.stat-card
-                class="stagger-item"
                 label="Published"
                 :value="$totalPublished"
                 icon="send"
@@ -134,7 +118,6 @@
                 :href="route('admin.resources.index', ['resource' => $resource['slug'], 'status' => [ArtikelStatus::PUBLISHED->value]])"
             />
             <x-admin.stat-card
-                class="stagger-item"
                 label="Draft"
                 :value="$totalDraft"
                 icon="file-text"
@@ -145,7 +128,7 @@
         </div>
 
         {{-- ═══════════ Tabel artikel ═══════════ --}}
-        <div class="stagger-item overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[var(--shadow-soft)]">
+        <x-admin.card :padding="false" class="overflow-hidden">
             <x-admin.bulk-actions-bar :resource="$resource" />
 
             {{-- Toolbar: pencarian + filter + export --}}
@@ -163,8 +146,8 @@
                     return is_array($v) ? count(array_filter($v)) > 0 : filled($v);
                 })->count();
             @endphp
-            <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-4">
-                <form method="GET" class="flex flex-1 items-center gap-2 lg:max-w-md">
+            <div class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/35 sm:px-6 lg:flex-row lg:items-center">
+                <form method="GET" role="search" class="flex w-full flex-1 items-center gap-2 lg:max-w-md">
                     @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
                     @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
                     @foreach($resource['filters'] as $f)
@@ -181,17 +164,16 @@
                     @endforeach
 
                     <div class="relative flex-1">
-                        <span class="pointer-events-none absolute inset-y-0 left-1.5 my-1.5 grid w-9 place-items-center rounded-lg bg-slate-100 text-slate-400">
-                            <x-admin.icon name="search" :size="16" />
-                        </span>
+                        <label for="article-search" class="sr-only">Cari judul artikel</label>
+                        <x-admin.icon name="search" :size="17" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                         <input name="q" value="{{ $search }}" placeholder="Cari judul artikel..."
-                            class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-[3.75rem] pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10">
+                            id="article-search" class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-950 outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-brand-400 dark:focus:ring-brand-400/20">
                     </div>
                 </form>
 
                 <div class="hidden flex-1 lg:block"></div>
 
-                <form method="GET" class="contents">
+                <form method="GET" class="flex flex-wrap items-center gap-2">
                     @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
                     @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
                     @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
@@ -271,20 +253,20 @@
             @endphp
 
             @if($activeFilters->isNotEmpty())
-                <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-emerald-50/30 px-5 py-3">
-                    <span class="text-sm font-semibold text-slate-600">Filter aktif:</span>
+                <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-brand-50/60 px-4 py-3 dark:border-slate-800 dark:bg-brand-950/25 sm:px-6">
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Filter aktif:</span>
                     @foreach($activeFilters as $filter)
                         <x-admin.filter-badge :label="$filter['label']" :removeUrl="$filter['removeUrl']" />
                     @endforeach
-                    <a href="{{ route('admin.resources.index', $resource['slug']) }}" class="ml-2 text-sm font-bold text-slate-500 transition hover:text-danger-600">
+                    <a href="{{ route('admin.resources.index', $resource['slug']) }}" class="ml-1 rounded px-1 text-sm font-semibold text-slate-600 outline-none transition-colors duration-150 hover:text-danger-600 focus-visible:text-danger-600 dark:text-slate-300 dark:hover:text-danger-300 dark:focus-visible:text-danger-300">
                         Hapus Semua
                     </a>
                 </div>
             @endif
 
             {{-- Tabel data --}}
-            <x-admin.table>
-                <thead class="bg-slate-50">
+            <x-admin.table aria-label="Daftar artikel">
+                <thead class="bg-slate-50 dark:bg-slate-900">
                     <tr>
                         <x-admin.table.checkbox-header />
                         <x-admin.table.header sortable column="judul"
@@ -304,9 +286,9 @@
                         <x-admin.table.header class="text-center">Aksi</x-admin.table.header>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($records as $record)
-                        <x-admin.table.row class="transition hover:bg-emerald-50/30">
+                        <x-admin.table.row>
                             <x-admin.table.checkbox-cell :value="$record->id" />
 
                             {{-- Artikel: thumbnail + judul + slug --}}
@@ -315,18 +297,18 @@
                                 <div class="flex items-center gap-3.5">
                                     @if($thumb)
                                         <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                           class="group/thumb block size-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 shadow-sm ring-1 ring-black/5">
+                                           class="group/thumb block size-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 shadow-sm ring-1 ring-black/5 outline-none transition-[border-color,box-shadow] duration-150 hover:border-brand-300 focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:border-slate-700 dark:hover:border-brand-700">
                                             <img src="{{ $thumb }}" alt="{{ $record->judul }}" loading="lazy"
-                                                 class="size-full object-cover transition duration-300 group-hover/thumb:scale-110" />
+                                                  class="size-full object-cover transition-transform duration-150 group-hover/thumb:scale-[1.03]" />
                                         </a>
                                     @else
-                                        <div class="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-400 ring-1 ring-emerald-100">
+                                        <div class="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-100 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-900">
                                             <x-admin.icon name="image" :size="20" />
                                         </div>
                                     @endif
                                     <div class="min-w-0">
                                         <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                           class="block max-w-[320px] truncate text-sm font-bold text-slate-900 transition hover:text-emerald-700"
+                                           class="block max-w-[320px] truncate rounded text-sm font-bold text-slate-900 outline-none transition-colors duration-150 hover:text-brand-700 focus-visible:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300 dark:focus-visible:text-brand-300"
                                            title="{{ $record->judul }}">
                                             {{ $record->judul }}
                                         </a>
@@ -382,17 +364,17 @@
                             <x-admin.table.cell class="text-center">
                                 <div class="flex items-center justify-center gap-1">
                                     <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                       class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm" title="Detail" aria-label="Detail">
-                                        <x-admin.icon name="eye" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ $record->judul }}">
+                                         <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                     </a>
                                     <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
-                                       class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 hover:shadow-sm" title="Edit" aria-label="Edit">
-                                        <x-admin.icon name="edit" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ $record->judul }}">
+                                         <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                     </a>
                                     <button type="button"
                                         x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
-                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-sm" title="Hapus" aria-label="Hapus">
-                                        <x-admin.icon name="trash" :size="16" class="transition-transform duration-200 group-hover:scale-110" />
+                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ $record->judul }}">
+                                         <x-admin.icon name="trash" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                     </button>
                                 </div>
 
@@ -421,8 +403,8 @@
             </x-admin.table>
 
             {{-- Pagination + ringkasan jumlah --}}
-            <div class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/40 px-5 py-4 sm:flex-row">
-                <p class="text-xs font-semibold text-slate-500">
+            <div class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/40 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/25 sm:flex-row sm:px-6">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
                     @if($records->total() > 0)
                         Menampilkan {{ $records->firstItem() }}–{{ $records->lastItem() }} dari {{ number_format($records->total()) }} artikel
                     @else
@@ -431,7 +413,7 @@
                 </p>
                 {{ $records->links() }}
             </div>
-        </div>
+        </x-admin.card>
     </div>
 </div>
 @endsection

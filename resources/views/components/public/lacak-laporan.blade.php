@@ -147,7 +147,7 @@ new class extends Component
     <div class="lc-search-card max-w-4xl mx-auto">
         <div class="lc-search-head">
             <span class="lc-search-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <x-icons.ui name="search" />
             </span>
             <div class="flex-1">
                 <h3 class="lc-search-title">{{ __('Lacak Laporan') }}</h3>
@@ -165,14 +165,14 @@ new class extends Component
             </div>
 
             <button type="submit" class="lc-search-btn">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <x-icons.ui name="search" class="h-4 w-4" />
                 {{ __('Cari Laporan') }}
             </button>
         </form>
 
         @error('form')
             <div class="dlh-limit-alert" role="alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <x-icons.ui name="alert" />
                 <span>{{ $message }}</span>
             </div>
         @enderror
@@ -185,7 +185,7 @@ new class extends Component
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
                 <div class="flex items-center gap-3">
                     <span class="lc-result-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                        <x-icons.ui name="document" />
                     </span>
                     <div>
                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
@@ -207,9 +207,9 @@ new class extends Component
                 @endphp
                 <span class="lc-status-badge {{ $badgeColors[$pengaduan->status_label] ?? 'lc-status--pending' }}">
                     @if ($isDone)
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                        <x-icons.ui name="check" class="h-3 w-3" />
                     @elseif ($isRejected)
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        <x-icons.ui name="close" class="h-3 w-3" />
                     @else
                         <span class="lc-status-dot"></span>
                     @endif
@@ -259,7 +259,7 @@ new class extends Component
                 <div class="space-y-6">
                     <div class="space-y-4">
                         <h3 class="lc-section-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h3"/></svg>
+                            <x-icons.ui name="document" />
                             {{ __('Rincian Aduan') }}
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
@@ -281,7 +281,7 @@ new class extends Component
                     @if ($statusStr === 'Ditolak')
                         <div class="lc-reject-box">
                             <span class="lc-reject-label">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                <x-icons.ui name="close" class="h-4 w-4" />
                                 {{ __('Alasan Penolakan') }}
                             </span>
                             <p class="text-sm mt-1.5">{{ $pengaduan->alasan_penolakan ?? __('Tidak ada alasan penolakan yang ditulis.') }}</p>
@@ -291,7 +291,7 @@ new class extends Component
                     @if (in_array($statusStr, ['Ditindaklanjuti', 'Selesai', 'Ditolak'], true) && filled($pengaduan->catatan_admin))
                         <div class="lc-note-box">
                             <span class="lc-note-label">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                <x-icons.ui name="message" class="h-4 w-4" />
                                 {{ __('Catatan Admin') }}
                             </span>
                             <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $pengaduan->catatan_admin }}</p>
@@ -314,7 +314,7 @@ new class extends Component
 
                 <div class="space-y-4">
                     <h3 class="lc-section-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>
+                        <x-icons.ui name="map-pin" />
                         {{ __('Lokasi Peta') }}
                     </h3>
                     <div wire:ignore wire:key="map-{{ $pengaduan->nomor_tiket }}"
@@ -340,7 +340,7 @@ new class extends Component
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
                 <div class="flex items-center gap-3">
                     <span class="lc-result-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                        <x-icons.ui name="document" />
                     </span>
                     <div>
                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">{{ __('Nomor Tiket') }}</span>
@@ -349,7 +349,7 @@ new class extends Component
                 </div>
                 <span class="lc-status-badge {{ $badgeMap[$statusColor] ?? 'lc-status--pending' }}">
                     @if ($isDone)
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                        <x-icons.ui name="check" class="h-3 w-3" />
                     @else
                         <span class="lc-status-dot"></span>
                     @endif
@@ -387,7 +387,7 @@ new class extends Component
                     @if ($isDone && filled($pengaduanTataPenataan->catatan_admin))
                         <div class="lc-note-box">
                             <span class="lc-note-label">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                <x-icons.ui name="message" class="h-4 w-4" />
                                 {{ __('Catatan Admin') }}
                             </span>
                             <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $pengaduanTataPenataan->catatan_admin }}</p>
@@ -409,7 +409,7 @@ new class extends Component
 
                 <div class="space-y-4">
                     <h3 class="lc-section-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>
+                        <x-icons.ui name="map-pin" />
                         {{ __('Lokasi Peta') }}
                     </h3>
                     <div wire:ignore wire:key="map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}"

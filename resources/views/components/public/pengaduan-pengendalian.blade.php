@@ -128,19 +128,16 @@ new class extends Component {
                     placeholder="{{ __('Nama lengkap pelapor') }}"
                 />
 
-                <div class="space-y-2.5">
-                    <label for="jenis_pengaduan" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Jenis Pengaduan') }}</label>
-                    <x-admin.select
-                        wire:model="jenis_pengaduan"
-                        id="jenis_pengaduan"
-                        name="jenis_pengaduan"
-                        :options="$this->jenisOptions()"
-                        :searchable="false"
-                        placeholder="{{ __('-- Pilih Jenis Pengaduan --') }}"
-                    />
-                    @error('jenis_pengaduan') <span class="text-[0.8rem] font-medium text-danger-500">{{ $message }}</span> @enderror
-
-                </div>
+                <x-public.select
+                    wire:model="jenis_pengaduan"
+                    id="jenis_pengaduan"
+                    name="jenis_pengaduan"
+                    label="{{ __('Jenis Pengaduan') }}"
+                    :options="$this->jenisOptions()"
+                    :selected="$jenis_pengaduan"
+                    :searchable="false"
+                    placeholder="{{ __('-- Pilih Jenis Pengaduan --') }}"
+                />
 
                 <x-public.input
                     wire:model="nomor_hp"
@@ -158,7 +155,7 @@ new class extends Component {
                     rows="2"
                     maxlength="150"
                     hint="{{ __('Sertakan patokan terdekat') }}"
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>'
+                    icon="map-pin"
                 />
 
                 <x-public.textarea
@@ -169,7 +166,7 @@ new class extends Component {
                     rows="4"
                     maxlength="5000"
                     hint="{{ __('Minimal 20 karakter') }}"
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>'
+                    icon="message"
                 />
 
                 <div class="space-y-2.5">

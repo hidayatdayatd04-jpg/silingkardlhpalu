@@ -13,10 +13,62 @@
 ])
 
 @php
+    // Attributes written as label="{{ ... }}" arrive already entity-escaped.
+    // Decode that attribute layer, while keeping the normal Blade escaping at
+    // the output point so user-visible ampersands are not shown as "&amp;".
+    $decodeDisplayText = static fn ($text) => is_string($text)
+        ? html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        : $text;
+
+    $label = $decodeDisplayText($label);
+    $placeholder = $decodeDisplayText($placeholder);
+    $hint = $decodeDisplayText($hint);
+
     $id = $attributes->get('id', 'pub-input-' . Str::random(6));
     $hasError = $error || $errors->has($name);
     $errorMessage = $error ?? $errors->first($name);
     $currentValue = old($name, $value);
+    $errorId = $hasError ? $id . '-error' : null;
+    $hintId = $hint ? $id . '-hint' : null;
+    $providedDescribedBy = trim((string) $attributes->get('aria-describedby', ''));
+    $describedBy = trim(implode(' ', array_filter([$providedDescribedBy, $errorId ?? $hintId])));
+
+    // Ikon lama yang berupa string SVG sengaja tidak lagi dirender. Sebagai
+    // gantinya, pemetaan berikut memilih ikon dari registry UI yang seragam.
+    $fieldContext = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii(implode(' ', [
+        (string) $name,
+        (string) $label,
+        (string) $placeholder,
+        (string) $type,
+    ])));
+
+    $semanticIcon = match (true) {
+        $type === 'file' || \Illuminate\Support\Str::contains($fieldContext, ['upload', 'unggah', 'lampiran', 'berkas', 'surat', 'dokumen', 'file', 'foto']) => 'upload',
+        $type === 'search' || \Illuminate\Support\Str::contains($fieldContext, ['search', 'cari', 'lacak', 'track', 'tiket']) => 'search',
+        $type === 'email' || \Illuminate\Support\Str::contains($fieldContext, ['email', 'e-mail']) => 'mail',
+        $type === 'tel' || \Illuminate\Support\Str::contains($fieldContext, ['telepon', 'telpon', 'nomor hp', 'nomor_hp', 'handphone', 'ponsel', 'whatsapp']) => 'phone',
+        in_array($type, ['date', 'datetime-local', 'month', 'time'], true) || \Illuminate\Support\Str::contains($fieldContext, ['tanggal', 'date', 'waktu', 'jam', 'agenda', 'jadwal']) => 'calendar',
+        \Illuminate\Support\Str::contains($fieldContext, ['alamat', 'lokasi', 'koordinat', 'kecamatan', 'kelurahan', 'wilayah']) => 'map-pin',
+        \Illuminate\Support\Str::contains($fieldContext, ['npwp', 'nib', 'nik', 'ktp', 'identitas', 'identity']) => 'id-card',
+        \Illuminate\Support\Str::contains($fieldContext, ['kegiatan', 'acara', 'event']) => 'calendar',
+        \Illuminate\Support\Str::contains($fieldContext, ['taman', 'ruang terbuka']) => 'map-pin',
+        \Illuminate\Support\Str::contains($fieldContext, ['perusahaan', 'usaha', 'instansi', 'organisasi']) => 'building',
+        \Illuminate\Support\Str::contains($fieldContext, ['nama', 'pemohon', 'pelapor', 'pemilik', 'penanggung', 'kontak']) => 'user',
+        \Illuminate\Support\Str::contains($fieldContext, ['deskripsi', 'keterangan', 'catatan', 'pesan', 'pengaduan', 'keluhan']) => 'message',
+        \Illuminate\Support\Str::contains($fieldContext, ['jenis', 'bidang', 'kategori', 'lb3', 'pertek', 'rintek', 'rekomendasi']) => 'document',
+        default => null,
+    };
+
+    $namedIcon = is_string($icon)
+        ? \Illuminate\Support\Str::of($icon)->trim()->lower()->replace(['_', ' '], '-')->toString()
+        : null;
+    $allowedIcons = [
+        'alert', 'arrow-right', 'building', 'calendar', 'check',
+        'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons',
+        'document', 'id-card', 'mail', 'map-pin', 'message', 'moon',
+        'phone', 'search', 'sun', 'upload', 'user',
+    ];
+    $resolvedIcon = in_array($namedIcon, $allowedIcons, true) ? $namedIcon : $semanticIcon;
 @endphp
 
 <div class="fi-field"
@@ -25,8 +77,8 @@
     {{-- Label --}}
     @if($label)
         <label for="{{ $id }}" class="fi-label">
-            @if($icon)
-                <span class="fi-icon-badge">{!! $icon !!}</span>
+            @if($resolvedIcon)
+                <span class="fi-icon-badge"><x-icons.ui :name="$resolvedIcon" /></span>
             @endif
             {{ $label }}
             @if($required)<span class="fi-required">*</span>@endif
@@ -45,9 +97,10 @@
             {{ $disabled ? 'disabled' : '' }}
             {{ $readonly ? 'readonly' : '' }}
             {{ $hasError ? 'aria-invalid="true"' : '' }}
+            @if($describedBy) aria-describedby="{{ $describedBy }}" @endif
             x-on:focus="focused = true"
             x-on:blur="focused = false"
-            {{ $attributes->except(['id', 'class', 'type', 'value', 'icon']) }}
+            {{ $attributes->except(['id', 'class', 'type', 'value', 'icon', 'aria-describedby']) }}
             class="fi-pill-input
                 {{ $hasError ? 'fi-pill-input--error' : '' }}
                 {{ $disabled ? 'fi-pill-input--disabled' : '' }}
@@ -57,12 +110,12 @@
 
     {{-- Error / Hint --}}
     @if($hasError)
-        <p class="fi-error">
-            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+        <p id="{{ $errorId }}" class="fi-error">
+            <x-icons.ui name="alert" />
             {{ $errorMessage }}
         </p>
     @elseif($hint)
-        <p class="fi-hint-sub">{{ $hint }}</p>
+        <p id="{{ $hintId }}" class="fi-hint-sub">{{ $hint }}</p>
     @endif
 
     <style>

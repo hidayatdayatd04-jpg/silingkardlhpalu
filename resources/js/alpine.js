@@ -12,6 +12,37 @@
  *    `document.addEventListener('alpine:init', () => Alpine.store(...))`
  *    tetap bekerja (contoh: store 'petaSidebar' di admin/peta).
  */
+window.dlhTrapFocus = function dlhTrapFocus(event, container) {
+    if (event.key !== 'Tab' || !container) return;
+
+    const selector = [
+        'a[href]:not([tabindex="-1"])',
+        'button:not([disabled]):not([tabindex="-1"])',
+        'input:not([disabled]):not([type="hidden"]):not([tabindex="-1"])',
+        'select:not([disabled]):not([tabindex="-1"])',
+        'textarea:not([disabled]):not([tabindex="-1"])',
+        '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+    const focusable = Array.from(container.querySelectorAll(selector))
+        .filter((element) => !element.hasAttribute('hidden') && element.getClientRects().length > 0);
+
+    if (!focusable.length) {
+        event.preventDefault();
+        container.focus?.();
+        return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+};
+
 function registerAlpineExtensions(Alpine) {
     if (window.__dlhAlpineExtensionsRegistered) return;
     window.__dlhAlpineExtensionsRegistered = true;

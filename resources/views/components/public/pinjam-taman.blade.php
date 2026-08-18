@@ -191,7 +191,7 @@ new class extends Component {
                 <div class="fi-cal-head">
                     <div class="flex items-center gap-2">
                         <span class="fi-cal-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                            <x-icons.ui name="calendar" />
                         </span>
                         <p class="fi-cal-title">{{ __('Kalender Ketersediaan (30 Hari ke Depan)') }}</p>
                     </div>
@@ -225,7 +225,7 @@ new class extends Component {
                     label="{{ __('Nama Pemohon / Komunitas') }}"
                     placeholder="{{ __('Nama lengkap pemohon atau komunitas') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+                    icon="user"
                 />
 
                 <x-public.input
@@ -235,7 +235,7 @@ new class extends Component {
                     label="{{ __('Nomor Telepon') }}"
                     placeholder="{{ __('Contoh: 08123456789') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>'
+                    icon="phone"
                 />
 
                 <x-public.input
@@ -246,7 +246,7 @@ new class extends Component {
                     placeholder="{{ __('contoh@email.com') }}"
                     required
                     hint="{{ __('Untuk notifikasi update status permohonan') }}"
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+                    icon="mail"
                 />
 
                 <x-public.input
@@ -255,7 +255,7 @@ new class extends Component {
                     label="{{ __('Nama Kegiatan') }}"
                     placeholder="{{ __('Contoh: Festival Musik Komunitas') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+                    icon="calendar"
                 />
             </div>
 
@@ -280,32 +280,33 @@ new class extends Component {
             @endif
 
             <div class="grid md:grid-cols-2 gap-5">
-                <div class="fi-field">
-                    <label class="fi-label">
-                        <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-                        {{ __('Tanggal & Jam Mulai') }} <span class="fi-required">*</span>
-                    </label>
-                    <div class="fi-date-wrap">
-                        <input wire:model.live="tanggal_kegiatan" wire:change="checkConflict" type="datetime-local" class="fi-date-input" aria-label="{{ __('Tanggal & Jam Mulai') }}" />
-                    </div>
-                    @error('tanggal_kegiatan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                </div>
+                <x-admin.date-field
+                    id="tanggal_kegiatan"
+                    wire:model.live="tanggal_kegiatan"
+                    wire:change="checkConflict"
+                    name="tanggal_kegiatan"
+                    type="datetime"
+                    :label="__('Tanggal & Jam Mulai')"
+                    :value="$tanggal_kegiatan"
+                    :error="$errors->first('tanggal_kegiatan')"
+                    required
+                />
 
-                <div class="fi-field">
-                    <label class="fi-label">
-                        <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-                        {{ __('Tanggal & Jam Selesai') }}
-                    </label>
-                    <div class="fi-date-wrap">
-                        <input wire:model.live="tanggal_selesai" wire:change="checkConflict" type="datetime-local" class="fi-date-input" aria-label="{{ __('Tanggal & Jam Selesai') }}" />
-                    </div>
-                    @error('tanggal_selesai') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                </div>
+                <x-admin.date-field
+                    id="tanggal_selesai"
+                    wire:model.live="tanggal_selesai"
+                    wire:change="checkConflict"
+                    name="tanggal_selesai"
+                    type="datetime"
+                    :label="__('Tanggal & Jam Selesai')"
+                    :value="$tanggal_selesai"
+                    :error="$errors->first('tanggal_selesai')"
+                />
             </div>
 
             @if ($conflictWarning)
                 <div class="fi-conflict-alert">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <x-icons.ui name="alert" />
                     {{ __('Tanggal bentrok dengan jadwal yang sudah disetujui.') }}
                 </div>
             @endif
@@ -313,7 +314,7 @@ new class extends Component {
             {{-- Surat Permohonan --}}
             <div class="fi-field">
                 <label class="fi-label">
-                    <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                    <span class="fi-icon-badge"><x-icons.ui name="document" /></span>
                     {{ __('Surat Permohonan') }} <span class="fi-required">*</span>
                     <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF, max 5MB)</span>
                 </label>
@@ -329,7 +330,7 @@ new class extends Component {
                     <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required aria-label="{{ __('Surat Permohonan') }}"
                         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                 </div>
-                @error('surat_permohonan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                @error('surat_permohonan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
             </div>
 
             {{-- Checkbox jaminan kebersihan --}}
@@ -337,12 +338,12 @@ new class extends Component {
                 <input wire:model="jaminan_kebersihan" type="checkbox" class="fi-check-input" />
                 <span class="fi-check-label">{{ __('Saya berjanji menjaga kebersihan taman') }}</span>
             </label>
-            @error('jaminan_kebersihan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+            @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
             {{-- Surat Jaminan (opsional) --}}
             <div class="fi-field">
                 <label class="fi-label">
-                    <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+                    <span class="fi-icon-badge"><x-icons.ui name="shield" /></span>
                     {{ __('Surat Jaminan') }}
                     <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(opsional, PDF max 5MB)</span>
                 </label>
@@ -358,12 +359,12 @@ new class extends Component {
                     <input wire:model="surat_jaminan" x-ref="jaminanInput" type="file" accept="application/pdf"
                         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                 </div>
-                @error('surat_jaminan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                @error('surat_jaminan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
             </div>
 
             @error('form')
                 <div class="dlh-limit-alert" role="alert">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <x-icons.ui name="alert" />
                     <span>{{ $message }}</span>
                 </div>
             @enderror
@@ -372,7 +373,7 @@ new class extends Component {
 
             <button type="submit" class="fi-submit-btn">
                 {{ __('Ajukan Penyewaan') }}
-                <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M12 5l7 7-7 7"/></svg>
+                <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
             </button>
         </form>
     @endif
@@ -400,18 +401,6 @@ new class extends Component {
         .fi-error svg { width: 13px; height: 13px; flex-shrink: 0; }
 
         /* ── Date input (pill style match) ── */
-        .fi-date-wrap { position: relative; }
-        .fi-date-input {
-            width: 100%; height: 48px; border-radius: 9999px;
-            border: 1.5px solid #dfe9e3; background: #fff;
-            padding: 0 20px; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-            font-size: 13.5px; color: #12201a; outline: none;
-            transition: border-color .18s ease, box-shadow .18s ease;
-        }
-        .fi-date-input::placeholder { color: #5f7268; }
-        .fi-date-input:hover:not(:focus) { border-color: #c3d8cc; }
-        .fi-date-input:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
-
         /* ── File drop ── */
         .fi-file-drop {
             border: 1.5px dashed #a9dcc0; border-radius: 16px; background: #f4faf6;
@@ -503,9 +492,6 @@ new class extends Component {
         /* ── Dark mode ── */
         .dark .fi-label { color: #e2e8f0; }
         .dark .fi-icon-badge { background: rgba(30,165,103,0.15); color: #1ea567; }
-        .dark .fi-date-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
-        .dark .fi-date-input::placeholder { color: #64748b; }
-        .dark .fi-date-input:hover:not(:focus) { border-color: #475569; }
         .dark .fi-file-drop { background: #0f172a; border-color: #334155; }
         .dark .fi-file-drop:hover { background: #1e293b; border-color: #1ea567; }
         .dark .fi-file-status { color: #64748b; }

@@ -63,12 +63,12 @@
                 <div class="hero-enter mt-9 flex flex-col sm:flex-row gap-3" style="--hero-delay:270ms">
                     <a href="/pengaduan"
                        class="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-sm font-bold text-brand-700 shadow-xl shadow-brand-950/30 ring-1 ring-white/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-brand-900/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50">
-                        <svg class="size-4 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <x-icons.ui name="shield" class="size-4 transition-transform duration-300 group-hover:scale-110" />
                         {{ __('Laporkan Aduan') }}
                     </a>
                     <a href="/lacak"
                        class="group inline-flex items-center justify-center gap-2 rounded-2xl border border-white/40 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30">
-                        <svg class="size-4 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                        <x-icons.ui name="search" class="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                         {{ __('Lacak Status') }}
                     </a>
                 </div>
@@ -83,17 +83,17 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 @php $stats = [
-                    ['label' => __('Pengunjung Hari Ini'), 'value' => $statistik['pengunjung_hari_ini'] ?? 0, 'icon' => 'M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', 'ring' => 'ring-bay-500/20', 'grad' => 'from-bay-500 to-bay-600'],
-                    ['label' => __('Total Pengunjung'), 'value' => $statistik['total_pengunjung'] ?? 0, 'icon' => 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'ring' => 'ring-brand-500/20', 'grad' => 'from-brand-500 to-emerald-500'],
-                    ['label' => __('Total Pelapor'), 'value' => $statistik['total_pelapor'] ?? 0, 'icon' => 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4', 'ring' => 'ring-clay-500/20', 'grad' => 'from-clay-500 to-clay-600'],
-                    ['label' => __('Total Pengajuan'), 'value' => $statistik['total_pengajuan'] ?? 0, 'icon' => 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M9 13h6M9 17h4', 'ring' => 'ring-amber-500/20', 'grad' => 'from-amber-500 to-orange-500'],
+                    ['label' => __('Pengunjung Hari Ini'), 'value' => $statistik['pengunjung_hari_ini'] ?? 0, 'icon' => 'user', 'ring' => 'ring-bay-500/20', 'grad' => 'from-bay-500 to-bay-600'],
+                    ['label' => __('Total Pengunjung'), 'value' => $statistik['total_pengunjung'] ?? 0, 'icon' => 'eye', 'ring' => 'ring-brand-500/20', 'grad' => 'from-brand-500 to-emerald-500'],
+                    ['label' => __('Total Pelapor'), 'value' => $statistik['total_pelapor'] ?? 0, 'icon' => 'shield', 'ring' => 'ring-clay-500/20', 'grad' => 'from-clay-500 to-clay-600'],
+                    ['label' => __('Total Pengajuan'), 'value' => $statistik['total_pengajuan'] ?? 0, 'icon' => 'document', 'ring' => 'ring-amber-500/20', 'grad' => 'from-amber-500 to-orange-500'],
                 ]; @endphp
                 @foreach ($stats as $i => $card)
                     <div class="reveal group rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 p-4 sm:p-5 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.18)] ring-1 {{ $card['ring'] }} transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-12px_rgba(15,23,42,0.28)]"
                          style="--reveal-delay: {{ $i * 80 }}ms">
                         <div class="flex items-center gap-3">
                             <div class="flex-shrink-0 size-11 rounded-2xl bg-gradient-to-br {{ $card['grad'] }} text-white flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $card['icon'] }}"/></svg>
+                                <x-icons.ui :name="$card['icon']" class="size-5" />
                             </div>
                             <div class="min-w-0">
                                 <p class="text-2xl font-bold text-slate-900 dark:text-white truncate tracking-tight" data-countup data-count="{{ (int) $card['value'] }}">{{ number_format($card['value']) }}</p>
@@ -290,7 +290,7 @@
                         <div class="mt-7">
                             <a href="/tentang" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
                                 {{ __('Selengkapnya tentang DLH Kota Palu') }}
-                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                                <x-icons.ui name="arrow-right" class="size-4" />
                             </a>
                         </div>
                     </div>
@@ -346,7 +346,7 @@
                 </div>
                 <a href="/berita" class="group inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-3 text-sm font-bold text-brand-600 dark:text-brand-400 shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 shrink-0">
                     {{ __('Lihat Semua Berita') }}
-                    <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    <x-icons.ui name="arrow-right" class="size-4 transition-transform group-hover:translate-x-0.5" />
                 </a>
             </div>
 
@@ -382,7 +382,7 @@
             @else
                 <div class="reveal rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 p-12 text-center">
                     <div class="mx-auto size-16 rounded-2xl bg-brand-50 dark:bg-brand-900/25 flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4">
-                        <svg class="size-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8Z"/></svg>
+                        <x-icons.ui name="document" class="size-8" />
                     </div>
                     <p class="font-semibold text-slate-800 dark:text-slate-200">{{ __('Belum ada berita dipublikasikan') }}</p>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">{{ __('Artikel akan ditampilkan di sini setelah admin mempublikasikannya melalui panel admin.') }}</p>
@@ -398,7 +398,7 @@
                 {{-- Aksen cahaya & motif --}}
                 <div class="absolute -top-32 -right-20 size-96 rounded-full bg-brand-500/20 blur-3xl" aria-hidden="true"></div>
                 <div class="absolute -bottom-32 -left-16 size-80 rounded-full bg-bay-500/20 blur-3xl" aria-hidden="true"></div>
-                <svg class="absolute -top-8 right-6 size-52 text-white/[0.04] rotate-12" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66C7.72 16.5 9.8 12 17 12v3l5-5-5-5v3z"/></svg>
+                <x-icons.ui name="arrow-right" class="absolute -top-8 right-6 size-52 rotate-12 text-white/[0.04]" />
                 <div class="absolute inset-0 opacity-[0.05]" aria-hidden="true"
                      style="background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:26px 26px"></div>
 
@@ -406,7 +406,7 @@
                     {{-- Kolom judul --}}
                     <div class="lg:col-span-4 reveal" style="--reveal-delay:80ms">
                         <span class="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-inset ring-white/20 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-200 mb-5">
-                            <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+                            <x-icons.ui name="sun" class="size-3.5" />
                             {{ __('Arah & Tujuan') }}
                         </span>
                         <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-[1.05]">
@@ -418,7 +418,7 @@
                         </p>
                         <a href="/profil#visi-misi" class="group mt-7 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-brand-800 shadow-lg shadow-brand-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
                             {{ __('Baca Selengkapnya') }}
-                            <svg class="size-4 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                            <x-icons.ui name="arrow-right" class="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                         </a>
                     </div>
 
@@ -484,7 +484,7 @@
                         <span class="font-semibold text-slate-800 dark:text-slate-100 text-sm sm:text-base">{{ $faq['q'] }}</span>
                         <span class="flex-shrink-0 size-8 rounded-full flex items-center justify-center transition-all duration-300"
                               :class="open === {{ $i }} ? 'bg-brand-600 text-white rotate-45' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            <x-icons.ui name="plus" class="size-4" />
                         </span>
                     </button>
                     <div x-cloak class="grid overflow-hidden transition-all duration-300 ease-out"

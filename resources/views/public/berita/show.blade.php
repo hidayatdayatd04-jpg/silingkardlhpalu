@@ -22,9 +22,13 @@
 @section('content')
 <article class="max-w-3xl mx-auto">
     {{-- Kembali --}}
-    @php $dariBeranda = request('dari') === 'beranda'; @endphp
-    <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="reveal is-revealed group inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all">
-        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+    @php
+        $dariBeranda = request('dari') === 'beranda';
+        $shareUrl = url()->current();
+        $whatsAppShareUrl = 'https://wa.me/?text='.urlencode($artikel->judul."\n".$shareUrl);
+    @endphp
+    <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="reveal is-revealed group inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 transition-[gap,color] dark:text-brand-400">
+        <x-icons.ui name="arrow-right" class="size-4 -rotate-180 transition-transform duration-200 group-hover:-translate-x-0.5" />
         {{ $dariBeranda ? __('Kembali ke Beranda') : __('Kembali ke Berita') }}
     </a>
 
@@ -33,11 +37,11 @@
         <h1 class="mt-5 text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-[1.1] tracking-tight text-slate-900 dark:text-white">{{ $artikel->judul }}</h1>
         <div class="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
             <span class="inline-flex items-center gap-1.5">
-                <svg class="size-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg>
+                <x-icons.ui name="calendar" class="size-4 text-brand-500" />
                 {{ $artikel->tanggal_publish?->translatedFormat('d F Y') }}
             </span>
             <span class="inline-flex items-center gap-1.5">
-                <svg class="size-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19a3 3 0 0 0-6 0M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 10a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
+                <x-icons.ui name="user" class="size-4 text-brand-500" />
                 {{ $artikel->user?->name ?? 'Admin DLH' }}
             </span>
         </div>
@@ -78,7 +82,7 @@
                 [&_sub]:text-xs [&_sub]:align-sub [&_sup]:text-xs [&_sup]:align-super">
         @if ($kontenKosong)
             <div class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 px-6 py-10 text-center">
-                <svg class="size-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                <x-icons.ui name="document" class="size-8 text-slate-300 dark:text-slate-600" />
                 <p class="text-sm text-slate-400 dark:text-slate-500">Konten artikel belum diisi.</p>
             </div>
         @else
@@ -90,16 +94,23 @@
     <div class="reveal mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
         <div class="flex items-center gap-2.5">
             <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Bagikan:') }}</span>
-            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}" target="_blank" rel="noopener noreferrer" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all hover:-translate-y-0.5" title="Facebook">
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}" target="_blank" rel="noopener noreferrer" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all hover:-translate-y-0.5" title="Facebook">
                 <x-icons.social.facebook class="size-4" />
             </a>
+            <a href="{{ $whatsAppShareUrl }}" target="_blank" rel="noopener noreferrer" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-emerald-500 transition-all hover:-translate-y-0.5" title="WhatsApp" aria-label="{{ __('Bagikan ke WhatsApp') }}">
+                <x-icons.social.whatsapp class="size-4" />
+            </a>
+            <button type="button" id="instagram-share-btn" class="relative size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 transition-all hover:-translate-y-0.5 hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-600 hover:text-white" title="{{ __('Bagikan ke Instagram') }}" aria-label="{{ __('Bagikan ke Instagram') }}">
+                <x-icons.social.instagram class="size-4" />
+                <span class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-0.5 text-[10px] text-white opacity-0"></span>
+            </button>
             <button type="button" id="copy-link-btn" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-slate-700 transition-all hover:-translate-y-0.5 relative" title="{{ __('Salin tautan') }}">
-                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg>
+                <x-icons.ui name="copy" class="size-4" />
                 <span class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-0.5 text-[10px] text-white opacity-0"></span>
             </button>
         </div>
-        <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="group inline-flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-bold text-brand-600 dark:text-brand-400 hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all">
-            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        <a href="{{ $dariBeranda ? '/' : '/berita' }}" class="group inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-brand-600 transition-[background-color,border-color,transform] duration-200 hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900 dark:text-brand-400 dark:hover:bg-brand-900/20">
+            <x-icons.ui name="arrow-right" class="size-4 -rotate-180 transition-transform duration-200 group-hover:-translate-x-0.5" />
             {{ $dariBeranda ? __('Kembali ke Beranda') : __('Semua Berita') }}
         </a>
     </div>
@@ -119,18 +130,51 @@
             els.forEach(function (el) { obs.observe(el); });
         }
 
+        function showShareFeedback(button, message) {
+            var tip = button.querySelector('span');
+            if (!tip) return;
+            tip.textContent = message;
+            tip.style.opacity = '1';
+            setTimeout(function () { tip.style.opacity = '0'; }, 1800);
+        }
+
         // CSP: tombol salin tautan dipasang via addEventListener, bukan onclick inline.
         var copyBtn = document.getElementById('copy-link-btn');
         if (copyBtn) {
             copyBtn.addEventListener('click', function () {
                 if (!navigator.clipboard) return;
                 navigator.clipboard.writeText(location.href).then(function () {
-                    var tip = copyBtn.querySelector('span');
-                    if (!tip) return;
-                    tip.textContent = @json(__('Tersalin!'));
-                    tip.style.opacity = '1';
-                    setTimeout(function () { tip.style.opacity = '0'; }, 1500);
+                    showShareFeedback(copyBtn, @json(__('Tersalin!')));
                 });
+            });
+        }
+
+        // Instagram tidak menyediakan URL share web. Gunakan native share sheet
+        // agar Instagram dapat dipilih di perangkat yang mendukungnya; di desktop
+        // tautan disalin sebagai fallback.
+        var instagramBtn = document.getElementById('instagram-share-btn');
+        if (instagramBtn) {
+            instagramBtn.addEventListener('click', async function () {
+                var shareData = {
+                    title: @json($artikel->judul),
+                    text: @json(__('Bagikan berita ini ke Instagram.')),
+                    url: @json($shareUrl),
+                };
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                        return;
+                    } catch (error) {
+                        if (error && error.name === 'AbortError') return;
+                    }
+                }
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(location.href).then(function () {
+                        showShareFeedback(instagramBtn, @json(__('Tautan disalin')));
+                    });
+                }
             });
         }
     })();

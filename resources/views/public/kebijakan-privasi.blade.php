@@ -87,7 +87,7 @@
         <div class="mx-auto grid max-w-[85rem] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_22rem] lg:px-8 lg:py-20">
             <div class="reveal max-w-3xl">
                 <span class="inline-flex items-center gap-2 rounded-full bg-bay-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-bay-700 dark:bg-bay-900/25 dark:text-bay-300">
-                    <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <x-icons.ui name="shield" class="size-3.5" />
                     {{ __('Dokumen Layanan Publik') }}
                 </span>
                 <h1 class="mt-5 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{{ __('Kebijakan Privasi') }}</h1>
@@ -133,7 +133,7 @@
                                     @foreach ($section['list'] as $item)
                                         <li class="flex gap-3">
                                             <span class="mt-2.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-bay-100 dark:bg-bay-900/40">
-                                                <svg class="size-2.5 text-bay-600 dark:text-bay-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+                                                <x-icons.ui name="check" class="size-2.5 text-bay-600 dark:text-bay-300" />
                                             </span>
                                             <span>{{ $item }}</span>
                                         </li>

@@ -246,7 +246,7 @@ new class extends Component {
         <div class="space-y-6 text-center py-8" wire:poll.3s="checkPhotoStatus">
             <div
                 class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl font-bold animate-spin">
-                ↻
+                <x-icons.ui name="refresh" class="size-8" />
             </div>
             <div class="space-y-2">
                 <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Sedang Memproses Foto') }}</h3>
@@ -403,18 +403,18 @@ new class extends Component {
                 <div>
                     <button type="button" id="btn-detect-location"
                         class="fi-detect-btn">
-                        <svg class="detect-icon-normal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-                        <svg class="detect-icon-spin hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+                        <x-icons.ui name="map-pin" class="detect-icon-normal" />
+                        <x-icons.ui name="refresh" class="detect-icon-spin hidden" />
                         <span class="detect-label">Deteksi Lokasi Saya</span>
                     </button>
 
                     <p class="detect-error hidden mt-2 flex items-start gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
-                        <svg class="w-4 h-4 shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <x-icons.ui name="alert" class="w-4 h-4 shrink-0 mt-px" />
                         <span class="detect-error-text"></span>
                     </p>
 
                     <p class="detect-success hidden mt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
-                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <x-icons.ui name="check" class="w-4 h-4 shrink-0" />
                         <span>{{ __('Lokasi terdeteksi — peta dan alamat terisi otomatis.') }}</span>
                     </p>
                 </div>
@@ -444,7 +444,7 @@ new class extends Component {
                     maxlength="150"
                     hint="{{ __('Sertakan patokan terdekat') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg>'
+                    icon="map-pin"
                 />
 
                 <x-public.textarea
@@ -456,7 +456,7 @@ new class extends Component {
                     maxlength="5000"
                     hint="{{ __('Minimal 20 karakter') }}"
                     required
-                    icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>'
+                    icon="message"
                 />
 
                 <div class="fi-field">
@@ -479,8 +479,8 @@ new class extends Component {
                             "
                         />
                     </div>
-                    @error('photos') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                    @error('photos.*') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                    @error('photos') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
+                    @error('photos.*') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
                     @if ($photos)
                         <div class="grid grid-cols-3 gap-3 pt-3">
@@ -491,7 +491,7 @@ new class extends Component {
                                         wire:click="removePhoto({{ $index }})"
                                         style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:#ef4444;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);cursor:pointer;z-index:10;"
                                         title="{{ __('Hapus foto') }}">
-                                        <svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                        <x-icons.ui name="close" style="width:12px;height:12px;" />
                                     </button>
                                 </div>
                             @endforeach
@@ -501,7 +501,7 @@ new class extends Component {
 
                 @error('form')
                     <div class="dlh-limit-alert" role="alert">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                        <x-icons.ui name="alert" />
                         <span>{{ $message }}</span>
                     </div>
                 @enderror
@@ -515,7 +515,7 @@ new class extends Component {
 
             <div x-show="located" x-cloak class="space-y-6 flex flex-col">
                 <label class="fi-label">
-                    <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 8.5c0 5.5-8.4 11.5-8.4 11.5S3.6 14 3.6 8.5a8.4 8.4 0 1 1 16.8 0Z"/><circle cx="12" cy="8.5" r="2.6"/></svg></span>
+                    <span class="fi-icon-badge"><x-icons.ui name="map-pin" /></span>
                     {{ __('Peta Lokasi Kejadian') }}
                 </label>
 
@@ -527,8 +527,8 @@ new class extends Component {
                     <span>Lat: {{ number_format($latitude, 6) }}</span>
                     <span>Lng: {{ number_format($longitude, 6) }}</span>
                 </div>
-                @error('latitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
-                @error('longitude') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
+                @error('latitude') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
+                @error('longitude') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
             </div>
         </form>
     @endif

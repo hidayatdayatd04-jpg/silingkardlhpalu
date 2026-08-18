@@ -199,7 +199,7 @@
                             if (window.dlhAddLocBtn) dlhAddLocBtn(map);
                             var el = document.createElement('div');
                             el.style.cssText = 'width:30px;height:30px;border-radius:50%;background:#10b981;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.5);border:2px solid #fff;display:grid;place-items:center;cursor:pointer';
-                            el.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+                            el.innerHTML = '<span aria-hidden="true" style="display:block;width:10px;height:10px;border:2px solid currentColor;border-radius:9999px;box-sizing:border-box"></span>';
                             new maplibregl.Marker({ element: el, anchor: 'center' })
                                 .setLngLat([{{ $mapLng }}, {{ $mapLat }}])
                                 .setPopup(new maplibregl.Popup({ offset: [0, -20] }).setText('Lokasi kejadian'))

@@ -28,16 +28,15 @@
         id="{{ $id }}"
         name="{{ $name }}"
         class="hidden"
+        @if($hasError) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
     >{{ $currentValue }}</textarea>
 
     <div id="{{ $id }}-container" style="min-height: 520px;"></div>
 
-    @if($error)
-        <p class="flex items-center gap-1 text-xs font-medium text-rose-600">
-            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ $errorMessage }}
+    @if($hasError)
+        <p id="{{ $id }}-error" class="flex items-start gap-1.5 text-xs font-medium leading-5 text-danger-600 dark:text-danger-300" role="alert">
+            <x-admin.icon name="alert-circle" :size="15" class="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>{{ $errorMessage }}</span>
         </p>
     @endif
 </div>
@@ -66,15 +65,15 @@
             0 2px 4px -2px rgba(15, 23, 42, 0.04) !important;
     }
     .jodit-container.jodit-focused {
-        border-color: #6366f1 !important;
+        border-color: #15803d !important;
         box-shadow:
-            0 0 0 3px rgba(99, 102, 241, 0.12),
+            0 0 0 3px rgba(21, 128, 61, 0.16),
             0 4px 6px -1px rgba(15, 23, 42, 0.06) !important;
     }
 
-    /* Toolbar: modern gradient background */
+    /* Toolbar: compact controls for operational writing. */
     .jodit-toolbar {
-        background: linear-gradient(to bottom, #fafbff, #f1f5f9) !important;
+        background: #f8fafc !important;
         border-bottom: 1px solid #e2e8f0 !important;
         padding: 6px 8px !important;
         gap: 2px !important;
@@ -84,22 +83,22 @@
     /* Toolbar buttons: clean modern style */
     .jodit-toolbar__button {
         border-radius: 0.375rem !important;
-        transition: all 0.15s ease !important;
+        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
         min-width: 32px !important;
         min-height: 32px !important;
     }
     .jodit-toolbar__button:hover {
-        background-color: #e0e7ff !important;
-        color: #4f46e5 !important;
+        background-color: #ecfdf5 !important;
+        color: #15803d !important;
     }
     .jodit-toolbar__button:active {
-        background-color: #c7d2fe !important;
+        background-color: #d1fae5 !important;
     }
     .jodit-toolbar__button.jodit-toolbar__button_active,
     .jodit-toolbar__button_active {
-        background: #eef2ff !important;
-        color: #4f46e5 !important;
-        box-shadow: inset 0 1px 2px rgba(99, 102, 241, 0.15) !important;
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        box-shadow: inset 0 1px 2px rgba(21, 128, 61, 0.12) !important;
     }
 
     /* Toolbar button SVG icons */
@@ -135,7 +134,7 @@
     .jodit-toolbar__popup .jodit-colors__value {
         border-radius: 0.375rem !important;
         border: 1px solid #e2e8f0 !important;
-        transition: all 0.15s ease !important;
+        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
     }
     .jodit-toolbar__popup .jodit-colors__value:hover {
         transform: scale(1.15) !important;
@@ -209,8 +208,8 @@
         background: #f8fafc !important;
     }
     .jodit-editor__content blockquote {
-        border-left: 4px solid #6366f1 !important;
-        background: #eef2ff !important;
+        border-left: 4px solid #16a34a !important;
+        background: #f0fdf4 !important;
         border-radius: 0 0.5rem 0.5rem 0 !important;
         padding: 0.875rem 1.25rem !important;
         margin: 1rem 0 !important;
@@ -223,7 +222,7 @@
         padding: 0.15em 0.4em !important;
         border-radius: 0.25rem !important;
         font-size: 0.875em !important;
-        color: #6366f1 !important;
+        color: #15803d !important;
     }
     .jodit-editor__content pre {
         background: #0f172a !important;
@@ -250,11 +249,11 @@
         text-decoration: underline !important;
         text-decoration-color: rgba(79, 70, 229, 0.3) !important;
         text-underline-offset: 2px !important;
-        transition: all 0.15s ease !important;
+        transition: color 0.15s ease, text-decoration-color 0.15s ease !important;
     }
     .jodit-editor__content a:hover {
-        color: #4338ca !important;
-        text-decoration-color: #4f46e5 !important;
+        color: #166534 !important;
+        text-decoration-color: #15803d !important;
     }
     .jodit-editor__content ul,
     .jodit-editor__content ol {
@@ -303,6 +302,32 @@
         color: #94a3b8 !important;
         font-style: italic !important;
     }
+
+    .dark .jodit-container {
+        border-color: #334155 !important;
+        background: #0f172a !important;
+    }
+    .dark .jodit-container:hover { border-color: #475569 !important; }
+    .dark .jodit-toolbar,
+    .dark .jodit-status-bar {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+    .dark .jodit-toolbar__button { color: #cbd5e1 !important; }
+    .dark .jodit-toolbar__button:hover,
+    .dark .jodit-toolbar__button.jodit-toolbar__button_active,
+    .dark .jodit-toolbar__button_active {
+        background: #14532d !important;
+        color: #dcfce7 !important;
+    }
+    .dark .jodit-workplace,
+    .dark .jodit-editor__content { background: #0f172a !important; color: #e2e8f0 !important; }
+    .dark .jodit-editor__content h1,
+    .dark .jodit-editor__content h2,
+    .dark .jodit-editor__content h3,
+    .dark .jodit-editor__content h4 { color: #f8fafc !important; }
+    .dark .jodit-toolbar__popup { background: #1e293b !important; border-color: #334155 !important; }
 
     /* Responsive adjustments */
     @media (max-width: 640px) {

@@ -122,7 +122,7 @@
     @stack('styles')
 </head>
 
-<body class="dlh-public-page bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased">
+<body class="public-site dlh-public-page bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-md focus:shadow-md">{{ __('Lewati ke konten utama') }}</a>
     @php
         $mtPreview = false;
@@ -137,14 +137,14 @@
     @if($mtPreview)
         <div style="position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:.5rem;justify-content:center;flex-wrap:wrap;padding:.6rem 1rem;background:#fffbeb;border-bottom:1px solid #fcd34d;color:#92400e;font-size:.8rem;text-align:center;">
             <span style="width:.5rem;height:.5rem;border-radius:9999px;background:#f59e0b;display:inline-block;"></span>
-            <span><strong>Mode Pemeliharaan AKTIF</strong> &mdash; Anda mem-pratinjau situs publik sebagai admin.</span>
+            <span><strong>Mode Pemeliharaan AKTIF</strong> - Anda mem-pratinjau situs publik sebagai admin.</span>
             <a href="{{ request()->fullUrlWithoutQuery('preview') }}" style="margin-left:.5rem;font-weight:600;text-decoration:underline;">Tutup pratinjau</a>
         </div>
     @endif
 
 
     <header x-data="{ mobileMenuOpen: false }"
-        class="sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_0_0_rgba(15,23,42,0.02),0_8px_24px_-16px_rgba(15,23,42,0.15)]">
+        class="public-site-header sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_0_0_rgba(15,23,42,0.02),0_8px_24px_-16px_rgba(15,23,42,0.15)]">
         <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-bay-500 to-brand-500"></div>
         <div class="max-w-[88rem] mx-auto px-4 sm:px-5 lg:px-6 h-16 flex items-center justify-between gap-3">
             <div class="flex items-center shrink-0">
@@ -177,9 +177,7 @@
                     <button @click="open = !open" 
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('profil') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Profil') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" 
                         x-transition:enter="transition ease-out duration-150"
@@ -207,9 +205,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Pengendalian') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open"
                         x-transition:enter="transition ease-out duration-150"
@@ -230,9 +226,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Sampah & LB3') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open"
                         x-transition:enter="transition ease-out duration-150"
@@ -256,9 +250,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Tata Penataan') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open"
                         x-transition:enter="transition ease-out duration-150"
@@ -278,9 +270,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('RTH') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" 
                         x-transition:enter="transition ease-out duration-150"
@@ -301,9 +291,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('uptd*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('UPTD') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open"
                         x-transition:enter="transition ease-out duration-150"
@@ -318,9 +306,7 @@
                             <button @click="labOpen = !labOpen"
                                 class="w-full flex items-center justify-between gap-1 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none {{ request()->is('uptd/topoksi-lab', 'uptd/jurnal-lab') ? 'bg-brand-50/50 dark:bg-brand-900/10' : '' }}">
                                 <span>UPTD Lab Lingkungan</span>
-                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': labOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
+                                <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': labOpen }" />
                             </button>
                             <div x-show="labOpen"
                                 x-transition:enter="transition ease-out duration-150"
@@ -344,9 +330,7 @@
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Informasi') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open"
                         x-transition:enter="transition ease-out duration-150"
@@ -360,9 +344,7 @@
                         <div class="relative">
                             <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">
                                 <span>{{ __('Layanan Informasi Publik') }}</span>
-                                <svg class="h-4 w-4 transition-transform duration-200 ml-2" :class="{ 'rotate-180': subOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
+                                <x-icons.ui name="chevron-right" class="ml-2 h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': subOpen }" />
                             </button>
                             <div x-show="subOpen"
                                 x-transition:enter="transition ease-out duration-150"
@@ -386,9 +368,9 @@
 
             <div class="flex items-center gap-2 shrink-0">
                 <x-public.dark-mode-toggle />
-                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" aria-label="Buka menu navigasi" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-all dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-                    <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="!mobileMenuOpen"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
-                    <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-show="mobileMenuOpen" style="display: none;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" aria-label="Buka menu navigasi" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-colors duration-200 dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                    <x-icons.ui name="menu" class="flex-shrink-0 size-5" x-show="!mobileMenuOpen" />
+                    <x-icons.ui name="close" class="flex-shrink-0 size-5" x-show="mobileMenuOpen" style="display: none;" />
                 </button>
             </div>
         </div>
@@ -409,9 +391,7 @@
                 <div x-data="{ open: {{ request()->is('profil') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('profil') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Profil') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -430,9 +410,7 @@
                 <div x-data="{ open: {{ request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('permohonan-rekomendasi', 'cek-permohonan-rekomendasi') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Pengendalian') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -447,9 +425,7 @@
                 <div x-data="{ open: {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Sampah & LB3') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -467,9 +443,7 @@
                 <div x-data="{ open: {{ request()->is('tata-lingkungan') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('tata-lingkungan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Tata Penataan') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -483,9 +457,7 @@
                 <div x-data="{ open: {{ request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('RTH') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -500,9 +472,7 @@
                 <div x-data="{ open: {{ request()->is('uptd*') ? 'true' : 'false' }}, labOpen: false }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('uptd*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('UPTD') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -511,9 +481,7 @@
                         <div>
                             <button @click="labOpen = !labOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer focus:outline-none">
                                 <span>UPTD Lab Lingkungan</span>
-                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': labOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': labOpen }" />
                             </button>
                             <div x-show="labOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
                                  x-transition:enter="transition ease-out duration-100"
@@ -531,9 +499,7 @@
                 <div x-data="{ open: {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'true' : 'false' }}, subOpen: false }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Informasi') }}</span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
                     <div x-show="open" class="pl-4 space-y-1 mt-1" style="display: none;"
                          x-transition:enter="transition ease-out duration-100"
@@ -542,9 +508,7 @@
                         <div x-data="{ subOpen: false }">
                             <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold {{ request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                                 <span>{{ __('Layanan Informasi Publik') }}</span>
-                                <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-90': subOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
+                                <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-90': subOpen }" />
                             </button>
                             <div x-show="subOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
                                  x-transition:enter="transition ease-out duration-100"
@@ -565,16 +529,16 @@
     </header>
 
     @hasSection('full_width')
-    <main id="main-content" class="dlh-public flex-1 w-full">
+    <main id="main-content" data-public-page class="public-main dlh-public flex-1 w-full">
         @yield('content')
     </main>
     @else
-    <main id="main-content" class="dlh-public flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <main id="main-content" data-public-page class="public-main dlh-public flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         @yield('content')
     </main>
     @endif
 
-<footer class="relative mt-auto bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800/80 overflow-hidden">
+<footer class="public-site-footer relative mt-auto bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800/80 overflow-hidden">
         {{-- Aksen gradien atas + cahaya latar --}}
         <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 via-bay-500 to-brand-500" aria-hidden="true"></div>
         <div class="absolute -top-24 right-10 size-72 rounded-full bg-brand-500/5 blur-3xl pointer-events-none" aria-hidden="true"></div>
@@ -593,13 +557,13 @@
                         {{ __('Gerbang digital DLH Kota Palu untuk menyampaikan pengaduan, mengakses informasi, dan memantau tindak lanjut layanan lingkungan.') }}
                     </p>
                     <div class="flex items-center gap-2 pt-1">
-                        <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-500 transition-all duration-300 hover:-translate-y-0.5" title="Instagram">
+                        <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" aria-label="Instagram DLH Kota Palu" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-500 transition-[background-color,color,transform] duration-300 hover:-translate-y-0.5" title="Instagram">
                             <x-icons.social.instagram class="w-4 h-4" />
                         </a>
-                        <a href="https://www.facebook.com/share/18qHSySQr4/?locale=id_ID" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:-translate-y-0.5" title="Facebook">
+                        <a href="https://www.facebook.com/share/18qHSySQr4/?locale=id_ID" target="_blank" rel="noopener noreferrer" aria-label="Facebook DLH Kota Palu" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-[background-color,color,transform] duration-300 hover:-translate-y-0.5" title="Facebook">
                             <x-icons.social.facebook class="w-4 h-4" />
                         </a>
-                        <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:-translate-y-0.5" title="WhatsApp">
+                        <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp DLH Kota Palu" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-brand-600 transition-[background-color,color,transform] duration-300 hover:-translate-y-0.5" title="WhatsApp">
                             <x-icons.social.whatsapp class="w-4 h-4" />
                         </a>
                     </div>
@@ -608,40 +572,40 @@
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Pengendalian') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Pengendalian') }}</a></li>
-                        <li><a href="/permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Permohonan') }}</a></li>
-                        <li><a href="/cek-permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Permohonan') }}</a></li>
-                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan Pengendalian') }}</a></li>
+                        <li><a href="/permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Permohonan') }}</a></li>
+                        <li><a href="/cek-permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Permohonan') }}</a></li>
+                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Peta Persampahan & Armada') }}</a></li>
-                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Sampah') }}</a></li>
-                        <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Registrasi LB3') }}</a></li>
-                        <li><a href="/cek-registrasi-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Registrasi LB3') }}</a></li>
-                        <li><a href="/pengajuan-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengajuan RINTEK/PERTEK') }}</a></li>
-                        <li><a href="/cek-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek RINTEK/PERTEK') }}</a></li>
+                        <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Peta Persampahan & Armada') }}</a></li>
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan Sampah') }}</a></li>
+                        <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Registrasi LB3') }}</a></li>
+                        <li><a href="/cek-registrasi-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Registrasi LB3') }}</a></li>
+                        <li><a href="/pengajuan-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengajuan RINTEK/PERTEK') }}</a></li>
+                        <li><a href="/cek-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek RINTEK/PERTEK') }}</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('RTH') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan RTH') }}</a></li>
-                        <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Penyewaan Taman') }}</a></li>
-                        <li><a href="/cek-pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Penyewaan Taman') }}</a></li>
+                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan RTH') }}</a></li>
+                        <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Penyewaan Taman') }}</a></li>
+                        <li><a href="/cek-pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Penyewaan Taman') }}</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Tata Penataan') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/tata-lingkungan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Tata Lingkungan') }}</a></li>
-                        <li><a href="/pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Tata Penataan') }}</a></li>
-                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
+                        <li><a href="/tata-lingkungan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Tata Lingkungan') }}</a></li>
+                        <li><a href="/pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan Tata Penataan') }}</a></li>
+                        <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 

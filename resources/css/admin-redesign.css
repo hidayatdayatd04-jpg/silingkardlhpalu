@@ -1,0 +1,269 @@
+/*
+ * SILINGKAR admin refresh
+ *
+ * All rules deliberately live below .admin-shell (or an explicit admin page
+ * marker) so the ongoing public-site refresh keeps its own visual language.
+ */
+
+@layer components {
+    html:has(body.admin-shell),
+    body.admin-shell {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body.admin-shell > .admin-shell {
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+
+    .admin-shell {
+        --admin-canvas: #f5f8f7;
+        --admin-canvas-muted: #edf3f0;
+        --admin-surface: #ffffff;
+        --admin-surface-muted: #f8faf9;
+        --admin-border: #d9e4df;
+        --admin-border-strong: #bfd1c8;
+        --admin-text: #14231d;
+        --admin-muted: #52675e;
+        --admin-focus: #087a54;
+        --admin-radius-card: 1rem;
+        --admin-radius-control: 0.75rem;
+        /* Popover form harus berada di atas kartu, sticky action, dan field
+           berikutnya. Lapisan modal/toast tetap lebih tinggi. */
+        --admin-z-dropdown: 100;
+        --admin-z-sticky: 200;
+        --admin-z-backdrop: 300;
+        --admin-z-modal: 400;
+        --admin-z-toast: 500;
+        --admin-z-tooltip: 600;
+        background: var(--admin-canvas);
+        color: var(--admin-text);
+    }
+
+    .dark .admin-shell {
+        --admin-canvas: #0a1511;
+        --admin-canvas-muted: #102019;
+        --admin-surface: #102019;
+        --admin-surface-muted: #13261e;
+        --admin-border: #284238;
+        --admin-border-strong: #3a5b4d;
+        --admin-text: #e8f4ed;
+        --admin-muted: #a4bab0;
+        --admin-focus: #53c68e;
+    }
+
+    .admin-shell .admin-main {
+        background: var(--admin-canvas);
+    }
+
+    /* Area ini adalah satu-satunya container scroll halaman admin. Dengan
+       demikian topbar sticky selalu melekat pada tepi area kerja. */
+    .admin-shell .admin-main-scroll {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+    }
+
+    .admin-shell .admin-topbar {
+        position: sticky !important;
+        top: 0;
+        z-index: var(--admin-z-sticky);
+        flex-shrink: 0;
+    }
+
+    .admin-skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: var(--admin-z-tooltip);
+        transform: translateY(-160%);
+        border-radius: 0.75rem;
+        background: #064e3b;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .admin-skip-link:focus-visible {
+        transform: translateY(0);
+    }
+
+    .admin-shell :focus-visible,
+    .admin-login :focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--admin-focus, #087a54) 56%, transparent);
+        outline-offset: 3px;
+    }
+
+    .admin-shell .admin-surface,
+    .admin-shell .admin-panel {
+        border: 1px solid var(--admin-border);
+        border-radius: var(--admin-radius-card);
+        background: var(--admin-surface);
+        box-shadow: 0 1px 3px rgb(15 40 29 / 0.06);
+    }
+
+    .admin-shell .admin-muted-surface {
+        border-color: var(--admin-border);
+        background: var(--admin-surface-muted);
+    }
+
+    .admin-shell .admin-page-heading {
+        text-wrap: balance;
+        color: var(--admin-text);
+        letter-spacing: -0.018em;
+    }
+
+    .admin-shell .admin-page-subtitle {
+        max-width: 72ch;
+        color: var(--admin-muted);
+    }
+
+    .admin-shell .admin-table-scroll {
+        position: relative;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-color: #9ab6a8 transparent;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-shell .admin-table-scroll::after {
+        content: '';
+        position: sticky;
+        right: 0;
+        display: block;
+        width: 1.25rem;
+        height: 1px;
+        margin-top: -1px;
+        pointer-events: none;
+    }
+
+    .admin-shell .admin-icon-button {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+    }
+
+    .admin-shell .admin-state-copy {
+        color: var(--admin-muted);
+    }
+
+    .admin-shell .admin-toast-host {
+        z-index: var(--admin-z-toast);
+    }
+
+    .admin-shell .admin-dropdown,
+    .admin-shell .fi-select-panel,
+    .admin-shell .df-popover {
+        z-index: var(--admin-z-dropdown);
+    }
+
+    .admin-shell .admin-modal-backdrop {
+        z-index: var(--admin-z-backdrop);
+    }
+
+    .admin-shell .admin-modal {
+        z-index: var(--admin-z-modal);
+    }
+
+    .admin-dashboard {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .admin-shell .admin-dashboard-hero {
+        border: 1px solid #0e5a40;
+        border-radius: var(--admin-radius-card);
+        background: #0b4936 !important;
+        box-shadow: none;
+    }
+
+    .dark .admin-shell .admin-dashboard-hero {
+        border-color: #2a7357;
+        background: #0d3d2e !important;
+    }
+
+    .admin-dashboard .admin-dashboard-kpi,
+    .admin-dashboard .admin-dashboard-section {
+        border-color: var(--admin-border);
+    }
+
+    .admin-dashboard .admin-progress-fill {
+        background: #078257;
+        transition: width 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .admin-notifications .admin-notification-row {
+        border-color: var(--admin-border);
+        transition: background-color 160ms ease, opacity 160ms ease;
+    }
+
+    .admin-notifications .admin-notification-row:hover {
+        background: var(--admin-surface-muted);
+    }
+
+    .admin-login {
+        background: var(--admin-canvas, #f5f8f7);
+    }
+
+    .admin-login .admin-login-brand {
+        background: #0b4936;
+    }
+
+    .admin-login .admin-login-form-surface {
+        border-color: #d9e4df;
+        box-shadow: 0 8px 20px rgb(15 40 29 / 0.08);
+    }
+
+    .admin-map-page .map-container {
+        border: 1px solid var(--admin-border);
+        border-radius: var(--admin-radius-card);
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgb(15 40 29 / 0.08);
+    }
+
+    .admin-map-page .map-sidebar,
+    .admin-map-page .map-panel {
+        border-color: var(--admin-border);
+        box-shadow: 0 8px 20px rgb(15 40 29 / 0.1);
+    }
+
+    .admin-shell .page-transition-overlay,
+    .admin-shell .admin-preloader-glow,
+    .admin-shell .admin-preloader-badge,
+    .admin-shell .page-transition-card {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-shell .admin-main {
+        min-width: 0;
+    }
+
+    .admin-dashboard {
+        gap: 1rem;
+    }
+
+    .admin-shell .admin-page-heading {
+        font-size: 1.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-shell *,
+    .admin-shell *::before,
+    .admin-shell *::after,
+    .admin-login *,
+    .admin-login *::before,
+    .admin-login *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

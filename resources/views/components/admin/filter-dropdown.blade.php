@@ -1,8 +1,10 @@
 @props([
     'label' => 'Filter',
     'active' => false,
-    'count' => 0
+    'count' => 0,
 ])
+
+@php($panelId = 'admin-filter-'.Str::random(8))
 
 <div
     x-data="{
@@ -10,8 +12,8 @@
         panelStyle: '',
         positionPanel() {
             const rect = this.$refs.trigger.getBoundingClientRect();
-            const width = Math.min(288, window.innerWidth - 16);
-            const top = rect.bottom + 6;
+            const width = Math.min(304, window.innerWidth - 16);
+            const top = rect.bottom + 8;
             const avail = Math.max(220, window.innerHeight - top - 16);
             let left = rect.left;
             const maxLeft = window.innerWidth - width - 8;
@@ -34,33 +36,38 @@
     class="relative"
 >
     <button
+        id="{{ $panelId }}-button"
         x-ref="trigger"
         x-on:click="toggle()"
         type="button"
-        class="group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold transition {{ $active ? 'border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_4px_14px_rgba(16,185,129,0.18)]' : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60 hover:text-emerald-700' }}"
+        aria-haspopup="dialog"
+        aria-controls="{{ $panelId }}"
+        x-bind:aria-expanded="open.toString()"
+        class="group inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold outline-none transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-brand-600/25 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 {{ $active ? 'border-brand-300 bg-brand-50 text-brand-800 shadow-sm dark:border-brand-800 dark:bg-brand-950/55 dark:text-brand-200' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-700 dark:hover:bg-brand-950/45 dark:hover:text-brand-200' }}"
     >
-        <span class="grid size-5 place-items-center rounded-lg {{ $active ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600' }} transition">
-            <x-admin.icon name="filter" :size="14" />
+        <span class="grid size-6 place-items-center rounded-lg {{ $active ? 'bg-brand-700 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-brand-100 group-hover:text-brand-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-brand-950 dark:group-hover:text-brand-300' }} transition-[background-color,color] duration-150">
+            <x-admin.icon name="filter" :size="14" aria-hidden="true" />
         </span>
         <span>{{ $label }}</span>
         @if($count > 0)
-            <span class="flex size-5 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold text-white">
-                {{ $count }}
-            </span>
+            <span class="grid size-5 place-items-center rounded-full bg-brand-700 px-1 text-[10px] font-bold text-white">{{ $count }}</span>
         @endif
-        <x-admin.icon name="chevron-down" :size="16" class="text-slate-400 transition group-hover:text-emerald-600" ::class="{ 'rotate-180': open }" />
+        <x-admin.icon name="chevron-down" :size="16" class="text-slate-400 transition-transform duration-150 dark:text-slate-500" x-bind:class="{ 'rotate-180': open }" aria-hidden="true" />
     </button>
 
     <div
+        id="{{ $panelId }}"
         x-show="open"
-        x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+        x-transition:enter="transition-[opacity,transform] ease-out duration-150"
+        x-transition:enter-start="opacity-0 -translate-y-1 scale-[.98]"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave="transition-[opacity,transform] ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+        x-transition:leave-end="opacity-0 -translate-y-1 scale-[.98]"
         x-bind:style="panelStyle"
-        class="z-[9999] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl shadow-slate-900/10 ring-1 ring-black/5 backdrop-blur-xl"
+        role="dialog"
+        aria-labelledby="{{ $panelId }}-button"
+        class="z-[95] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,0.35)] ring-1 ring-slate-950/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/5"
         style="display: none;"
     >
         {{ $slot }}

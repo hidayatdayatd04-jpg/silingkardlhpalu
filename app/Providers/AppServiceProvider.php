@@ -32,9 +32,12 @@ use App\Auth\CachedUserProvider;
 use App\Support\Admin\AdminNotificationFeed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -66,6 +69,22 @@ class AppServiceProvider extends ServiceProvider
         // tidak memiliki akses internet.
         Password::defaults(function () {
             return Password::min(10)->mixedCase()->numbers();
+        });
+
+        // Login sebelumnya dibatasi hanya berdasarkan IP (5/menit). Pada
+        // jaringan kantor, VPN, atau proxy bersama, satu pengguna dapat
+        // mengunci seluruh admin. Kombinasi IP + identitas menjaga pembatasan
+        // brute-force per akun tanpa saling mengganggu, sementara batas IP
+        // kedua tetap menahan banjir percobaan dari satu sumber.
+        RateLimiter::for('admin-login', function (Request $request): array {
+            $identity = mb_strtolower(trim((string) $request->input('login')));
+            $identityKey = hash('sha256', $request->ip().'|'.($identity ?: 'anonymous'));
+            $ipKey = hash('sha256', (string) $request->ip());
+
+            return [
+                Limit::perMinute(10)->by('admin-login:identity:'.$identityKey),
+                Limit::perMinute(60)->by('admin-login:ip:'.$ipKey),
+            ];
         });
 
         // Tunda eksekusi Livewire JS keluar dari critical path render (defer).

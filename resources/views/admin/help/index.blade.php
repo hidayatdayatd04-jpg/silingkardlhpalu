@@ -27,11 +27,9 @@
 @endphp
 
 @section('content')
+<div class="admin-help">
     {{-- Hero Header --}}
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-500 to-emerald-500 p-6 text-white shadow-xl sm:p-8">
-        <div class="bg-grain pointer-events-none absolute inset-0 opacity-[0.04]"></div>
-        <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-16 left-1/3 size-48 rounded-full bg-emerald-400/20 blur-3xl"></div>
+    <div class="admin-dashboard-hero relative overflow-hidden p-6 text-white sm:p-8">
 
         <div class="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
             <div class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur-sm">
@@ -150,4 +148,5 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
