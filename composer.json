@@ -22,8 +22,7 @@
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "laravel/tinker": "^2.10.1",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5"
+        "nunomaduro/collision": "^8.6"
     },
     "autoload": {
         "psr-4": {
