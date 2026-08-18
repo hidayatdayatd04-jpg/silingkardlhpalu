@@ -221,8 +221,7 @@
             <span class="dot"></span> Sedang Pemeliharaan
         </span>
 
-        <img src="{{ $logo }}" alt="Logo DLH Kota Palu" class="logo"
-             onerror="this.style.display='none'">
+        <img src="{{ $logo }}" alt="Logo DLH Kota Palu" class="logo">
 
         <h1>Situs Sedang Dalam Pemeliharaan</h1>
 
@@ -245,6 +244,13 @@
 
     <script>
         (function () {
+            // CSP: fallback logo gagal dimuat dipasang via addEventListener.
+            var logo = document.querySelector('img.logo');
+            if (logo) {
+                if (logo.complete && logo.naturalWidth === 0) logo.style.display = 'none';
+                logo.addEventListener('error', function () { logo.style.display = 'none'; });
+            }
+
             var el = document.getElementById('countdown');
             if (!el) return;
 

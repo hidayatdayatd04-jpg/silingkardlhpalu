@@ -2,6 +2,8 @@
 
 use App\Enums\StatusPengaduanRth;
 use App\Http\Requests\StorePermohonanPinjamTamanRequest;
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanPinjamTaman;
 use App\Services\FileUploadService;
 use Livewire\Component;
@@ -10,6 +12,8 @@ use Livewire\WithFileUploads;
 
 new class extends Component {
     use WithFileUploads;
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
 
     public string $nama_pemohon = '';
     public string $nomor_hp = '';
@@ -97,16 +101,17 @@ new class extends Component {
 
     public function submit(): void
     {
-        $validated = $this->validate((new StorePermohonanPinjamTamanRequest())->rules());
-
-        $ip = request()->ip();
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pinjam-taman:'.$ip, 3)) {
-            $this->addError('nomor_hp', __('Batas maksimal pengiriman tercapai (3 permohonan per jam).'));
-
+        if (! $this->verifyCaptcha('submit')) {
             return;
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit('pinjam-taman:'.$ip, 3600);
+        $this->resetCaptcha();
+
+        $validated = $this->validate((new StorePermohonanPinjamTamanRequest())->rules());
+
+        if ($this->hitRateLimit('pinjam-taman', 10, 'form', __('Pengiriman dibatasi maksimal 10 per jam.'))) {
+            return;
+        }
 
         $this->checkConflict();
 
@@ -212,7 +217,7 @@ new class extends Component {
             </div>
         @endif
 
-        <form wire:submit.prevent="submit" class="space-y-5">
+        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-5">
             <div class="grid md:grid-cols-2 gap-5">
                 <x-public.input
                     wire:model="nama_pemohon"
@@ -355,6 +360,15 @@ new class extends Component {
                 </div>
                 @error('surat_jaminan') <p class="fi-error"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>{{ $message }}</p> @enderror
             </div>
+
+            @error('form')
+                <div class="dlh-limit-alert" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <span>{{ $message }}</span>
+                </div>
+            @enderror
+
+        <x-google-recaptcha />
 
             <button type="submit" class="fi-submit-btn">
                 {{ __('Ajukan Penyewaan') }}

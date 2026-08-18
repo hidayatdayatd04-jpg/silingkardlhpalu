@@ -49,15 +49,15 @@
 
                 <h1 class="hero-enter mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-white leading-[1.05]"
                     style="--hero-delay:90ms">
-                    {{ __('Menjaga Palu Tetap') }}
+                    {{ __('Layanan Lingkungan') }}
                     <span class="block bg-gradient-to-r from-brand-200 via-emerald-200 to-bay-200 bg-clip-text text-transparent">
-                        {{ __('Bersih, Hijau & Asri') }}
+                        {{ __('untuk Kota Palu') }}
                     </span>
                 </h1>
 
                 <p class="hero-enter mt-6 text-base sm:text-lg text-brand-50/90 max-w-2xl leading-relaxed"
                    style="--hero-delay:180ms">
-                    {{ __('Portal resmi Dinas Lingkungan Hidup Kota Palu untuk pengaduan lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, dan pelacakan armada — cepat, transparan, tanpa perlu mendaftar akun.') }}
+                    {{ __('Akses informasi dan layanan DLH Kota Palu—mulai dari pengaduan, pengelolaan sampah & LB3, ruang terbuka hijau, hingga pelacakan armada—dalam satu portal yang mudah digunakan.') }}
                 </p>
 
                 <div class="hero-enter mt-9 flex flex-col sm:flex-row gap-3" style="--hero-delay:270ms">
@@ -130,6 +130,7 @@
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Cek Status'), '/lacak'],
                         [__('Permohonan'), '/permohonan-rekomendasi'],
+                        [__('Cek Permohonan'), '/cek-permohonan-rekomendasi'],
                     ],
                 ],
                 [
@@ -141,19 +142,20 @@
                         [__('Peta Sampah'), '/peta-persampahan'],
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Registrasi LB3'), '/registrasi-usaha-lb3'],
+                        [__('Cek Registrasi LB3'), '/cek-registrasi-lb3'],
                         ['RINTEK/PERTEK', '/pengajuan-rintek-pertek'],
                         [__('Cek RINTEK/PERTEK'), '/cek-rintek-pertek'],
                     ],
                 ],
                 [
                     'title' => __('Tata Penataan'),
-                    'desc' => __('Pengaduan limbah/asap/kebisingan, peta objek pengawasan & sidak.'),
+                    'desc' => __('Pengaduan lingkungan serta akses dokumen Tata Lingkungan.'),
                     'accent' => 'bay',
                     'icon' => 'tata-penataan',
                     'links' => [
-                        [__('Pengaduan'), '/pengaduan'],
+                        [__('Pengaduan'), '/pengaduan-tata-penataan'],
                         [__('Cek Status'), '/lacak'],
-                        [__('Peta Objek'), '/peta-objek-pengawasan'],
+                        [__('Tata Lingkungan'), '/tata-lingkungan'],
                     ],
                 ],
                 [
@@ -164,6 +166,7 @@
                     'links' => [
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Penyewaan Taman'), '/pinjam-taman'],
+                        [__('Cek Penyewaan'), '/cek-pinjam-taman'],
                     ],
                 ],
             ];
@@ -188,7 +191,7 @@
                         </div>
 
                         <h3 class="font-bold text-lg text-slate-900 dark:text-white">{{ $bidang['title'] }}</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">{{ $bidang['desc'] }}</p>
+                        <p class="flex-1 text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">{{ $bidang['desc'] }}</p>
 
                         <div class="flex flex-wrap gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
                             @foreach ($bidang['links'] as [$label, $url])
@@ -527,7 +530,7 @@
                         </div>
                         <div class="flex items-start gap-3.5">
                             <span class="mt-0.5 flex-shrink-0 size-10 rounded-2xl bg-clay-50 dark:bg-clay-900/25 text-clay-600 dark:text-clay-300 flex items-center justify-center" style="--icon-accent: var(--color-clay-500)">
-                                <x-icons.whatsapp class="size-5" />
+                                <x-icons.social.whatsapp class="size-5" />
                             </span>
                             <div>
                                 <p class="font-bold text-slate-800 dark:text-white text-sm">{{ __('Call Center / WhatsApp') }}</p>

@@ -2,6 +2,8 @@
 
 use App\Http\Requests\StorePermohonanRekomendasiRequest;
 use App\Http\Requests\StorePermohonanRekomendasiStep1Request;
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanDokumen;
 use App\Models\PermohonanRekomendasi;
 use App\Services\FileUploadService;
@@ -11,6 +13,8 @@ use Livewire\WithFileUploads;
 
 new class extends Component {
     use WithFileUploads;
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
 
     public int $step = 1;
 
@@ -43,16 +47,17 @@ new class extends Component {
 
     public function submit()
     {
-        $validated = $this->validate((new StorePermohonanRekomendasiRequest())->rules());
-
-        $ip = request()->ip();
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('permohonan-rekomendasi:'.$ip, 3)) {
-            $this->addError('email', __('Batas maksimal pengajuan tercapai (3 pengajuan per jam). Silakan coba beberapa saat lagi.'));
-
+        if (! $this->verifyCaptcha('submit')) {
             return;
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit('permohonan-rekomendasi:'.$ip, 3600);
+        $this->resetCaptcha();
+
+        $validated = $this->validate((new StorePermohonanRekomendasiRequest())->rules());
+
+        if ($this->hitRateLimit('permohonan-rekomendasi', 10, 'form', __('Pengajuan dibatasi maksimal 10 per jam.'))) {
+            return;
+        }
 
         $fileService = app(FileUploadService::class);
 
@@ -266,7 +271,7 @@ new class extends Component {
                 </button>
             </form>
         @else
-            <form wire:submit.prevent="submit" class="space-y-6">
+            <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-6">
                 <div class="fi-field">
                     <label class="fi-label">
                         <span class="fi-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h3"/></svg></span>
@@ -335,6 +340,16 @@ new class extends Component {
                         <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         {{ __('Kembali') }}
                     </button>
+                </div>
+
+                @error('form')
+                    <div class="dlh-limit-alert" role="alert">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                        <span>{{ $message }}</span>
+                    </div>
+                @enderror
+
+                <div class="flex gap-3 pt-2">
                     <button type="submit" class="fi-submit-btn flex-1">
                         {{ __('Kirim Permohonan') }}
                         <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M12 5l7 7-7 7"/></svg>
@@ -342,6 +357,8 @@ new class extends Component {
                 </div>
             </form>
         @endif
+
+        <x-google-recaptcha />
     @endif
 
     <style>

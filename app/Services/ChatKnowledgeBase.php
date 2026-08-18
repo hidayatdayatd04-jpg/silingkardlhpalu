@@ -124,10 +124,6 @@ Layanan pengelolaan sampah dan limbah bahan berbahaya.
 ### 3. BIDANG TATA PENATAAN (Pengawasan Lingkungan)
 Layanan pengawasan dan penataan lingkungan hidup.
 
-**Info Modul Tata Penataan:**
-- URL: https://dlh.palukota.go.id/tata-penataan
-- 6 Modul: Objek Pengawasan, Pengaduan Masyarakat, Sidak (Inspeksi), Pelanggaran, Sanksi, Sosialisasi
-
 **Pengaduan Tata Penataan:**
 - URL: https://dlh.palukota.go.id/pengaduan
 - Untuk melapor masalah: Limbah dari industri, Asap dari industri, Kebisingan dari industri
@@ -137,10 +133,6 @@ Layanan pengawasan dan penataan lingkungan hidup.
 **Cek Status Pengaduan Tata Penataan:**
 - URL: https://dlh.palukota.go.id/lacak
 - Masukkan nomor tiket untuk melihat status
-
-**Peta Objek Pengawasan:**
-- URL: https://dlh.palukota.go.id/peta-objek-pengawasan
-- Peta interaktif lokasi objek industri yang diawasi
 
 ---
 

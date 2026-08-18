@@ -1,98 +1,92 @@
 <?php
 
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanPinjamTaman;
 use Livewire\Component;
 
 new class extends Component
 {
-    public string $searchTicket = '';
-    public string $searchNama = '';
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
+
+    public string $search = '';
     public ?PermohonanPinjamTaman $permohonan = null;
 
-    public function searchByTicket()
+    public function lookup()
     {
-        $this->validate(['searchTicket' => 'required|string']);
-
-        $this->permohonan = PermohonanPinjamTaman::query()
-            ->where('nomor_tiket', trim($this->searchTicket))
-            ->first();
-
-        if (! $this->permohonan) {
-            $this->addError('searchTicket', __('Nomor tiket tidak ditemukan.'));
-        } else {
-            $this->resetErrorBag('searchTicket');
+        if (! $this->verifyCaptcha('lookup')) {
+            return;
         }
-    }
 
-    public function searchByNama()
-    {
-        $this->validate(['searchNama' => 'required|string|min:3']);
+        $this->resetCaptcha();
 
-        $this->permohonan = PermohonanPinjamTaman::query()
-            ->where('nama_pemohon', 'like', '%'.trim($this->searchNama).'%')
-            ->latest()
-            ->first();
+        $this->validate(['search' => 'required|string']);
 
-        if (! $this->permohonan) {
-            $this->addError('searchNama', __('Permohonan dengan nama pemohon tersebut tidak ditemukan.'));
+        if ($this->hitRateLimit('cek-pinjam-taman:search', 20, 'form', __('Batas pencarian tercapai (maksimal 20 kali per jam).'))) {
+            return;
+        }
+
+        $value = trim($this->search);
+        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+
+        if ($isEmail) {
+            $this->permohonan = PermohonanPinjamTaman::query()
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->latest()
+                ->first();
+
+            if (! $this->permohonan) {
+                $this->addError('search', __('Tidak ada permohonan dengan email tersebut.'));
+            }
         } else {
-            $this->resetErrorBag('searchNama');
+            $this->permohonan = PermohonanPinjamTaman::query()
+                ->where('nomor_tiket', $value)
+                ->first();
+
+            if (! $this->permohonan) {
+                $this->addError('search', __('Nomor tiket tidak ditemukan.'));
+            }
         }
     }
 };
 ?>
 
 <div class="space-y-6 ck-wrap">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        {{-- Cek via Nomor Tiket --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Nomor Tiket') }}</h3>
-                    <p class="ck-card-desc">{{ __('Masukkan nomor tiket penyewaan yang Anda terima.') }}</p>
-                </div>
+    <div class="ck-card max-w-4xl mx-auto">
+        <div class="ck-card-head">
+            <span class="ck-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <div class="flex-1">
+                <h3 class="ck-card-title">{{ __('Cek Status Penyewaan Taman') }}</h3>
+                <p class="ck-card-desc">{{ __('Masukkan nomor tiket atau email yang Anda daftarkan untuk melihat status penyewaan taman.') }}</p>
             </div>
-            <form wire:submit.prevent="searchByTicket" class="space-y-3">
+        </div>
+        <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
+            <div class="flex-1">
                 <x-public.input
-                    wire:model="searchTicket"
-                    name="searchTicket"
-                    placeholder="{{ __('Nomor tiket') }}"
+                    wire:model.live.debounce.250ms="search"
+                    name="search"
+                    placeholder="{{ __('Nomor tiket atau email') }}"
                     required
                 />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari Tiket') }}
-                </button>
-            </form>
-        </div>
+            </div>
 
-        {{-- Cek via Nama Pemohon --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Nama Pemohon') }}</h3>
-                    <p class="ck-card-desc">{{ __('Cari permohonan berdasarkan nama pemohon/komunitas.') }}</p>
-                </div>
+            <button type="submit" class="ck-search-btn md:w-auto">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                {{ __('Cari Tiket') }}
+            </button>
+        </form>
+
+        @error('form')
+            <div class="dlh-limit-alert" role="alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span>{{ $message }}</span>
             </div>
-            <form wire:submit.prevent="searchByNama" class="space-y-3">
-                <x-public.input
-                    wire:model="searchNama"
-                    name="searchNama"
-                    placeholder="{{ __('Nama pemohon/komunitas') }}"
-                    required
-                />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari via Nama') }}
-                </button>
-            </form>
-        </div>
+        @enderror
+
+        <x-google-recaptcha />
     </div>
 
     @if ($permohonan)
@@ -115,6 +109,7 @@ new class extends Component
                         'warning' => 'ck-status-badge--pending',
                     ];
                     $isDone = in_array($statusColor, ['success']);
+                    $isProcessed = $statusColor !== 'gray';
                 @endphp
                 <span class="ck-status-badge {{ $badgeMap[$statusColor] ?? 'ck-status-badge--pending' }}">
                     @if ($isDone)
@@ -149,8 +144,15 @@ new class extends Component
                 @endforeach
             </div>
 
-            {{-- Keamanan: catatan_admin adalah catatan internal petugas dan tidak
-                 ditampilkan di kanal publik untuk mencegah kebocoran informasi. --}}
+            @if ($isProcessed && filled($permohonan->catatan_admin))
+                <div class="ck-note-box mt-5">
+                    <span class="ck-note-label">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        {{ __('Catatan Admin') }}
+                    </span>
+                    <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $permohonan->catatan_admin }}</p>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -177,13 +179,14 @@ new class extends Component
         .ck-card-desc { font-size: 12px; color: #5b6b63; margin-top: 2px; line-height: 1.4; }
 
         .ck-search-btn {
-            width: 100%; height: 46px; border: none; border-radius: 9999px;
+            height: 48px; padding: 0 24px; border: none; border-radius: 9999px;
             background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
             font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-            font-size: 13.5px; font-weight: 700; cursor: pointer;
+            font-size: 14px; font-weight: 700; cursor: pointer;
             box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
             transition: transform .12s ease, box-shadow .12s ease;
             display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
         }
         .ck-search-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -6px rgba(20, 106, 68, 0.55); }
 

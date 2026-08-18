@@ -12,29 +12,18 @@
  *    `document.addEventListener('alpine:init', () => Alpine.store(...))`
  *    tetap bekerja (contoh: store 'petaSidebar' di admin/peta).
  */
-import Alpine from 'alpinejs';
-import focus from '@alpinejs/focus';
-import collapse from '@alpinejs/collapse';
-import intersect from '@alpinejs/intersect';
-
-function bootstrapAlpine() {
-    if (window.__dlhAlpineStarted) return;
-    window.__dlhAlpineStarted = true;
-
-    Alpine.plugin(focus);
-    Alpine.plugin(collapse);
-    Alpine.plugin(intersect);
+function registerAlpineExtensions(Alpine) {
+    if (window.__dlhAlpineExtensionsRegistered) return;
+    window.__dlhAlpineExtensionsRegistered = true;
 
     // Store 'sidebar' — dipindahkan dari inline script layouts/admin.blade.php.
     // Terdaftar lewat event `alpine:init` seperti sebelumnya.
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('sidebar', {
-            collapsed: localStorage.getItem('sidebar-collapsed') === 'true',
-            toggle() {
-                this.collapsed = !this.collapsed;
-                localStorage.setItem('sidebar-collapsed', this.collapsed);
-            },
-        });
+    Alpine.store('sidebar', {
+        collapsed: localStorage.getItem('sidebar-collapsed') === 'true',
+        toggle() {
+            this.collapsed = !this.collapsed;
+            localStorage.setItem('sidebar-collapsed', this.collapsed);
+        },
     });
 
     /**
@@ -154,20 +143,9 @@ function bootstrapAlpine() {
         },
     }));
 
-    window.Alpine = Alpine;
-    Alpine.start();
 }
 
-function shouldBootstrap() {
-    return document.documentElement.hasAttribute('data-alpine-bootstrap')
-        || (document.body && document.body.hasAttribute('data-alpine-bootstrap'));
-}
+document.addEventListener('alpine:init', () => registerAlpineExtensions(window.Alpine));
 
-if (shouldBootstrap()) {
-    bootstrapAlpine();
-} else {
-    // Body belum tersedia (modul dieksekusi sebelum parse selesai di kasus tertentu).
-    document.addEventListener('DOMContentLoaded', () => {
-        if (shouldBootstrap()) bootstrapAlpine();
-    });
-}
+// Supports pages where Vite is evaluated after the Livewire bundle.
+if (window.Alpine) registerAlpineExtensions(window.Alpine);

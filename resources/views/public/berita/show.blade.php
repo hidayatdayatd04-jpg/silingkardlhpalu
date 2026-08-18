@@ -93,7 +93,7 @@
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}" target="_blank" rel="noopener noreferrer" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-blue-600 transition-all hover:-translate-y-0.5" title="Facebook">
                 <x-icons.social.facebook class="size-4" />
             </a>
-            <button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href).then(()=>{this.querySelector('span').textContent='{{ __('Tersalin!') }}';})" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-slate-700 transition-all hover:-translate-y-0.5 relative" title="{{ __('Salin tautan') }}">
+            <button type="button" id="copy-link-btn" class="size-9 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-slate-700 transition-all hover:-translate-y-0.5 relative" title="{{ __('Salin tautan') }}">
                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg>
                 <span class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-0.5 text-[10px] text-white opacity-0"></span>
             </button>
@@ -117,6 +117,21 @@
                 entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-revealed'); obs.unobserve(e.target); } });
             }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
             els.forEach(function (el) { obs.observe(el); });
+        }
+
+        // CSP: tombol salin tautan dipasang via addEventListener, bukan onclick inline.
+        var copyBtn = document.getElementById('copy-link-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function () {
+                if (!navigator.clipboard) return;
+                navigator.clipboard.writeText(location.href).then(function () {
+                    var tip = copyBtn.querySelector('span');
+                    if (!tip) return;
+                    tip.textContent = @json(__('Tersalin!'));
+                    tip.style.opacity = '1';
+                    setTimeout(function () { tip.style.opacity = '0'; }, 1500);
+                });
+            });
         }
     })();
 </script>

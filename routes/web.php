@@ -61,8 +61,6 @@ Route::get('/uptd/{slug}', function (string $slug) {
     return view('public.coming-soon', ['title' => $title]);
 })->whereIn('slug', ['topoksi-lab', 'jurnal-lab', 'tpa-kawatuna']);
 
-Route::get('/tata-penataan', fn () => view('public.tata-penataan'));
-
 // Tata Lingkungan — dokumen publik dari Google Drive
 Route::get('/tata-lingkungan', [App\Http\Controllers\TataLingkunganController::class, 'index'])
     ->name('tata-lingkungan')
@@ -78,7 +76,6 @@ Route::get('/api/tata-lingkungan/files', [App\Http\Controllers\TataLingkunganCon
 Route::get('/pengaduan-tata-penataan', fn () => view('public.pengaduan-tata-penataan'));
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-tata-penataan', '/lacak');
-Route::get('/peta-objek-pengawasan', fn () => view('public.peta-objek-pengawasan'));
 
 Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->middleware('throttle:30,1')->name('feedback.store');
 

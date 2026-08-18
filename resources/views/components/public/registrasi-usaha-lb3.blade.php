@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Requests\StoreRegistrasiUsahaLb3Request;
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\RegistrasiUsahaLb3;
 use Livewire\Component;
 
 new class extends Component
 {
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
+
     public ?string $nama_perusahaan = null;
     public ?string $nomor_telepon = null;
     public ?string $email = null;
@@ -17,16 +22,17 @@ new class extends Component
 
     public function submit(): void
     {
-        $validated = $this->validate((new StoreRegistrasiUsahaLb3Request())->rules());
-
-        $ip = request()->ip();
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('registrasi-usaha-lb3:'.$ip, 3)) {
-            $this->addError('email', __('Batas maksimal pengiriman tercapai (3 registrasi per jam).'));
-
+        if (! $this->verifyCaptcha('submit')) {
             return;
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit('registrasi-usaha-lb3:'.$ip, 3600);
+        $this->resetCaptcha();
+
+        $validated = $this->validate((new StoreRegistrasiUsahaLb3Request())->rules());
+
+        if ($this->hitRateLimit('registrasi-usaha-lb3', 10, 'form', __('Pengiriman dibatasi maksimal 10 per jam.'))) {
+            return;
+        }
 
         if ($this->jenis_lb3 === 'Lainnya' && blank($this->jenis_lb3_lainnya)) {
             $this->addError('jenis_lb3_lainnya', __('Mohon isi jenis LB3 lainnya.'));
@@ -80,7 +86,7 @@ new class extends Component
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" class="space-y-5">
+        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-5">
             <x-public.input
                 wire:model="nama_perusahaan"
                 name="nama_perusahaan"
@@ -142,6 +148,15 @@ new class extends Component
                     required
                 />
             @endif
+
+            @error('form')
+                <div class="dlh-limit-alert" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <span>{{ $message }}</span>
+                </div>
+            @enderror
+
+        <x-google-recaptcha />
 
             <button type="submit" class="fi-submit-btn">
                 {{ __('Kirim Registrasi') }}

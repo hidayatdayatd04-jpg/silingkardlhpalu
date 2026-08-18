@@ -51,4 +51,9 @@ return [
         'max_depth' => (int) env('GOOGLE_DRIVE_MAX_DEPTH', 8),
     ],
 
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
+    ],
+
 ];

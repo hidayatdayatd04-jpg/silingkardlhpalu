@@ -87,6 +87,7 @@
     {{-- Toast host (Alpine store 'toasts') --}}
     <x-admin.toast />
 
+    @livewireScripts
     @stack('styles')
     @stack('scripts')
 </body>

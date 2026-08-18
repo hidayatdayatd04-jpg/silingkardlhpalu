@@ -54,11 +54,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // CSP nonce per request: dipakai otomatis oleh tag @vite dan asset
-        // Livewire (FrontendAssets membaca Vite::cspNonce()). Tahap awal
-        // migrasi CSP — header Report-Only ada di SecurityHeaders middleware.
-        \Illuminate\Support\Facades\Vite::useCspNonce();
-
         // Peringatan dini bila proxy dipercaya semua alamat di produksi —
         // IP client (rate limit, audit log) bisa dipalsukan via X-Forwarded-For.
         if ($this->app->environment('production') && env('TRUSTED_PROXIES') === '*') {

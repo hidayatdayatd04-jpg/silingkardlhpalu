@@ -254,7 +254,7 @@
                 <!-- Bidang Tata Penataan Dropdown -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('tata-penataan', 'tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('tata-lingkungan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Tata Penataan') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -464,8 +464,8 @@
                 </div>
 
                 <!-- Bidang Tata Penataan (Dropdown Mobile) -->
-                <div x-data="{ open: {{ request()->is('tata-penataan', 'tata-lingkungan') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('tata-penataan', 'tata-lingkungan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
+                <div x-data="{ open: {{ request()->is('tata-lingkungan') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('tata-lingkungan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Tata Penataan') }}</span>
                         <svg class="h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -580,9 +580,9 @@
         <div class="absolute -top-24 right-10 size-72 rounded-full bg-brand-500/5 blur-3xl pointer-events-none" aria-hidden="true"></div>
 
         <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-12 gap-8 lg:gap-6 pb-10 border-b border-slate-200 dark:border-slate-800">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-[1.4fr_repeat(5,minmax(0,1fr))] items-start gap-8 lg:gap-6 pb-10 border-b border-slate-200 dark:border-slate-800">
 
-                <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-4">
+                <div class="col-span-2 md:col-span-4 lg:col-span-1 space-y-4">
                     <div class="flex items-center gap-3">
                         <img src="{{ asset('assets/images/logo_kota_palu.webp') }}" alt="Logo Kota Palu" width="320" height="423" class="h-14 sm:h-16 w-auto object-contain drop-shadow-sm">
                         <div class="min-w-0">
@@ -590,7 +590,7 @@
                         </div>
                     </div>
                     <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
-                        {{ __('Portal layanan publik digital untuk pengaduan lingkungan, pengelolaan sampah & LB3, serta pelestarian ruang terbuka hijau di Kota Palu.') }}
+                        {{ __('Gerbang digital DLH Kota Palu untuk menyampaikan pengaduan, mengakses informasi, dan memantau tindak lanjut layanan lingkungan.') }}
                     </p>
                     <div class="flex items-center gap-2 pt-1">
                         <a href="https://www.instagram.com/dlhkotapalu" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-white hover:bg-gradient-to-br hover:from-pink-500 hover:to-purple-500 transition-all duration-300 hover:-translate-y-0.5" title="Instagram">
@@ -605,47 +605,49 @@
                     </div>
                 </div>
 
-                <div class="col-span-1 lg:col-span-2 space-y-3">
+                <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Pengendalian') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Pengendalian') }}</a></li>
                         <li><a href="/permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Permohonan') }}</a></li>
+                        <li><a href="/cek-permohonan-rekomendasi" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Permohonan') }}</a></li>
                         <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 
-                <div class="col-span-1 lg:col-span-2 space-y-3">
+                <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Peta Persampahan & Armada') }}</a></li>
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Sampah') }}</a></li>
                         <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Registrasi LB3') }}</a></li>
+                        <li><a href="/cek-registrasi-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Registrasi LB3') }}</a></li>
                         <li><a href="/pengajuan-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengajuan RINTEK/PERTEK') }}</a></li>
                         <li><a href="/cek-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek RINTEK/PERTEK') }}</a></li>
                     </ul>
                 </div>
 
-                <div class="col-span-1 lg:col-span-2 space-y-3">
+                <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('RTH') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan RTH') }}</a></li>
                         <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Penyewaan Taman') }}</a></li>
+                        <li><a href="/cek-pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Penyewaan Taman') }}</a></li>
                     </ul>
                 </div>
 
-                <div class="col-span-1 lg:col-span-2 space-y-3">
+                <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Tata Penataan') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Modul Tata Penataan') }}</a></li>
+                        <li><a href="/tata-lingkungan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Tata Lingkungan') }}</a></li>
                         <li><a href="/pengaduan-tata-penataan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Pengaduan Tata Penataan') }}</a></li>
-                        <li><a href="/peta-objek-pengawasan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Peta Objek Pengawasan') }}</a></li>
                         <li><a href="/lacak" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-all duration-200">{{ __('Cek Status') }}</a></li>
                     </ul>
                 </div>
 
-                <div class="col-span-2 md:col-span-4 lg:col-span-2 space-y-3">
+                <div class="col-span-2 md:col-span-4 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Kontak') }}</h2>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p class="min-h-[4.5rem] text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu
                     </p>
                     <a href="https://wa.me/6285191512076" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-900/20 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors whitespace-nowrap">
@@ -656,7 +658,7 @@
             </div>
 
             <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                <p>© {{ date('Y') }} Dinas Lingkungan Hidup Kota Palu. {{ __('Hak cipta dilindungi.') }}</p>
+                <p class="text-center sm:text-left">&copy; {{ date('Y') }} <span class="font-semibold text-slate-600 dark:text-slate-300">Dinas Lingkungan Hidup Kota Palu</span>. {{ __('Hak cipta dilindungi.') }}</p>
                 <div class="flex items-center gap-4">
                     <a href="/kebijakan-privasi" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{{ __('Kebijakan Privasi') }}</a>
                     <a href="/syarat-ketentuan" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{{ __('Syarat & Ketentuan') }}</a>
@@ -667,7 +669,40 @@
     </footer>
 
     @livewire('chat-bot')
+    <style>
+        /* Umpan balik submit yang dipakai semua form layanan publik. */
+        .dlh-form--loading button[type="submit"] {
+            cursor: wait !important;
+            pointer-events: none;
+            opacity: .88;
+            transform: translateY(0) !important;
+        }
+        .dlh-form--loading button[type="submit"]:not([data-dlh-original-html])::before {
+            content: '';
+            width: 1em;
+            height: 1em;
+            flex: 0 0 auto;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 999px;
+            animation: dlh-submit-spin .65s linear infinite;
+        }
+        @keyframes dlh-submit-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+            .dlh-form--loading button[type="submit"]::before { animation: none; }
+        }
+    </style>
     @livewireScripts
+    <script>
+        (() => {
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || form.dataset.dlhSubmitting === 'false') return;
+
+                form.classList.add('dlh-form--loading');
+            }, true);
+        })();
+    </script>
     @yield('scripts')
     @stack('scripts')
 </body>

@@ -20,7 +20,15 @@
                 </div>
             </a>
         @empty
-            <p class="col-span-full text-center text-slate-500">{{ __('Belum ada berita.') }}</p>
+            <section class="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900 sm:px-10" aria-labelledby="empty-news-title">
+                <div class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-900/25 dark:text-brand-400">
+                    <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8Z" />
+                    </svg>
+                </div>
+                <h2 id="empty-news-title" class="mt-4 text-lg font-bold text-slate-900 dark:text-white">{{ __('Belum ada berita dipublikasikan') }}</h2>
+                <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ __('Informasi dan kegiatan terbaru DLH Kota Palu akan tampil di halaman ini setelah dipublikasikan.') }}</p>
+            </section>
         @endforelse
     </div>
 

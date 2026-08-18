@@ -43,7 +43,7 @@
 </div>
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('vendor/jodit/jodit.min.css') }}" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="{{ asset('vendor/jodit/jodit.min.css') }}">
 <style>
     /* ═══════════════════════════════════════════════════════
        JODIT EDITOR — Modern Professional Redesign

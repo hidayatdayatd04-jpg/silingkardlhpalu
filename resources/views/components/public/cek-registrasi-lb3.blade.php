@@ -1,98 +1,92 @@
 <?php
 
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\RegistrasiUsahaLb3;
 use Livewire\Component;
 
 new class extends Component
 {
-    public string $searchNomor = '';
-    public string $searchNama = '';
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
+
+    public string $search = '';
     public ?RegistrasiUsahaLb3 $registrasi = null;
 
-    public function searchByNomor()
+    public function lookup()
     {
-        $this->validate(['searchNomor' => 'required|string']);
-
-        $this->registrasi = RegistrasiUsahaLb3::query()
-            ->where('nomor_registrasi', trim($this->searchNomor))
-            ->first();
-
-        if (! $this->registrasi) {
-            $this->addError('searchNomor', __('Nomor registrasi tidak ditemukan.'));
-        } else {
-            $this->resetErrorBag('searchNomor');
+        if (! $this->verifyCaptcha('lookup')) {
+            return;
         }
-    }
 
-    public function searchByNama()
-    {
-        $this->validate(['searchNama' => 'required|string|min:3']);
+        $this->resetCaptcha();
 
-        $this->registrasi = RegistrasiUsahaLb3::query()
-            ->where('nama_perusahaan', 'like', '%'.trim($this->searchNama).'%')
-            ->latest()
-            ->first();
+        $this->validate(['search' => 'required|string']);
 
-        if (! $this->registrasi) {
-            $this->addError('searchNama', __('Registrasi dengan nama perusahaan tersebut tidak ditemukan.'));
+        if ($this->hitRateLimit('cek-registrasi-lb3:search', 20, 'form', __('Batas pencarian tercapai (maksimal 20 kali per jam).'))) {
+            return;
+        }
+
+        $value = trim($this->search);
+        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+
+        if ($isEmail) {
+            $this->registrasi = RegistrasiUsahaLb3::query()
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->latest()
+                ->first();
+
+            if (! $this->registrasi) {
+                $this->addError('search', __('Tidak ada registrasi dengan email tersebut.'));
+            }
         } else {
-            $this->resetErrorBag('searchNama');
+            $this->registrasi = RegistrasiUsahaLb3::query()
+                ->where('nomor_registrasi', $value)
+                ->first();
+
+            if (! $this->registrasi) {
+                $this->addError('search', __('Nomor registrasi tidak ditemukan.'));
+            }
         }
     }
 };
 ?>
 
 <div class="space-y-6 ck-wrap">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        {{-- Cek via Nomor Registrasi --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Nomor Registrasi') }}</h3>
-                    <p class="ck-card-desc">{{ __('Masukkan nomor registrasi LB3 yang Anda terima.') }}</p>
-                </div>
+    <div class="ck-card max-w-4xl mx-auto">
+        <div class="ck-card-head">
+            <span class="ck-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <div class="flex-1">
+                <h3 class="ck-card-title">{{ __('Cek Status Registrasi LB3') }}</h3>
+                <p class="ck-card-desc">{{ __('Masukkan nomor registrasi atau email yang Anda daftarkan untuk melihat status registrasi LB3.') }}</p>
             </div>
-            <form wire:submit.prevent="searchByNomor" class="space-y-3">
+        </div>
+        <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
+            <div class="flex-1">
                 <x-public.input
-                    wire:model="searchNomor"
-                    name="searchNomor"
-                    placeholder="LB3-XXXX-XXXX"
+                    wire:model.live.debounce.250ms="search"
+                    name="search"
+                    placeholder="LB3-XXXX-XXXX atau email@perusahaan.com"
                     required
                 />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari Registrasi') }}
-                </button>
-            </form>
-        </div>
+            </div>
 
-        {{-- Cek via Nama Perusahaan --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Nama Perusahaan') }}</h3>
-                    <p class="ck-card-desc">{{ __('Cari registrasi berdasarkan nama perusahaan.') }}</p>
-                </div>
+            <button type="submit" class="ck-search-btn md:w-auto">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                {{ __('Cari Registrasi') }}
+            </button>
+        </form>
+
+        @error('form')
+            <div class="dlh-limit-alert" role="alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span>{{ $message }}</span>
             </div>
-            <form wire:submit.prevent="searchByNama" class="space-y-3">
-                <x-public.input
-                    wire:model="searchNama"
-                    name="searchNama"
-                    placeholder="{{ __('Nama perusahaan') }}"
-                    required
-                />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari via Nama') }}
-                </button>
-            </form>
-        </div>
+        @enderror
+
+        <x-google-recaptcha />
     </div>
 
     @if ($registrasi)
@@ -116,6 +110,7 @@ new class extends Component
                         'gray' => 'ck-status-badge--pending',
                     ];
                     $isDone = in_array($statusColor, ['success']);
+                    $isProcessed = $statusColor !== 'warning' && $statusColor !== 'gray';
                 @endphp
                 <span class="ck-status-badge {{ $badgeMap[$statusColor] ?? 'ck-status-badge--pending' }}">
                     @if ($isDone)
@@ -148,8 +143,15 @@ new class extends Component
                 @endforeach
             </div>
 
-            {{-- Keamanan: catatan adalah catatan internal petugas dan tidak
-                 ditampilkan di kanal publik untuk mencegah kebocoran informasi. --}}
+            @if ($isProcessed && filled($registrasi->catatan))
+                <div class="ck-note-box mt-5">
+                    <span class="ck-note-label">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        {{ __('Catatan Admin') }}
+                    </span>
+                    <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $registrasi->catatan }}</p>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -207,22 +209,14 @@ new class extends Component
         }
 
         .ck-search-btn {
-            width: 100%;
-            height: 46px;
-            border: none;
-            border-radius: 9999px;
-            background: linear-gradient(180deg, #178a53, #146a44);
-            color: #fff;
+            height: 48px; padding: 0 24px; border: none; border-radius: 9999px;
+            background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
             font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-            font-size: 13.5px;
-            font-weight: 700;
-            cursor: pointer;
+            font-size: 14px; font-weight: 700; cursor: pointer;
             box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
             transition: transform .12s ease, box-shadow .12s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
         }
         .ck-search-btn:hover {
             transform: translateY(-1px);

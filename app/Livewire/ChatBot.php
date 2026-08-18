@@ -28,11 +28,7 @@ class ChatBot extends Component
         $this->isOpen = !$this->isOpen;
 
         if ($this->isOpen && empty($this->messages)) {
-            $this->messages[] = [
-                'role'      => 'assistant',
-                'content'   => "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda tentang layanan DLH Kota Palu.",
-                'timestamp' => now()->toIso8601String(),
-            ];
+            $this->messages = [$this->welcomeMessage()];
             $this->saveMessages();
         }
 
@@ -41,16 +37,9 @@ class ChatBot extends Component
 
     public function clearChat(): void
     {
-        $this->messages = [];
+        // Reset ke kondisi awal: seluruh riwayat lama hilang, hanya sapaan pembuka.
+        $this->messages = [$this->welcomeMessage()];
         $this->pendingToken = '';
-        session()->forget('chatbot_messages');
-
-        // Kembalikan ke kondisi "chat pertama kali": simpan pesan sambutan.
-        $this->messages[] = [
-            'role'      => 'assistant',
-            'content'   => "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda tentang layanan DLH Kota Palu.",
-            'timestamp' => now()->toIso8601String(),
-        ];
         $this->saveMessages();
 
         $this->dispatch('chatbot-cleared');
@@ -112,6 +101,15 @@ class ChatBot extends Component
     {
         $trimmed = array_slice($this->messages, -50);
         session(['chatbot_messages' => $trimmed]);
+    }
+
+    private function welcomeMessage(): array
+    {
+        return [
+            'role'      => 'assistant',
+            'content'   => "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda tentang layanan DLH Kota Palu.",
+            'timestamp' => now()->toIso8601String(),
+        ];
     }
 
     public function render()
