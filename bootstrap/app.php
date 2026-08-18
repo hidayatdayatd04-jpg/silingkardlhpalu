@@ -48,11 +48,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // (di Laravel 12, guest() memperlakukan nilai ini sebagai path,
         // bukan nama route, sehingga harus berupa path lengkap.)
         $middleware->redirectGuestsTo('/admin/login');
-
-        // Exclude webhook endpoints from CSRF protection
-        $middleware->validateCsrfTokens(except: [
-            'api/webhooks/*',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

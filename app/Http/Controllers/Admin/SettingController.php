@@ -168,9 +168,16 @@ class SettingController extends Controller
      */
     private function fetchCustomModels(string $baseUrl, string $apiKey): array
     {
+        // withoutRedirecting(): mencegah bypass anti-SSRF lewat redirect
+        // dari endpoint luar ke alamat internal.
         $response = Http::withToken($apiKey)
             ->timeout(30)
+            ->withoutRedirecting()
             ->get(rtrim($baseUrl, '/') . '/models');
+
+        if ($response->redirect()) {
+            throw new \RuntimeException('Endpoint model melakukan redirect (tidak diizinkan).');
+        }
 
         if ($response->failed()) {
             throw new \RuntimeException('Endpoint model merespons dengan status ' . $response->status());
@@ -302,20 +309,23 @@ class SettingController extends Controller
 
         $hostLower = strtolower(trim($host, '[]'));
 
-        $blockedPattern = '/^(localhost|127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1$)/i';
+        $blockedPattern = '/^(localhost|127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1$|f[cd][0-9a-f]{2}:|fe80:)/i';
 
         if (preg_match($blockedPattern, $hostLower)) {
             throw new \RuntimeException('URL tidak boleh mengarah ke alamat internal/privat.');
         }
 
         // Lapis kedua: bila host berupa IP literal, validasi langsung;
-        // bila bukan, resolusikan DNS lalu validasi hasilnya. Keduanya harus
-        // berada di luar rentang privat/reserved.
+        // bila bukan, resolusikan DNS (A + AAAA) lalu validasi SEMUA hasil.
+        // dns_get_record dipakai karena gethostbyname hanya mengembalikan
+        // satu record IPv4 dan mengabaikan IPv6.
         if (filter_var($hostLower, FILTER_VALIDATE_IP) !== false) {
             $candidates = [$hostLower];
         } else {
-            $resolved = gethostbyname($hostLower);
-            $candidates = $resolved !== $hostLower ? [$resolved] : [];
+            $records = @dns_get_record($hostLower, DNS_A | DNS_AAAA) ?: [];
+            $candidates = array_values(array_unique(array_filter(
+                array_map(fn ($r) => $r['ip'] ?? $r['ipv6'] ?? null, $records)
+            )));
         }
 
         foreach ($candidates as $ip) {

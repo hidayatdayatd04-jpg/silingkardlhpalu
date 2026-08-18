@@ -232,6 +232,12 @@ class DatabaseBackup
                 continue;
             }
 
+            // Guard zip-slip: tolak entri berisi traversal direktori ('..')
+            // atau path absolut agar restore tidak menulis di luar disk.
+            if (str_starts_with($relative, '/') || in_array('..', explode('/', $relative), true)) {
+                continue;
+            }
+
             $content = $zip->getFromIndex($i);
             if ($content === false) {
                 continue;

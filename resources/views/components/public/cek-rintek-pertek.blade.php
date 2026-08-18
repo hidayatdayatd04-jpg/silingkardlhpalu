@@ -150,15 +150,8 @@ new class extends Component
                 @endforeach
             </div>
 
-            @if ($pengajuan->catatan_verifikasi)
-                <div class="ck-note-box mt-5">
-                    <span class="ck-note-label">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        {{ __('Catatan Verifikasi') }}
-                    </span>
-                    <p class="text-sm mt-1.5">{{ $pengajuan->catatan_verifikasi }}</p>
-                </div>
-            @endif
+            {{-- Keamanan: catatan_verifikasi adalah catatan internal petugas dan tidak
+                 ditampilkan di kanal publik untuk mencegah kebocoran informasi. --}}
         </div>
     @endif
 

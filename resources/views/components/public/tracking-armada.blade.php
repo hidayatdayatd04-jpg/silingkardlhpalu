@@ -9,10 +9,13 @@ new class extends Component
     public function updatedSearch() { $this->filterChanged = true; }
     public function getVehicles(): array
     {
-        $query = GpsVehicleCache::query();
+        // Hanya kolom publik yang dikirim ke pengunjung — 'raw_data' berisi
+        // payload mentah GPS tracker dan tidak boleh bocor ke halaman publik.
+        $query = GpsVehicleCache::query()->select(GpsVehicleCache::PUBLIC_COLUMNS);
         if (filled($this->search)) $query->where('title', 'like', '%' . $this->search . '%');
         $vehicles = $query->get()->toArray();
-        $this->js('window.dispatchEvent(new CustomEvent("guest-map-vehicles-updated",{detail:{vehicles:' . json_encode($vehicles) . ',fitBounds:' . ($this->filterChanged?'true':'false') . '}}))');
+        // JSON_HEX_* mencegah breakout </script> saat payload disisipkan via $this->js().
+        $this->js('window.dispatchEvent(new CustomEvent("guest-map-vehicles-updated",{detail:{vehicles:' . json_encode($vehicles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ',fitBounds:' . ($this->filterChanged?'true':'false') . '}}))');
         $this->filterChanged = false;
         return $vehicles;
     }

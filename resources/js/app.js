@@ -182,6 +182,14 @@ window.dlhMapInit = function (containerId) {
     });
 };
 
+// Escape HTML untuk nilai yang disisipkan ke popup armada (data berasal
+// dari cache GPS pihak ketiga — perlakukan sebagai input tidak tepercaya).
+var _dlhEsc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+};
+
 window.dlhMapDrawMarkers = function (vd, fv) {
     var map = window._dlhMap;
     if (!map) { setTimeout(function () { window.dlhMapDrawMarkers(vd, fv); }, 200); return; }
@@ -200,17 +208,19 @@ window.dlhMapDrawMarkers = function (vd, fv) {
         var pfx = isTruck ? 'truck' : 'car';
         var st = (parseInt(v.acc) === 1) ? 'acc_on' : 'parking';
         var iu = '/assets/tracking/' + pfx + '_' + st + '.png';
+        var ang = parseFloat(v.angle);
+        if (isNaN(ang)) ang = 0;
         var el = document.createElement('div');
         el.className = 'custom-vehicle-icon';
-        el.innerHTML = '<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.05);backdrop-filter:blur(4px)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'"><img src="' + iu + '" alt="" style="transform:rotate(' + v.angle + 'deg);width:30px;height:30px;transition:transform 0.3s ease;border-radius:8px" /></div>';
+        el.innerHTML = '<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.05);backdrop-filter:blur(4px)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'"><img src="' + iu + '" alt="" style="transform:rotate(' + ang + 'deg);width:30px;height:30px;transition:transform 0.3s ease;border-radius:8px" /></div>';
         var sc = (parseInt(v.acc) === 1) ? '#10b981' : '#64748b';
         var stx = (parseInt(v.acc) === 1) ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
-        var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + v.title + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + v.speed + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + v.server_time + '</p></div></div>';
+        var ph = '<div style="min-width:200px;padding:14px;font-family:system-ui,-apple-system,sans-serif"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:8px;height:8px;border-radius:50%;background:' + sc + ';box-shadow:0 0 0 3px ' + sc + '33;flex-shrink:0"></div><p style="font-weight:700;font-size:13px;color:#1e293b;margin:0;letter-spacing:-0.3px;line-height:1.3">' + _dlhEsc(v.title) + '</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px"><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Kecepatan</p><p style="font-size:12px;color:#334155;margin:2px 0 0;font-weight:600">' + _dlhEsc(v.speed) + ' <span style="font-weight:400;color:#94a3b8">km/h</span></p></div><div><p style="font-size:10px;color:#94a3b8;margin:0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Status</p><p style="font-size:12px;color:' + sc + ';margin:2px 0 0;font-weight:600">' + stx + '</p></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9"><p style="font-size:10px;color:#94a3b8;margin:0">Update: ' + _dlhEsc(v.server_time) + '</p></div></div>';
 
         var ex = markers.find(function (m) { return m._imei === v.imei; });
         if (ex) {
             ex.setLngLat([lng, lat]);
-            ex.getElement().querySelector('img').style.transform = 'rotate(' + v.angle + 'deg)';
+            ex.getElement().querySelector('img').style.transform = 'rotate(' + ang + 'deg)';
             ex.setPopup(new maplibregl.Popup({ offset: [0, -24], closeButton: true, closeOnClick: false, maxWidth: '280px' }).setHTML(ph));
         } else {
             var mk = new maplibregl.Marker({ element: el, anchor: 'center' })

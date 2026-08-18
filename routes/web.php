@@ -64,7 +64,9 @@ Route::get('/uptd/{slug}', function (string $slug) {
 Route::get('/tata-penataan', fn () => view('public.tata-penataan'));
 
 // Tata Lingkungan — dokumen publik dari Google Drive
-Route::get('/tata-lingkungan', [App\Http\Controllers\TataLingkunganController::class, 'index'])->name('tata-lingkungan');
+Route::get('/tata-lingkungan', [App\Http\Controllers\TataLingkunganController::class, 'index'])
+    ->name('tata-lingkungan')
+    ->middleware('throttle:60,1');
 Route::get('/api/tata-lingkungan/folders', [App\Http\Controllers\TataLingkunganController::class, 'folders'])
     ->name('tata-lingkungan.folders')
     ->middleware('throttle:60,1');
@@ -243,7 +245,7 @@ Route::get('/berita', function () {
     return view('public.berita.index', [
         'artikels' => Artikel::published()->latest('tanggal_publish')->paginate(9),
     ]);
-});
+})->middleware('throttle:60,1');
 
 Route::get('/berita/{slug}', function (string $slug) {
     $artikel = Artikel::published()
@@ -251,7 +253,7 @@ Route::get('/berita/{slug}', function (string $slug) {
         ->firstOrFail();
 
     return view('public.berita.show', compact('artikel'));
-});
+})->middleware('throttle:60,1');
 
 Route::get('/api/armada-aktif', function () {
     return response()->json([
@@ -269,7 +271,8 @@ Route::post('/api/chatbot/stream', [App\Http\Controllers\ChatStreamController::c
 // Permanent proxy for OpenGraph/social-share images stored in the (private) B2 bucket.
 // Avoids short-lived signed URLs that break WhatsApp/Facebook previews.
 Route::get('/file/og', [App\Http\Controllers\OgImageProxyController::class, 'show'])
-    ->name('og.image');
+    ->name('og.image')
+    ->middleware('throttle:60,1');
 
 // Kontak pelaporan kerentanan keamanan (praktik baik website pemerintah).
 Route::get('/.well-known/security.txt', function () {

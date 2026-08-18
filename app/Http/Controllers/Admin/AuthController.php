@@ -34,8 +34,11 @@ class AuthController extends Controller
 
         if (! AdminAccess::hasAnyPanelRole($request->user())) {
             Auth::logout();
+
+            // Pesan sengaja disamakan dengan kegagalan login agar respons
+            // tidak membocorkan keberadaan akun (anti account enumeration).
             throw ValidationException::withMessages([
-                'login' => 'Akun ini belum aktif atau tidak punya akses admin.',
+                'login' => 'Username/email atau password tidak sesuai.',
             ]);
         }
 

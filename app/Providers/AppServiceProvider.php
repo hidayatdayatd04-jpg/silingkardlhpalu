@@ -80,6 +80,15 @@ class AppServiceProvider extends ServiceProvider
         // Livewire sinkron, dan Alpine.store sudah dibungkus 'alpine:init'.
         \Livewire\Livewire::useScriptTagAttributes(['defer' => true]);
 
+        // Endpoint update Livewire default tidak memiliki rate limit. Tambahkan
+        // throttle untuk membatasi abuse lewat komponen publik (polling,
+        // chatbot, form pengaduan). Dipanggil di boot() provider agar route
+        // terdaftar sebelum routes/web.php dimuat (tetap di depan catch-all).
+        \Livewire\Livewire::setUpdateRoute(function ($handle, $path) {
+            return \Illuminate\Support\Facades\Route::post($path, $handle)
+                ->middleware(['web', 'throttle:60,1']);
+        });
+
         // Provider user ter-cache (hindari query DB remote tiap request).
         Auth::provider('cached-eloquent', function ($app, $config) {
             return new CachedUserProvider($app['hash'], $config['model']);

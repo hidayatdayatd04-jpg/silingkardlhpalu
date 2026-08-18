@@ -259,13 +259,14 @@ new class extends Component
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         @php
+                            // Data pribadi pelapor (nama, alamat, nama terlapor) dan catatan
+                            // internal admin sengaja TIDAK ditampilkan di halaman publik —
+                            // disamakan dengan cabang pengaduan lain yang hanya menampilkan
+                            // informasi non-personal.
                             $items = [
-                                __('Nama Pelapor') => $pengaduanTataPenataan->nama_pelapor,
                                 __('Jenis Pengaduan') => \App\Enums\JenisPengaduanTataPenataan::tryFrom($pengaduanTataPenataan->jenis_pengaduan)?->label() ?? $pengaduanTataPenataan->jenis_pengaduan,
                                 __('Tanggal Lapor') => $pengaduanTataPenataan->created_at->format('d M Y H:i'),
-                                __('Alamat') => $pengaduanTataPenataan->alamat,
                             ];
-                            if ($pengaduanTataPenataan->nama_terlapor) $items[__('Nama Terlapor')] = $pengaduanTataPenataan->nama_terlapor;
                             if ($pengaduanTataPenataan->nama_perusahaan_terlapor) $items[__('Perusahaan Terlapor')] = $pengaduanTataPenataan->nama_perusahaan_terlapor;
                         @endphp
                         @foreach ($items as $label => $value)
@@ -279,15 +280,6 @@ new class extends Component
                         <span class="lc-info-label">{{ __('Deskripsi') }}</span>
                         <p class="lc-desc-text">{{ $pengaduanTataPenataan->deskripsi }}</p>
                     </div>
-                    @if ($pengaduanTataPenataan->catatan_admin)
-                        <div class="lc-note-box">
-                            <span class="lc-note-label">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                {{ __('Catatan Admin') }}
-                            </span>
-                            <p class="text-sm mt-1.5">{{ $pengaduanTataPenataan->catatan_admin }}</p>
-                        </div>
-                    @endif
                     @if ($pengaduanTataPenataan->fotos->isNotEmpty())
                         <div class="space-y-2">
                             <span class="lc-info-label">{{ __('Foto Bukti Pengaduan') }}</span>
