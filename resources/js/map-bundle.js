@@ -279,7 +279,7 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
         // Fungsi untuk menambahkan satu layer
         function addSingleLayer(layer) {
             var layerType = typeByLayer[layer.id];
-            var color = typeColor[layerType] || (layer.metadata && layer.metadata.color) || '#6b7280';
+            var color = (layer.metadata && layer.metadata.color) || typeColor[layerType] || '#6b7280';
             var sourceId = 'src-' + layer.id;
 
             // Hapus source dan layer lama jika ada

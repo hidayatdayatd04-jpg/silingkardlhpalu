@@ -118,7 +118,7 @@ class PetaPersampahanController extends Controller
             $vehicleTypes[$key] = [
                 'key' => $key,
                 'label' => $info['label'],
-                'color' => $info['color'],
+                'color' => ($l->metadata['color'] ?? null) ?: $info['color'],
                 'total' => $total,
                 'kelurahans' => $kelurahans,
                 'layerIds' => $typeLayers->pluck('id')->all(),
