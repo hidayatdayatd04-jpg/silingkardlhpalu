@@ -11,7 +11,6 @@
     {{-- FAB Button --}}
     <button
         id="chatbot-fab"
-        onclick="chatbotOpen()"
         class="pointer-events-auto fixed bottom-6 right-6 h-16 w-16 rounded-full flex items-center justify-center cursor-pointer focus:outline-none group transition-transform duration-300 hover:scale-105 active:scale-95"
         style="background:linear-gradient(135deg,#ecfdf5,#ffffff);box-shadow:0 12px 34px rgba(16,185,129,0.4),0 2px 10px rgba(0,0,0,0.16);border:1.5px solid rgba(16,185,129,0.35);"
         aria-label="{{ __('Buka Asisten AI DLH Kota Palu') }}"
@@ -56,10 +55,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button onclick="chatbotClear()" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Hapus percakapan') }}" aria-label="{{ __('Hapus percakapan') }}">
+                    <button id="chatbot-clear-btn" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Hapus percakapan') }}" aria-label="{{ __('Hapus percakapan') }}">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
                     </button>
-                    <button onclick="chatbotClose()" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Tutup') }}" aria-label="{{ __('Tutup') }}">
+                    <button id="chatbot-close-btn" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Tutup') }}" aria-label="{{ __('Tutup') }}">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -67,20 +66,20 @@
         </div>
 
         {{-- Messages --}}
-        <div id="chatbot-messages" wire:ignore.self class="flex-1 overflow-y-auto px-4 py-6 flex flex-col bg-slate-50 dark:bg-slate-950"
+        <div id="chatbot-messages" wire:ignore class="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-3 bg-slate-50 dark:bg-slate-950"
             style="scrollbar-width:thin;scrollbar-color:#a7f3d0 transparent;">
 
             @foreach($chatMessages as $msg)
                 @php $isUser = $msg['role'] === 'user'; @endphp
                 @if($isUser)
                 <div class="cb-msg-row flex justify-end" data-sender="user">
-                    <div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium"
-                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);"><span class="cb-raw">{{ $msg['content'] }}</span></div>
+                    <div class="cb-bubble cb-bubble--user max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium"
+                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);"><div class="cb-raw">{{ $msg['content'] }}</div></div>
                 </div>
                 @else
                 <div class="cb-msg-row flex items-start gap-2" data-sender="bot">
                     <img src="{{ $avatar }}" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">
-                    <div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><span class="cb-raw">{{ $msg['content'] }}</span></div>
+                    <div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-raw">{{ $msg['content'] }}</div></div>
                 </div>
                 @endif
             @endforeach
@@ -90,9 +89,9 @@
 
         {{-- Quick Chips --}}
         @if(count($chatMessages) <= 1)
-        <div id="chatbot-chips" class="shrink-0 px-3 pt-2.5 pb-1.5 flex flex-wrap gap-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+        <div id="chatbot-chips" class="shrink-0 px-3 pt-3 pb-2 flex flex-wrap gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
             @foreach([__('Cara melapor?')=>'Bagaimana cara melapor pengaduan?',__('Layanan apa saja?')=>'Apa saja layanan DLH Kota Palu?',__('Cek status')=>'Bagaimana cara cek status pengaduan saya?',__('Kontak')=>'Bagaimana cara menghubungi DLH Kota Palu?'] as $lbl=>$q)
-            <button onclick="chatbotSuggest('{{ addslashes($q) }}')"
+            <button type="button" data-suggest="{{ $q }}"
                 class="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-white dark:bg-slate-800 text-brand-700 dark:text-brand-300 border border-brand-500/25 shadow-sm transition-all cursor-pointer hover:bg-brand-50 dark:hover:bg-slate-700 hover:-translate-y-0.5">{{ $lbl }}</button>
             @endforeach
         </div>
@@ -107,12 +106,9 @@
                     placeholder="{{ __('Ketik pertanyaan Anda...') }}"
                     class="flex-1 resize-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                     style="min-height:44px;max-height:110px;"
-                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatbotSend();}"
-                    oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"
                 ></textarea>
                 <button
                     id="chatbot-send-btn"
-                    onclick="chatbotSend()"
                     class="shrink-0 h-11 w-11 rounded-2xl text-white flex items-center justify-center transition-all duration-200 focus:outline-none cursor-pointer hover:scale-105 active:scale-95"
                     style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 14px rgba(16,185,129,0.4);"
                     aria-label="{{ __('Kirim pesan') }}"
@@ -126,18 +122,37 @@
     </div>
 
 <style>
-    /* Spasi antar gelembung chat DLH Assistant.
-       Flex column + margin per row agar jarak bisa dibedakan:
-       - ganti sender (user <-> bot): 16px (lebih lega)
-       - pesan berurutan sender sama  : 7px  (lebih rapat, avatar tak menumpuk)
-       Baris pertama mengikuti padding container (py-6). */
-    #chatbot-messages { gap: 0; }
-    #chatbot-messages > .cb-msg-row { margin-top: 16px; }
-    #chatbot-messages > .cb-msg-row:first-child { margin-top: 0; }
-    #chatbot-messages > .cb-msg-row[data-sender="user"] + .cb-msg-row[data-sender="user"],
-    #chatbot-messages > .cb-msg-row[data-sender="bot"]  + .cb-msg-row[data-sender="bot"] {
-        margin-top: 7px;
+    /* Jarak utama antar pesan: flex gap menjaga bubble tidak menumpuk. */
+    #chatbot-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
+    #chatbot-messages > .cb-msg-row {
+        margin: 0;
+    }
+    #chatbot-stream-placeholder {
+        display: contents;
+    }
+    @supports not (gap: 12px) {
+        #chatbot-messages > .cb-msg-row {
+            margin-bottom: 12px;
+        }
+    }
+    #chatbot-messages .cb-bubble {
+        padding-top: 14px;
+        padding-bottom: 14px;
+    }
+    #chatbot-messages .cb-bubble--bot {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+    #chatbot-messages .cb-bubble :is(p, ul, ol, pre) { margin: 0; }
+    #chatbot-messages .cb-bubble :is(p, ul, ol, pre) + :is(p, ul, ol, pre) { margin-top: 12px; }
+    #chatbot-messages .cb-md-ul,
+    #chatbot-messages .cb-md-ol { padding-left: 20px; }
+    #chatbot-messages .cb-md-ul li + li,
+    #chatbot-messages .cb-md-ol li + li { margin-top: 4px; }
 </style>
 
 <script>
@@ -209,22 +224,23 @@
 
     window.chatbotClear = function () {
         if (_isStreaming) return;
-        _history = [];
+        _history = [{ role: 'assistant', content: WELCOME_TEXT }];
+        _welcomed = true;
         var m = msgs();
         // Panel ber-wire:ignore, jadi re-render Livewire tidak menyentuh DOM ini.
-        // Hapus SEMUA bubble (server + dinamis) langsung, sisakan placeholder.
+        // Hapus SEMUA bubble (server + dinamis) langsung, termasuk isi placeholder.
         if (m) {
             Array.prototype.slice.call(m.children).forEach(function (ch) {
                 if (ch.id !== 'chatbot-stream-placeholder') ch.remove();
             });
         }
+        if (placeholder()) placeholder().innerHTML = '';
         var chips = el('chatbot-chips');
         if (chips) chips.style.display = 'flex';
+        appendAIBubble(WELCOME_TEXT);
         scrollBottom();
-        // Reset session di server agar setelah refresh tetap tampil seperti awal.
+        // Reset riwayat server dan DOM sekaligus ke sapaan pembuka yang sama.
         try { wire()?.call('clearChat'); } catch (e) {}
-        // Tampilkan kembali pesan sambutan seperti saat chat pertama kali dibuka.
-        showWelcome();
     };
 
     window.chatbotSuggest = function (text) {
@@ -254,7 +270,7 @@
         setLoadingState(true);
 
         var typingId = 'cb-typing-' + (_history.length);
-        placeholder().insertAdjacentHTML('beforeend', typingHTML(typingId));
+        placeholder().insertAdjacentHTML('beforebegin', typingHTML(typingId));
         scrollBottom();
 
         var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -303,9 +319,12 @@
         if (typingEl) {
             typingEl.innerHTML =
                 '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-                '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><span class="cb-body"></span><span class="cb-caret"></span></div>';
+                '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-body"></div><span class="cb-caret"></span></div>';
         }
-        if (typingEl) typingEl.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
+        if (typingEl) {
+            typingEl.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
+            typingEl.setAttribute('data-sender', 'bot');
+        }
         var body = typingEl ? typingEl.querySelector('.cb-body') : null;
         var caret = typingEl ? typingEl.querySelector('.cb-caret') : null;
 
@@ -384,7 +403,7 @@
         // Loading "keren": logo Kota Palu berputar dalam cincin, + label + titik memantul.
         return '<div id="' + id + '" class="cb-msg-row flex items-start gap-2 cb-dynamic-bubble" data-sender="bot">' +
             '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="px-4 py-3 rounded-2xl rounded-bl-md bg-white dark:bg-slate-800 border border-black/5 dark:border-white/5 shadow-sm">' +
+            '<div class="cb-bubble cb-bubble--bot px-4 py-3 rounded-2xl rounded-bl-md bg-white dark:bg-slate-800 border border-black/5 dark:border-white/5 shadow-sm">' +
             '<div class="flex items-center gap-2.5">' +
                 '<span class="cb-spinner"><span class="cb-spinner__ring"></span>' +
                 '<img src="' + CITY + '" alt="" class="cb-spinner__logo"></span>' +
@@ -401,7 +420,7 @@
         if (!typingEl) { appendAIBubble(text); return; }
         typingEl.innerHTML =
             '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
         scrollBottom();
     }
 
@@ -409,7 +428,7 @@
         var d = document.createElement('div');
         d.className = 'cb-msg-row flex justify-end cb-dynamic-bubble';
         d.setAttribute('data-sender', 'user');
-        d.innerHTML = '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '</div>';
+        d.innerHTML = '<div class="cb-bubble cb-bubble--user max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '</div>';
         placeholder().before(d);
         scrollBottom();
     }
@@ -424,7 +443,7 @@
         d.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
         d.setAttribute('data-sender', 'bot');
         d.innerHTML = '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
         placeholder().before(d);
         scrollBottom();
     }
@@ -529,6 +548,32 @@
             if (p && p.style.display !== 'none' && !_isStreaming) chatbotClose();
         }
     });
+
+    // Semua handler dipasang via addEventListener, bukan atribut on* inline.
+    var fabBtn = el('chatbot-fab');
+    if (fabBtn) fabBtn.addEventListener('click', function () { chatbotOpen(); });
+    var clearBtn = el('chatbot-clear-btn');
+    if (clearBtn) clearBtn.addEventListener('click', function () { chatbotClear(); });
+    var closeBtn = el('chatbot-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', function () { chatbotClose(); });
+    var sendBtn = el('chatbot-send-btn');
+    if (sendBtn) sendBtn.addEventListener('click', function () { chatbotSend(); });
+    var chipsWrap = el('chatbot-chips');
+    if (chipsWrap) {
+        Array.prototype.forEach.call(chipsWrap.querySelectorAll('[data-suggest]'), function (btn) {
+            btn.addEventListener('click', function () { chatbotSuggest(btn.getAttribute('data-suggest')); });
+        });
+    }
+    var inputEl = input();
+    if (inputEl) {
+        inputEl.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); chatbotSend(); }
+        });
+        inputEl.addEventListener('input', function () {
+            inputEl.style.height = 'auto';
+            inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
+        });
+    }
 })();
 </script>
 </div>

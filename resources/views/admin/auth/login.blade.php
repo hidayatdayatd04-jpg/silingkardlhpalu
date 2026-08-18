@@ -190,6 +190,7 @@
             .login-card, .login-float { animation: none !important; }
         }
     </style>
+    @livewireScripts
 </body>
 
 </html>

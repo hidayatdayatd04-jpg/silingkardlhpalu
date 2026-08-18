@@ -26,7 +26,7 @@ new class extends Component {
         $validated = $this->validate((new StorePengaduanPengendalianRequest())->rules());
 
         $ip = request()->ip();
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pengaduan-pengendalian:'.$ip, 5)) {
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pengaduan-pengendalian:'.$ip, 10)) {
             $this->addError('nomor_hp', __('Batas maksimal pengiriman pengaduan tercapai (5 pengaduan per jam). Silakan coba beberapa saat lagi.'));
 
             return;

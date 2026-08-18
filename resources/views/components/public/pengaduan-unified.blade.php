@@ -13,12 +13,16 @@ use App\Models\PengaduanSampahFoto;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengaduanTataPenataanFoto;
 use App\Traits\HandlesPengaduanPhotoUpload;
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component {
     use WithFileUploads;
     use HandlesPengaduanPhotoUpload;
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
 
     public string $bidang = 'pengendalian';
     public ?string $nama_pelapor = null;
@@ -74,17 +78,17 @@ new class extends Component {
 
     public function submit(): void
     {
-        $this->validate($this->rules(), $this->messages());
-
-        $ip = request()->ip();
-        $limiterKey = 'pengaduan-unified:' . $this->bidang . ':' . $ip;
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($limiterKey, 5)) {
-            $this->addError('nomor_hp', __('Batas maksimal pengiriman tercapai (5 pengaduan per jam).'));
-
+        if (! $this->verifyCaptcha('submit')) {
             return;
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit($limiterKey, 3600);
+        $this->resetCaptcha();
+
+        $this->validate($this->rules(), $this->messages());
+
+        if ($this->hitRateLimit('pengaduan-unified', 10, 'form', __('Pengaduan dibatasi maksimal 10 per jam.'))) {
+            return;
+        }
 
         if ($this->bidang === 'tata-penataan') {
             $pengaduan = PengaduanTataPenataan::create([
@@ -284,7 +288,7 @@ new class extends Component {
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" class="grid gap-8"
+        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="grid gap-8"
             :class="located ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'"
             x-data="{
                 located: false,
@@ -494,6 +498,15 @@ new class extends Component {
                         </div>
                     @endif
                 </div>
+
+                @error('form')
+                    <div class="dlh-limit-alert" role="alert">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                        <span>{{ $message }}</span>
+                    </div>
+                @enderror
+
+        <x-google-recaptcha />
 
                 <button type="submit" class="fi-submit-btn">
                     {{ __('Kirim Pengaduan') }}

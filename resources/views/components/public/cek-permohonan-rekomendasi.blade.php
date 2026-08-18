@@ -1,162 +1,153 @@
 <?php
 
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanRekomendasi;
 use Livewire\Component;
 
 new class extends Component
 {
-    public string $searchEmail = '';
-    public string $searchPhone = '';
-    public array $permohonans = [];
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
 
-    public function searchByEmail()
+    public string $search = '';
+    public ?PermohonanRekomendasi $permohonan = null;
+
+    public function lookup()
     {
-        $this->validate(['searchEmail' => 'required|email']);
-
-        $this->permohonans = PermohonanRekomendasi::query()
-            ->where('email', trim($this->searchEmail))
-            ->latest()
-            ->get()
-            ->all();
-
-        if (empty($this->permohonans)) {
-            $this->addError('searchEmail', __('Tidak ada permohonan dengan email tersebut.'));
-        } else {
-            $this->resetErrorBag('searchEmail');
+        if (! $this->verifyCaptcha('lookup')) {
+            return;
         }
-    }
 
-    public function searchByPhone()
-    {
-        $this->validate(['searchPhone' => 'required|string']);
+        $this->resetCaptcha();
 
-        $this->permohonans = PermohonanRekomendasi::query()
-            ->where('nomor_telepon', trim($this->searchPhone))
-            ->latest()
-            ->get()
-            ->all();
+        $this->validate(['search' => 'required|string']);
 
-        if (empty($this->permohonans)) {
-            $this->addError('searchPhone', __('Tidak ada permohonan dengan nomor telepon tersebut.'));
+        if ($this->hitRateLimit('cek-permohonan-rekomendasi:search', 20, 'form', __('Batas pencarian tercapai (maksimal 20 kali per jam).'))) {
+            return;
+        }
+
+        $value = trim($this->search);
+        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+
+        if ($isEmail) {
+            $this->permohonan = PermohonanRekomendasi::query()
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->latest()
+                ->first();
+
+            if (! $this->permohonan) {
+                $this->addError('search', __('Tidak ada permohonan dengan email tersebut.'));
+            }
         } else {
-            $this->resetErrorBag('searchPhone');
+            $this->permohonan = PermohonanRekomendasi::query()
+                ->where('nomor_tiket', $value)
+                ->first();
+
+            if (! $this->permohonan) {
+                $this->addError('search', __('Nomor tiket tidak ditemukan.'));
+            }
         }
     }
 };
 ?>
 
 <div class="space-y-6 ck-wrap">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        {{-- Cek via Email --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Email') }}</h3>
-                    <p class="ck-card-desc">{{ __('Cari semua riwayat permohonan menggunakan email pemohon.') }}</p>
-                </div>
+    <div class="ck-card max-w-4xl mx-auto">
+        <div class="ck-card-head">
+            <span class="ck-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <div class="flex-1">
+                <h3 class="ck-card-title">{{ __('Cek Status Permohonan Rekomendasi') }}</h3>
+                <p class="ck-card-desc">{{ __('Masukkan nomor tiket atau email yang Anda daftarkan untuk melihat status permohonan.') }}</p>
             </div>
-            <form wire:submit.prevent="searchByEmail" class="space-y-3">
+        </div>
+        <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
+            <div class="flex-1">
                 <x-public.input
-                    wire:model="searchEmail"
-                    name="searchEmail"
-                    type="email"
-                    placeholder="email@perusahaan.com"
+                    wire:model.live.debounce.250ms="search"
+                    name="search"
+                    placeholder="{{ __('Nomor tiket atau email') }}"
                     required
                 />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari Riwayat') }}
-                </button>
-            </form>
-        </div>
+            </div>
 
-        {{-- Cek via Nomor Telepon --}}
-        <div class="ck-card">
-            <div class="ck-card-head">
-                <span class="ck-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
-                </span>
-                <div>
-                    <h3 class="ck-card-title">{{ __('Cek via Nomor Telepon') }}</h3>
-                    <p class="ck-card-desc">{{ __('Cari semua riwayat permohonan menggunakan nomor telepon pemohon.') }}</p>
-                </div>
+            <button type="submit" class="ck-search-btn md:w-auto">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                {{ __('Cari Permohonan') }}
+            </button>
+        </form>
+
+        @error('form')
+            <div class="dlh-limit-alert" role="alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span>{{ $message }}</span>
             </div>
-            <form wire:submit.prevent="searchByPhone" class="space-y-3">
-                <x-public.input
-                    wire:model="searchPhone"
-                    name="searchPhone"
-                    type="tel"
-                    placeholder="08123456789"
-                    required
-                />
-                <button type="submit" class="ck-search-btn">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    {{ __('Cari Riwayat') }}
-                </button>
-            </form>
-        </div>
+        @enderror
+
+        <x-google-recaptcha />
     </div>
 
-    @if (! empty($permohonans))
+    @if ($permohonan)
         <div class="max-w-4xl mx-auto space-y-4">
-            <div class="flex items-center gap-3 pt-2">
-                <span class="ck-count-badge">{{ count($permohonans) }}</span>
-                <h3 class="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ __('Riwayat Permohonan') }}</h3>
-            </div>
-            @foreach ($permohonans as $permohonan)
-                <div class="ck-result-card">
-                    <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-start gap-3">
-                            <span class="ck-result-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-                            </span>
-                            <div>
-                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">{{ __('Nomor Tiket') }}</span>
-                                <x-public.copy-ticket :ticket="$permohonan->nomor_tiket" class="font-mono font-bold text-lg text-slate-900 dark:text-slate-100" />
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ $permohonan->nama_perusahaan }} <span class="text-slate-300 dark:text-slate-600">•</span> {{ $permohonan->jenis_usaha }}</p>
-                            </div>
-                        </div>
-                        @php
-                            $isDone = $permohonan->status === 'Ditindaklanjuti' || $permohonan->status === 'Selesai';
-                        @endphp
-                        <span class="ck-status-badge {{ $isDone ? 'ck-status-badge--done' : 'ck-status-badge--pending' }}">
-                            @if ($isDone)
-                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                            @else
-                                <span class="ck-status-dot"></span>
-                            @endif
-                            {{ $permohonan->status }}
+            <div class="ck-result-card">
+                <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-start gap-3">
+                        <span class="ck-result-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                         </span>
-                    </div>
-
-                    <x-public.ticket-feedback :ticket="$permohonan" />
-
-                    <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($permohonan)" />
-
-                    {{-- 'catatan_verifikasi' adalah catatan internal petugas dan sengaja
-                         tidak ditampilkan di halaman publik. --}}
-                    <div class="grid grid-cols-2 gap-4 mt-5 text-sm">
                         <div>
-                            <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Jenis Pengajuan') }}</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->jenis_pengajuan }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Tanggal Pengajuan') }}</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->created_at->format('d M Y H:i') }}</span>
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">{{ __('Nomor Tiket') }}</span>
+                            <x-public.copy-ticket :ticket="$permohonan->nomor_tiket" class="font-mono font-bold text-lg text-slate-900 dark:text-slate-100" />
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ $permohonan->nama_perusahaan }} <span class="text-slate-300 dark:text-slate-600">•</span> {{ $permohonan->jenis_usaha }}</p>
                         </div>
                     </div>
-                    <div class="mt-5">
-                        <a href="{{ url('/permohonan-rekomendasi/'.$permohonan->nomor_tiket.'/bukti-pdf') }}"
-                            class="ck-download-link">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                            {{ __('Unduh Bukti PDF') }}
-                        </a>
+                    @php
+                        $statusValue = $permohonan->status instanceof \BackedEnum ? $permohonan->status->value : $permohonan->status;
+                        $isDone = in_array($statusValue, ['Ditindaklanjuti', 'Selesai'], true);
+                    @endphp
+                    <span class="ck-status-badge {{ $isDone ? 'ck-status-badge--done' : 'ck-status-badge--pending' }}">
+                        @if ($isDone)
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                        @else
+                            <span class="ck-status-dot"></span>
+                        @endif
+                        {{ $permohonan->status }}
+                    </span>
+                </div>
+
+                <x-public.ticket-feedback :ticket="$permohonan" />
+
+                <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($permohonan)" />
+
+                @if ($isDone && filled($permohonan->catatan_verifikasi))
+                    <div class="ck-note-box mt-5">
+                        <span class="ck-note-label">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            {{ __('Catatan Admin') }}
+                        </span>
+                        <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $permohonan->catatan_verifikasi }}</p>
+                    </div>
+                @endif
+                <div class="grid grid-cols-2 gap-4 mt-5 text-sm">
+                    <div>
+                        <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Jenis Pengajuan') }}</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->jenis_pengajuan }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Tanggal Pengajuan') }}</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->created_at->format('d M Y H:i') }}</span>
                     </div>
                 </div>
-            @endforeach
+                <div class="mt-5">
+                    <a href="{{ url('/permohonan-rekomendasi/'.$permohonan->nomor_tiket.'/bukti-pdf') }}"
+                        class="ck-download-link">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        {{ __('Unduh Bukti PDF') }}
+                    </a>
+                </div>
+            </div>
         </div>
     @endif
 
@@ -216,22 +207,14 @@ new class extends Component
 
         /* ── Search Button ── */
         .ck-search-btn {
-            width: 100%;
-            height: 46px;
-            border: none;
-            border-radius: 9999px;
-            background: linear-gradient(180deg, #178a53, #146a44);
-            color: #fff;
+            height: 48px; padding: 0 24px; border: none; border-radius: 9999px;
+            background: linear-gradient(180deg, #178a53, #146a44); color: #fff;
             font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-            font-size: 13.5px;
-            font-weight: 700;
-            cursor: pointer;
+            font-size: 14px; font-weight: 700; cursor: pointer;
             box-shadow: 0 8px 20px -6px rgba(20, 106, 68, 0.5);
             transition: transform .12s ease, box-shadow .12s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
         }
         .ck-search-btn:hover {
             transform: translateY(-1px);

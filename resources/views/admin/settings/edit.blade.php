@@ -173,7 +173,7 @@
                                 @endif
                             </div>
                             <form method="POST" action="{{ route('admin.settings.providers.destroy', $provider) }}"
-                                  onsubmit="return confirm('Hapus provider &quot;{{ $provider->name }}&quot;?');">
+                                  class="js-confirm-delete" data-confirm="Hapus provider &quot;{{ $provider->name }}&quot;?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Hapus provider" aria-label="Hapus provider {{ $provider->name }}">
@@ -809,6 +809,15 @@
             },
         };
     }
+
+    // CSP: konfirmasi hapus provider dipasang via addEventListener, bukan onsubmit inline.
+    document.querySelectorAll('form.js-confirm-delete').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!window.confirm(form.getAttribute('data-confirm') || 'Yakin?')) {
+                event.preventDefault();
+            }
+        });
+    });
 </script>
 @endpush
 @endif

@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PengajuanRintekPertek;
 use App\Models\RegistrasiUsahaLb3;
 use App\Services\FileUploadService;
@@ -10,6 +12,8 @@ use Livewire\WithFileUploads;
 new class extends Component
 {
     use WithFileUploads;
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
 
     public ?string $registrasi_usaha_lb3_id = null;
     public ?string $nama_perusahaan = null;
@@ -48,17 +52,19 @@ new class extends Component
 
     public function submit(): void
     {
+        if (! $this->verifyCaptcha('submit')) {
+            return;
+        }
+
+        $this->resetCaptcha();
+
         $validated = $this->validate((new \App\Http\Requests\StorePengajuanRintekPertekRequest())->rules());
 
-        $ip = request()->ip();
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('pengajuan-rintek-pertek:'.$ip, 3)) {
-            $this->addError('email', __('Batas maksimal pengajuan tercapai (3 pengajuan per jam). Silakan coba beberapa saat lagi.'));
-
+        if ($this->hitRateLimit('pengajuan-rintek-pertek', 10, 'form', __('Pengajuan dibatasi maksimal 10 per jam.'))) {
             return;
         }
 
         $this->isSubmitting = true;
-        \Illuminate\Support\Facades\RateLimiter::hit('pengajuan-rintek-pertek:'.$ip, 3600);
 
         $paths = [];
         $fileService = app(FileUploadService::class);
@@ -163,7 +169,7 @@ new class extends Component
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" class="space-y-8">
+        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-8">
             {{-- Section: Data Perusahaan --}}
             <section class="space-y-5">
                 <header class="fi-section-head">
@@ -398,6 +404,15 @@ new class extends Component
                     <li>{{ __('Pastikan dokumen yang diunggah dapat dibaca dengan jelas.') }}</li>
                 </ul>
             </div>
+
+            @error('form')
+                <div class="dlh-limit-alert" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <span>{{ $message }}</span>
+                </div>
+            @enderror
+
+        <x-google-recaptcha />
 
             <button type="submit" wire:loading.attr="disabled" wire:target="submit" class="fi-submit-btn">
                 <span wire:loading.remove wire:target="submit" class="inline-flex items-center justify-center gap-2">

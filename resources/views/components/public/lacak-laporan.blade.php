@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Concerns\ThrottlesPublic;
+use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use Livewire\Component;
 use App\Models\PengaduanPengendalian;
 use App\Models\PengaduanSampah;
@@ -8,7 +10,10 @@ use App\Models\PengaduanTataPenataan;
 
 new class extends Component
 {
-    public string $searchTicket = '';
+    use VerifiesGoogleRecaptcha;
+    use ThrottlesPublic;
+
+    public string $search = '';
     /** @var PengaduanPengendalian|PengaduanSampah|PengaduanRth|null */
     public $pengaduan = null;
     public ?PengaduanTataPenataan $pengaduanTataPenataan = null;
@@ -20,16 +25,95 @@ new class extends Component
         'TTP' => PengaduanTataPenataan::class,
     ];
 
-    public function search()
+    /**
+     * Normalisasi nomor telepon ke bentuk baku agar pencarian cocok meski
+     * pengguna mengetik 08xxx, 62xxx, atau +62xxx.
+     *
+     * @return string[]
+     */
+    private function normalizePhoneCandidates(string $digits): array
     {
+        if ($digits === '') {
+            return [];
+        }
+
+        $candidates = [$digits];
+
+        if (str_starts_with($digits, '0')) {
+            // 08xxx -> 628xxx
+            $candidates[] = '62'.substr($digits, 1);
+        } elseif (str_starts_with($digits, '62')) {
+            // 628xxx -> 08xxx
+            $candidates[] = '0'.substr($digits, 2);
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
+    public function lookup()
+    {
+        if (! $this->verifyCaptcha('lookup')) {
+            return;
+        }
+
+        $this->resetCaptcha();
+
         $this->validate([
-            'searchTicket' => 'required|string',
+            'search' => 'required|string',
         ]);
 
-        $ticket = strtoupper(trim($this->searchTicket));
+        if ($this->hitRateLimit('lacak-laporan:search', 20, 'form', __('Batas pencarian tercapai (maksimal 20 kali per jam).'))) {
+            return;
+        }
+
+        $value = trim($this->search);
+
+        // Deteksi nomor telepon: hanya terdiri dari angka, spasi, tanda hubung,
+        // atau diawali '+'. Nomor tiket mengandung huruf sehingga tidak akan cocok.
+        $digits = preg_replace('/\D/', '', $value);
+        $isPhone = $digits !== '' && preg_match('/^[\d\s\-+]+$/', $value);
 
         $this->pengaduan = null;
         $this->pengaduanTataPenataan = null;
+
+        if ($isPhone) {
+            $candidates = $this->normalizePhoneCandidates($digits);
+
+            if (empty($candidates)) {
+                $this->addError('search', __('Nomor telepon tidak valid.'));
+
+                return;
+            }
+
+            foreach (self::TICKET_MODELS as $modelClass) {
+                $found = $modelClass::query()
+                    ->with('fotos')
+                    ->where(function ($query) use ($candidates): void {
+                        foreach ($candidates as $candidate) {
+                            $query->orWhere('nomor_hp', $candidate)
+                                // Cocokkan meski tersimpan dengan '+', spasi, atau '-'.
+                                ->orWhereRaw("REPLACE(REPLACE(REPLACE(nomor_hp, '+', ''), ' ', ''), '-', '') = ?", [$candidate]);
+                        }
+                    })
+                    ->first();
+
+                if ($found) {
+                    if ($modelClass === PengaduanTataPenataan::class) {
+                        $this->pengaduanTataPenataan = $found;
+                    } else {
+                        $this->pengaduan = $found;
+                    }
+
+                    return;
+                }
+            }
+
+            $this->addError('search', __('Nomor telepon tidak ditemukan.'));
+
+            return;
+        }
+
+        $ticket = strtoupper($value);
 
         // Shortcut: cari di tabel sesuai prefix tiket.
         $prefix = substr($ticket, 0, 3);
@@ -53,7 +137,7 @@ new class extends Component
             }
         }
 
-        $this->addError('searchTicket', __('Nomor tiket tidak ditemukan.'));
+        $this->addError('search', __('Nomor tiket tidak ditemukan.'));
     }
 };
 ?>
@@ -67,23 +151,33 @@ new class extends Component
             </span>
             <div class="flex-1">
                 <h3 class="lc-search-title">{{ __('Lacak Laporan') }}</h3>
-                <p class="lc-search-desc">{{ __('Masukkan nomor tiket untuk memantau status verifikasi dan tindak lanjut petugas.') }}</p>
+                <p class="lc-search-desc">{{ __('Gunakan nomor tiket atau nomor telepon yang tercantum pada bukti laporan.') }}</p>
             </div>
         </div>
-        <form wire:submit.prevent="search" class="flex flex-col md:flex-row items-stretch md:items-end gap-3">
+        <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
             <div class="flex-1">
                 <x-public.input
-                    wire:model="searchTicket"
-                    name="searchTicket"
-                    placeholder="{{ __('Contoh: PDL-XXXX-XXXX, SMP-XXXX-XXXX, RTH-XXXX-XXXX, atau TTP-XXXX-XXXX') }}"
+                    wire:model.live.debounce.250ms="search"
+                    name="search"
+                    placeholder="{{ __('Nomor tiket (PDL/SMP/RTH/TTP) atau nomor telepon (08xxx / 62xxx / +62xxx)') }}"
                     required
                 />
             </div>
+
             <button type="submit" class="lc-search-btn">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 {{ __('Cari Laporan') }}
             </button>
         </form>
+
+        @error('form')
+            <div class="dlh-limit-alert" role="alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span>{{ $message }}</span>
+            </div>
+        @enderror
+
+        <x-google-recaptcha />
     </div>
 
     @if ($pengaduan)
@@ -194,6 +288,16 @@ new class extends Component
                         </div>
                     @endif
 
+                    @if (in_array($statusStr, ['Ditindaklanjuti', 'Selesai', 'Ditolak'], true) && filled($pengaduan->catatan_admin))
+                        <div class="lc-note-box">
+                            <span class="lc-note-label">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                {{ __('Catatan Admin') }}
+                            </span>
+                            <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $pengaduan->catatan_admin }}</p>
+                        </div>
+                    @endif
+
                     @if ($pengaduan->fotos->isNotEmpty())
                         <div class="space-y-2">
                             <span class="lc-info-label">{{ __('Foto Lampiran Pengaduan') }}</span>
@@ -214,7 +318,7 @@ new class extends Component
                         {{ __('Lokasi Peta') }}
                     </h3>
                     <div wire:ignore wire:key="map-{{ $pengaduan->nomor_tiket }}"
-                         x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-laporan-{{ $pengaduan->nomor_tiket }}',{lat:@js($pengaduan->latitude),lng:@js($pengaduan->longitude),zoom:14,popupText:'{{ __('Lokasi Laporan') }}'})},100)">
+                         x-data x-init="setTimeout(function(){window.ensureMapComponents().then(function(){window.dlhSimpleMap('cek-map-laporan-{{ $pengaduan->nomor_tiket }}',{lat:@js($pengaduan->latitude),lng:@js($pengaduan->longitude),zoom:14,popupText:@js(__('Lokasi Laporan'))})})},100)">
                         <div id="cek-map-laporan-{{ $pengaduan->nomor_tiket }}" class="lc-map"></div>
                     </div>
                 </div>
@@ -280,6 +384,15 @@ new class extends Component
                         <span class="lc-info-label">{{ __('Deskripsi') }}</span>
                         <p class="lc-desc-text">{{ $pengaduanTataPenataan->deskripsi }}</p>
                     </div>
+                    @if ($isDone && filled($pengaduanTataPenataan->catatan_admin))
+                        <div class="lc-note-box">
+                            <span class="lc-note-label">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                {{ __('Catatan Admin') }}
+                            </span>
+                            <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $pengaduanTataPenataan->catatan_admin }}</p>
+                        </div>
+                    @endif
                     @if ($pengaduanTataPenataan->fotos->isNotEmpty())
                         <div class="space-y-2">
                             <span class="lc-info-label">{{ __('Foto Bukti Pengaduan') }}</span>
@@ -300,7 +413,7 @@ new class extends Component
                         {{ __('Lokasi Peta') }}
                     </h3>
                     <div wire:ignore wire:key="map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}"
-                         x-data x-init="setTimeout(function(){dlhSimpleMap('cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}',{lat:@js($pengaduanTataPenataan->latitude),lng:@js($pengaduanTataPenataan->longitude),zoom:14,popupText:'{{ __('Lokasi Pengaduan') }}'})},100)">
+                         x-data x-init="setTimeout(function(){window.ensureMapComponents().then(function(){window.dlhSimpleMap('cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}',{lat:@js($pengaduanTataPenataan->latitude),lng:@js($pengaduanTataPenataan->longitude),zoom:14,popupText:@js(__('Lokasi Pengaduan'))})})},100)">
                         <div id="cek-map-ttp-{{ $pengaduanTataPenataan->nomor_tiket }}" class="lc-map"></div>
                     </div>
                 </div>
