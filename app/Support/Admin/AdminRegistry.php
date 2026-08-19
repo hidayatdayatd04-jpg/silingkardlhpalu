@@ -75,7 +75,7 @@ class AdminRegistry
                 'items' => [
                     self::resource('artikel', 'Artikel', Artikel::class, ['judul', 'status', 'tanggal_publish']),
                     self::resource('user', 'Pengguna Admin', User::class, ['name', 'username', 'email', 'role', 'is_active']),
-                    ['slug' => 'sekretariat', 'label' => 'Kesekretariatan', 'link' => '/admin/sekretariat', 'icon' => 'building'],
+                    ['slug' => 'ulasan-masyarakat', 'label' => 'Ulasan Masyarakat', 'link' => '/admin/ulasan-masyarakat', 'icon' => 'star'],
                 ],
             ],
         ];
@@ -657,7 +657,7 @@ class AdminRegistry
                     'name' => 'status',
                     'label' => 'Status Pengaduan',
                     'type' => 'select',
-                    'options' => \App\Enums\StatusPengaduanRth::options(),
+                    'options' => \App\Enums\StatusPengaduan::options(),
                     'required' => true,
                     'wide' => true,
                 ],
@@ -682,7 +682,6 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'wide' => true,
-                    'show_on_status' => 'Ditolak',
                 ],
                 [
                     'name' => '_section_foto',
@@ -792,7 +791,7 @@ class AdminRegistry
                     'name' => 'status',
                     'label' => 'Status',
                     'type' => 'select',
-                    'options' => \App\Enums\StatusPengaduanTataPenataan::options(),
+                    'options' => \App\Enums\StatusPengaduan::options(),
                     'required' => true,
                     'wide' => true,
                 ],
@@ -899,14 +898,6 @@ class AdminRegistry
                     'readonly_on_edit' => true,
                 ],
                 [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
-                    'required' => true,
-                    'readonly_on_edit' => true,
-                ],
-                [
                     'name' => '_section_pengajuan',
                     'label' => 'Data Pengajuan',
                     'type' => 'section',
@@ -954,7 +945,7 @@ class AdminRegistry
 
         // Custom fields untuk resource 'pengajuan-rintek-pertek'
         if (in_array($resource['slug'], ['pengajuan-rintek-pertek'])) {
-            return self::decorateFields($resource, [
+            $fields = self::decorateFields($resource, [
                 [
                     'name' => 'nomor_pengajuan',
                     'label' => 'Nomor Pengajuan',
@@ -1023,13 +1014,6 @@ class AdminRegistry
                     'name' => 'nomor_telepon',
                     'label' => 'Nomor Telepon',
                     'type' => 'tel',
-                    'options' => [],
-                    'required' => true,
-                ],
-                [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
                     'options' => [],
                     'required' => true,
                 ],
@@ -1117,7 +1101,7 @@ class AdminRegistry
                     'name' => 'status',
                     'label' => 'Status Pengajuan',
                     'type' => 'select',
-                    'options' => \App\Enums\RintekPertekStatus::options(),
+                    'options' => \App\Enums\StatusPengaduan::options(),
                     'required' => true,
                 ],
                 [
@@ -1127,6 +1111,17 @@ class AdminRegistry
                     'options' => [],
                 ],
             ]);
+
+            // Data dari masyarakat bersifat final: hanya bagian "Verifikasi Admin"
+            // (status & catatan_verifikasi) yang boleh diedit oleh admin.
+            return collect($fields)->map(function (array $field): array {
+                $name = $field['name'] ?? null;
+                if ($name !== null && ! in_array($name, ['status', 'catatan_verifikasi'], true)) {
+                    $field['readonly_on_edit'] = true;
+                }
+
+                return $field;
+            })->all();
         }
 
         // Custom fields untuk resource 'pelanggaran' (gabungan Pelanggaran + Sanksi)
@@ -1198,7 +1193,7 @@ class AdminRegistry
                     'name' => 'status_sanksi',
                     'label' => 'Status Sanksi',
                     'type' => 'select',
-                    'options' => \App\Enums\StatusSanksi::options(),
+                    'options' => \App\Enums\StatusPengaduan::options(),
                     'wide' => true,
                 ],
                 [
@@ -1264,10 +1259,17 @@ class AdminRegistry
                     'label' => 'Jenis LB3',
                     'type' => 'select',
                     'options' => array_combine(
-                        ['Pengumpul LB3', 'Pengangkut LB3', 'Pemanfaat LB3', 'Pengolah LB3', 'Penimbun LB3', 'Lainnya'],
-                        ['Pengumpul LB3', 'Pengangkut LB3', 'Pemanfaat LB3', 'Pengolah LB3', 'Penimbun LB3', 'Lainnya']
+                        ['Medis', 'Oli Bekas', 'Kimia', 'Aki', 'Lainnya'],
+                        ['Medis', 'Oli Bekas', 'Kimia', 'Aki', 'Lainnya']
                     ),
                     'required' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'jenis_lb3_lainnya',
+                    'label' => 'Jenis LB3 (Lainnya)',
+                    'type' => 'text',
+                    'options' => [],
                     'readonly_on_edit' => true,
                 ],
                 [
@@ -1280,7 +1282,7 @@ class AdminRegistry
                     'name' => 'status',
                     'label' => 'Status',
                     'type' => 'select',
-                    'options' => array_filter(\App\Enums\RegistrasiLb3Status::options(), fn ($v) => in_array($v, ['Disetujui', 'Ditolak'])),
+                    'options' => \App\Enums\StatusPengaduan::options(),
                     'required' => true,
                     'wide' => true,
                 ],
@@ -1303,6 +1305,9 @@ class AdminRegistry
                     'label' => self::labelForField($field),
                     'type' => self::fieldType($model, $field),
                     'options' => self::fieldOptions($model, $field),
+                    // Data dari masyarakat bersifat final: hanya Status & Catatan
+                    // Admin yang boleh diubah di halaman edit. Sisanya read-only.
+                    'readonly_on_edit' => ! in_array($field, ['status', 'catatan_admin'], true),
                 ])
                 ->values()
                 ->all();
@@ -1529,6 +1534,22 @@ class AdminRegistry
                 ],
             ],
         ][$slug] ?? [];
+    }
+
+    /**
+     * Bangun URL preview inline (lokal, wajib login admin) untuk sebuah file
+     * storage. URL-nya bersih: {web}/{resource}/{nama-file}, sehingga address
+     * bar tidak menampilkan URL signed B2 langsung.
+     *
+     * @param string $path Path relatif file di disk (mis. permohonan-rekomendasi/dokumen/Surat.pdf)
+     * @param string $resourceSlug Slug resource (mis. permohonan-rekomendasi)
+     */
+    public static function previewUrl(string $path, string $resourceSlug): string
+    {
+        return route('file.preview', [
+            'resource' => $resourceSlug,
+            'file' => basename($path),
+        ]);
     }
 
     protected static function decorateFields(array $resource, array $fields): array

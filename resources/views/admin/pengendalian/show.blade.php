@@ -52,9 +52,9 @@
     $mapLng = $record->longitude ?? null;
     $hasMap = $mapLat !== null && $mapLng !== null && $mapLat != 0 && $mapLng != 0;
 
-    $fotos = ($record instanceof \App\Models\Laporan && $record->fotos && $record->fotos->isNotEmpty())
-        ? $record->fotos->map(fn($f) => ['url' => $f->fullUrl(), 'caption' => ''])->all()
-        : [];
+    $fotoItems = (method_exists($record, 'fotos') && $record->fotos && $record->fotos->isNotEmpty())
+        ? $record->fotos
+        : collect();
 @endphp
 
 <div x-data x-init="window.staggerReveal($el.querySelectorAll('.stagger-item'), 80)" class="space-y-6">
@@ -136,7 +136,7 @@
                                     @php
                                         $docPath = $record->{$field['name']} ?? null;
                                         $docExt = $docPath ? pathinfo($docPath, PATHINFO_EXTENSION) : '';
-                                        $docName = $docExt ? $field['label'].'.'.$docExt : $field['label'];
+                                        $docName = $docPath ? basename($docPath) : $field['label'];
                                     @endphp
                                     <x-admin.file-preview
                                         :label="$field['label']"
@@ -152,10 +152,36 @@
             @endif
 
             {{-- Foto bukti --}}
-            @if(!empty($fotos))
+            @if($fotoItems->isNotEmpty())
                 <div class="stagger-item">
-                    <x-admin.section-card title="Foto Bukti" icon="eye" :subtitle="count($fotos) . ' foto'">
-                        <x-admin.lightbox :images="$fotos" :columns="3" />
+                    <x-admin.section-card title="Foto Bukti" icon="eye" :subtitle="$fotoItems->count() . ' foto'">
+                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                            @foreach($fotoItems as $foto)
+                                @php
+                                    $fotoPath = $foto->path_foto ?? null;
+                                    $fotoName = $fotoPath ? basename((string) $fotoPath) : ('Foto '.$loop->iteration);
+                                    $fotoSrc = $foto->fullUrl();
+                                @endphp
+                                @if($fotoPath)
+                                    <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
+                                        <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
+                                            class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                            <img src="{{ $fotoSrc }}" alt="Foto {{ $loop->iteration }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
+                                        </a>
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
+                                                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-blue-600 ring-1 ring-slate-200 transition hover:bg-blue-50">
+                                                <x-admin.icon name="eye" :size="14" /> Lihat
+                                            </a>
+                                            <a href="{{ route('admin.file.download', ['path' => $fotoPath, 'name' => $fotoName, 'resource' => $resource['slug']]) }}" target="_blank"
+                                                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-slate-200 transition hover:bg-emerald-50">
+                                                <x-admin.icon name="download" :size="14" /> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     </x-admin.section-card>
                 </div>
             @endif

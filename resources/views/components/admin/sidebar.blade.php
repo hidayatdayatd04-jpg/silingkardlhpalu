@@ -22,7 +22,6 @@
         'artikel-sampah-lb3' => 'news',
         'artikel-tata-penataan' => 'news',
         'artikel-rth' => 'news',
-        'sekretariat' => 'building',
         'user' => 'user-check',
         'website-settings' => 'settings',
         'peta' => 'map',
@@ -181,7 +180,7 @@
 
             @if($isSuperadmin)
                 @php $isBackupActive = request()->routeIs('admin.backup.*'); @endphp
-                <section class="pt-5" aria-labelledby="mobile-sidebar-system">
+                <section class="pt-2" aria-labelledby="mobile-sidebar-system">
                     <p id="mobile-sidebar-system" class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">Sistem</p>
                     <a
                         href="{{ route('admin.backup.index') }}"
@@ -290,9 +289,9 @@
             </section>
         @endforeach
 
-        @if($isSuperadmin)
-            @php $isBackupActive = request()->routeIs('admin.backup.*'); @endphp
-            <section class="pt-4" x-bind:class="$store.sidebar.collapsed ? 'pt-2' : 'pt-4'">
+            @if($isSuperadmin)
+                @php $isBackupActive = request()->routeIs('admin.backup.*'); @endphp
+                <section class="pt-2" x-bind:class="$store.sidebar.collapsed ? 'pt-1' : 'pt-2'">
                 <a
                     href="{{ route('admin.backup.index') }}"
                     class="group relative flex min-h-11 items-center gap-3 rounded-xl py-2.5 transition-colors duration-150 {{ $isBackupActive ? 'border border-emerald-400/20 bg-emerald-400/15 text-white' : 'border border-transparent text-white/70 hover:bg-white/[0.07] hover:text-white' }}"

@@ -8,18 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class TicketTimelineService
 {
     private const STATUS_LABELS = [
-        'Belum Ditinjau' => ['label' => 'Menunggu Peninjauan', 'color' => 'gray'],
-        'Ditinjau' => ['label' => 'Sedang Ditinjau', 'color' => 'amber'],
+        'Belum Ditinjau' => ['label' => 'Belum Ditinjau', 'color' => 'gray'],
+        'Ditinjau' => ['label' => 'Ditinjau', 'color' => 'amber'],
         'Selesai' => ['label' => 'Selesai', 'color' => 'emerald'],
         'Ditolak' => ['label' => 'Ditolak', 'color' => 'red'],
-        'Belum Ditindaklanjuti' => ['label' => 'Menunggu Penanganan', 'color' => 'gray'],
-        'Ditindaklanjuti' => ['label' => 'Sedang Ditangani', 'color' => 'amber'],
+        'Belum Ditindaklanjuti' => ['label' => 'Belum Ditindaklanjuti', 'color' => 'warning'],
+        'Ditindaklanjuti' => ['label' => 'Ditindaklanjuti', 'color' => 'success'],
         'Disetujui' => ['label' => 'Disetujui', 'color' => 'emerald'],
-        'DIAJUKAN' => ['label' => 'Diajukan', 'color' => 'gray'],
+        'Diajukan' => ['label' => 'Diajukan', 'color' => 'gray'],
+        'Diverifikasi' => ['label' => 'Diverifikasi', 'color' => 'amber'],
+        'menunggu' => ['label' => 'Menunggu', 'color' => 'gray'],
+        'ditugaskan' => ['label' => 'Ditugaskan', 'color' => 'amber'],
+        'selesai' => ['label' => 'Selesai', 'color' => 'emerald'],
+        'diberikan' => ['label' => 'Diberikan', 'color' => 'emerald'],
+        'banding' => ['label' => 'Banding', 'color' => 'amber'],
+        'belum' => ['label' => 'Belum', 'color' => 'gray'],
+        'proses' => ['label' => 'Proses', 'color' => 'amber'],
         'DIPROSES' => ['label' => 'Sedang Diproses', 'color' => 'amber'],
-        'MENUNGGU' => ['label' => 'Menunggu', 'color' => 'gray'],
-        'Disetujui' => ['label' => 'Disetujui', 'color' => 'emerald'],
-        'DITOLAK' => ['label' => 'Ditolak', 'color' => 'red'],
         'DIPERBARUI' => ['label' => 'Diperbarui', 'color' => 'sky'],
     ];
 

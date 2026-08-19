@@ -153,7 +153,7 @@
                     'accent' => 'bay',
                     'icon' => 'tata-penataan',
                     'links' => [
-                        [__('Pengaduan'), '/pengaduan-tata-penataan'],
+                        [__('Pengaduan'), '/pengaduan?bidang=tata-penataan'],
                         [__('Cek Status'), '/lacak'],
                         [__('Tata Lingkungan'), '/tata-lingkungan'],
                     ],
@@ -193,7 +193,7 @@
                         <h3 class="font-bold text-lg text-slate-900 dark:text-white">{{ $bidang['title'] }}</h3>
                         <p class="flex-1 text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">{{ $bidang['desc'] }}</p>
 
-                        <div class="flex flex-wrap gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex flex-col items-start gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
                             @foreach ($bidang['links'] as [$label, $url])
                                 <a href="{{ $url }}" class="inline-flex items-center whitespace-nowrap rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 transition-all duration-200 {{ $a['linkHover'] }}">
                                     {{ $label }}

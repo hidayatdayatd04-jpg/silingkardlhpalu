@@ -7,8 +7,7 @@ use App\Enums\ArtikelStatus;
 use App\Enums\JenisPengaduanPengendalian;
 use App\Enums\JenisPengaduanRth;
 use App\Enums\JenisPengaduanSampah;
-use App\Enums\PengaduanStatus;
-use App\Enums\StatusPengaduanRth;
+use App\Enums\StatusPengaduan;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateExportJob;
 use App\Models\Pelanggaran;
@@ -302,9 +301,10 @@ class ResourceController extends Controller
         );
 
         // Batasi path ke direktori penyimpanan milik resource ini saja:
-        // 'admin/{slug}/' (field file langsung) atau direktori upload relasi
-        // (foto pengaduan, dokumen permohonan, file sosialisasi, dll).
-        $allowedPrefixes = ['admin/'.$meta['slug'].'/'];
+        // '{slug}/' (seluruh subdirektori upload resource, mis. surat/,
+        // dokumen/), 'admin/{slug}/' (field file langsung), serta direktori
+        // upload relasi (foto pengaduan, dokumen permohonan, dll).
+        $allowedPrefixes = [$meta['slug'].'/', 'admin/'.$meta['slug'].'/'];
         foreach (AdminRegistry::relationUploads($meta['slug']) as $upload) {
             $allowedPrefixes[] = $upload['directory'].'/';
         }
@@ -336,6 +336,72 @@ class ResourceController extends Controller
         }
 
         return Storage::disk('public')->download($path, $downloadName);
+    }
+
+    /**
+     * Preview inline dokumen/lampiran dari storage publik via proxy web lokal.
+     *
+     * Tidak mengembalikan URL signed B2, melainkan menjembatani file dari B2
+     * lalu menyajikannya inline (Content-Disposition: inline) sehingga address
+     * bar menampilkan domain web sendiri, bukan URL storage. Akses wajib login
+     * admin (middleware di web.php) dan diotorisasi per-bidang seperti download.
+     */
+    public function previewFile(Request $request)
+    {
+        $resource = (string) $request->route('resource');
+        $file = (string) $request->route('file');
+
+        // Otorisasi per-bidang: resource wajib dikenal (find() akan 404 bila tak dikenal).
+        $meta = AdminRegistry::find($resource);
+        $this->authorize($meta);
+
+        // Validasi path: tolak kosong, traversal (..), path absolut,
+        // drive letter Windows, null byte, dan backslash.
+        abort_unless(
+            $file !== ''
+            && ! str_contains($file, '..')
+            && ! str_starts_with($file, '/')
+            && ! str_starts_with($file, '\\')
+            && ! str_contains($file, ':')
+            && ! str_contains($file, "\0")
+            && ! str_contains($file, '\\'),
+            403,
+            'Akses file ditolak.'
+        );
+
+        // URL hanya membawa basename (tanpa subdirektori). Resolusi ke path
+        // lengkap: (1) coba prefix yang dikenal, lalu (2) cari berdasar
+        // basename di seluruh direktori resource (ter-scope per resource).
+        $slug = $meta['slug'];
+        $basename = basename($file);
+        $candidate = null;
+
+        $prefixes = [$slug.'/', 'admin/'.$slug.'/'];
+        foreach (AdminRegistry::relationUploads($slug) as $upload) {
+            $prefixes[] = $upload['directory'].'/';
+        }
+
+        foreach ($prefixes as $prefix) {
+            if (Storage::disk('public')->exists($prefix.$basename)) {
+                $candidate = $prefix.$basename;
+                break;
+            }
+        }
+
+        if ($candidate === null) {
+            foreach ([$slug, 'admin/'.$slug] as $dir) {
+                foreach (Storage::disk('public')->allFiles($dir) as $key) {
+                    if (basename($key) === $basename) {
+                        $candidate = $key;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        abort_unless($candidate !== null, 404, 'File tidak ditemukan.');
+
+        return Storage::disk('public')->response($candidate, basename($candidate));
     }
 
     public function destroy(string $resource, int|string $record)
@@ -881,15 +947,10 @@ class ResourceController extends Controller
             'pengaduan-rth' => JenisPengaduanRth::options(),
         };
 
-        $statusOptions = match ($meta['slug']) {
-            'pengaduan-rth' => StatusPengaduanRth::options(),
-            default => PengaduanStatus::options(),
-        };
+        $statusOptions = StatusPengaduan::options();
 
         $status = $request->input('status');
-        $isDitolak = $meta['slug'] === 'pengaduan-rth'
-            ? $status === StatusPengaduanRth::DITOLAK->value
-            : false;
+        $isDitolak = false;
 
         $request->validate([
             'nama_pelapor' => [$updating ? 'nullable' : 'required', 'string', 'max:255'],
@@ -901,7 +962,7 @@ class ResourceController extends Controller
             'longitude' => ['nullable', 'numeric'],
             'status' => ['required', Rule::in(array_keys($statusOptions))],
             'catatan_admin' => ['nullable', 'string'],
-            'alasan_penolakan' => $meta['slug'] === 'pengaduan-rth' ? [$isDitolak ? 'required' : 'nullable', 'string'] : ['nullable', 'string'],
+            'alasan_penolakan' => ['nullable', 'string'],
             'photos' => [$updating ? 'nullable' : 'required', 'array', 'max:5'],
             'photos.*' => ['mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
         ], [
@@ -915,7 +976,7 @@ class ResourceController extends Controller
             'longitude.numeric' => 'Longitude harus berupa angka.',
             'status.required' => 'Status pengaduan wajib dipilih.',
             'status.in' => 'Status pengaduan tidak valid.',
-            'alasan_penolakan.required' => 'Alasan penolakan wajib diisi saat status Ditolak.',
+            'alasan_penolakan.required' => 'Alasan penolakan wajib diisi.',
             'photos.required' => 'Foto bukti wajib diunggah.',
             'photos.max' => 'Maksimal 5 foto bukti.',
             'photos.*.mimes' => 'Foto bukti harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',

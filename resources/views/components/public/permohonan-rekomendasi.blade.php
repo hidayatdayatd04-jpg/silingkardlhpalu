@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ThrottlesPublic;
 use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanDokumen;
 use App\Models\PermohonanRekomendasi;
+use App\Models\PengajuanRintekPertek;
 use App\Services\FileUploadService;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -23,9 +24,9 @@ new class extends Component {
     public ?string $npwp = null;
     public ?string $jenis_usaha = null;
     public ?string $jenis_usaha_lainnya = null;
+    public ?string $jenis_pengajuan = null;
     public ?string $alamat_lengkap = null;
     public ?string $nomor_telepon = null;
-    public ?string $email = null;
 
     public ?TemporaryUploadedFile $surat_permohonan = null;
     /** @var TemporaryUploadedFile[] */
@@ -71,9 +72,9 @@ new class extends Component {
             'jenis_usaha' => $validated['jenis_usaha'] === 'Lainnya'
                 ? trim($validated['jenis_usaha_lainnya'])
                 : $validated['jenis_usaha'],
+            'jenis_pengajuan' => $validated['jenis_pengajuan'],
             'alamat_lengkap' => $validated['alamat_lengkap'],
             'nomor_telepon' => $validated['nomor_telepon'],
-            'email' => $validated['email'],
             'surat_permohonan' => $suratPath,
         ]);
 
@@ -96,7 +97,7 @@ new class extends Component {
         $this->successTicket = $permohonan->nomor_tiket;
         $this->reset([
             'step', 'nama_perusahaan', 'nama_pemilik', 'npwp', 'jenis_usaha', 'jenis_usaha_lainnya',
-            'alamat_lengkap', 'nomor_telepon', 'email',
+            'jenis_pengajuan', 'alamat_lengkap', 'nomor_telepon',
             'surat_permohonan', 'dokumen_pendukung',
         ]);
         $this->step = 1;
@@ -108,6 +109,11 @@ new class extends Component {
             unset($this->dokumen_pendukung[$index]);
             $this->dokumen_pendukung = array_values($this->dokumen_pendukung);
         }
+    }
+
+    public function jenisPengajuanOptions(): array
+    {
+        return PengajuanRintekPertek::JENIS_PENGAJUAN_OPTIONS;
     }
 
     public function jenisUsahaOptions(): array
@@ -229,6 +235,16 @@ new class extends Component {
                         />
                     @endif
 
+                    <x-public.select
+                        wire:model="jenis_pengajuan"
+                        name="jenis_pengajuan"
+                        label="{{ __('Jenis Pengajuan') }}"
+                        :options="$this->jenisPengajuanOptions()"
+                        :searchable="true"
+                        placeholder="{{ __('-- Pilih Jenis Pengajuan --') }}"
+                        required
+                    />
+
                     <x-public.input
                         wire:model="nomor_telepon"
                         name="nomor_telepon"
@@ -239,18 +255,6 @@ new class extends Component {
                         icon="phone"
                     />
 
-                    <div class="md:col-span-2">
-                        <x-public.input
-                            wire:model="email"
-                            name="email"
-                            type="email"
-                            label="{{ __('Email') }}"
-                            placeholder="contoh@gmail.com"
-                            required
-                            hint="{{ __('Email untuk menerima notifikasi update status permohonan') }}"
-                            icon="mail"
-                        />
-                    </div>
 
                     <div class="md:col-span-2">
                         <x-public.textarea
@@ -278,7 +282,7 @@ new class extends Component {
                         {{ __('Surat Permohonan') }} <span class="fi-required">*</span>
                         <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF, max 5MB)</span>
                     </label>
-                    <div class="fi-file-drop">
+                    <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Surat Permohonan', exts: ['pdf'], maxSizeMB: 5 })">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.suratInput.click()">{{ __('Pilih File') }}</button>
                         <span class="fi-file-status">
                             <span x-data="{ name: '' }" x-init="$watch('$store.suratName', v => name = v)">
@@ -289,7 +293,7 @@ new class extends Component {
                                 @endif
                             </span>
                         </span>
-                        <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required
+                        <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf,.pdf" required
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                     </div>
                     @error('surat_permohonan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
@@ -299,9 +303,9 @@ new class extends Component {
                     <label class="fi-label">
                         <span class="fi-icon-badge"><x-icons.ui name="upload" /></span>
                         {{ __('Dokumen Pendukung') }}
-                        <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF/Gambar, min 1, max 5, max 5MB/file)</span>
+                        <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF/Word/Excel/Gambar JPG/PNG/WebP/AVIF/HEIC, min 1, max 5, max 5MB/file)</span>
                     </label>
-                    <div class="fi-file-drop">
+                    <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Dokumen Pendukung', exts: ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5, maxCount: 5, countSelector: '[data-dokumen-item]' })">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.dokumenInput.click()">{{ __('Pilih File') }}</button>
                         <span class="fi-file-status">
                             @if (count($dokumen_pendukung))
@@ -310,7 +314,7 @@ new class extends Component {
                                 {{ __('Belum ada file dipilih') }}
                             @endif
                         </span>
-                        <input wire:model="dokumen_pendukung" x-ref="dokumenInput" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/jpg"
+                        <input wire:model="dokumen_pendukung" x-ref="dokumenInput" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                     </div>
                     @error('dokumen_pendukung') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
@@ -319,7 +323,7 @@ new class extends Component {
                     @if (count($dokumen_pendukung))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3">
                             @foreach ($dokumen_pendukung as $index => $dok)
-                                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div data-dokumen-item class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                                     <span class="flex-shrink-0 h-8 w-8 rounded-lg bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
                                         <x-icons.ui name="document" class="h-4 w-4" />
                                     </span>

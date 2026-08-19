@@ -514,7 +514,7 @@
                                     @php
                                         $docPath = $record->{$field['name']} ?? null;
                                         $docExt = $docPath ? pathinfo($docPath, PATHINFO_EXTENSION) : '';
-                                        $docName = $docExt ? $field['label'].'.'.$docExt : $field['label'];
+                                        $docName = $docPath ? basename($docPath) : $field['label'];
                                     @endphp
                                     <x-admin.file-preview
                                         :label="$field['label']"
@@ -535,22 +535,43 @@
                         <div class="stagger-item">
                             <x-admin.section-card :title="$config['title']" :icon="$config['image'] ? 'eye' : 'folder'">
                                 @if($config['image'])
-                                    @php
-                                        $imgs = $record->{$config['relation']}->map(function ($item) use ($pathFor, $nameFor, $config) {
-                                            $p = $pathFor($item, $config);
-                                            if (! $p) return null;
-                                            // File tersimpan di B2 (bucket private) -> wajib signed URL.
-                                            try {
-                                                $url = method_exists($item, 'fullUrl')
-                                                    ? $item->fullUrl()
-                                                    : Storage::disk('public')->temporaryUrl($p, now()->addHours(24));
-                                            } catch (\Throwable $e) {
-                                                $url = Storage::url($p);
-                                            }
-                                            return ['url' => $url, 'caption' => $nameFor($item, $p, $config)];
-                                        })->filter()->values()->all();
-                                    @endphp
-                                    <x-admin.lightbox :images="$imgs" :columns="3" />
+                                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                        @foreach($record->{$config['relation']} as $item)
+                                            @php
+                                                $path = $pathFor($item, $config);
+                                                $label = $nameFor($item, $path, $config);
+                                                $imgSrc = null;
+                                                if ($path) {
+                                                    try {
+                                                        $imgSrc = method_exists($item, 'fullUrl')
+                                                            ? $item->fullUrl()
+                                                            : Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
+                                                    } catch (\Throwable $e) {
+                                                        $imgSrc = Storage::url($path);
+                                                    }
+                                                }
+                                                $fotoName = $path ? basename((string) $path) : $label;
+                                            @endphp
+                                            @if($path)
+                                                <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
+                                                    <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" target="_blank"
+                                                        class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                                        <img src="{{ $imgSrc }}" alt="{{ $label }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
+                                                    </a>
+                                                    <div class="flex items-center gap-2">
+                                                        <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" target="_blank"
+                                                            class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-blue-600 ring-1 ring-slate-200 transition hover:bg-blue-50">
+                                                            <x-admin.icon name="eye" :size="14" /> Lihat
+                                                        </a>
+                                                        <a href="{{ route('admin.file.download', ['path' => $path, 'name' => $fotoName, 'resource' => $resource['slug']]) }}" target="_blank"
+                                                            class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-slate-200 transition hover:bg-emerald-50">
+                                                            <x-admin.icon name="download" :size="14" /> Unduh
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 @else
                                     <div class="space-y-3">
                                         @foreach($record->{$config['relation']} as $item)

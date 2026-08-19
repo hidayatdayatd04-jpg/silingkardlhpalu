@@ -10,7 +10,13 @@
     $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'bmp'], true);
     $previewSrc = null; $viewUrl = null; $downloadRoute = null;
     if ($path) {
-        try { $viewUrl = Storage::disk('public')->temporaryUrl($path, now()->addHours(24)); } catch (\Throwable $e) { $viewUrl = Storage::url($path); }
+        // Preview inline via proxy web lokal (URL domain sendiri, bukan B2).
+        $viewUrl = $resource
+            ? \App\Support\Admin\AdminRegistry::previewUrl($path, $resource)
+            : (function () use ($path) {
+                try { return Storage::disk('public')->temporaryUrl($path, now()->addHours(24)); }
+                catch (\Throwable $e) { return Storage::url($path); }
+            })();
         if ($isImage) $previewSrc = $viewUrl;
         $downloadRoute = route('admin.file.download', ['path' => $path, 'name' => $downloadName ?: basename((string) $path), 'resource' => $resource]);
     }

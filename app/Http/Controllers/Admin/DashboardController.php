@@ -23,31 +23,27 @@ class DashboardController extends Controller
 {
     public function __invoke()
     {
+        /** @var User $user */
         $user = auth()->user();
-        $allowedGroups = $user->allowedGroups();
+        $allowedGroups = $user->accessibleGroups();
         $statistik = app(StatistikService::class);
         $isSuperadmin = $user->isSuperadmin();
 
-        // Agregat Laporan dihitung SEKALI (2 query) lalu dipakai semua kartu/chart.
         $bidangValues = array_values(array_intersect(
             ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
             $allowedGroups,
         ));
-        // Statistik berat di-cache 10 menit agar navigasi berulang ke dashboard instan.
-        // Agregat Laporan ikut dihitung DI DALAM closure supaya request yang
-        // mengenai cache tidak membayar 2 round-trip DB sama sekali.
+
         $cacheKey = 'dashboard:' . $user->id . ':' . md5(implode(',', $allowedGroups));
-        $cached = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $bidangValues) {
+        $cached = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $bidangValues) {
             $agg = $this->aggregateLaporan($bidangValues);
 
             return [
                 'cards'        => $this->buildCards($allowedGroups, $user, $agg),
                 'statusStats'  => $this->buildStatusStats($allowedGroups, $agg),
                 'pendingTasks' => $this->buildPendingTasks($allowedGroups, $agg),
-                'charts'       => $this->buildCharts($allowedGroups, $agg),
+                'charts'       => $this->buildCharts($allowedGroups, $agg, $bidangValues),
                 'recent'       => $this->buildRecent($allowedGroups),
-                // Feed aktivitas difilter per role: superadmin melihat semua,
-                // selain itu hanya module yang diizinkan + aktivitas sendiri.
                 'activity'     => $isSuperadmin
                     ? ActivityLog::with('user')->latest()->take(10)->get()
                     : ActivityLog::with('user')->latest()
@@ -62,9 +58,6 @@ class DashboardController extends Controller
                     now()->endOfMonth()->toDateString(),
                     $allowedGroups,
                 ),
-                // Counters ringan namun TETAP ditaruh di dalam cache agar tidak
-                // dieksekusi ulang setiap request saat cache dashboard masih hit.
-                // Nilainya tidak dependen per-user, jadi aman digabung ke cache yang sama.
                 'activeUsers'  => $isSuperadmin ? User::where('is_active', true)->count() : null,
                 'visits'       => $isSuperadmin && class_exists(WebsiteVisit::class) ? WebsiteVisit::count() : null,
             ];
@@ -82,7 +75,6 @@ class DashboardController extends Controller
             'charts'        => $cached['charts'],
             'mapReports'    => $cached['mapReports'],
             'activityFeed'  => $cached['activity'],
-            // ── Data ringkas tambahan ──
             'summary'       => $cached['summary'],
             'statusStats'   => $cached['statusStats'],
             'pendingTasks'  => $cached['pendingTasks'],
@@ -95,33 +87,32 @@ class DashboardController extends Controller
         $bidangTotal = fn (string $bidang) => array_sum($agg['byStatus'][$bidang] ?? []);
 
         if (in_array('pengendalian', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Pengendalian', 'value' => $bidangTotal('pengendalian'), 'tone' => 'emerald', 'icon' => 'alert-circle'];
-            $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text'];
+            $cards[] = ['label' => 'Laporan Pengendalian', 'value' => $bidangTotal('pengendalian'), 'tone' => 'emerald', 'icon' => 'alert-circle', 'slug' => 'pengaduan-pengendalian'];
+            $cards[] = ['label' => 'Permohonan Rekomendasi', 'value' => PermohonanRekomendasi::count(), 'tone' => 'indigo', 'icon' => 'file-text', 'slug' => 'permohonan-rekomendasi'];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Sampah', 'value' => $bidangTotal('sampah-lb3'), 'tone' => 'sky', 'icon' => 'recycle'];
-            $cards[] = ['label' => 'Registrasi LB3', 'value' => RegistrasiUsahaLb3::count(), 'tone' => 'amber', 'icon' => 'building'];
+            $cards[] = ['label' => 'Laporan Sampah', 'value' => $bidangTotal('sampah-lb3'), 'tone' => 'sky', 'icon' => 'recycle', 'slug' => 'pengaduan-sampah'];
+            $cards[] = ['label' => 'Registrasi LB3', 'value' => RegistrasiUsahaLb3::count(), 'tone' => 'amber', 'icon' => 'building', 'slug' => 'registrasi-usaha-lb3'];
         }
         if (in_array('rth', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan RTH', 'value' => $bidangTotal('rth'), 'tone' => 'teal', 'icon' => 'tree'];
+            $cards[] = ['label' => 'Laporan RTH', 'value' => $bidangTotal('rth'), 'tone' => 'teal', 'icon' => 'tree', 'slug' => 'pengaduan-rth'];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
-            $cards[] = ['label' => 'Laporan Tata Penataan', 'value' => $bidangTotal('tata-penataan'), 'tone' => 'purple', 'icon' => 'building'];
+            $cards[] = ['label' => 'Laporan Tata Penataan', 'value' => $bidangTotal('tata-penataan'), 'tone' => 'purple', 'icon' => 'building', 'slug' => 'pengaduan-tata-penataan'];
         }
         if (in_array('konten', $allowedGroups)) {
-            $cards[] = ['label' => 'Artikel', 'value' => Artikel::count(), 'tone' => 'rose', 'icon' => 'file-text'];
+            $cards[] = ['label' => 'Artikel', 'value' => Artikel::count(), 'tone' => 'rose', 'icon' => 'file-text', 'slug' => 'artikel'];
         }
 
-        // Kartu ke-8 (selalu tersedia untuk superadmin/Kepala) — melengkapi grid 4x2.
         if ($user->isSuperadmin()) {
-            $cards[] = ['label' => 'Pengguna', 'value' => User::count(), 'tone' => 'bay', 'icon' => 'users'];
+            $cards[] = ['label' => 'Pengguna', 'value' => User::count(), 'tone' => 'bay', 'icon' => 'users', 'slug' => 'user'];
         }
 
         return $cards;
     }
 
     /**
-     * Ringkasan status pengaduan untuk kartu KPI + doughnut performa.
+     * Ringkasan status pengaduan untuk KPI + performa penanganan.
      */
     protected function buildStatusStats(array $allowedGroups, array $agg): array
     {
@@ -130,52 +121,50 @@ class DashboardController extends Controller
             $allowedGroups,
         ));
 
-        $total = 0; $belum = 0; $proses = 0; $selesai = 0; $ditolak = 0;
+        $total = 0; $belum = 0; $selesai = 0;
         foreach ($bidangValues as $b) {
             $row = $agg['byStatus'][$b] ?? [];
             $total += array_sum($row);
-            $belum += (int) ($row['Belum Ditindaklanjuti'] ?? 0) + (int) ($row['Belum Ditinjau'] ?? 0) + (int) ($row['menunggu'] ?? 0);
-            $proses += (int) ($row['Ditindaklanjuti'] ?? 0) + (int) ($row['Ditinjau'] ?? 0) + (int) ($row['ditugaskan'] ?? 0);
-            $selesai += (int) ($row['Selesai'] ?? 0) + (int) ($row['selesai'] ?? 0);
-            $ditolak += (int) ($row['Ditolak'] ?? 0);
+            $belum += (int) ($row['Belum Ditindaklanjuti'] ?? 0);
+            $selesai += (int) ($row['Ditindaklanjuti'] ?? 0);
         }
 
         $selesaiPct = $total > 0 ? round(($selesai / $total) * 100) : 0;
 
         return [
-            'total'   => $total,
-            'belum'   => $belum,
-            'proses'  => $proses,
-            'selesai' => $selesai,
-            'ditolak' => $ditolak,
+            'total'       => $total,
+            'belum'       => $belum,
+            'proses'      => 0, // reserved for backward-compatibility
+            'selesai'     => $selesai,
+            'ditolak'     => 0,
             'selesai_pct' => $selesaiPct,
             'distribution' => [
-                'labels' => ['Belum Ditindaklanjuti', 'Ditindaklanjuti', 'Selesai', 'Ditolak'],
-                'data'   => [$belum, $proses, $selesai, $ditolak],
+                'labels' => ['Belum Ditindaklanjuti', 'Ditindaklanjuti'],
+                'data'   => [$belum, $selesai],
             ],
         ];
     }
 
     /**
-     * Tugas tertunda (butuh tindakan admin) untuk CTA + badges.
+     * Tugas tertunda (butuh tindakan admin).
      */
     protected function buildPendingTasks(array $allowedGroups, array $agg): array
     {
         $tasks = [];
 
         if (in_array('pengendalian', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Pengendalian belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'pengendalian', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-pengendalian'])];
-            $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi'])];
+            $tasks[] = ['label' => 'Laporan Pengendalian belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'pengendalian', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-pengendalian']), 'bidang' => 'Pengendalian', 'color' => '#ef4444'];
+            $tasks[] = ['label' => 'Permohonan rekomendasi belum ditindaklanjuti', 'count' => PermohonanRekomendasi::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'permohonan-rekomendasi']), 'bidang' => 'Pengendalian', 'color' => '#ef4444'];
         }
         if (in_array('sampah-lb3', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Sampah belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'sampah-lb3', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-sampah'])];
-            $tasks[] = ['label' => 'Registrasi LB3 menunggu verifikasi', 'count' => RegistrasiUsahaLb3::where('status', 'Diajukan')->count(), 'href' => route('admin.resources.index', ['resource' => 'registrasi-usaha-lb3'])];
+            $tasks[] = ['label' => 'Laporan Sampah belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'sampah-lb3', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-sampah']), 'bidang' => 'Sampah & LB3', 'color' => '#0284c7'];
+            $tasks[] = ['label' => 'Registrasi LB3 belum ditindaklanjuti', 'count' => RegistrasiUsahaLb3::where('status', 'Belum Ditindaklanjuti')->count(), 'href' => route('admin.resources.index', ['resource' => 'registrasi-usaha-lb3']), 'bidang' => 'Sampah & LB3', 'color' => '#0284c7'];
         }
         if (in_array('rth', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan RTH belum ditinjau', 'count' => $this->aggCount($agg, 'rth', ['Belum Ditinjau']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-rth'])];
+            $tasks[] = ['label' => 'Laporan RTH belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'rth', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-rth']), 'bidang' => 'RTH', 'color' => '#10b981'];
         }
         if (in_array('tata-penataan', $allowedGroups)) {
-            $tasks[] = ['label' => 'Laporan Tata Penataan menunggu tindak lanjut', 'count' => $this->aggCount($agg, 'tata-penataan', ['menunggu']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan'])];
+            $tasks[] = ['label' => 'Laporan Tata Penataan belum ditindaklanjuti', 'count' => $this->aggCount($agg, 'tata-penataan', ['Belum Ditindaklanjuti']), 'href' => route('admin.resources.index', ['resource' => 'pengaduan-tata-penataan']), 'bidang' => 'Tata Penataan', 'color' => '#8b5cf6'];
         }
 
         $total = collect($tasks)->sum('count');
@@ -200,19 +189,27 @@ class DashboardController extends Controller
                 'rth' => PengaduanRth::class,
                 'tata-penataan' => PengaduanTataPenataan::class,
             ];
+            $slugs = [
+                'pengendalian' => 'pengaduan-pengendalian',
+                'sampah-lb3' => 'pengaduan-sampah',
+                'rth' => 'pengaduan-rth',
+                'tata-penataan' => 'pengaduan-tata-penataan',
+            ];
 
             $recent['laporan'] = collect($sources)
                 ->filter(fn ($class, $bidang) => in_array($bidang, $allowedGroups, true))
-                ->flatMap(function ($class, $bidang) use ($labels) {
-                    return $class::latest()->take(5)->get()->map(function ($item) use ($labels, $bidang) {
+                ->flatMap(function ($class, $bidang) use ($labels, $slugs) {
+                    return $class::latest()->take(6)->get()->map(function ($item) use ($labels, $slugs, $bidang) {
                         $item->bidang_label = $labels[$bidang];
+                        $item->bidang_key = $bidang;
                         $item->status_text = $item->status instanceof \BackedEnum ? $item->status->label() : (string) $item->status;
+                        $item->detail_url = route('admin.resources.edit', ['resource' => $slugs[$bidang], 'record' => $item->id]);
 
                         return $item;
                     });
                 })
                 ->sortByDesc('created_at')
-                ->take(5)
+                ->take(6)
                 ->values();
         }
         if (in_array('pengendalian', $allowedGroups)) {
@@ -234,17 +231,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * Data agregat untuk chart (line tren, bar per modul, doughnut status, performa).
-     * Semua dihitung dari $agg (2 query) — tanpa query per bulan/per bidang.
+     * Data agregat untuk chart.
      */
-    protected function buildCharts(array $allowedGroups, array $agg): array
+    protected function buildCharts(array $allowedGroups, array $agg, array $bidangValues): array
     {
-        $bidangValues = array_values(array_intersect(
-            ['pengendalian', 'sampah-lb3', 'rth', 'tata-penataan'],
-            $allowedGroups,
-        ));
-
-        // ── Tren 6 bulan terakhir (line) dari agregat ──
+        // ── Tren 6 bulan terakhir (line) ──
         $months = collect(range(5, 0))->map(fn ($i) => Carbon::now()->startOfMonth()->subMonths($i));
         $trendLabels = $months->map(fn ($m) => $m->translatedFormat('M Y'))->all();
 
@@ -258,14 +249,24 @@ class DashboardController extends Controller
             return $total;
         })->all();
 
+        $bidangDisplayNames = [
+            'pengendalian' => 'Pengendalian',
+            'sampah-lb3' => 'Sampah & LB3',
+            'rth' => 'RTH',
+            'tata-penataan' => 'Tata Penataan',
+        ];
+
         $trendPerBidang = ['labels' => $trendLabels, 'datasets' => []];
         foreach ($bidangValues as $b) {
-            $trendPerBidang['datasets'][$b] = $months->map(
-                fn ($m) => $agg['byMonth'][$b][$m->format('Y-m')] ?? 0
-            )->all();
+            $trendPerBidang['datasets'][$b] = [
+                'label' => $bidangDisplayNames[$b] ?? ucfirst($b),
+                'data' => $months->map(
+                    fn ($m) => $agg['byMonth'][$b][$m->format('Y-m')] ?? 0
+                )->all(),
+            ];
         }
 
-        // ── Jumlah data per modul (bar) dari kartu ──
+        // ── Jumlah data per modul (bar) ──
         $cards = $this->buildCards($allowedGroups, auth()->user(), $agg);
         $barLabels = [];
         $barData = [];
@@ -274,7 +275,7 @@ class DashboardController extends Controller
             $barData[] = $card['value'];
         }
 
-        // ── Distribusi status pengaduan (doughnut) dari agregat ──
+        // ── Distribusi status ──
         $statusTotals = [];
         foreach ($bidangValues as $b) {
             foreach ($agg['byStatus'][$b] ?? [] as $status => $count) {
@@ -282,6 +283,20 @@ class DashboardController extends Controller
             }
         }
         $statusRows = collect($statusTotals)->filter(fn ($v) => $v > 0);
+
+        // ── Distribusi Pengaduan per Bidang ──
+        $bidangDistLabels = [];
+        $bidangDistData = [];
+        foreach ($bidangValues as $b) {
+            $c = array_sum($agg['byStatus'][$b] ?? []);
+            if ($c > 0) {
+                $bidangDistLabels[] = $bidangDisplayNames[$b] ?? ucfirst($b);
+                $bidangDistData[] = $c;
+            }
+        }
+
+        // ── Top Kategori Pengaduan ──
+        $topCategories = $this->getTopCategories($bidangValues);
 
         return [
             'trend' => [
@@ -296,6 +311,11 @@ class DashboardController extends Controller
                 'labels' => $statusRows->keys()->map(fn ($s) => $s ?: 'Tanpa Status')->all(),
                 'data'   => $statusRows->values()->all(),
             ],
+            'bidangDistribution' => [
+                'labels' => $bidangDistLabels,
+                'data'   => $bidangDistData,
+            ],
+            'topCategories' => $topCategories,
             'performance' => $statusRows->map(function ($total, $status) {
                 return [
                     'status' => $status ?: 'Tanpa Status',
@@ -307,8 +327,44 @@ class DashboardController extends Controller
     }
 
     /**
-     * Hitung agregat pengaduan SEKALI per tabel bidang: byStatus (bidang→status)
-     * dan byMonth (bidang→YYYY-MM). Hanya 2 query grouped per bidang.
+     * Top Kategori Pengaduan across all accessible models
+     */
+    protected function getTopCategories(array $bidangValues): array
+    {
+        $sources = [
+            'pengendalian' => PengaduanPengendalian::class,
+            'sampah-lb3' => PengaduanSampah::class,
+            'rth' => PengaduanRth::class,
+            'tata-penataan' => PengaduanTataPenataan::class,
+        ];
+
+        $counts = [];
+        foreach ($bidangValues as $b) {
+            $model = $sources[$b] ?? null;
+            if (! $model) continue;
+            $rows = $model::query()
+                ->select('jenis_pengaduan', DB::raw('COUNT(*) as total'))
+                ->whereNotNull('jenis_pengaduan')
+                ->groupBy('jenis_pengaduan')
+                ->get();
+            foreach ($rows as $r) {
+                $cat = trim((string) $r->jenis_pengaduan);
+                if ($cat !== '') {
+                    $counts[$cat] = ($counts[$cat] ?? 0) + (int) $r->total;
+                }
+            }
+        }
+        arsort($counts);
+        $top = array_slice($counts, 0, 5, true);
+
+        return [
+            'labels' => array_keys($top),
+            'data'   => array_values($top),
+        ];
+    }
+
+    /**
+     * Hitung agregat pengaduan SEKALI per tabel bidang: byStatus dan byMonth.
      */
     protected function aggregateLaporan(array $bidangValues): array
     {
@@ -361,3 +417,4 @@ class DashboardController extends Controller
         return $sum;
     }
 }
+

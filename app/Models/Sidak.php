@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\HasilSidak;
-use App\Enums\StatusTindakLanjutSidak;
+use App\Enums\StatusPengaduan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,7 +30,7 @@ class Sidak extends Model
     {
         return [
             'tanggal_sidak' => 'date',
-            'status_tindak_lanjut' => StatusTindakLanjutSidak::class,
+            'status_tindak_lanjut' => StatusPengaduan::class,
             'is_jadwal' => 'boolean',
         ];
     }

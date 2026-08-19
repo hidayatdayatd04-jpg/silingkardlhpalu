@@ -49,7 +49,7 @@ return new class extends Migration
             $table->string('hasil')->nullable();
             $table->text('temuan')->nullable();
             $table->text('rekomendasi')->nullable();
-            $table->string('status_tindak_lanjut')->default('belum');
+            $table->string('status_tindak_lanjut')->default('Belum Ditindaklanjuti');
             $table->boolean('is_jadwal')->default(false);
             $table->text('catatan_jadwal')->nullable();
             $table->timestamps();
@@ -86,7 +86,7 @@ return new class extends Migration
             $table->foreignId('pelanggaran_id')->constrained('pelanggarans')->cascadeOnDelete();
             $table->string('jenis_sanksi');
             $table->date('batas_waktu_perbaikan')->nullable();
-            $table->string('status_sanksi')->default('diberikan');
+            $table->string('status_sanksi')->default('Belum Ditindaklanjuti');
             $table->string('surat_path')->nullable();
             $table->text('catatan')->nullable();
             $table->timestamps();

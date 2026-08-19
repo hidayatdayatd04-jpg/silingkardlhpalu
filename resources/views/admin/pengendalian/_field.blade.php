@@ -121,11 +121,31 @@
             @else
                 <p class="mb-3 text-xs text-slate-500">Foto lampiran dari masyarakat. Admin tidak dapat menambah foto baru.</p>
             @endif
-            <div class="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 @foreach($record->fotos as $foto)
-                    <a href="{{ $foto->fullUrl() }}" target="_blank" class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                        <img src="{{ $foto->fullUrl() }}" alt="Foto {{ $loop->iteration }}" class="size-full object-cover transition group-hover:scale-105">
-                    </a>
+                    @php
+                        $fotoPath = $foto->path_foto ?? null;
+                        $fotoName = $fotoPath ? basename((string) $fotoPath) : ('Foto '.$loop->iteration);
+                        $fotoSrc = $foto->fullUrl();
+                    @endphp
+                    @if($fotoPath)
+                        <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
+                            <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
+                                class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                <img src="{{ $fotoSrc }}" alt="Foto {{ $loop->iteration }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
+                            </a>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
+                                    class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-blue-600 ring-1 ring-slate-200 transition hover:bg-blue-50">
+                                    <x-admin.icon name="eye" :size="14" /> Lihat
+                                </a>
+                                <a href="{{ route('admin.file.download', ['path' => $fotoPath, 'name' => $fotoName, 'resource' => $resource['slug']]) }}" target="_blank"
+                                    class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-slate-200 transition hover:bg-emerald-50">
+                                    <x-admin.icon name="download" :size="14" /> Unduh
+                                </a>
+                            </div>
+                        </div>
+                    @endif
                 @endforeach
             </div>
             @if($canAddNew)

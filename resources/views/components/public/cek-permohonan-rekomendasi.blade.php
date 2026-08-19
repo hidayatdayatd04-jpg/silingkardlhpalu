@@ -13,6 +13,23 @@ new class extends Component
     public string $search = '';
     public ?PermohonanRekomendasi $permohonan = null;
 
+    private function normalizePhoneCandidates(string $digits): array
+    {
+        if ($digits === '') {
+            return [];
+        }
+
+        $candidates = [$digits];
+
+        if (str_starts_with($digits, '0')) {
+            $candidates[] = '62'.substr($digits, 1);
+        } elseif (str_starts_with($digits, '62')) {
+            $candidates[] = '0'.substr($digits, 2);
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
     public function lookup()
     {
         if (! $this->verifyCaptcha('lookup')) {
@@ -28,20 +45,34 @@ new class extends Component
         }
 
         $value = trim($this->search);
-        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+        $digits = preg_replace('/\D/', '', $value);
+        $isPhone = $digits !== '' && preg_match('/^[\d\s\-+]+$/', $value);
 
-        if ($isEmail) {
+        if ($isPhone) {
+            $candidates = $this->normalizePhoneCandidates($digits);
+
+            if (empty($candidates)) {
+                $this->addError('search', __('Nomor telepon tidak valid.'));
+
+                return;
+            }
+
             $this->permohonan = PermohonanRekomendasi::query()
-                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->where(function ($query) use ($candidates): void {
+                    foreach ($candidates as $candidate) {
+                        $query->orWhere('nomor_telepon', $candidate)
+                            ->orWhereRaw("REPLACE(REPLACE(REPLACE(nomor_telepon, '+', ''), ' ', ''), '-', '') = ?", [$candidate]);
+                    }
+                })
                 ->latest()
                 ->first();
 
             if (! $this->permohonan) {
-                $this->addError('search', __('Tidak ada permohonan dengan email tersebut.'));
+                $this->addError('search', __('Tidak ada permohonan dengan nomor telepon tersebut.'));
             }
         } else {
             $this->permohonan = PermohonanRekomendasi::query()
-                ->where('nomor_tiket', $value)
+                ->whereRaw('UPPER(nomor_tiket) = ?', [strtoupper($value)])
                 ->first();
 
             if (! $this->permohonan) {
@@ -60,7 +91,7 @@ new class extends Component
             </span>
             <div class="flex-1">
                 <h3 class="ck-card-title">{{ __('Cek Status Permohonan Rekomendasi') }}</h3>
-                <p class="ck-card-desc">{{ __('Masukkan nomor tiket atau email yang Anda daftarkan untuk melihat status permohonan.') }}</p>
+                <p class="ck-card-desc">{{ __('Masukkan nomor tiket atau nomor telepon yang Anda daftarkan untuk melihat status permohonan.') }}</p>
             </div>
         </div>
         <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
@@ -68,7 +99,7 @@ new class extends Component
                 <x-public.input
                     wire:model.live.debounce.250ms="search"
                     name="search"
-                    placeholder="{{ __('Nomor tiket atau email') }}"
+                    placeholder="{{ __('Nomor tiket atau nomor telepon') }}"
                     required
                 />
             </div>

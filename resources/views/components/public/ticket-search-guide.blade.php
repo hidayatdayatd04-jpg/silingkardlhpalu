@@ -10,7 +10,7 @@
                 <x-icons.ui name="search" class="size-[1.05rem]" />
             </span>
             <div class="min-w-0">
-                <p class="text-sm font-bold tracking-[-0.01em] text-slate-900 dark:text-slate-100">{{ __('Cari dengan tiket atau email') }}</p>
+                <p class="text-sm font-bold tracking-[-0.01em] text-slate-900 dark:text-slate-100">{{ __('Cari dengan nomor tiket atau nomor telepon') }}</p>
                 <p class="mt-0.5 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ __('Masukkan data yang digunakan saat pengajuan.') }}</p>
             </div>
         </div>

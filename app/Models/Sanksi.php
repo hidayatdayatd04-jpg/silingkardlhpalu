@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\JenisSanksi;
-use App\Enums\StatusSanksi;
+use App\Enums\StatusPengaduan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,7 +24,7 @@ class Sanksi extends Model
     {
         return [
             'jenis_sanksi' => JenisSanksi::class,
-            'status_sanksi' => StatusSanksi::class,
+            'status_sanksi' => StatusPengaduan::class,
             'batas_waktu_perbaikan' => 'date',
         ];
     }
@@ -53,7 +53,7 @@ class Sanksi extends Model
         }
 
         return $this->batas_waktu_perbaikan->isPast()
-            && $this->status_sanksi !== StatusSanksi::SELESAI;
+            && $this->status_sanksi !== StatusPengaduan::DITINDAKLANJUTI;
     }
 
     /**

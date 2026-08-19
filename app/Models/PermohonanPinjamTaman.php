@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\StatusPengaduanRth;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,7 +14,6 @@ class PermohonanPinjamTaman extends Model
         'nomor_tiket',
         'nama_pemohon',
         'nomor_hp',
-        'email',
         'nama_kegiatan',
         'nama_taman',
         'tanggal_kegiatan',
@@ -29,7 +28,7 @@ class PermohonanPinjamTaman extends Model
     protected function casts(): array
     {
         return [
-            'status' => StatusPengaduanRth::class,
+            'status' => StatusPengaduan::class,
             'tanggal_kegiatan' => 'datetime',
             'tanggal_selesai' => 'datetime',
             'jaminan_kebersihan' => 'boolean',
@@ -42,7 +41,7 @@ class PermohonanPinjamTaman extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = StatusPengaduanRth::BELUM_DITINJAU->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI->value;
             }
 
             if (empty($model->nomor_tiket)) {
@@ -59,19 +58,25 @@ class PermohonanPinjamTaman extends Model
         return $this->morphOne(TicketFeedback::class, 'feedbackable');
     }
 
-    public static function hasConflict(string $namaTaman, \DateTimeInterface $start, ?\DateTimeInterface $end = null): bool
+    public static function hasConflict(string $namaTaman, \DateTimeInterface|string $start, \DateTimeInterface|string|null $end = null): bool
     {
-        $end ??= $start;
+        $startDate = \Illuminate\Support\Carbon::parse($start)->startOfDay();
+        $endDate = $end ? \Illuminate\Support\Carbon::parse($end)->endOfDay() : $startDate->copy()->endOfDay();
 
         return static::query()
             ->where('nama_taman', $namaTaman)
-            ->where('status', StatusPengaduanRth::DITINJAU->value)
-            ->where(function ($query) use ($start, $end) {
-                $query->whereBetween('tanggal_kegiatan', [$start, $end])
-                    ->orWhereBetween('tanggal_selesai', [$start, $end])
-                    ->orWhere(function ($q) use ($start, $end) {
-                        $q->where('tanggal_kegiatan', '<=', $start)
-                            ->where('tanggal_selesai', '>=', $end);
+            ->whereIn('status', [
+                StatusPengaduan::BELUM_DITINDAKLANJUTI->value,
+                StatusPengaduan::DITINDAKLANJUTI->value,
+            ])
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where('tanggal_kegiatan', '<=', $endDate)
+                    ->where(function ($q) use ($startDate) {
+                        $q->where('tanggal_selesai', '>=', $startDate)
+                            ->orWhere(function ($q2) use ($startDate) {
+                                $q2->whereNull('tanggal_selesai')
+                                    ->where('tanggal_kegiatan', '>=', $startDate);
+                            });
                     });
             })
             ->exists();

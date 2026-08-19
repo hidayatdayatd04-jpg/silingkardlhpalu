@@ -13,16 +13,16 @@ SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan 
 
 ## Teknologi
 
-| Area | Teknologi |
-|---|---|
-| Backend | PHP 8.2+, Laravel 12 |
-| UI | Blade, Livewire 4, Alpine.js, Tailwind CSS 4 |
-| Build | Vite 7, TypeScript |
-| Database | PostgreSQL; Neon untuk produksi atau PostgreSQL 16 di Docker |
-| Storage/backup | Local storage dan Backblaze B2 (S3-compatible) |
-| Peta | MapLibre GL, impor Shapefile |
-| Integrasi | portal.gps.id, Google Drive API, provider AI OpenAI-compatible |
-| Dokumen | DomPDF, ekspor CSV/XLSX tanpa dependensi spreadsheet |
+| Area           | Teknologi                                                      |
+| -------------- | -------------------------------------------------------------- |
+| Backend        | PHP 8.2+, Laravel 12                                           |
+| UI             | Blade, Livewire 4, Alpine.js, Tailwind CSS 4                   |
+| Build          | Vite 7, TypeScript                                             |
+| Database       | PostgreSQL; Neon untuk produksi atau PostgreSQL 16 di Docker   |
+| Storage/backup | Local storage dan Backblaze B2 (S3-compatible)                 |
+| Peta           | MapLibre GL, impor Shapefile                                   |
+| Integrasi      | portal.gps.id, Google Drive API, provider AI OpenAI-compatible |
+| Dokumen        | DomPDF, ekspor CSV/XLSX tanpa dependensi spreadsheet           |
 
 ## Arsitektur singkat
 
@@ -81,7 +81,7 @@ Menjalankan pengembangan:
 composer run dev
 ```
 
-Perintah tersebut menjalankan web server, queue listener, Pail, dan Vite. Alternatifnya, jalankan `php artisan serve`, `php artisan queue:work`, dan `npm run dev` secara terpisah.
+Perintah tersebut menjalankan web server, queue listener, Pail, dan Vite. Alternatifnya, jalankan `php artisan serve`, `php artisan queue:work`, dan `npm run dev` secara terpisah, `php artisan queue:restart` Untuk Restart queue listener.
 
 ## Docker dan produksi
 
@@ -157,14 +157,14 @@ Backup dibuat dari **Admin → Backup Database**. Arsip berisi dump PostgreSQL d
 
 Perintah yang tersedia:
 
-| Perintah | Fungsi |
-|---|---|
-| `gps:fetch` | Mengambil posisi armada dan menyimpannya ke cache database. |
-| `dlh:setup-seeder [--fresh]` | Menyiapkan data contoh; `--fresh` mereset skema lebih dahulu. |
-| `dlh:cleanup-orphan-files --delete` | Menghapus objek B2 yang tidak lagi direferensikan database. |
-| `dlh:cleanup-b2-orphans [--all]` | Membersihkan upload sementara Livewire pada B2. |
-| `dlh:download-images` | Mengunduh gambar artikel sumber. |
-| `shp:import-bulk` | Mengimpor file Shapefile secara massal ke layer GIS. |
+| Perintah                            | Fungsi                                                        |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `gps:fetch`                         | Mengambil posisi armada dan menyimpannya ke cache database.   |
+| `dlh:setup-seeder [--fresh]`        | Menyiapkan data contoh; `--fresh` mereset skema lebih dahulu. |
+| `dlh:cleanup-orphan-files --delete` | Menghapus objek B2 yang tidak lagi direferensikan database.   |
+| `dlh:cleanup-b2-orphans [--all]`    | Membersihkan upload sementara Livewire pada B2.               |
+| `dlh:download-images`               | Mengunduh gambar artikel sumber.                              |
+| `shp:import-bulk`                   | Mengimpor file Shapefile secara massal ke layer GIS.          |
 
 Scheduler menjalankan `gps:fetch` setiap 30 detik dan `dlh:cleanup-orphan-files --delete` setiap Minggu pukul 03:00. Pada server tanpa container scheduler, pasang cron berikut:
 
@@ -188,16 +188,16 @@ Setelah reset tanpa seeder, tidak ada akun admin, role, konfigurasi provider AI,
 
 ## Rute penting
 
-| Area | Rute |
-|---|---|
-| Beranda | `/` |
+| Area              | Rute                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| Beranda           | `/`                                                                                                        |
 | Layanan/pengaduan | `/pengaduan`, `/pengaduan-pengendalian`, `/pengaduan-sampah`, `/pengaduan-rth`, `/pengaduan-tata-penataan` |
-| Pelacakan | `/lacak` |
-| Armada | `/armada`, `/api/armada-aktif` |
-| Tata Lingkungan | `/tata-lingkungan` |
-| Berita | `/berita` dan `/berita/{slug}` |
-| Login/panel | `/admin/login`, `/admin` |
-| Chatbot stream | `POST /api/chatbot/stream` |
+| Pelacakan         | `/lacak`                                                                                                   |
+| Armada            | `/armada`, `/api/armada-aktif`                                                                             |
+| Tata Lingkungan   | `/tata-lingkungan`                                                                                         |
+| Berita            | `/berita` dan `/berita/{slug}`                                                                             |
+| Login/panel       | `/admin/login`, `/admin`                                                                                   |
+| Chatbot stream    | `POST /api/chatbot/stream`                                                                                 |
 
 ## Keamanan dan troubleshooting
 

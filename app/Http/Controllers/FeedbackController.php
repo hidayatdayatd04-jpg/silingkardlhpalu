@@ -28,10 +28,7 @@ class FeedbackController extends Controller
     ];
 
     private const FINAL_STATUSES = [
-        'Selesai',
-        'Ditinjau',
         'Ditindaklanjuti',
-        'Disetujui',
     ];
 
     public function store(Request $request, string $nomor_tiket)

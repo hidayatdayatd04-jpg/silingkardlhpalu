@@ -20,7 +20,7 @@ return new class extends Migration
                 $table->string('surat_permohonan');
                 $table->boolean('jaminan_kebersihan')->default(false);
                 $table->string('surat_jaminan')->nullable();
-                $table->string('status')->default('Belum Ditinjau');
+                $table->string('status')->default('Belum Ditindaklanjuti');
                 $table->text('catatan_admin')->nullable();
                 $table->timestamps();
             });

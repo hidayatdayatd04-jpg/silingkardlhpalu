@@ -83,9 +83,8 @@ class NotificationObserver
     protected function pengaduanStatusChanged(Model $model, string $group, string $slug, string $newStatus): void
     {
         $color = match ($newStatus) {
-            'Selesai' => 'emerald',
-            'Ditolak' => 'rose',
-            'Ditindaklanjuti', 'Ditinjau' => 'sky',
+            'Ditindaklanjuti' => 'sky',
+            'Belum Ditindaklanjuti' => 'amber',
             default => 'amber',
         };
 

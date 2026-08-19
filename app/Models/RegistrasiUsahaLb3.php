@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RegistrasiLb3Status;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +15,6 @@ class RegistrasiUsahaLb3 extends Model
         'nomor_registrasi',
         'nama_perusahaan',
         'nomor_telepon',
-        'email',
         'alamat',
         'jenis_lb3',
         'jenis_lb3_lainnya',
@@ -26,7 +25,7 @@ class RegistrasiUsahaLb3 extends Model
     protected function casts(): array
     {
         return [
-            'status' => RegistrasiLb3Status::class,
+            'status' => StatusPengaduan::class,
         ];
     }
 
@@ -36,7 +35,7 @@ class RegistrasiUsahaLb3 extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = RegistrasiLb3Status::DIAJUKAN->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI->value;
             }
 
             if (empty($model->nomor_registrasi)) {

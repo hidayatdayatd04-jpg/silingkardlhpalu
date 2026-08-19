@@ -13,7 +13,6 @@ new class extends Component
 
     public ?string $nama_perusahaan = null;
     public ?string $nomor_telepon = null;
-    public ?string $email = null;
     public ?string $alamat = null;
     public ?string $jenis_lb3 = null;
     public ?string $jenis_lb3_lainnya = null;
@@ -45,17 +44,16 @@ new class extends Component
         ]));
 
         $this->successNumber = $registrasi->nomor_registrasi;
-        $this->reset(['nama_perusahaan', 'nomor_telepon', 'email', 'alamat', 'jenis_lb3', 'jenis_lb3_lainnya']);
+        $this->reset(['nama_perusahaan', 'nomor_telepon', 'alamat', 'jenis_lb3', 'jenis_lb3_lainnya']);
     }
 
     public function getJenisOptions(): array
     {
         $options = [
-            'Pengumpul LB3',
-            'Pengangkut LB3',
-            'Pemanfaat LB3',
-            'Pengolah LB3',
-            'Penimbun LB3',
+            'Medis',
+            'Oli Bekas',
+            'Kimia',
+            'Aki',
             'Lainnya',
         ];
 
@@ -96,28 +94,15 @@ new class extends Component
                 icon="building"
             />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <x-public.input
-                    wire:model="nomor_telepon"
-                    name="nomor_telepon"
-                    type="tel"
-                    label="{{ __('Nomor Telepon') }}"
-                    placeholder="{{ __('Contoh: 08123456789') }}"
-                    required
-                    icon="phone"
-                />
-
-                <x-public.input
-                    wire:model="email"
-                    name="email"
-                    type="email"
-                    label="{{ __('Email') }}"
-                    placeholder="contoh@email.com"
-                    required
-                    hint="{{ __('Untuk notifikasi update status registrasi') }}"
-                    icon="mail"
-                />
-            </div>
+            <x-public.input
+                wire:model="nomor_telepon"
+                name="nomor_telepon"
+                type="tel"
+                label="{{ __('Nomor Telepon') }}"
+                placeholder="{{ __('Contoh: 08123456789') }}"
+                required
+                icon="phone"
+            />
 
             <x-public.textarea
                 wire:model="alamat"

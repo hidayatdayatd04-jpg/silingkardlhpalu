@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\StatusPengaduanRth;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,7 +29,7 @@ class PengaduanRth extends Model
     protected function casts(): array
     {
         return [
-            'status' => StatusPengaduanRth::class,
+            'status' => StatusPengaduan::class,
         ];
     }
 
@@ -39,7 +39,7 @@ class PengaduanRth extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = StatusPengaduanRth::BELUM_DITINJAU->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI->value;
             }
 
             if (empty($model->nomor_tiket)) {
@@ -64,23 +64,11 @@ class PengaduanRth extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->attributes['status'] ?? '') {
-            'Belum Ditinjau' => 'Belum Ditinjau',
-            'Ditinjau' => 'Ditinjau',
-            'Selesai' => 'Selesai',
-            'Ditolak' => 'Ditolak',
-            default => $this->attributes['status'] ?? '-',
-        };
+        return $this->status?->label() ?? ($this->attributes['status'] ?? '-');
     }
 
     public function getStatusColorAttribute(): string
     {
-        return match ($this->attributes['status'] ?? '') {
-            'Belum Ditinjau' => 'gray',
-            'Ditinjau' => 'amber',
-            'Selesai' => 'success',
-            'Ditolak' => 'danger',
-            default => 'gray',
-        };
+        return $this->status?->color() ?? 'gray';
     }
 }

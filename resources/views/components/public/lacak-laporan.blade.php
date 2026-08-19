@@ -202,7 +202,7 @@ new class extends Component
                         'Ditindaklanjuti' => 'lc-status--info',
                     ];
                     $statusStr = $pengaduan->status instanceof \BackedEnum ? $pengaduan->status->value : $pengaduan->status;
-                    $isDone = $statusStr === 'Selesai';
+                    $isDone = in_array($statusStr, ['Selesai', 'Ditindaklanjuti'], true);
                     $isRejected = $statusStr === 'Ditolak';
                 @endphp
                 <span class="lc-status-badge {{ $badgeColors[$pengaduan->status_label] ?? 'lc-status--pending' }}">
@@ -216,6 +216,9 @@ new class extends Component
                     {{ $pengaduan->status_label }}
                 </span>
             </div>
+
+            {{-- Ulasan Masyarakat --}}
+            <x-public.ticket-feedback :ticket="$pengaduan" />
 
             {{-- Mini Stepper --}}
             <div class="lc-stepper-wrap">
@@ -356,6 +359,9 @@ new class extends Component
                     {{ $pengaduanTataPenataan->status?->label() ?? $pengaduanTataPenataan->status }}
                 </span>
             </div>
+
+            {{-- Ulasan Masyarakat --}}
+            <x-public.ticket-feedback :ticket="$pengaduanTataPenataan" />
 
             <x-public.status-timeline :timeline="\App\Services\TicketTimelineService::forTicket($pengaduanTataPenataan)" />
 

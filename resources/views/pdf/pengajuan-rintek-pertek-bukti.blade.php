@@ -37,7 +37,6 @@
         <tr><td class="label">Jenis Usaha</td><td>{{ $pengajuan->jenis_usaha }}</td></tr>
         <tr><td class="label">Alamat Lengkap</td><td>{{ $pengajuan->alamat_lengkap }}</td></tr>
         <tr><td class="label">Nomor Telepon</td><td>{{ $pengajuan->nomor_telepon }}</td></tr>
-        <tr><td class="label">Email</td><td>{{ $pengajuan->email }}</td></tr>
     </table>
 
     <div class="section-title">Data Pengajuan</div>
@@ -45,7 +44,6 @@
         <tr><td class="label">Jenis Pengajuan</td><td>{{ $pengajuan->jenis_pengajuan }}</td></tr>
         <tr><td class="label">Tanggal Pengajuan</td><td>{{ $pengajuan->created_at->format('d F Y H:i') }} WITA</td></tr>
         <tr><td class="label">Status</td><td>{{ $pengajuan->status?->label() ?? $pengajuan->status }}</td></tr>
-        <tr><td class="label">Verifikasi Dokumen</td><td>{{ $pengajuan->documentVerificationSummary() }}</td></tr>
         <tr><td class="label">Keterangan Tambahan</td><td>{{ $pengajuan->keterangan_tambahan ?? '-' }}</td></tr>
     </table>
 

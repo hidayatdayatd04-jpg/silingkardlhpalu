@@ -46,8 +46,7 @@ Route::get('/profil', fn () => view('public.profil'));
 
 Route::get('/tentang', fn () => view('public.tentang-kami'));
 
-// Sekretariat & UPTD
-Route::get('/sekretariat', fn () => view('public.coming-soon', ['title' => 'Sekretariat']));
+// UPTD
 Route::get('/uptd/{slug}', function (string $slug) {
     $titles = [
         'topoksi-lab' => 'Topoksi Lab',
@@ -73,7 +72,7 @@ Route::get('/api/tata-lingkungan/files', [App\Http\Controllers\TataLingkunganCon
     ->middleware('throttle:120,1');
 
 // Tata Penataan Public Routes
-Route::get('/pengaduan-tata-penataan', fn () => view('public.pengaduan-tata-penataan'));
+Route::redirect('/pengaduan-tata-penataan', '/pengaduan?bidang=tata-penataan');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-tata-penataan', '/lacak');
 
@@ -92,14 +91,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
-
-    // Kesekretariatan per bidang (admin) — halaman Segera Hadir
-    Route::get('/sekretariat-pengendalian', fn () => view('admin.sekretariat.index', ['title' => 'Kesekretariatan - Pengendalian']))->name('sekretariat.pengendalian');
-    Route::get('/sekretariat-sampah-lb3', fn () => view('admin.sekretariat.index', ['title' => 'Kesekretariatan - Sampah & LB3']))->name('sekretariat.sampah-lb3');
-    Route::get('/sekretariat-tata-penataan', fn () => view('admin.sekretariat.index', ['title' => 'Kesekretariatan - Tata Penataan']))->name('sekretariat.tata-penataan');
-    Route::get('/sekretariat-rth', fn () => view('admin.sekretariat.index', ['title' => 'Kesekretariatan - RTH']))->name('sekretariat.rth');
-    // Kesekretariatan (Konten & Sistem) — halaman Segera Hadir
-    Route::get('/sekretariat', fn () => view('admin.sekretariat.index', ['title' => 'Kesekretariatan']))->name('sekretariat');
 
     // Peta Laporan — sebaran pengaduan berkoordinat (hanya admin, akses per bidang)
     Route::get('/peta-laporan/data', [\App\Http\Controllers\PetaLaporanController::class, 'data'])
@@ -193,10 +184,11 @@ Route::get('/sosialisasi/{sosialisasi}/sertifikat/{token}.pdf', function (Sosial
 })->middleware('throttle:10,1');
 
 // Pengendalian Public Routes
-Route::get('/pengaduan-pengendalian', fn () => view('public.pengaduan-pengendalian'));
+Route::redirect('/pengaduan-pengendalian', '/pengaduan?bidang=pengendalian');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-pengendalian', '/lacak');
 Route::get('/permohonan-rekomendasi', fn () => view('public.permohonan-rekomendasi'));
+
 Route::get('/cek-permohonan-rekomendasi', fn () => view('public.cek-permohonan-rekomendasi'))->middleware('throttle:30,1');
 
 Route::get('/permohonan-rekomendasi/{nomor_tiket}/bukti-pdf', function (string $nomor_tiket) {
@@ -214,7 +206,7 @@ Route::get('/kebijakan-privasi', fn () => view('public.kebijakan-privasi'));
 Route::get('/syarat-ketentuan', fn () => view('public.syarat-ketentuan'));
 
 // RTH Public Routes
-Route::get('/pengaduan-rth', fn () => view('public.pengaduan-rth'));
+Route::redirect('/pengaduan-rth', '/pengaduan?bidang=rth');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-rth', '/lacak');
 Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
@@ -223,7 +215,7 @@ Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middl
 // Sampah & LB3 Public Routes
 Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->middleware('throttle:60,1');
 Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers'])->middleware('throttle:120,1');
-Route::get('/pengaduan-sampah', fn () => view('public.pengaduan-sampah'));
+Route::redirect('/pengaduan-sampah', '/pengaduan?bidang=sampah');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-sampah', '/lacak');
 Route::get('/registrasi-usaha-lb3', fn () => view('public.registrasi-usaha-lb3'));
@@ -280,3 +272,12 @@ Route::get('/.well-known/security.txt', function () {
         'Preferred-Languages: id, en',
     ]), 200, ['Content-Type' => 'text/plain; charset=utf-8']);
 });
+
+// Preview inline dokumen/lampiran via proxy web (URL bersih domain sendiri,
+// bukan URL signed B2). Wajib login admin. Didefinisikan PALING AKHIR agar
+// route spesifik (mis. /berita/{slug}) tetap menang prioritas pencocokan.
+// {file} = nama file (basename), tanpa subdirektori maupun sufiks.
+Route::get('/{resource}/{file}', [ResourceController::class, 'previewFile'])
+    ->name('file.preview')
+    ->middleware(['auth', 'admin.access', 'no-store'])
+    ->where('file', '.*');

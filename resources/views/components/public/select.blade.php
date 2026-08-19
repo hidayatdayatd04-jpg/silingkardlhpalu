@@ -151,19 +151,19 @@
                 </div>
             @endif
 
-            {{-- Empty option --}}
-            <div
-                x-on:click="selectOption('', '')"
-                class="fi-select-option"
-                :class="{ 'fi-select-option--active': selected === '' }"
-                role="option"
-                :aria-selected="selected === '' ? 'true' : 'false'"
-            >
-                <span>{{ $displayPlaceholder }}</span>
-            </div>
-
             {{-- Options --}}
             <div class="fi-select-options-scroll">
+                {{-- Empty option --}}
+                <div
+                    x-on:click="selectOption('', '')"
+                    class="fi-select-option"
+                    :class="{ 'fi-select-option--active': selected === '' }"
+                    role="option"
+                    :aria-selected="selected === '' ? 'true' : 'false'"
+                >
+                    <span>{{ $displayPlaceholder }}</span>
+                </div>
+
                 <template x-for="option in filteredOptions" :key="option.value">
                     <div
                         x-on:click="selectOption(option.value, option.label)"
@@ -229,7 +229,7 @@
 
         .fi-select-field--open,
         .fi-select-shell--open {
-            z-index: 80;
+            z-index: 9999;
         }
 
         .fi-select-trigger {
@@ -305,8 +305,8 @@
             border-radius: 18px;
             box-shadow: 0 12px 32px -10px rgba(13, 43, 29, 0.18);
             padding: 8px;
-            z-index: 1000;
-            max-height: 360px;
+            z-index: 10000;
+            max-height: 260px;
             overflow: visible;
             overscroll-behavior: contain;
             transform-origin: top center;
@@ -344,7 +344,7 @@
 
         /* ── Options ── */
         .fi-select-options-scroll {
-            max-height: 280px;
+            max-height: 195px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #dfe9e3 transparent;

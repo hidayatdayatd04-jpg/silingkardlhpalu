@@ -1,11 +1,12 @@
 <?php
 
-use App\Enums\StatusPengaduanRth;
+use App\Enums\StatusPengaduan;
 use App\Http\Requests\StorePermohonanPinjamTamanRequest;
 use App\Livewire\Concerns\ThrottlesPublic;
 use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanPinjamTaman;
 use App\Services\FileUploadService;
+use Illuminate\Support\Carbon;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -17,7 +18,6 @@ new class extends Component {
 
     public string $nama_pemohon = '';
     public string $nomor_hp = '';
-    public string $email = '';
     public string $nama_kegiatan = '';
     public string $nama_taman = '';
     public string $nama_taman_manual = '';
@@ -36,19 +36,61 @@ new class extends Component {
         $this->checkConflict();
     }
 
+    public function updatedTanggalKegiatan(): void
+    {
+        $this->resetErrorBag(['tanggal_kegiatan', 'tanggal_selesai']);
+        if ($this->tanggal_kegiatan) {
+            try {
+                $start = Carbon::parse($this->tanggal_kegiatan);
+                if (! $this->tanggal_selesai || Carbon::parse($this->tanggal_selesai)->lessThan($start->copy()->addHour())) {
+                    $this->tanggal_selesai = $start->copy()->addHours(2)->format('Y-m-d\TH:i');
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        $this->checkConflict();
+    }
+
+    public function updatedTanggalSelesai(): void
+    {
+        $this->resetErrorBag(['tanggal_kegiatan', 'tanggal_selesai']);
+        if ($this->tanggal_kegiatan && $this->tanggal_selesai) {
+            try {
+                $start = Carbon::parse($this->tanggal_kegiatan);
+                $end = Carbon::parse($this->tanggal_selesai);
+                if ($end->lessThan($start->copy()->addHour())) {
+                    $this->addError('tanggal_selesai', __('Tanggal & jam selesai tidak boleh sebelum tanggal mulai dan harus minimal 1 jam sesudah tanggal & jam mulai.'));
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        $this->checkConflict();
+    }
+
     public function checkConflict(): void
     {
+        $this->conflictWarning = false;
         $namaTaman = $this->resolvedNamaTaman();
 
+        if ($this->tanggal_kegiatan && $this->tanggal_selesai) {
+            try {
+                $start = Carbon::parse($this->tanggal_kegiatan);
+                $end = Carbon::parse($this->tanggal_selesai);
+                if ($end->lessThan($start->copy()->addHour())) {
+                    $this->addError('tanggal_selesai', __('Tanggal & jam selesai tidak boleh sebelum tanggal mulai dan harus minimal 1 jam sesudah tanggal & jam mulai.'));
+
+                    return;
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
         if ($namaTaman && $this->tanggal_kegiatan) {
-            $end = $this->tanggal_selesai ?: $this->tanggal_kegiatan;
             $this->conflictWarning = PermohonanPinjamTaman::hasConflict(
                 $namaTaman,
-                new \DateTime($this->tanggal_kegiatan),
-                new \DateTime($end),
+                $this->tanggal_kegiatan,
+                $this->tanggal_selesai ?: $this->tanggal_kegiatan,
             );
-        } else {
-            $this->conflictWarning = false;
         }
     }
 
@@ -74,15 +116,25 @@ new class extends Component {
 
         $booked = PermohonanPinjamTaman::query()
             ->where('nama_taman', $namaTaman)
-            ->where('status', StatusPengaduanRth::DITINJAU->value)
+            ->whereIn('status', [
+                StatusPengaduan::BELUM_DITINDAKLANJUTI->value,
+                StatusPengaduan::DITINDAKLANJUTI->value,
+            ])
+            ->where(function ($query) {
+                $query->whereDate('tanggal_kegiatan', '>=', now()->startOfDay())
+                    ->orWhereDate('tanggal_selesai', '>=', now()->startOfDay());
+            })
             ->get(['tanggal_kegiatan', 'tanggal_selesai']);
 
         $days = [];
         for ($i = 0; $i < 30; $i++) {
             $date = now()->addDays($i)->startOfDay();
             $isBooked = $booked->contains(function ($booking) use ($date) {
-                $start = $booking->tanggal_kegiatan->copy()->startOfDay();
-                $end = ($booking->tanggal_selesai ?? $booking->tanggal_kegiatan)->copy()->endOfDay();
+                if (! $booking->tanggal_kegiatan) {
+                    return false;
+                }
+                $start = Carbon::parse($booking->tanggal_kegiatan)->startOfDay();
+                $end = Carbon::parse($booking->tanggal_selesai ?? $booking->tanggal_kegiatan)->endOfDay();
 
                 return $date->between($start, $end);
             });
@@ -129,7 +181,6 @@ new class extends Component {
         $record = PermohonanPinjamTaman::create([
             'nama_pemohon' => $validated['nama_pemohon'],
             'nomor_hp' => $validated['nomor_hp'],
-            'email' => $validated['email'],
             'nama_kegiatan' => $validated['nama_kegiatan'],
             'nama_taman' => $namaTamanFinal,
             'tanggal_kegiatan' => $validated['tanggal_kegiatan'],
@@ -141,7 +192,7 @@ new class extends Component {
         ]);
 
         $this->successTicket = $record->nomor_tiket;
-        $this->reset(['nama_pemohon', 'nomor_hp', 'email', 'nama_kegiatan', 'nama_taman', 'nama_taman_manual', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan', 'surat_jaminan']);
+        $this->reset(['nama_pemohon', 'nomor_hp', 'nama_kegiatan', 'nama_taman', 'nama_taman_manual', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan', 'surat_jaminan']);
         $this->conflictWarning = false;
     }
 
@@ -238,25 +289,16 @@ new class extends Component {
                     icon="phone"
                 />
 
-                <x-public.input
-                    wire:model="email"
-                    name="email"
-                    type="email"
-                    label="{{ __('Email') }}"
-                    placeholder="{{ __('contoh@email.com') }}"
-                    required
-                    hint="{{ __('Untuk notifikasi update status permohonan') }}"
-                    icon="mail"
-                />
-
-                <x-public.input
-                    wire:model="nama_kegiatan"
-                    name="nama_kegiatan"
-                    label="{{ __('Nama Kegiatan') }}"
-                    placeholder="{{ __('Contoh: Festival Musik Komunitas') }}"
-                    required
-                    icon="calendar"
-                />
+                <div class="md:col-span-2">
+                    <x-public.input
+                        wire:model="nama_kegiatan"
+                        name="nama_kegiatan"
+                        label="{{ __('Nama Kegiatan') }}"
+                        placeholder="{{ __('Contoh: Festival Musik Komunitas') }}"
+                        required
+                        icon="calendar"
+                    />
+                </div>
             </div>
 
             <x-public.select
@@ -301,13 +343,14 @@ new class extends Component {
                     :label="__('Tanggal & Jam Selesai')"
                     :value="$tanggal_selesai"
                     :error="$errors->first('tanggal_selesai')"
+                    required
                 />
             </div>
 
             @if ($conflictWarning)
-                <div class="fi-conflict-alert">
+                <div class="fi-conflict-alert" role="alert">
                     <x-icons.ui name="alert" />
-                    {{ __('Tanggal bentrok dengan jadwal yang sudah disetujui.') }}
+                    <span>{{ __('Taman sudah dibooking pada tanggal yang Anda pilih. Silakan pilih tanggal lain yang masih tersedia pada kalender di atas.') }}</span>
                 </div>
             @endif
 
@@ -318,7 +361,7 @@ new class extends Component {
                     {{ __('Surat Permohonan') }} <span class="fi-required">*</span>
                     <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(PDF, max 5MB)</span>
                 </label>
-                <div class="fi-file-drop">
+                <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Surat Permohonan', exts: ['pdf'], maxSizeMB: 5 })">
                     <button type="button" class="fi-file-btn" x-on:click="$refs.suratInput.click()">{{ __('Pilih File') }}</button>
                     <span class="fi-file-status">
                         @if ($surat_permohonan)
@@ -327,7 +370,7 @@ new class extends Component {
                             {{ __('Belum ada file dipilih') }}
                         @endif
                     </span>
-                    <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf" required aria-label="{{ __('Surat Permohonan') }}"
+                    <input wire:model="surat_permohonan" x-ref="suratInput" type="file" accept="application/pdf,.pdf" required aria-label="{{ __('Surat Permohonan') }}"
                         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                 </div>
                 @error('surat_permohonan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
@@ -347,7 +390,7 @@ new class extends Component {
                     {{ __('Surat Jaminan') }}
                     <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(opsional, PDF max 5MB)</span>
                 </label>
-                <div class="fi-file-drop">
+                <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Surat Jaminan', exts: ['pdf'], maxSizeMB: 5 })">
                     <button type="button" class="fi-file-btn" x-on:click="$refs.jaminanInput.click()">{{ __('Pilih File') }}</button>
                     <span class="fi-file-status">
                         @if ($surat_jaminan)
@@ -356,7 +399,7 @@ new class extends Component {
                             {{ __('Belum ada file dipilih') }}
                         @endif
                     </span>
-                    <input wire:model="surat_jaminan" x-ref="jaminanInput" type="file" accept="application/pdf"
+                    <input wire:model="surat_jaminan" x-ref="jaminanInput" type="file" accept="application/pdf,.pdf"
                         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
                 </div>
                 @error('surat_jaminan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
@@ -371,7 +414,7 @@ new class extends Component {
 
         <x-google-recaptcha />
 
-            <button type="submit" class="fi-submit-btn">
+            <button type="submit" class="fi-submit-btn" @if($conflictWarning) disabled style="opacity: 0.55; cursor: not-allowed;" @endif>
                 {{ __('Ajukan Penyewaan') }}
                 <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
             </button>

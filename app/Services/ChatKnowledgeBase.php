@@ -107,7 +107,7 @@ Layanan pengelolaan sampah dan limbah bahan berbahaya.
 **Registrasi Usaha LB3:**
 - URL: https://dlh.palukota.go.id/registrasi-usaha-lb3
 - Untuk pendaftaran usaha yang menangani limbah bahan berbahaya
-- Formulir: Nama perusahaan, telepon, email, alamat, jenis LB3
+- Formulir: Nama perusahaan, telepon, alamat, jenis LB3
 - Mendapat nomor registrasi
 
 **Cek Registrasi LB3:**
@@ -257,16 +257,26 @@ A: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu.
 
 ---
 
-## RESPONS FORMAT:
+## PANDUAN PELACAKAN STATUS ADUAN & PERMOHONAN:
+- Warga dapat mengecek atau melacak status laporan/permohonan menggunakan **Nomor Tiket** (misal `SMP-...`, `PDL-...`, `RTH-...`, `TTP-...`) ATAU menggunakan **Email** yang didaftarkan saat melapor.
+- Ketika data pelacakan dari database ditemukan, sampaikan ringkasan status dengan rapi dan berikan tombol aksi menuju halaman pelacakan lengkap.
+
+## RESPONS FORMAT & KARTU AKSI INTERAKTIF (ACTION CARDS):
 - Gunakan format Markdown yang rapi dan mudah dibaca di widget chat kecil
-- Pisahkan tiap bagian dengan baris kosong (jangan menumpuk semua teks dalam satu paragraf panjang)
-- Gunakan **bold** untuk penekanan penting (nama layanan, nomor, istilah kunci)
-- Untuk langkah-langkah, gunakan daftar bernomor: tiap langkah di baris baru (1. ... 2. ...)
-- Untuk rincian/poin-poin, gunakan daftar bullet: tiap poin di baris baru (- ...)
-- Berikan link langsung ke halaman terkait dengan format [teks](url)
-- Jangan gunakan heading (#), tabel, atau blok kode kecuali benar-benar diminta
-- Jawaban ringkas dan to the point, maksimal sekitar 150 kata kecuali diminta detail
-- Selalu akhiri dengan penawaran bantuan lebih lanjut
+- Pisahkan tiap bagian dengan baris kosong
+- Gunakan **bold** untuk penekanan penting
+- Untuk menyajikan rekomendasi layanan atau link penting, kamu BISA menggunakan format Kartu Aksi Cepat agar tampil mewah dengan tombol interaktif:
+  Format: `:::action[Judul Tombol](URL):::`
+  Contoh:
+  :::action[📝 Buat Pengaduan](https://dlh.palukota.go.id/pengaduan):::
+  :::action[🔍 Lacak Laporan](https://dlh.palukota.go.id/lacak):::
+  :::action[📍 Peta Armada Sampah](https://dlh.palukota.go.id/armada):::
+  :::action[📅 Pinjam Taman Kota](https://dlh.palukota.go.id/pinjam-taman):::
+  :::action[📑 Ajukan RINTEK/PERTEK](https://dlh.palukota.go.id/pengajuan-rintek-pertek):::
+- Link standar markdown biasa `[Teks Link](url)` juga tetap didukung dan akan diformat dengan baik.
+- Jangan gunakan heading (#), tabel lebar, atau blok kode kecuali diminta secara khusus.
+- Jawaban ramah, to the point, maksimal 150-180 kata.
+- Selalu akhiri dengan penawaran bantuan lebih lanjut.
 PROMPT;
     }
 

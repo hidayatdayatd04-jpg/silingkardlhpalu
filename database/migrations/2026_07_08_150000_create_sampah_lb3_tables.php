@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('nama_perusahaan');
             $table->text('alamat');
             $table->string('jenis_lb3')->nullable();
-            $table->string('status')->default('Diajukan');
+            $table->string('status')->default('Belum Ditindaklanjuti');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });
@@ -47,9 +47,8 @@ return new class extends Migration
             $table->string('sppl');
             $table->string('denah_tps_lb3');
             $table->string('sop_tanggap_darurat');
-            $table->string('status')->default('Diajukan');
+            $table->string('status')->default('Belum Ditindaklanjuti');
             $table->text('catatan_verifikasi')->nullable();
-            $table->json('verifikasi_dokumen')->nullable();
             $table->timestamps();
         });
     }

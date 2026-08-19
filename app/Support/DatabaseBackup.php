@@ -585,16 +585,17 @@ class DatabaseBackup
 
         // 5) Constraint PRIMARY KEY / UNIQUE / CHECK (setelah data, agar cepat & aman).
         $cons = $pdo->query(
-            "SELECT conrelid::regclass::text AS tbl, conname, conindid::regclass::text AS idx, pg_get_constraintdef(oid) AS def
-             FROM pg_constraint
-             WHERE connamespace = 'public'::regnamespace AND contype IN ('p','u','c')
-             ORDER BY CASE contype WHEN 'p' THEN 0 WHEN 'u' THEN 1 ELSE 2 END, conname"
+            "SELECT c.conrelid::regclass::text AS tbl, c.conname, c.conindid::regclass::text AS idx, pg_get_constraintdef(c.oid) AS def
+             FROM pg_constraint c
+             WHERE c.connamespace = 'public'::regnamespace AND c.contype IN ('p','u','c')
+             ORDER BY CASE c.contype WHEN 'p' THEN 0 WHEN 'u' THEN 1 ELSE 2 END, c.conname"
         )->fetchAll(PDO::FETCH_ASSOC);
 
         if ($cons) {
             fwrite($handle, "\n");
             foreach ($cons as $c) {
-                fwrite($handle, 'ALTER TABLE ONLY "'.str_replace('public.', '', $c['tbl']).'" ADD CONSTRAINT "'.$c['conname'].'" '.$c['def'].";\n");
+                $rawTbl = trim(str_replace('public.', '', $c['tbl']), '"');
+                fwrite($handle, 'ALTER TABLE ONLY "'.$rawTbl.'" ADD CONSTRAINT "'.$c['conname'].'" '.$c['def'].";\n");
             }
         }
 
@@ -644,16 +645,17 @@ class DatabaseBackup
 
         // 8) FOREIGN KEY paling akhir.
         $fks = $pdo->query(
-            "SELECT conrelid::regclass::text AS tbl, conname, pg_get_constraintdef(oid) AS def
-             FROM pg_constraint
-             WHERE connamespace = 'public'::regnamespace AND contype = 'f'
-             ORDER BY conname"
+            "SELECT c.conrelid::regclass::text AS tbl, c.conname, pg_get_constraintdef(c.oid) AS def
+             FROM pg_constraint c
+             WHERE c.connamespace = 'public'::regnamespace AND c.contype = 'f'
+             ORDER BY c.conname"
         )->fetchAll(PDO::FETCH_ASSOC);
 
         if ($fks) {
             fwrite($handle, "\n");
             foreach ($fks as $fk) {
-                fwrite($handle, 'ALTER TABLE ONLY "'.str_replace('public.', '', $fk['tbl']).'" ADD CONSTRAINT "'.$fk['conname'].'" '.$fk['def'].";\n");
+                $rawTbl = trim(str_replace('public.', '', $fk['tbl']), '"');
+                fwrite($handle, 'ALTER TABLE ONLY "'.$rawTbl.'" ADD CONSTRAINT "'.$fk['conname'].'" '.$fk['def'].";\n");
             }
         }
     }
@@ -882,19 +884,27 @@ class DatabaseBackup
         // (constraint bernama sama, atau tabel sudah punya PK), selain itu bungkus
         // dalam blok DO idempoten sebagai jaring pengaman.
         if (preg_match('/^ALTER\s+TABLE\s+.*ADD\s+CONSTRAINT\s/is', $statement) && ! str_contains($statement, '$$')) {
-            if (preg_match('/^ALTER\s+TABLE\s+(?:ONLY\s+)?(?<tbl>"[^"]+"|[\w.]+)\s+ADD\s+CONSTRAINT\s+"(?<name>[^"]+)"\s+(?<def>.+)$/is', $statement, $cm)) {
-                $tbl = str_replace('public.', '', trim($cm['tbl'], '"'));
+            if (preg_match('/^ALTER\s+TABLE\s+(?:ONLY\s+)?(?<tbl>"+[^"]+"+|"[^"]+"|[\w."]+)\s+ADD\s+CONSTRAINT\s+"(?<name>[^"]+)"\s+(?<def>.+)$/is', $statement, $cm)) {
+                $rawTbl = trim($cm['tbl'], " \t\n\r\0\x0B\"");
+                $rawTbl = str_replace('public.', '', $rawTbl);
+                $rawTbl = trim($rawTbl, " \t\n\r\0\x0B\"");
+
+                // Normalisasi statement agar selalu berformat: ALTER TABLE ONLY "nama_tabel" ADD CONSTRAINT "nama" ...
+                $statement = 'ALTER TABLE ONLY "'.$rawTbl.'" ADD CONSTRAINT "'.$cm['name'].'" '.$cm['def'];
 
                 // Constraint dengan nama sama sudah ada di tabel ini — tidak perlu dibuat ulang.
-                if (isset($this->existingConstraints[$tbl.'.'.$cm['name']])) {
+                if (isset($this->existingConstraints[$rawTbl.'.'.$cm['name']])) {
                     return null;
                 }
 
                 // Tabel sudah punya primary key — menambah PK kedua selalu gagal
                 // dengan 42P16, apa pun nama constraint-nya.
-                if (preg_match('/^PRIMARY\s+KEY\b/i', $cm['def']) && $this->tablePrimaryKeys($tbl) !== []) {
+                if (preg_match('/^PRIMARY\s+KEY\b/i', $cm['def']) && $this->tablePrimaryKeys($rawTbl) !== []) {
                     return null;
                 }
+            } else {
+                // Fallback: bersihkan semua double quotes beruntun ("" -> ") pada klausa ALTER TABLE
+                $statement = preg_replace('/""+/', '"', $statement);
             }
 
             return 'DO $$ BEGIN '.$statement.'; '

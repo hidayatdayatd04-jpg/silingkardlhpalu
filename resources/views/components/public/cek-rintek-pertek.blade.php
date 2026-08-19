@@ -12,6 +12,23 @@ new class extends Component
     public string $search = '';
     public ?\App\Models\PengajuanRintekPertek $pengajuan = null;
 
+    private function normalizePhoneCandidates(string $digits): array
+    {
+        if ($digits === '') {
+            return [];
+        }
+
+        $candidates = [$digits];
+
+        if (str_starts_with($digits, '0')) {
+            $candidates[] = '62'.substr($digits, 1);
+        } elseif (str_starts_with($digits, '62')) {
+            $candidates[] = '0'.substr($digits, 2);
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
     public function lookup()
     {
         if (! $this->verifyCaptcha('lookup')) {
@@ -27,20 +44,34 @@ new class extends Component
         }
 
         $value = trim($this->search);
-        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+        $digits = preg_replace('/\D/', '', $value);
+        $isPhone = $digits !== '' && preg_match('/^[\d\s\-+]+$/', $value);
 
-        if ($isEmail) {
+        if ($isPhone) {
+            $candidates = $this->normalizePhoneCandidates($digits);
+
+            if (empty($candidates)) {
+                $this->addError('search', __('Nomor telepon tidak valid.'));
+
+                return;
+            }
+
             $this->pengajuan = \App\Models\PengajuanRintekPertek::query()
-                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->where(function ($query) use ($candidates): void {
+                    foreach ($candidates as $candidate) {
+                        $query->orWhere('nomor_telepon', $candidate)
+                            ->orWhereRaw("REPLACE(REPLACE(REPLACE(nomor_telepon, '+', ''), ' ', ''), '-', '') = ?", [$candidate]);
+                    }
+                })
                 ->latest()
                 ->first();
 
             if (! $this->pengajuan) {
-                $this->addError('search', __('Tidak ada pengajuan dengan email tersebut.'));
+                $this->addError('search', __('Tidak ada pengajuan dengan nomor telepon tersebut.'));
             }
         } else {
             $this->pengajuan = \App\Models\PengajuanRintekPertek::query()
-                ->where('nomor_pengajuan', $value)
+                ->whereRaw('UPPER(nomor_pengajuan) = ?', [strtoupper($value)])
                 ->first();
 
             if (! $this->pengajuan) {
@@ -58,8 +89,8 @@ new class extends Component
                 <x-icons.ui name="search" />
             </span>
             <div class="flex-1">
-                <h3 class="ck-card-title">{{ __('Cek Status Pengajuan RINTEK/PTEK') }}</h3>
-                <p class="ck-card-desc">{{ __('Masukkan nomor pengajuan atau email yang Anda daftarkan untuk melihat status RINTEK/PTEK.') }}</p>
+                <h3 class="ck-card-title">{{ __('Cek Status Pengajuan RINTEK/PERTEK') }}</h3>
+                <p class="ck-card-desc">{{ __('Masukkan nomor pengajuan atau nomor telepon yang Anda daftarkan untuk melihat status RINTEK/PERTEK.') }}</p>
             </div>
         </div>
         <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
@@ -67,7 +98,7 @@ new class extends Component
                 <x-public.input
                     wire:model.live.debounce.250ms="search"
                     name="search"
-                    placeholder="RPT-YYYY-XXXX atau email@perusahaan.com"
+                    placeholder="RPT-YYYY-XXXX atau 08123456789"
                     required
                 />
             </div>
@@ -134,7 +165,6 @@ new class extends Component
                         __('Nama Penanggung Jawab') => $pengajuan->nama_penanggung_jawab,
                         __('Jenis Usaha') => $pengajuan->jenis_usaha,
                         __('Tanggal Pengajuan') => $pengajuan->created_at->format('d M Y H:i'),
-                        __('Verifikasi Dokumen') => $pengajuan->documentVerificationSummary(),
                     ];
                 @endphp
                 @foreach ($infoItems as $label => $value)

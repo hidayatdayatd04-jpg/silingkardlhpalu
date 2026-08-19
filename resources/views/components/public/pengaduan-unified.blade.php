@@ -31,8 +31,8 @@ new class extends Component {
     public ?string $nama_terlapor = null;
     public ?string $nama_perusahaan_terlapor = null;
     public ?string $alamat = null;
-    public float $latitude = -0.9;
-    public float $longitude = 119.87;
+    public ?float $latitude = null;
+    public ?float $longitude = null;
     public ?string $deskripsi = null;
     public array $photos = [];
 
@@ -119,8 +119,8 @@ new class extends Component {
                 'jenis_pengaduan' => $this->jenis_pengaduan,
                 'alamat' => $this->alamat,
                 'deskripsi' => $this->deskripsi,
-                'latitude' => $this->latitude,
-                'longitude' => $this->longitude,
+                'latitude' => (float) $this->latitude,
+                'longitude' => (float) $this->longitude,
             ];
 
             [$modelClass, $fotoClass, $fkColumn, $storageDir] = match ($this->bidang) {
@@ -204,9 +204,8 @@ new class extends Component {
         $this->reset([
             'nama_pelapor', 'nomor_hp', 'jenis_pengaduan', 'nama_terlapor',
             'nama_perusahaan_terlapor', 'alamat', 'deskripsi', 'photos',
+            'latitude', 'longitude',
         ]);
-        $this->latitude = -0.9;
-        $this->longitude = 119.87;
     }
 
     public function jenisOptions(): array
@@ -294,6 +293,8 @@ new class extends Component {
                 located: false,
                 detecting: false,
                 geoError: null,
+                currentLat: null,
+                currentLng: null,
                 map: null,
                 marker: null,
                 detectLocation() {
@@ -304,38 +305,79 @@ new class extends Component {
                         return;
                     }
                     this.detecting = true;
-                    navigator.geolocation.getCurrentPosition(
-                        function (pos) {
-                            var lat = pos.coords.latitude;
-                            var lon = pos.coords.longitude;
-                            fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&accept-language=id')
-                                .then(function (r) { return r.json(); })
-                                .then(function (data) {
-                                    var addr = (data && data.display_name) ? data.display_name : '';
-                                    @this.set('alamat', addr);
-                                })
-                                .catch(function () {})
-                                .finally(function () {
+                    // Strategi watchPosition: kumpulkan pembacaan selama max 15 detik,
+                    // ambil yang akurasi terbaik (radius terkecil = paling akurat).
+                    var bestPos = null;
+                    var watchId = null;
+                    var collectTimeout = null;
+
+                    function applyBestPos() {
+                        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                        if (collectTimeout) { clearTimeout(collectTimeout); collectTimeout = null; }
+                        if (!bestPos) { self.detecting = false; self.geoError = 'Tidak dapat memperoleh posisi. Coba lagi.'; return; }
+                        var lat = bestPos.coords.latitude;
+                        var lon = bestPos.coords.longitude;
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1&accept-language=id')
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) {
+                                var addr = '';
+                                if (data && data.address) {
+                                    var a = data.address;
+                                    var parts = [];
+                                    if (a.road) parts.push(a.road);
+                                    if (a.suburb || a.village || a.hamlet) parts.push(a.suburb || a.village || a.hamlet);
+                                    if (a.city || a.town || a.county) parts.push(a.city || a.town || a.county);
+                                    if (a.state) parts.push(a.state);
+                                    if (a.postcode) parts.push(a.postcode);
+                                    if (a.country) parts.push(a.country);
+                                    addr = parts.join(', ');
+                                }
+                                if (!addr && data.display_name) addr = data.display_name;
+                                @this.set('alamat', addr);
+                            })
+                            .catch(function () {})
+                            .finally(function () {
                                     @this.set('latitude', lat);
                                     @this.set('longitude', lon);
+                                    self.currentLat = lat;
+                                    self.currentLng = lon;
                                     self.detecting = false;
                                     self.located = true;
                                     self.$nextTick(function () { self.initMap(lat, lon); });
                                 });
-                        },
-                        function (err) {
-                            self.detecting = false;
-                            if (err.code === 1) {
-                                self.geoError = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda lalu coba lagi.';
-                            } else if (err.code === 2) {
-                                self.geoError = 'Posisi tidak dapat ditentukan saat ini. Coba lagi atau isi alamat secara manual.';
-                            } else if (err.code === 3) {
-                                self.geoError = 'Waktu permintaan lokasi habis. Silakan coba lagi.';
-                            } else {
-                                self.geoError = 'Gagal mendapatkan lokasi: ' + err.message;
-                            }
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                    }
+
+                    // Berhenti lebih awal jika akurasi sudah sangat baik (<= 15m)
+                    function onWatchSuccess(pos) {
+                        if (!bestPos || pos.coords.accuracy < bestPos.coords.accuracy) {
+                            bestPos = pos;
+                        }
+                        if (pos.coords.accuracy <= 15) { applyBestPos(); }
+                    }
+
+                    function onWatchError(err) {
+                        if (bestPos) { applyBestPos(); return; }
+                        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                        if (collectTimeout) { clearTimeout(collectTimeout); collectTimeout = null; }
+                        self.detecting = false;
+                        if (err.code === 1) {
+                            self.geoError = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda lalu coba lagi.';
+                        } else if (err.code === 2) {
+                            self.geoError = 'Posisi tidak dapat ditentukan saat ini. Coba lagi atau isi alamat secara manual.';
+                        } else if (err.code === 3) {
+                            self.geoError = 'Waktu permintaan lokasi habis. Silakan coba lagi.';
+                        } else {
+                            self.geoError = 'Gagal mendapatkan lokasi: ' + err.message;
+                        }
+                    }
+
+                    // Timeout 15 detik, ambil posisi terbaik yang sudah dikumpulkan
+                    collectTimeout = setTimeout(applyBestPos, 15000);
+
+                    watchId = navigator.geolocation.watchPosition(
+                        onWatchSuccess,
+                        onWatchError,
+                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
                     );
                 },
                 initMap(lat, lon) {
@@ -349,8 +391,8 @@ new class extends Component {
                             self.map.on('load', function () { bs.onAdd(self.map); });
                         }
                         self.marker = new maplibregl.Marker({ draggable: true, anchor: 'center' }).setLngLat([lon, lat]).addTo(self.map);
-                        self.marker.on('dragend', function () { var ll = self.marker.getLngLat(); @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });
-                        self.map.on('click', function (e) { self.marker.setLngLat(e.lngLat); @this.set('latitude', e.lngLat.lat); @this.set('longitude', e.lngLat.lng); });
+                        self.marker.on('dragend', function () { var ll = self.marker.getLngLat(); self.currentLat = ll.lat; self.currentLng = ll.lng; @this.set('latitude', ll.lat); @this.set('longitude', ll.lng); });
+                        self.map.on('click', function (e) { self.marker.setLngLat(e.lngLat); self.currentLat = e.lngLat.lat; self.currentLng = e.lngLat.lng; @this.set('latitude', e.lngLat.lat); @this.set('longitude', e.lngLat.lng); });
                         setTimeout(function () { try { self.map.resize(); } catch (e) {} }, 150);
                     });
                 },
@@ -415,7 +457,7 @@ new class extends Component {
 
                     <p class="detect-success hidden mt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
                         <x-icons.ui name="check" class="w-4 h-4 shrink-0" />
-                        <span>{{ __('Lokasi terdeteksi — peta dan alamat terisi otomatis.') }}</span>
+                        <span class="detect-success-text">{{ __('Lokasi terdeteksi — peta dan alamat terisi otomatis.') }}</span>
                     </p>
                 </div>
 
@@ -461,22 +503,11 @@ new class extends Component {
 
                 <div class="fi-field">
                     <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG/WebP/AVIF/HEIC maksimal 5MB)</span></label>
-                    <div class="fi-file-drop">
+                    <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Foto Bukti', exts: ['jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5, maxCount: 5, countSelector: '[data-photo-item]' })">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.fileInput.click()">{{ __('Choose Files') }}</button>
                         <span class="fi-file-status">{{ __('No file chosen') }}</span>
                         <input wire:model="photos" x-ref="fileInput" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" required aria-label="{{ __('Foto Bukti') }}"
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;"
-                            x-on:change="
-                                let files = $el.files;
-                                if(files.length > 5){ alert('Maksimal 5 foto yang diizinkan!'); $el.value=''; return; }
-                                const okTypes = ['image/jpeg','image/jpg','image/png','image/webp','image/avif','image/heic','image/heif'];
-                                const okExts = ['jpg','jpeg','png','webp','avif','heic','heif'];
-                                for(let f of files){
-                                    if(f.size > 5*1024*1024){ alert('Ukuran foto ' + f.name + ' melebihi 5MB!'); $el.value=''; return; }
-                                    const ext = f.name.split('.').pop().toLowerCase();
-                                    if(!okTypes.includes(f.type) && !okExts.includes(ext)){ alert('File ' + f.name + ' bukan JPG/PNG/WebP/AVIF/HEIC!'); $el.value=''; return; }
-                                }
-                            "
                         />
                     </div>
                     @error('photos') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
@@ -485,7 +516,7 @@ new class extends Component {
                     @if ($photos)
                         <div class="grid grid-cols-3 gap-3 pt-3">
                             @foreach ($photos as $index => $photo)
-                                <div class="relative aspect-square rounded-xl" style="overflow:visible;">
+                                <div data-photo-item class="relative aspect-square rounded-xl" style="overflow:visible;">
                                     <img src="{{ $photo->temporaryUrl() }}" alt="{{ __('Pratinjau foto bukti') }}" class="w-full h-full object-cover rounded-xl" />
                                     <button type="button"
                                         wire:click="removePhoto({{ $index }})"
@@ -510,6 +541,7 @@ new class extends Component {
 
                 <button type="submit" class="fi-submit-btn">
                     {{ __('Kirim Pengaduan') }}
+                    <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
                 </button>
             </div>
 
@@ -524,9 +556,12 @@ new class extends Component {
                 </div>
 
                 <div class="flex justify-between text-xs text-[#5b6b63] dark:text-slate-400 font-medium tabular-nums">
-                    <span>Lat: {{ number_format($latitude, 6) }}</span>
-                    <span>Lng: {{ number_format($longitude, 6) }}</span>
+                    <span>Lat: <span x-text="currentLat !== null ? Number(currentLat).toFixed(6) : '–'"></span></span>
+                    <span>Lng: <span x-text="currentLng !== null ? Number(currentLng).toFixed(6) : '–'"></span></span>
                 </div>
+                {{-- Hidden inputs untuk Livewire wire:model sync --}}
+                <input type="hidden" wire:model="latitude" x-bind:value="currentLat">
+                <input type="hidden" wire:model="longitude" x-bind:value="currentLng">
                 @error('latitude') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
                 @error('longitude') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
             </div>
@@ -597,6 +632,9 @@ new class extends Component {
             cursor: pointer;
             box-shadow: 0 10px 24px -8px rgba(20, 106, 68, 0.55);
             transition: transform .12s ease, box-shadow .12s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fi-submit-btn:hover {
@@ -606,6 +644,11 @@ new class extends Component {
 
         .fi-submit-btn:active {
             transform: translateY(0);
+        }
+
+        .fi-submit-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
         }
 
         /* ── Form card ── */
@@ -698,9 +741,27 @@ new class extends Component {
             btnDetect.querySelector('.detect-icon-spin').classList.remove('hidden');
             btnDetect.querySelector('.detect-label').textContent = 'Mendeteksi Lokasi...';
 
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                var lat = pos.coords.latitude;
-                var lon = pos.coords.longitude;
+// Strategi watchPosition: kumpulkan pembacaan selama max 15 detik,
+            // ambil yang akurasi terbaik (radius terkecil = paling tepat).
+            var bestPos2 = null;
+            var watchId2 = null;
+            var collectTimeout2 = null;
+
+            function resetBtn() {
+                btnDetect.disabled = false;
+                btnDetect.querySelector('.detect-icon-normal').classList.remove('hidden');
+                btnDetect.querySelector('.detect-icon-spin').classList.add('hidden');
+                btnDetect.querySelector('.detect-label').textContent = 'Deteksi Lokasi Saya';
+            }
+
+            function applyBestPos2() {
+                if (watchId2 !== null) { navigator.geolocation.clearWatch(watchId2); watchId2 = null; }
+                if (collectTimeout2) { clearTimeout(collectTimeout2); collectTimeout2 = null; }
+                if (!bestPos2) { resetBtn(); var wEl = btnDetect.closest('div'); var eEl = wEl.querySelector('.detect-error'); var eTxt = wEl.querySelector('.detect-error-text'); if (eEl && eTxt) { eTxt.textContent = 'Tidak dapat memperoleh posisi. Coba lagi.'; eEl.classList.remove('hidden'); } return; }
+
+                var lat = bestPos2.coords.latitude;
+                var lon = bestPos2.coords.longitude;
+                var acc = bestPos2.coords.accuracy; // dalam meter
 
                 fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1&accept-language=id')
                     .then(function(r) { return r.json(); })
@@ -731,14 +792,14 @@ new class extends Component {
                         if (latEl) { latEl.value = lat; latEl.dispatchEvent(new Event('input', { bubbles: true })); }
                         if (lonEl) { lonEl.value = lon; lonEl.dispatchEvent(new Event('input', { bubbles: true })); }
 
-                        var wrapper = btnDetect.closest('div');
-                        wrapper.querySelector('.detect-success').classList.remove('hidden');
-                        wrapper.querySelector('.detect-error').classList.add('hidden');
+                        var wrapper2 = btnDetect.closest('div');
+                        var successEl = wrapper2.querySelector('.detect-success');
+                        var successText = wrapper2.querySelector('.detect-success-text');
+                        if (successEl) successEl.classList.remove('hidden');
+                        if (successText) successText.textContent = 'Lokasi berhasil dideteksi (akurasi ±' + Math.round(acc) + ' m)';
+                        wrapper2.querySelector('.detect-error').classList.add('hidden');
 
-                        btnDetect.disabled = false;
-                        btnDetect.querySelector('.detect-icon-normal').classList.remove('hidden');
-                        btnDetect.querySelector('.detect-icon-spin').classList.add('hidden');
-                        btnDetect.querySelector('.detect-label').textContent = 'Deteksi Lokasi Saya';
+                        resetBtn();
 
                         var form = btnDetect.closest('form');
                         if (form && window.Alpine) {
@@ -746,28 +807,45 @@ new class extends Component {
                             if (formData) {
                                 formData.located = true;
                                 formData.detecting = false;
+                                formData.currentLat = lat;
+                                formData.currentLng = lon;
                                 setTimeout(function() { formData.initMap(lat, lon); }, 100);
                             }
                         }
                     });
-            }, function(err) {
-                btnDetect.disabled = false;
-                btnDetect.querySelector('.detect-icon-normal').classList.remove('hidden');
-                btnDetect.querySelector('.detect-icon-spin').classList.add('hidden');
-                btnDetect.querySelector('.detect-label').textContent = 'Deteksi Lokasi Saya';
+            }
 
-                var wrapper = btnDetect.closest('div');
-                var errEl = wrapper.querySelector('.detect-error');
-                var errText = wrapper.querySelector('.detect-error-text');
+            function onWatch2Success(pos) {
+                if (!bestPos2 || pos.coords.accuracy < bestPos2.coords.accuracy) {
+                    bestPos2 = pos;
+                }
+                // Berhenti lebih awal jika akurasi sudah sangat baik (<= 15m)
+                if (pos.coords.accuracy <= 15) { applyBestPos2(); }
+            }
+
+            function onWatch2Error(err) {
+                if (bestPos2) { applyBestPos2(); return; }
+                if (watchId2 !== null) { navigator.geolocation.clearWatch(watchId2); watchId2 = null; }
+                if (collectTimeout2) { clearTimeout(collectTimeout2); collectTimeout2 = null; }
+                resetBtn();
+                var wrapper2 = btnDetect.closest('div');
+                var errEl = wrapper2.querySelector('.detect-error');
+                var errText = wrapper2.querySelector('.detect-error-text');
                 var msg = 'Gagal mendapatkan lokasi.';
                 if (err.code === 1) msg = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda.';
                 else if (err.code === 2) msg = 'Posisi tidak dapat ditentukan. Coba lagi.';
                 else if (err.code === 3) msg = 'Waktu habis. Silakan coba lagi.';
-                if (errEl && errText) {
-                    errText.textContent = msg;
-                    errEl.classList.remove('hidden');
-                }
-            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+                if (errEl && errText) { errText.textContent = msg; errEl.classList.remove('hidden'); }
+            }
+
+            // Timeout 15 detik, lalu pakai posisi terbaik yang sudah terkumpul
+            collectTimeout2 = setTimeout(applyBestPos2, 15000);
+
+            watchId2 = navigator.geolocation.watchPosition(
+                onWatch2Success,
+                onWatch2Error,
+                { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+            );
         });
     });
     </script>

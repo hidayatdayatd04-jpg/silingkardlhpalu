@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\PermohonanStatus;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +17,6 @@ class PermohonanRekomendasi extends Model
         'jenis_usaha',
         'alamat_lengkap',
         'nomor_telepon',
-        'email',
         'jenis_pengajuan',
         'surat_permohonan',
         'status',
@@ -28,7 +27,7 @@ class PermohonanRekomendasi extends Model
     protected function casts(): array
     {
         return [
-            'status' => PermohonanStatus::class,
+            'status' => StatusPengaduan::class,
             'dokumen_lengkap_terverifikasi' => 'boolean',
         ];
     }
@@ -39,7 +38,7 @@ class PermohonanRekomendasi extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = PermohonanStatus::BELUM_DITINDAKLANJUTI->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI->value;
             }
 
             if (empty($model->nomor_tiket)) {

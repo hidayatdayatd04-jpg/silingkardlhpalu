@@ -45,6 +45,13 @@ class PengaduanSampah extends Model
         });
     }
 
+    protected function casts(): array
+    {
+        return [
+            'status' => PengaduanStatus::class,
+        ];
+    }
+
     public function fotos(): HasMany
     {
         return $this->hasMany(PengaduanSampahFoto::class, 'pengaduan_sampah_id');

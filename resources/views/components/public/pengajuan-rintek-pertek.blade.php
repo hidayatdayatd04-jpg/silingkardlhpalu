@@ -24,7 +24,6 @@ new class extends Component
     public ?string $jenis_usaha = null;
     public ?string $alamat_lengkap = null;
     public ?string $nomor_telepon = null;
-    public ?string $email = null;
     public ?string $jenis_pengajuan = null;
     public ?string $keterangan_tambahan = null;
 
@@ -42,11 +41,15 @@ new class extends Component
 
     public function updatedRegistrasiUsahaLb3Id($value): void
     {
-        if ($value) {
+        if ($value && $value !== '__lainnya__' && is_numeric($value)) {
             $reg = RegistrasiUsahaLb3::find($value);
             if ($reg) {
                 $this->nama_perusahaan = $reg->nama_perusahaan;
             }
+        } elseif ($value === '__lainnya__') {
+            $this->nama_perusahaan = null;
+        } else {
+            $this->nama_perusahaan = null;
         }
     }
 
@@ -70,14 +73,14 @@ new class extends Component
         $fileService = app(FileUploadService::class);
         foreach (array_keys(PengajuanRintekPertek::DOKUMEN_FIELDS) as $field) {
             // Gambar raster otomatis dikompres & dikonversi ke WebP; PDF disimpan apa adanya.
-            $paths[$field] = $fileService->store($this->{$field}, 'rintek-pertek', 'public') ?: null;
+                $paths[$field] = $fileService->store($this->{$field}, 'pengajuan-rintek-pertek', 'public') ?: null;
         }
 
         $registrasiId = $validated['registrasi_usaha_lb3_id'] ?? null;
-        $namaPerusahaan = $validated['nama_perusahaan'];
-        if ($registrasiId === '__lainnya__') {
+        $namaPerusahaan = $validated['nama_perusahaan'] ?? null;
+        if ($registrasiId === '__lainnya__' || empty($registrasiId)) {
             $registrasiId = null;
-            $namaPerusahaan = trim($validated['nama_perusahaan_lainnya'] ?? '');
+            $namaPerusahaan = trim($validated['nama_perusahaan_lainnya'] ?? $namaPerusahaan ?? '');
         }
 
         $pengajuan = PengajuanRintekPertek::create([
@@ -89,7 +92,6 @@ new class extends Component
             'jenis_usaha' => $validated['jenis_usaha'],
             'alamat_lengkap' => $validated['alamat_lengkap'],
             'nomor_telepon' => $validated['nomor_telepon'],
-            'email' => $validated['email'],
             'jenis_pengajuan' => $validated['jenis_pengajuan'],
             'keterangan_tambahan' => $validated['keterangan_tambahan'] ?? null,
             ...$paths,
@@ -101,7 +103,7 @@ new class extends Component
         $this->reset([
             'registrasi_usaha_lb3_id', 'nama_perusahaan', 'nama_perusahaan_lainnya', 'nama_penanggung_jawab',
             'nomor_nib', 'npwp', 'jenis_usaha', 'alamat_lengkap', 'nomor_telepon',
-            'email', 'jenis_pengajuan', 'keterangan_tambahan',
+            'jenis_pengajuan', 'keterangan_tambahan',
             'surat_permohonan', 'dplh_ukl_upl', 'nib', 'sppl', 'denah_tps_lb3', 'sop_tanggap_darurat',
         ]);
     }
@@ -140,7 +142,7 @@ new class extends Component
 
     public function getDocumentAccept(): string
     {
-        return '.pdf,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif';
+        return '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif';
     }
 };
 ?>
@@ -273,27 +275,18 @@ new class extends Component
                         />
                     </div>
 
-                    <x-public.input
-                        wire:model="nomor_telepon"
-                        name="nomor_telepon"
-                        type="tel"
-                        label="{{ __('Nomor Telepon') }}"
-                        placeholder="08123456789"
-                        required
-                        hint="{{ __('Nomor yang aktif dan bisa dihubungi (WhatsApp).') }}"
-                        icon="phone"
-                    />
-
-                    <x-public.input
-                        wire:model="email"
-                        name="email"
-                        type="email"
-                        label="{{ __('Email') }}"
-                        placeholder="email@perusahaan.com"
-                        required
-                        hint="{{ __('Email aktif untuk menerima nomor pengajuan & informasi status.') }}"
-                        icon="mail"
-                    />
+                    <div class="md:col-span-2">
+                        <x-public.input
+                            wire:model="nomor_telepon"
+                            name="nomor_telepon"
+                            type="tel"
+                            label="{{ __('Nomor Telepon') }}"
+                            placeholder="08123456789"
+                            required
+                            hint="{{ __('Nomor yang aktif dan bisa dihubungi (WhatsApp).') }}"
+                            icon="phone"
+                        />
+                    </div>
                 </div>
             </section>
 
@@ -338,6 +331,7 @@ new class extends Component
                                 x-on:dragover.prevent="dragging = true"
                                 x-on:dragleave.prevent="dragging = false"
                                 x-on:drop.prevent="dragging = false"
+                                x-on:change.capture="dlhFileGuard($event, { label: '{{ $label }}', exts: ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5 })"
                                 :class="dragging ? 'fi-file-drop--drag' : ''"
                                 class="fi-file-drop fi-file-drop--col"
                             >
@@ -364,7 +358,7 @@ new class extends Component
                                         </span>
                                         <div class="fi-file-meta">
                                             <span class="fi-file-hint">{{ __('Klik atau seret file ke sini') }}</span>
-                                            <span class="fi-file-size">{{ __('PDF, JPG, PNG, WEBP, AVIF, HEIC • max 5MB') }}</span>
+                                            <span class="fi-file-size">{{ __('PDF, Word, Excel, JPG, PNG, WEBP, AVIF, HEIC • max 5MB') }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -400,7 +394,7 @@ new class extends Component
                 <ul>
                     <li>{!! __('Semua field bertanda (:asterisk:) wajib diisi.', ['asterisk' => '<span class="fi-required">*</span>']) !!}</li>
                     <li>{{ __('Ukuran file maksimal 5 MB per file.') }}</li>
-                    <li>{{ __('Hanya menerima file dengan format PDF, JPG, JPEG, PNG, WEBP, AVIF, HEIC, dan HEIF.') }}</li>
+                    <li>{{ __('Hanya menerima file dengan format PDF, Word (DOC/DOCX), Excel (XLS/XLSX), JPG, JPEG, PNG, WEBP, AVIF, HEIC, dan HEIF.') }}</li>
                     <li>{{ __('Pastikan dokumen yang diunggah dapat dibaca dengan jelas.') }}</li>
                 </ul>
             </div>
@@ -414,15 +408,9 @@ new class extends Component
 
         <x-google-recaptcha />
 
-            <button type="submit" wire:loading.attr="disabled" wire:target="submit" class="fi-submit-btn">
-                <span wire:loading.remove wire:target="submit" class="inline-flex items-center justify-center gap-2">
-                    {{ __('Kirim Pengajuan') }}
-                    <x-icons.ui name="arrow-right" class="h-4 w-4" />
-                </span>
-                <span wire:loading wire:target="submit" class="inline-flex items-center justify-center gap-2">
-                    <span class="fi-spinner"></span>
-                    {{ __('Mengirim...') }}
-                </span>
+            <button type="submit" class="fi-submit-btn">
+                {{ __('Kirim Pengajuan') }}
+                <x-icons.ui name="arrow-right" class="ml-2 h-4 w-4" />
             </button>
         </form>
     @endif
@@ -583,16 +571,13 @@ new class extends Component
             font-size: 15px; font-weight: 700; letter-spacing: .2px; cursor: pointer;
             box-shadow: 0 10px 24px -8px rgba(20, 106, 68, 0.55);
             transition: transform .12s ease, box-shadow .12s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .fi-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -8px rgba(20, 106, 68, 0.6); }
         .fi-submit-btn:active { transform: translateY(0); }
         .fi-submit-btn:disabled { opacity: 0.7; cursor: wait; }
-
-        .fi-spinner {
-            width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent;
-            border-radius: 9999px; display: inline-block; animation: fi-spin 0.8s linear infinite;
-        }
-        @keyframes fi-spin { to { transform: rotate(360deg); } }
 
         /* ── Dark mode ── */
         .dark .fi-section-head { border-color: #334155; }

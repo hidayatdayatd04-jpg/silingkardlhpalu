@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\JenisPengaduanTataPenataan;
-use App\Enums\StatusPengaduanTataPenataan;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,7 +32,7 @@ class PengaduanTataPenataan extends Model
     protected function casts(): array
     {
         return [
-            'status' => StatusPengaduanTataPenataan::class,
+            'status' => StatusPengaduan::class,
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
         ];
@@ -44,7 +44,7 @@ class PengaduanTataPenataan extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = StatusPengaduanTataPenataan::MENUNGGU->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI;
             }
 
             if (empty($model->nomor_tiket)) {
@@ -75,5 +75,15 @@ class PengaduanTataPenataan extends Model
     public function feedback(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
         return $this->morphOne(TicketFeedback::class, 'feedbackable');
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->status?->label() ?? ($this->attributes['status'] ?? '-');
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return $this->status?->color() ?? 'gray';
     }
 }

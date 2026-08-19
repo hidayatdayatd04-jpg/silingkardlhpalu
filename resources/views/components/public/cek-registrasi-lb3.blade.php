@@ -13,6 +13,23 @@ new class extends Component
     public string $search = '';
     public ?RegistrasiUsahaLb3 $registrasi = null;
 
+    private function normalizePhoneCandidates(string $digits): array
+    {
+        if ($digits === '') {
+            return [];
+        }
+
+        $candidates = [$digits];
+
+        if (str_starts_with($digits, '0')) {
+            $candidates[] = '62'.substr($digits, 1);
+        } elseif (str_starts_with($digits, '62')) {
+            $candidates[] = '0'.substr($digits, 2);
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
     public function lookup()
     {
         if (! $this->verifyCaptcha('lookup')) {
@@ -28,20 +45,34 @@ new class extends Component
         }
 
         $value = trim($this->search);
-        $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+        $digits = preg_replace('/\D/', '', $value);
+        $isPhone = $digits !== '' && preg_match('/^[\d\s\-+]+$/', $value);
 
-        if ($isEmail) {
+        if ($isPhone) {
+            $candidates = $this->normalizePhoneCandidates($digits);
+
+            if (empty($candidates)) {
+                $this->addError('search', __('Nomor telepon tidak valid.'));
+
+                return;
+            }
+
             $this->registrasi = RegistrasiUsahaLb3::query()
-                ->whereRaw('LOWER(email) = ?', [mb_strtolower($value)])
+                ->where(function ($query) use ($candidates): void {
+                    foreach ($candidates as $candidate) {
+                        $query->orWhere('nomor_telepon', $candidate)
+                            ->orWhereRaw("REPLACE(REPLACE(REPLACE(nomor_telepon, '+', ''), ' ', ''), '-', '') = ?", [$candidate]);
+                    }
+                })
                 ->latest()
                 ->first();
 
             if (! $this->registrasi) {
-                $this->addError('search', __('Tidak ada registrasi dengan email tersebut.'));
+                $this->addError('search', __('Tidak ada registrasi dengan nomor telepon tersebut.'));
             }
         } else {
             $this->registrasi = RegistrasiUsahaLb3::query()
-                ->where('nomor_registrasi', $value)
+                ->whereRaw('UPPER(nomor_registrasi) = ?', [strtoupper($value)])
                 ->first();
 
             if (! $this->registrasi) {
@@ -60,7 +91,7 @@ new class extends Component
             </span>
             <div class="flex-1">
                 <h3 class="ck-card-title">{{ __('Cek Status Registrasi LB3') }}</h3>
-                <p class="ck-card-desc">{{ __('Masukkan nomor registrasi atau email yang Anda daftarkan untuk melihat status registrasi LB3.') }}</p>
+                <p class="ck-card-desc">{{ __('Masukkan nomor registrasi atau nomor telepon yang Anda daftarkan untuk melihat status registrasi LB3.') }}</p>
             </div>
         </div>
         <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
@@ -68,7 +99,7 @@ new class extends Component
                 <x-public.input
                     wire:model.live.debounce.250ms="search"
                     name="search"
-                    placeholder="LB3-XXXX-XXXX atau email@perusahaan.com"
+                    placeholder="LB3-XXXX-XXXX atau 08123456789"
                     required
                 />
             </div>
@@ -130,7 +161,7 @@ new class extends Component
                 @php
                     $infoItems = [
                         __('Nama Perusahaan') => $registrasi->nama_perusahaan,
-                        __('Jenis LB3') => $registrasi->jenis_lb3 ?? '-',
+                        __('Jenis LB3') => ($registrasi->jenis_lb3 === 'Lainnya' && filled($registrasi->jenis_lb3_lainnya)) ? "Lainnya ({$registrasi->jenis_lb3_lainnya})" : ($registrasi->jenis_lb3 ?? '-'),
                         __('Tanggal Registrasi') => $registrasi->created_at->format('d M Y H:i'),
                         __('Alamat') => $registrasi->alamat,
                     ];

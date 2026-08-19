@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('jenis_usaha')->default('');
             $table->text('alamat_lengkap')->nullable();
             $table->string('nomor_telepon', 20)->default('');
-            $table->string('email')->default('');
             $table->string('jenis_pengajuan')->default('');
             $table->text('keterangan_tambahan')->nullable();
         });
@@ -31,7 +30,6 @@ return new class extends Migration
                 'jenis_usaha',
                 'alamat_lengkap',
                 'nomor_telepon',
-                'email',
                 'jenis_pengajuan',
                 'keterangan_tambahan',
             ]);

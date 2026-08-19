@@ -64,7 +64,7 @@ return new class extends Migration
         $this->createPengaduanTable('pengaduan_sampah', 'Belum Ditindaklanjuti');
         $this->createFotoTable('pengaduan_sampah_foto', 'pengaduan_sampah', 'pengaduan_sampah_id');
 
-        $this->createPengaduanTable('pengaduan_rth', 'Belum Ditinjau');
+        $this->createPengaduanTable('pengaduan_rth', 'Belum Ditindaklanjuti');
         $this->createFotoTable('pengaduan_rth_foto', 'pengaduan_rth', 'pengaduan_rth_id');
 
         if (! Schema::hasTable('pengaduan_tata_penataan')) {
@@ -80,7 +80,7 @@ return new class extends Migration
                 $t->decimal('latitude', 10, 7)->nullable();
                 $t->decimal('longitude', 10, 7)->nullable();
                 $t->text('deskripsi');
-                $t->string('status')->default('menunggu');
+                $t->string('status')->default('Belum Ditindaklanjuti');
                 $t->text('catatan_admin')->nullable();
                 $t->foreignId('assigned_user_id')->nullable()->constrained('user')->nullOnDelete();
                 $t->timestamps();

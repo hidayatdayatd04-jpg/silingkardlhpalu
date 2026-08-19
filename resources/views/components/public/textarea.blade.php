@@ -16,7 +16,7 @@
 ])
 
 @php
-    // Attributes written as label="{{ ... }}" arrive already entity-escaped.
+    // Attributes written as label="{{ $value }}" arrive already entity-escaped.
     // Decode that attribute layer, while keeping the normal Blade escaping at
     // the output point so user-visible ampersands are not shown as "&amp;".
     $decodeDisplayText = static fn ($text) => is_string($text)

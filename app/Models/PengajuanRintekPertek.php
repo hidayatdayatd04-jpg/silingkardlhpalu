@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RintekPertekStatus;
+use App\Enums\StatusPengaduan;
 use App\Support\TicketGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,7 +38,6 @@ class PengajuanRintekPertek extends Model
         'jenis_usaha',
         'alamat_lengkap',
         'nomor_telepon',
-        'email',
         'jenis_pengajuan',
         'keterangan_tambahan',
         'surat_permohonan',
@@ -49,14 +48,12 @@ class PengajuanRintekPertek extends Model
         'sop_tanggap_darurat',
         'status',
         'catatan_verifikasi',
-        'verifikasi_dokumen',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => RintekPertekStatus::class,
-            'verifikasi_dokumen' => 'array',
+            'status' => StatusPengaduan::class,
         ];
     }
 
@@ -66,7 +63,7 @@ class PengajuanRintekPertek extends Model
 
         static::creating(function (self $model): void {
             if (empty($model->status)) {
-                $model->status = RintekPertekStatus::DIAJUKAN->value;
+                $model->status = StatusPengaduan::BELUM_DITINDAKLANJUTI->value;
             }
 
             if (empty($model->nomor_pengajuan)) {
@@ -101,29 +98,5 @@ class PengajuanRintekPertek extends Model
         }
 
         return $count;
-    }
-
-    public function documentVerificationStatus(): array
-    {
-        $statuses = $this->verifikasi_dokumen ?? [];
-        $result = [];
-        foreach (array_keys(self::DOKUMEN_FIELDS) as $field) {
-            $result[$field] = $statuses[$field] ?? false;
-        }
-
-        return $result;
-    }
-
-    public function documentVerificationSummary(): string
-    {
-        $statuses = $this->documentVerificationStatus();
-        $verified = count(array_filter($statuses));
-        $total = count($statuses);
-
-        if ($verified === 0) {
-            return 'Belum Diverifikasi';
-        }
-
-        return "Terverifikasi {$verified}/{$total} dokumen";
     }
 }

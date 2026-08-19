@@ -434,10 +434,14 @@ html.js .public-main[data-public-page] {
 .dlh-public .fi-form-card::before {
     content: '';
     position: absolute;
-    inset: 0 0 auto;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
     height: 3px;
     background: linear-gradient(90deg, #059669, #0dabce);
-    opacity: 0.78;
+    border-radius: 9999px;
+    pointer-events: none;
+    opacity: 0.85;
 }
 
 .dark .dlh-public .fi-form-card {
@@ -449,12 +453,12 @@ html.js .public-main[data-public-page] {
    memakai komponen select yang sama, tanpa memengaruhi halaman admin. */
 .dlh-public .fi-select-shell--open,
 .dlh-public .fi-select-field--open {
-    z-index: 80;
+    z-index: 9999;
 }
 
 .dlh-public .fi-select-panel,
 .dlh-public .df-popover {
-    z-index: 1000;
+    z-index: 10000;
 }
 
 @media (max-width: 639px) {

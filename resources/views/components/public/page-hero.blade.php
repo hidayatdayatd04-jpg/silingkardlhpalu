@@ -6,7 +6,7 @@
 ])
 
 @php
-    // String attributes rendered with {{ ... }} are HTML-escaped before they
+    // String attributes rendered with {{ $value }} are HTML-escaped before they
     // reach a Blade component. Decode that one attribute layer here, then let
     // the normal Blade output below escape the final text safely.
     $decodeHeroText = static fn ($value) => is_string($value)

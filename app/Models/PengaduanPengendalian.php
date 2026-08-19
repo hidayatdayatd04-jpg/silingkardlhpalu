@@ -45,6 +45,13 @@ class PengaduanPengendalian extends Model
         });
     }
 
+    protected function casts(): array
+    {
+        return [
+            'status' => PengaduanStatus::class,
+        ];
+    }
+
     public function fotos(): HasMany
     {
         return $this->hasMany(PengaduanPengendalianFoto::class, 'pengaduan_pengendalian_id');

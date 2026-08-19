@@ -34,7 +34,7 @@
     $badgeLower = mb_strtolower($badgeText ?? '');
     $pillVariant = match(true) {
         in_array($badgeVariant, ['success','warning','danger','info','neutral']) => $badgeVariant,
-        str_contains($badgeLower, 'ditinjau') && !str_contains($badgeLower, 'belum') => 'success',
+        str_contains($badgeLower, 'ditindaklanjuti') || (str_contains($badgeLower, 'ditinjau') && !str_contains($badgeLower, 'belum')) => 'success',
         str_contains($badgeLower, 'belum') => 'warning',
         str_contains($badgeLower, 'tolak') => 'danger',
         default => 'neutral',

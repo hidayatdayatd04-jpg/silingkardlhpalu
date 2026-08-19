@@ -10,14 +10,13 @@ return new class extends Migration
     {
         Schema::table('registrasi_usaha_lb3', function (Blueprint $table) {
             $table->string('nomor_telepon')->nullable();
-            $table->string('email')->nullable();
         });
     }
 
     public function down(): void
     {
         Schema::table('registrasi_usaha_lb3', function (Blueprint $table) {
-            $table->dropColumn(['nomor_telepon', 'email']);
+            $table->dropColumn(['nomor_telepon']);
         });
     }
 };
