@@ -460,14 +460,6 @@ class AdminRegistry
                     'readonly_on_edit' => true,
                 ],
                 [
-                    'name' => 'email',
-                    'label' => 'Email',
-                    'type' => 'email',
-                    'options' => [],
-                    'wide' => true,
-                    'readonly_on_edit' => true,
-                ],
-                [
                     'name' => '_section_pengaduan',
                     'label' => 'Informasi Pengaduan',
                     'type' => 'section',
@@ -702,6 +694,8 @@ class AdminRegistry
         }
 
         // Custom fields untuk resource 'pengaduan-tata-penataan'
+        // Admin hanya bisa mengubah Status & Catatan Admin — data dari masyarakat
+        // bersifat readonly (readonly_on_edit) agar tidak bisa dipalsukan.
         if ($resource['slug'] === 'pengaduan-tata-penataan') {
             return self::decorateFields($resource, [
                 [
@@ -717,6 +711,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nomor_hp',
@@ -725,6 +720,7 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_kejadian',
@@ -739,6 +735,7 @@ class AdminRegistry
                     'options' => \App\Enums\JenisPengaduanTataPenataan::options(),
                     'required' => true,
                     'wide' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nama_terlapor',
@@ -746,12 +743,14 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'nama_perusahaan_terlapor',
                     'label' => 'Nama Perusahaan Terlapor',
                     'type' => 'text',
                     'options' => [],
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'alamat',
@@ -759,6 +758,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'latitude',
@@ -766,6 +766,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'longitude',
@@ -773,6 +774,7 @@ class AdminRegistry
                     'type' => 'number',
                     'options' => [],
                     'step' => '0.000001',
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => 'deskripsi',
@@ -780,6 +782,7 @@ class AdminRegistry
                     'type' => 'textarea',
                     'options' => [],
                     'required' => true,
+                    'readonly_on_edit' => true,
                 ],
                 [
                     'name' => '_section_verifikasi',

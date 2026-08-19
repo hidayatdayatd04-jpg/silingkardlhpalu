@@ -67,7 +67,13 @@
         @endif
 
         @foreach ($sections as $i => $section)
-            @php $isCoordSection = $hasLatLng && collect($section['fields'])->pluck('name')->intersect(['latitude', 'longitude'])->count() >= 2; @endphp
+            @php
+                $isCoordSection = $hasLatLng && collect($section['fields'])->pluck('name')->intersect(['latitude', 'longitude'])->count() >= 2;
+                // Peta readonly jika salah satu field lat/lng punya readonly_on_edit dan record sudah ada.
+                $isCoordReadonly = $isCoordSection && $record->exists && collect($section['fields'])
+                    ->filter(fn ($f) => in_array($f['name'] ?? '', ['latitude', 'longitude']))
+                    ->contains(fn ($f) => ($f['readonly_on_edit'] ?? false) || ($f['readonly'] ?? false));
+            @endphp
             <div class="stagger-item">
                 <x-admin.section-card :number="$i + 1" :title="$section['label']">
                     @if($isCoordSection)
@@ -77,6 +83,7 @@
                                 lng-input="peng-longitude"
                                 :lat="old('latitude', $record->latitude ?? null)"
                                 :lng="old('longitude', $record->longitude ?? null)"
+                                :readonly="$isCoordReadonly"
                             />
                         </div>
                     @endif
