@@ -73,4 +73,4 @@ RUN printf 'upload_max_filesize = 512M\npost_max_size = 512M\n' \
 # Railway: expose 8080 dan jalankan artisan serve (bukan php-fpm 9000)
 # php-fpm butuh nginx terpisah, di Railway cukup artisan serve agar 502 hilang
 EXPOSE 8080
-CMD sh -c "php artisan migrate --force --no-interaction && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+CMD ["sh", "-c", "echo \"=== Starting on PORT=${PORT:-8080} ===\"; php artisan migrate --force --no-interaction || echo \"migrate failed, continue\"; php artisan config:clear; php artisan storage:link || true; echo \"=== Launching artisan serve ===\"; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
