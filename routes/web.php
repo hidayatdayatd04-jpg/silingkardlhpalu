@@ -40,8 +40,6 @@ Route::get('/lacak', fn () => view('public.lacak'))->middleware('throttle:30,1')
 
 Route::get('/pengaduan', fn () => view('public.pengaduan'));
 
-Route::get('/armada', fn () => view('public.armada'));
-
 Route::get('/profil', fn () => view('public.profil'));
 
 Route::get('/tentang', fn () => view('public.tentang-kami'));

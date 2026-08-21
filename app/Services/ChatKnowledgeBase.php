@@ -111,13 +111,8 @@ Layanan pengelolaan sampah dan limbah bahan berbahaya.
 - Mendapat nomor registrasi
 
 **Cek Registrasi LB3:**
-- URL: https://www.silingkardlhpalu.web.id/cek-registrasi-lb3
-- Masukkan nomor registrasi untuk melihat status
-
-**Pelacakan Armada:**
-- URL: https://www.silingkardlhpalu.web.id/armada
-- Pelacakan real-time lokasi armada pengangkutan sampah menggunakan GPS
-- Tersedia armada: L300/Pick Up (untuk gang sempit), Truk R6 (TPS ke TPA)
+ - URL: https://www.silingkardlhpalu.web.id/cek-registrasi-lb3
+ - Masukkan nomor registrasi untuk melihat status
 
 ---
 
@@ -268,10 +263,9 @@ A: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu.
 - Untuk menyajikan rekomendasi layanan atau link penting, kamu BISA menggunakan format Kartu Aksi Cepat agar tampil mewah dengan tombol interaktif:
   Format: `:::action[Judul Tombol](URL):::`
   Contoh:
-  :::action[📝 Buat Pengaduan](https://www.silingkardlhpalu.web.id/pengaduan):::
-  :::action[🔍 Lacak Laporan](https://www.silingkardlhpalu.web.id/lacak):::
-  :::action[📍 Peta Armada Sampah](https://www.silingkardlhpalu.web.id/armada):::
-  :::action[📅 Pinjam Taman Kota](https://www.silingkardlhpalu.web.id/pinjam-taman):::
+   :::action[📝 Buat Pengaduan](https://www.silingkardlhpalu.web.id/pengaduan):::
+   :::action[🔍 Lacak Laporan](https://www.silingkardlhpalu.web.id/lacak):::
+   :::action[📅 Pinjam Taman Kota](https://www.silingkardlhpalu.web.id/pinjam-taman):::
   :::action[📑 Ajukan RINTEK/PERTEK](https://www.silingkardlhpalu.web.id/pengajuan-rintek-pertek):::
 - Link standar markdown biasa `[Teks Link](url)` juga tetap didukung dan akan diformat dengan baik.
 - Jangan gunakan heading (#), tabel lebar, atau blok kode kecuali diminta secara khusus.
@@ -380,7 +374,7 @@ PROMPT;
 
         // Sampah menumpuk / armada
         if ($has(['sampah menumpuk', 'sampah tidak diangkut', 'armada tidak lewat', 'truk sampah'])) {
-            return "Untuk masalah persampahan (sampah menumpuk, tidak diangkut, armada tidak lewat), silakan lapor di [Pengaduan Sampah](/pengaduan). Anda juga bisa memantau [Pelacakan Armada](/armada) secara real-time.";
+            return "Untuk masalah persampahan (sampah menumpuk, tidak diangkut, armada tidak lewat), silakan lapor di [Pengaduan Sampah](/pengaduan). Anda juga bisa memantau armada di [Peta Persampahan](/peta-persampahan) secara real-time.";
         }
 
         return null;

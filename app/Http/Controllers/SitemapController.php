@@ -46,7 +46,6 @@ class SitemapController extends Controller
             ['loc' => $base.'/berita',                   'priority' => '0.8', 'changefreq' => 'daily'],
             ['loc' => $base.'/profil',                   'priority' => '0.7', 'changefreq' => 'monthly'],
             ['loc' => $base.'/tentang',                  'priority' => '0.6', 'changefreq' => 'monthly'],
-            ['loc' => $base.'/armada',                   'priority' => '0.7', 'changefreq' => 'weekly'],
             ['loc' => $base.'/peta-persampahan',         'priority' => '0.7', 'changefreq' => 'weekly'],
             ['loc' => $base.'/tata-lingkungan',          'priority' => '0.7', 'changefreq' => 'weekly'],
             ['loc' => $base.'/permohonan-rekomendasi',   'priority' => '0.7', 'changefreq' => 'monthly'],

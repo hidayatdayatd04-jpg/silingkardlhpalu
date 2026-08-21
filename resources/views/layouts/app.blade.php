@@ -298,7 +298,7 @@
                 <!-- Bidang Sampah LB3 -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Sampah & LB3') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
@@ -564,8 +564,8 @@
                 </div>
 
                 <!-- Bidang Sampah LB3 (Dropdown Mobile) -->
-                <div x-data="{ open: {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'armada', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
+                <div x-data="{ open: {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Sampah & LB3') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
