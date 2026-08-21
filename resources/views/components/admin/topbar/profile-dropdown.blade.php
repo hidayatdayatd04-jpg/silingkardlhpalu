@@ -17,7 +17,7 @@
         x-bind:aria-expanded="open"
         aria-controls="topbar-profile-menu"
         aria-label="Buka menu akun {{ $user?->name ?? 'Admin' }}"
-        class="flex min-h-10 items-center gap-2.5 rounded-xl p-1 pr-2 transition-[background-color,color] duration-150 hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:hover:bg-white/[.06]"
+        class="flex min-h-9 items-center gap-2 rounded-xl p-1 pr-1.5 transition-[background-color,color] duration-150 hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 lg:min-h-10 lg:gap-2.5 lg:pr-2 dark:hover:bg-white/[.06]"
     >
         <span class="relative">
             <x-admin.avatar :name="$user?->name ?? ''" :src="$photoUrl" size="sm" class="ring-2 ring-white dark:ring-slate-800" />
@@ -29,7 +29,7 @@
             <span class="block max-w-32 truncate text-[11px] text-slate-400 dark:text-slate-500">{{ $roleLabel }}</span>
         </span>
 
-        <x-admin.icon name="chevron-down" :size="15" class="hidden shrink-0 text-slate-400 transition-transform duration-150 dark:text-slate-500 xl:block" x-bind:class="open ? 'rotate-180' : ''" />
+        <x-admin.icon name="chevron-down" :size="15" class="hidden shrink-0 text-slate-400 transition-transform duration-150 xl:block dark:text-slate-500" x-bind:class="open ? 'rotate-180' : ''" />
     </button>
 
     <div

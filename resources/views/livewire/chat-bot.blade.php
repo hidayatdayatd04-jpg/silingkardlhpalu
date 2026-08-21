@@ -101,7 +101,7 @@
         <div class="relative shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800">
             
             {{-- Spectrum Audio Popup & Live Transcription Preview (Synced with DLH Emerald Brand Theme) --}}
-            <div id="chatbot-voice-overlay" class="absolute inset-0 z-40 flex flex-col justify-between p-3 transition-all duration-300 transform translate-y-full opacity-0 pointer-events-none rounded-b-3xl shadow-2xl"
+            <div id="chatbot-voice-overlay" class="absolute inset-0 z-40 flex flex-col justify-between p-3 transition-opacity duration-300 opacity-0 pointer-events-none rounded-b-3xl shadow-2xl"
                  style="background: linear-gradient(145deg, #064e3b 0%, #065f46 50%, #047857 100%);">
                 
                 {{-- Decorative background glow rings --}}
@@ -231,9 +231,9 @@
         100% { height: var(--h, 22px); opacity: 1; transform: scaleY(1); }
     }
 
-    /* Spectrum popup active state (Opaque solid card replacement) */
+    /* Spectrum popup active state (toggled via opacity, tanpa transform
+       agar tidak bergeser keluar panel & ter-clip oleh overflow:hidden) */
     #chatbot-voice-overlay.active {
-        transform: translateY(0);
         opacity: 1;
         pointer-events: auto;
     }
@@ -315,6 +315,7 @@
     var _reduced     = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var _speechRec   = null;
     var _isListening = false;
+    var _voiceWatchdog = null;
 
     // Teks sambutan DLH Assistant (sama seperti toggleChat di server) —
     // dipakai agar tampilan setelah hapus kembali ke kondisi "chat pertama kali".
@@ -351,6 +352,7 @@
         rec.onstart = function () {
             _isListening = true;
             _capturedVoiceText = '';
+            if (_voiceWatchdog) { clearTimeout(_voiceWatchdog); _voiceWatchdog = null; }
             var overlay = el('chatbot-voice-overlay');
             if (overlay) overlay.classList.add('active');
             var prev = el('chatbot-voice-preview');
@@ -385,12 +387,19 @@
 
         rec.onerror = function (e) {
             console.warn('Speech recognition error:', e.error);
-            if (e.error === 'not-allowed') {
+            var msg = null;
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                msg = @js(__('Akses mikrofon diblokir. Klik ikon gembok/setelan di kiri address bar untuk mengizinkan mikrofon, lalu coba lagi.'));
+            } else if (e.error === 'audio-capture') {
+                msg = @js(__('Tidak ada mikrofon yang terdeteksi. Sambungkan mikrofon lalu coba lagi.'));
+            } else if (e.error === 'no-speech') {
                 stopVoiceInput(false);
-                alert(@js(__('Akses mikrofon diblokir oleh browser. Pastikan URL menggunakan HTTPS atau izinkan izin Microphone di pengaturan browser.')));
+                return;
             } else {
-                stopVoiceInput(false);
+                msg = @js(__('Terjadi kesalahan pada input suara. Silakan coba lagi.'));
             }
+            stopVoiceInput(false);
+            if (msg) showVoiceError(msg);
         };
 
         rec.onend = function () {
@@ -402,10 +411,21 @@
         return rec;
     }
 
+    function showVoiceError(msg) {
+        var overlay = el('chatbot-voice-overlay');
+        var prev = el('chatbot-voice-preview');
+        if (overlay) overlay.classList.add('active');
+        if (prev) {
+            prev.textContent = msg;
+            prev.classList.add('italic');
+        }
+        setTimeout(function () { stopVoiceInput(false); }, 3000);
+    }
+
     function toggleVoiceInput() {
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert(@js(__('Browser Anda belum mendukung input suara. Gunakan Google Chrome atau Microsoft Edge.')));
+            showVoiceError(@js(__('Browser Anda belum mendukung input suara. Gunakan Google Chrome atau Microsoft Edge.')));
             return;
         }
 
@@ -415,46 +435,42 @@
             return;
         }
 
-        // Pancing dialog izin mikrofon via getUserMedia terlebih dahulu
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(function (stream) {
-                    // Izin diberikan, matikan stream dummy
-                    stream.getTracks().forEach(function (t) { t.stop(); });
-                    
-                    if (!_speechRec) {
-                        _speechRec = initSpeechRecognition();
-                    }
-                    try {
-                        _speechRec.start();
-                    } catch (e) {
-                        try {
-                            _speechRec.abort();
-                            setTimeout(function () { _speechRec.start(); }, 150);
-                        } catch (e2) {
-                            stopVoiceInput(false);
-                        }
-                    }
-                })
-                .catch(function (err) {
-                    console.warn('Mic permission error:', err);
-                    alert(@js(__('Izin mikrofon belum aktif di browser Anda. Klik ikon gembok/setelan di kiri address bar URL untuk mengizinkan mikrofon.')));
-                    stopVoiceInput(false);
-                });
-        } else {
-            if (!_speechRec) {
-                _speechRec = initSpeechRecognition();
-            }
+        // Biarkan Web Speech API menangani izin mikrofon sendiri (lebih stabil
+        // daripada memanggil getUserMedia terlebih dahulu yang sering memicu
+        // error not-allowed / audio-capture di Chrome versi baru).
+        if (!_speechRec) {
+            _speechRec = initSpeechRecognition();
+        }
+        if (!_speechRec) {
+            showVoiceError(@js(__('Gagal menginisialisasi pengenalan suara.')));
+            return;
+        }
+
+        try {
+            _speechRec.start();
+            // Watchdog: jika onstart tidak muncul dalam 2,5 dtk, layanan
+            // pengenalan suara (Google Speech di Chrome) kemungkinan gagal
+            // merespons — beri umpan balik jelas, jangan diam saja.
+            _voiceWatchdog = setTimeout(function () {
+                if (!_isListening) {
+                    try { _speechRec.abort(); } catch (e) {}
+                    _voiceWatchdog = null;
+                    showVoiceError(@js(__('Layanan pengenalan suara tidak merespons. Ini sering terjadi karena pembatasan layanan Google Speech di Chrome. Coba segarkan halaman (Ctrl+F5) atau ketik pertanyaan secara manual.')));
+                }
+            }, 2500);
+        } catch (e) {
             try {
-                _speechRec.start();
-            } catch (err) {
-                stopVoiceInput(false);
+                _speechRec.stop();
+                setTimeout(function () { _speechRec.start(); }, 150);
+            } catch (e2) {
+                showVoiceError(@js(__('Tidak dapat memulai input suara. Pastikan mikrofon tersedia dan tidak digunakan aplikasi lain.')));
             }
         }
     }
 
     function stopVoiceInput(shouldSend) {
         _isListening = false;
+        if (_voiceWatchdog) { clearTimeout(_voiceWatchdog); _voiceWatchdog = null; }
         var overlay = el('chatbot-voice-overlay');
         if (overlay) overlay.classList.remove('active');
 

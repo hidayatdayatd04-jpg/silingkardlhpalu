@@ -1,54 +1,93 @@
 # SILINGKAR — Sistem Informasi Layanan Lingkungan Hidup Kota Palu
 
-SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan publik, pelacakan tiket, informasi dinas, dan panel administrasi internal berbasis peran.
+SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan publik (pengaduan, permohonan, pelacakan tiket), informasi dinas, dan panel administrasi internal berbasis peran untuk empat bidang: Pengendalian, Sampah & LB3, Tata Penataan, dan RTH.
 
 ## Fitur utama
 
-- Layanan publik untuk pengaduan Pengendalian, Sampah, RTH, dan Tata Penataan; permohonan rekomendasi, pinjam taman, registrasi usaha LB3, serta pengajuan RINTEK/PERTEK.
-- Pelacakan satu pintu di `/lacak`, lengkap dengan riwayat status dan umpan balik masyarakat.
-- Berita, profil, dokumen Tata Lingkungan dari Google Drive, peta persampahan, dan monitoring armada GPS.
-- Panel `/admin` dengan CRUD berbasis registry, pembatasan akses per bidang, ekspor CSV/XLSX, PDF, peta GIS/Shapefile, audit log, notifikasi internal, backup/restore, dan monitoring Neon/B2.
-- Chatbot AI streaming dengan provider OpenAI-compatible yang dikelola dari Pengaturan Admin. Kunci provider disimpan terenkripsi di database.
-- reCAPTCHA v2 Invisible pada form publik, throttling endpoint, security headers, trusted proxy, dan endpoint `/.well-known/security.txt`.
+**Portal publik**
+
+- Pengaduan terpadu di `/pengaduan` untuk bidang Pengendalian, Sampah, RTH, dan Tata Penataan (form Livewire multi-foto + titik lokasi peta). URL lama per bidang (`/pengaduan-pengendalian`, dll.) redirect ke form terpadu.
+- Permohonan rekomendasi, pinjam taman (penyewaan taman), registrasi usaha LB3, dan pengajuan RINTEK/PERTEK — masing-masing dengan halaman cek status dan bukti PDF.
+- Pelacakan satu pintu di `/lacak` dengan riwayat status (timeline) dan umpan balik/ulasan masyarakat per tiket.
+- Berita (`/berita`), profil dinas, halaman UPTD (Lab Lingkungan, TPA Kawatuna), kebijakan privasi, dan syarat & ketentuan.
+- Dokumen Tata Lingkungan dari Google Drive, peta persampahan publik, dan monitoring armada GPS (`/armada`, `/api/armada-aktif`).
+- Chatbot AI streaming dengan provider OpenAI-compatible (failover otomatis antar provider) yang dikelola dari Pengaturan Admin; kunci provider disimpan terenkripsi di database.
+- Mode pemeliharaan yang bisa diaktifkan dari Pengaturan Admin (halaman publik diblokir 503, panel admin tetap bisa diakses, pratinjau via `?preview=1`).
+
+**Panel admin (`/admin`)**
+
+- Dashboard per peran: KPI per bidang, grafik tren (Chart.js), tugas tertunda, aktivitas terbaru, dan peta sebaran laporan.
+- CRUD berbasis registry (`AdminRegistry` + `ResourceController`) dengan filter, pencarian, bulk action, ekspor CSV/XLSX (sinkron atau antrean via `QUEUE_EXPORTS`), dan detail record.
+- Modul GIS: layer peta, impor Shapefile, digitasi fitur, bulk visibility/delete, soft delete + restore.
+- Audit log, notifikasi internal (polling), ulasan masyarakat, backup/restore database, monitoring kuota Neon/B2, dan manajemen pengguna.
+
+**Keamanan bawaan**
+
+- reCAPTCHA v2 Invisible pada form publik, throttling endpoint, security headers (nosniff, frame options, referrer policy, permissions policy, HSTS), trusted proxy dari env, login throttle per identitas + IP, kebijakan password minimal 10 karakter, dan endpoint `/.well-known/security.txt`.
+- Sertifikat sosialisasi diakses via token acak (anti-IDOR); API armada hanya mengekspos kolom publik.
 
 ## Teknologi
 
-| Area           | Teknologi                                                      |
-| -------------- | -------------------------------------------------------------- |
-| Backend        | PHP 8.2+, Laravel 12                                           |
-| UI             | Blade, Livewire 4, Alpine.js, Tailwind CSS 4                   |
-| Build          | Vite 7, TypeScript                                             |
-| Database       | PostgreSQL; Neon untuk produksi atau PostgreSQL 16 di Docker   |
-| Storage/backup | Local storage dan Backblaze B2 (S3-compatible)                 |
-| Peta           | MapLibre GL, impor Shapefile                                   |
-| Integrasi      | portal.gps.id, Google Drive API, provider AI OpenAI-compatible |
-| Dokumen        | DomPDF, ekspor CSV/XLSX tanpa dependensi spreadsheet           |
+| Area           | Teknologi                                                        |
+| -------------- | ---------------------------------------------------------------- |
+| Backend        | PHP 8.2+, Laravel 12                                             |
+| UI             | Blade, Livewire 4 (single-file components), Alpine.js, Tailwind CSS 4 |
+| Frontend libs  | MapLibre GL, Chart.js, Flatpickr, Jodit editor, @resvg/resvg-js  |
+| Build          | Vite 7, TypeScript                                               |
+| Database       | PostgreSQL; Neon untuk produksi atau PostgreSQL 16 di Docker     |
+| Storage/backup | Local storage dan Backblaze B2 (S3-compatible)                   |
+| Paket utama    | spatie/laravel-permission, DomPDF, Intervention Image, HTMLPurifier, Flysystem S3 |
+| Integrasi      | portal.gps.id, Google Drive API, provider AI OpenAI-compatible   |
 
 ## Arsitektur singkat
 
-Portal publik dan panel admin menggunakan route Blade/Livewire. Sebagian besar CRUD admin ditangani oleh `ResourceController` yang membaca definisi resource dari `app/Support/Admin/AdminRegistry.php`. Model, policy, observer, dan service memisahkan aturan bisnis, otorisasi, nomor tiket, notifikasi, unggahan, GIS, GPS, AI, statistik, serta backup.
+Portal publik memakai route Blade + komponen Livewire single-file di `resources/views/components/public/` (form pengaduan, lacak, cek status, armada). Panel admin memakai Blade + Livewire; sebagian besar CRUD ditangani `ResourceController` yang membaca definisi resource dari `app/Support/Admin/AdminRegistry.php`. Model, policy, observer, dan service memisahkan aturan bisnis, otorisasi, nomor tiket, notifikasi, unggahan, GIS, GPS, AI, statistik, serta backup.
+
+Nomor tiket dibuat oleh `TicketGenerator` dengan prefix per bidang: `PDL` (Pengendalian), `SMP` (Sampah & LB3), `RTH`, `TTP` (Tata Penataan), `PJM` (pinjam taman), format `PREFIX-XXXX-XXXX`. Status pengaduan dinormalisasi menjadi dua nilai: **Belum Ditindaklanjuti** dan **Ditindaklanjuti**.
 
 Direktori penting:
 
 ```text
 app/
-  Console/Commands/       # GPS, seeder, impor SHP, pembersihan B2
+  Console/Commands/       # GPS, seeder, impor SHP, pembersihan B2, unduh gambar
+  Enums/                  # bidang, status, jenis pengaduan, role admin
   Http/Controllers/       # endpoint publik dan admin
-  Livewire/               # chatbot
-  Services/               # AI, GPS, Drive, upload, statistik, GIS
-  Support/Admin/          # registry dan akses admin
+  Jobs/                   # backup, restore, ekspor antrean, proses foto
+  Livewire/               # ChatBot + trait reCAPTCHA/throttle
+  Models/                 # 30+ model domain (pengaduan, permohonan, GIS, GPS, dll.)
+  Observers/              # audit log & notifikasi admin otomatis
+  Policies/               # otorisasi per resource
+  Services/               # AI, GPS, Drive, upload, statistik, GIS, monitoring
+  Support/Admin/          # registry, akses, feed notifikasi admin
 database/migrations/      # skema PostgreSQL
-resources/views/          # view portal, admin, PDF, dan komponen
+resources/views/
+  components/public/      # komponen Livewire form publik (SFC)
+  admin/                  # view panel admin
+  pdf/                    # template PDF (bukti, sertifikat, laporan, surat sanksi)
 routes/web.php            # rute HTTP
 routes/console.php        # scheduler
 ```
+
+### Peran dan akses admin
+
+Role didefinisikan di `App\Enums\AdminRole` (spatie/laravel-permission):
+
+| Role                  | Akses                                                        |
+| --------------------- | ------------------------------------------------------------ |
+| `admin`               | Semua grup (superadmin): audit log, backup, reset password   |
+| `bidang-pengendalian` | Grup Pengendalian                                            |
+| `bidang-sampah-lb3`   | Grup Sampah & LB3                                            |
+| `bidang-tata-penataan`| Grup Tata Penataan                                           |
+| `bidang-rth`          | Grup RTH                                                     |
+
+Selain role, kolom `additional_access` pada user memberikan akses per menu (slug resource) di luar grup rolenya. Menu admin terbagi dalam grup: Pengendalian, Sampah & LB3, Tata Penataan, RTH, dan Konten & Sistem (artikel, pengguna, ulasan masyarakat).
 
 ## Prasyarat
 
 - PHP 8.2+ dengan `pdo_pgsql`, `gd`, `mbstring`, `zip`, `bcmath`, `intl`, dan `exif`.
 - Composer, Node.js, dan npm.
 - PostgreSQL atau akun Neon.
-- Opsional: Docker Desktop/Compose, Backblaze B2, Google Drive API, dan akun GPS.id.
+- Opsional: Docker Desktop/Compose, Backblaze B2, Google Drive API, akun GPS.id, dan kunci reCAPTCHA.
 
 ## Setup lokal
 
@@ -67,13 +106,15 @@ npm install
 npm run build
 ```
 
-Untuk data role dan akun contoh, jalankan seeder secara eksplisit:
+Untuk role dan akun admin awal, jalankan seeder secara eksplisit:
 
 ```bash
 php artisan db:seed
-# atau setup lengkap
+# atau setup lengkap (folder storage + seeding)
 php artisan dlh:setup-seeder
 ```
+
+Seeder membuat 5 akun (username: `admin`, `pengendalian`, `sampah-lb3`, `tata-penataan`, `rth`) dengan password acak 16 karakter yang **hanya ditampilkan sekali di console** — simpan segera. Menjalankan ulang seeder tidak menimpa password akun yang sudah ada.
 
 Menjalankan pengembangan:
 
@@ -81,11 +122,11 @@ Menjalankan pengembangan:
 composer run dev
 ```
 
-Perintah tersebut menjalankan web server, queue listener, Pail, dan Vite. Alternatifnya, jalankan `php artisan serve`, `php artisan queue:work`, dan `npm run dev` secara terpisah, `php artisan queue:restart` Untuk Restart queue listener.
+Perintah tersebut menjalankan web server, queue listener, Pail, dan Vite. Alternatifnya, jalankan `php artisan serve`, `php artisan queue:work`, dan `npm run dev` secara terpisah; `php artisan queue:restart` untuk me-restart queue listener.
 
 ## Docker dan produksi
 
-`docker-compose.yml` menyediakan `app`, `nginx`, `db` (PostgreSQL 16), `queue`, dan `scheduler`.
+`docker-compose.yml` menyediakan `app` (PHP-FPM multi-stage), `nginx` (port 80, gzip, `client_max_body_size 512M`), `db` (PostgreSQL 16), `queue` (`queue:work --tries=3 --timeout=1900`), dan `scheduler`. Kode aplikasi + vendor + aset build berasal dari image Docker, bukan bind-mount — deploy cukup `git pull && docker compose up -d --build`. Yang di-bind dari host hanya `.env`, `storage/`, dan `bootstrap/cache/`.
 
 ```bash
 copy .env.example .env
@@ -141,30 +182,31 @@ RECAPTCHA_SECRET_KEY=
 
 Untuk Neon, gunakan host endpoint Neon, `DB_SSLMODE=require`, dan isi `DB_NEON_ENDPOINT`. `NeonDatabaseProvider` akan menambahkan parameter endpoint ke koneksi PostgreSQL.
 
-Disk utama aplikasi tetap `local`; B2 digunakan untuk backup dan objek cloud terkait. Jangan mengubah `FILESYSTEM_DISK` ke B2 tanpa memahami konsekuensi upload sementara Livewire. `B2_STORAGE_LIMIT_GB`, `NEON_STORAGE_LIMIT_GB`, `B2_PLAN`, dan `NEON_PLAN` mengatur informasi monitoring pada admin.
+Disk utama aplikasi tetap `local`; B2 digunakan untuk backup dan objek cloud terkait. Jangan mengubah `FILESYSTEM_DISK` ke B2 tanpa memahami konsekuensi upload sementara Livewire (upload sementara sudah dipaksa ke disk `local` via `config/livewire.php`). `B2_STORAGE_LIMIT_GB`, `NEON_STORAGE_LIMIT_GB`, `B2_PLAN`, dan `NEON_PLAN` mengatur informasi monitoring pada admin.
 
 Konfigurasi tambahan tersedia di `.env.example`:
 
 - `GPS_*` untuk data armada dari portal.gps.id.
-- `GOOGLE_DRIVE_*` untuk dokumen Tata Lingkungan.
+- `GOOGLE_DRIVE_*` untuk dokumen Tata Lingkungan (API key + folder ID, cache TTL 900 detik).
 - `RECAPTCHA_*` untuk verifikasi form publik.
+- `QUEUE_EXPORTS=true` untuk memproses ekspor besar lewat queue (notifikasi + tautan unduh) alih-alih sinkron.
 
 Provider chatbot tidak memakai variabel `.env`: kelola melalui **Admin → Pengaturan**. API key diproteksi oleh enkripsi Laravel; pastikan `APP_KEY` tidak berubah setelah provider dibuat.
 
 ## Operasional data dan storage
 
-Backup dibuat dari **Admin → Backup Database**. Arsip berisi dump PostgreSQL dan file storage, lalu disimpan pada disk `BACKUP_DISK` (biasanya B2). Pembuatan backup baru mempertahankan hanya backup terbaru. Restore bersifat merge/non-destruktif dan membuat backup sebelum pemulihan.
+Backup dibuat dari **Admin → Backup Database** (khusus superadmin) dan diproses lewat queue (`RunBackupJob`). Arsip berisi dump PostgreSQL dan file storage, lalu disimpan pada disk `BACKUP_DISK` (biasanya B2). Restore (`RunRestoreJob`) bersifat merge/non-destruktif dan membuat backup sebelum pemulihan. Progress dan pembatalan bisa dipantau dari halaman backup.
 
-Perintah yang tersedia:
+Perintah artisan yang tersedia:
 
-| Perintah                            | Fungsi                                                        |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `gps:fetch`                         | Mengambil posisi armada dan menyimpannya ke cache database.   |
-| `dlh:setup-seeder [--fresh]`        | Menyiapkan data contoh; `--fresh` mereset skema lebih dahulu. |
-| `dlh:cleanup-orphan-files --delete` | Menghapus objek B2 yang tidak lagi direferensikan database.   |
-| `dlh:cleanup-b2-orphans [--all]`    | Membersihkan upload sementara Livewire pada B2.               |
-| `dlh:download-images`               | Mengunduh gambar artikel sumber.                              |
-| `shp:import-bulk`                   | Mengimpor file Shapefile secara massal ke layer GIS.          |
+| Perintah                                              | Fungsi                                                        |
+| ----------------------------------------------------- | ------------------------------------------------------------- |
+| `gps:fetch`                                           | Mengambil posisi armada dan menyimpannya ke cache database.   |
+| `dlh:setup-seeder [--fresh]`                          | Menyiapkan data awal; `--fresh` mereset skema lebih dahulu.   |
+| `dlh:cleanup-orphan-files [--delete] [--disk=] [--days=]` | Menghapus objek storage yang tidak lagi direferensikan database (default dry-run). |
+| `dlh:cleanup-b2-orphans [--all]`                      | Membersihkan upload sementara Livewire pada B2 (`livewire-tmp`). |
+| `dlh:download-images`                                 | Mengunduh gambar artikel dari situs sumber.                   |
+| `shp:import-bulk {folder} {bidang} [--dry-run] [--skip-existing] [--color=]` | Mengimpor file Shapefile secara massal ke layer GIS. |
 
 Scheduler menjalankan `gps:fetch` setiap 30 detik dan `dlh:cleanup-orphan-files --delete` setiap Minggu pukul 03:00. Pada server tanpa container scheduler, pasang cron berikut:
 
@@ -175,7 +217,7 @@ Scheduler menjalankan `gps:fetch` setiap 30 detik dan `dlh:cleanup-orphan-files 
 Queue memakai driver database secara default. Jalankan worker terus-menerus di produksi:
 
 ```bash
-php artisan queue:work --tries=1 --timeout=0
+php artisan queue:work --tries=3 --timeout=1900
 ```
 
 ### Reset total lingkungan
@@ -184,29 +226,52 @@ php artisan queue:work --tries=1 --timeout=0
 
 Untuk mengosongkan B2, hapus seluruh object version dan delete marker pada bucket melalui kredensial B2 yang tepat. Perintah pembersih bawaan hanya menghapus file yatim atau upload sementara, bukan seluruh bucket. Operasi ini permanen dan harus dibatasi ke bucket aplikasi.
 
-Setelah reset tanpa seeder, tidak ada akun admin, role, konfigurasi provider AI, atau konten. Jalankan `php artisan db:seed` hanya jika memang ingin menambahkan data awal/demo.
+Setelah reset tanpa seeder, tidak ada akun admin, role, konfigurasi provider AI, atau konten. Jalankan `php artisan db:seed` hanya jika memang ingin menambahkan data awal.
 
 ## Rute penting
+
+**Publik**
 
 | Area              | Rute                                                                                                       |
 | ----------------- | ---------------------------------------------------------------------------------------------------------- |
 | Beranda           | `/`                                                                                                        |
-| Layanan/pengaduan | `/pengaduan`, `/pengaduan-pengendalian`, `/pengaduan-sampah`, `/pengaduan-rth`, `/pengaduan-tata-penataan` |
-| Pelacakan         | `/lacak`                                                                                                   |
+| Pengaduan terpadu | `/pengaduan` (alias `/lapor`; per bidang: `?bidang=pengendalian\|sampah\|rth\|tata-penataan`)              |
+| Pelacakan         | `/lacak` + `POST /feedback/{nomor_tiket}`                                                                  |
+| Permohonan        | `/permohonan-rekomendasi`, `/pinjam-taman`, `/registrasi-usaha-lb3`, `/pengajuan-rintek-pertek` (+ halaman cek & bukti PDF masing-masing) |
 | Armada            | `/armada`, `/api/armada-aktif`                                                                             |
-| Tata Lingkungan   | `/tata-lingkungan`                                                                                         |
+| Peta persampahan  | `/peta-persampahan`, `/api/peta-persampahan/layers`                                                        |
+| Tata Lingkungan   | `/tata-lingkungan`, `/api/tata-lingkungan/folders`, `/api/tata-lingkungan/files`                           |
 | Berita            | `/berita` dan `/berita/{slug}`                                                                             |
-| Login/panel       | `/admin/login`, `/admin`                                                                                   |
+| Profil & UPTD     | `/profil`, `/tentang`, `/uptd/lab-lingkungan`, `/uptd/tpa-kawatuna` (+ sejarah), `/uptd/jurnal-lab`        |
+| Legal             | `/kebijakan-privasi`, `/syarat-ketentuan`                                                                  |
 | Chatbot stream    | `POST /api/chatbot/stream`                                                                                 |
+| OG image proxy    | `/file/og`                                                                                                 |
+| Sertifikat        | `/sosialisasi/{id}/sertifikat/{token}.pdf` (token acak)                                                    |
+
+**Admin** (prefix `/admin`, middleware `auth` + `admin.access` + `no-store`)
+
+| Area              | Rute                                                            |
+| ----------------- | --------------------------------------------------------------- |
+| Login/panel       | `/admin/login`, `/admin` (dashboard)                             |
+| CRUD registry     | `/admin/{resource}`, `/admin/{resource}/create`, `/{record}`, `/{record}/edit` |
+| Ekspor            | `/admin/{resource}/export`, `/export-all`, `/bulk-export`, `/exports/download/{token}` |
+| Peta GIS          | `/admin/peta` (+ import, layer CRUD, draw, feature edit)        |
+| Peta laporan      | `/admin/peta-laporan/data`                                       |
+| Audit log         | `/admin/activity-log` (superadmin)                               |
+| Backup            | `/admin/backup` (superadmin; progress, cancel, restore, unduh)  |
+| Notifikasi        | `/admin/notifications` (+ poll, read)                            |
+| Profil/pengaturan | `/admin/profile`, `/admin/settings` (termasuk provider AI & mode pemeliharaan), `/admin/help` |
+| Ulasan            | `/admin/ulasan-masyarakat`                                       |
+| Berkas            | `/admin/file/download`, `/admin/{resource}/{file}` (preview), `/admin/upload-image` |
 
 ## Keamanan dan troubleshooting
 
 - Jangan aktifkan `APP_DEBUG` di produksi atau menyimpan kredensial pada repository.
-- Batasi `TRUSTED_PROXIES`; jangan gunakan `*` di produksi.
-- Semua endpoint publik penting diberi throttle; jangan hapus middleware ini tanpa mitigasi pengganti.
+- Batasi `TRUSTED_PROXIES`; jangan gunakan `*` di produksi (aplikasi mencatat warning log bila terdeteksi).
+- Semua endpoint publik penting diberi throttle; jangan hapus middleware ini tanpa mitigasi pengganti. Endpoint update Livewire juga di-throttle 60/menit.
 - Pastikan folder Google Drive publik memang dibagikan untuk dibaca dan API Google Drive aktif.
 - Bila unggahan tidak bisa diakses lokal, jalankan kembali `php artisan storage:link` dan cek permission `storage/` serta `bootstrap/cache/`.
-- Bila job tertahan, periksa `jobs`/`failed_job`, jalankan worker, kemudian `php artisan queue:restart` setelah deploy.
+- Bila job tertahan, periksa `jobs`/`failed_jobs`, jalankan worker, kemudian `php artisan queue:restart` setelah deploy.
 - Lihat log aplikasi dengan `php artisan pail` atau `storage/logs/laravel.log`.
 
 ## Pengembangan
@@ -217,4 +282,11 @@ npm run build
 php artisan optimize:clear
 ```
 
-Jaga migration bersifat aman untuk database yang sudah ada, gunakan policy dan `AdminAccess` untuk resource baru, serta perbarui registry ketika menambahkan modul CRUD admin.
+Entrypoint Vite: `resources/css/app.css`, `resources/js/app.js`, `admin-common.js`, `map-bundle.js`, `dashboard-charts.js`, `flatpickr-init.js`, dan `tata-lingkungan.ts`. Build produksi menyertakan source map dan memaksa `font-display: optional` untuk mencegah layout shift.
+
+Panduan kontribusi internal:
+
+- Jaga migration bersifat aman untuk database yang sudah ada.
+- Gunakan policy dan `AdminAccess` untuk resource baru, serta daftarkan modulnya di `AdminRegistry`.
+- Form publik baru sebaiknya memakai komponen Livewire SFC di `resources/views/components/public/` dengan trait `VerifiesGoogleRecaptcha` dan `ThrottlesPublic`.
+- Terjemahan validasi/auth/pagination bahasa Indonesia ada di `lang/id/`.

@@ -19,7 +19,7 @@
                 this.tab = 'struktur';
             } else if (hash === '#visi-misi') {
                 this.tab = 'visi-misi';
-            } else if (['#tugas-fungsi', '#tugas-dlh', '#sekretaris', '#umum-kepegawaian', '#tata-lingkungan', '#pengendalian', '#sampah-lb3', '#rth'].includes(hash)) {
+            } else if (['#tugas-fungsi', '#tugas-dlh', '#sekretaris', '#umum-kepegawaian', '#tata-lingkungan', '#pengendalian', '#sampah-lb3', '#rth', '#uptd-lab', '#uptd-tpa'].includes(hash)) {
                 this.tab = 'tugas';
                 if (hash === '#tugas-dlh' || hash === '#tugas-fungsi') this.activeSub = 'dlh';
                 else if (hash === '#sekretaris') this.activeSub = 'sekretaris';
@@ -28,6 +28,8 @@
                 else if (hash === '#pengendalian') this.activeSub = 'pengendalian';
                 else if (hash === '#sampah-lb3') this.activeSub = 'sampah-lb3';
                 else if (hash === '#rth') this.activeSub = 'rth';
+                else if (hash === '#uptd-lab') this.activeSub = 'uptd-lab';
+                else if (hash === '#uptd-tpa') this.activeSub = 'uptd-tpa';
             }
         },
         setTab(name) {
@@ -55,7 +57,7 @@
         scrollToSection(hash) {
             if (!hash) return;
             this.parseHash(hash);
-            const targetId = ['#tugas-fungsi', '#tugas-dlh', '#sekretaris', '#umum-kepegawaian', '#tata-lingkungan', '#pengendalian', '#sampah-lb3', '#rth'].includes(hash)
+            const targetId = ['#tugas-fungsi', '#tugas-dlh', '#sekretaris', '#umum-kepegawaian', '#tata-lingkungan', '#pengendalian', '#sampah-lb3', '#rth', '#uptd-lab', '#uptd-tpa'].includes(hash)
                 ? 'tugas-fungsi'
                 : hash.replace('#', '');
             const el = document.getElementById(targetId);
@@ -408,6 +410,48 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Grup 4: UPTD -->
+                        <div>
+                            <span class="block px-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ __('UPTD') }}</span>
+                            <div class="mt-1.5 space-y-1.5">
+                                <button
+                                    type="button"
+                                    @click="setSub('uptd-lab')"
+                                    :class="activeSub === 'uptd-lab' ? 'bg-emerald-700 text-white shadow-md shadow-emerald-900/30 ring-1 ring-emerald-600 font-bold' : 'bg-slate-50 text-slate-800 hover:bg-emerald-50/80 hover:text-emerald-900 border border-slate-200/80 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 font-medium'"
+                                    class="group flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs transition-all duration-200 sm:text-sm"
+                                >
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span :class="activeSub === 'uptd-lab' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-slate-900 dark:text-emerald-300'" class="inline-flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors">
+                                            <x-icons.ui name="beaker" class="size-3.5" />
+                                        </span>
+                                        <div class="truncate">
+                                            <span :class="activeSub === 'uptd-lab' ? 'text-white font-bold' : 'text-slate-900 dark:text-white font-semibold'" class="block truncate">1. UPTD Lab Lingkungan</span>
+                                            <span :class="activeSub === 'uptd-lab' ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'" class="block text-[11px]">Pemantauan Kualitas Lingkungan</span>
+                                        </div>
+                                    </div>
+                                    <x-icons.ui name="chevron-right" :class="activeSub === 'uptd-lab' ? 'translate-x-0.5 text-white opacity-100' : 'text-slate-400 opacity-0 group-hover:opacity-100'" class="size-4 shrink-0 transition-all" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="setSub('uptd-tpa')"
+                                    :class="activeSub === 'uptd-tpa' ? 'bg-emerald-700 text-white shadow-md shadow-emerald-900/30 ring-1 ring-emerald-600 font-bold' : 'bg-slate-50 text-slate-800 hover:bg-emerald-50/80 hover:text-emerald-900 border border-slate-200/80 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 font-medium'"
+                                    class="group flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs transition-all duration-200 sm:text-sm"
+                                >
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span :class="activeSub === 'uptd-tpa' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-slate-900 dark:text-emerald-300'" class="inline-flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors">
+                                            <x-icons.ui name="recycle" class="size-3.5" />
+                                        </span>
+                                        <div class="truncate">
+                                            <span :class="activeSub === 'uptd-tpa' ? 'text-white font-bold' : 'text-slate-900 dark:text-white font-semibold'" class="block truncate">2. UPTD TPA Kawatuna</span>
+                                            <span :class="activeSub === 'uptd-tpa' ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'" class="block text-[11px]">Pengelolaan TPA</span>
+                                        </div>
+                                    </div>
+                                    <x-icons.ui name="chevron-right" :class="activeSub === 'uptd-tpa' ? 'translate-x-0.5 text-white opacity-100' : 'text-slate-400 opacity-0 group-hover:opacity-100'" class="size-4 shrink-0 transition-all" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -740,6 +784,126 @@
                             <li class="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5 text-xs sm:text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300"><span class="mt-1 size-1.5 shrink-0 rounded-full bg-teal-500"></span><span>Penyusunan laporan pelaksanaan kebijakan teknis pemakaman; dan</span></li>
                             <li class="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5 text-xs sm:text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300"><span class="mt-1 size-1.5 shrink-0 rounded-full bg-teal-500"></span><span>Melaksanakan fungsi lain yang diberikan oleh atasan.</span></li>
                         </ul>
+                    </div>
+                </div>
+
+                <!-- 8. DETAIL UPTD LAB LINGKUNGAN -->
+                <div x-show="activeSub === 'uptd-lab'" x-cloak x-transition.opacity.duration.250ms class="space-y-6">
+                    <div class="relative isolate overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-800 via-teal-800 to-slate-950 p-6 text-white shadow-xl shadow-emerald-950/20 sm:p-8">
+                        <div class="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full bg-emerald-400/20 blur-3xl"></div>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex size-11 items-center justify-center rounded-xl bg-white/10 text-emerald-300 ring-1 ring-white/20 backdrop-blur-md">
+                                <x-icons.ui name="beaker" class="size-6" />
+                            </span>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-200/90">{{ __('Unit Pelaksana Teknis Daerah') }}</span>
+                                <h2 class="text-xl font-extrabold text-white sm:text-2xl">UPTD Laboratorium Lingkungan</h2>
+                            </div>
+                        </div>
+                        <div class="mt-5 border-t border-white/10 pt-5">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">{{ __('Tugas Pokok:') }}</h3>
+                            <p class="mt-2 text-sm leading-relaxed text-emerald-50/90 text-justify">
+                                Melaksanakan sebagian kegiatan teknis operasional dinas dalam lingkup penyelenggaraan pemantauan kualitas lingkungan dalam rangka peningkatan kualitas lingkungan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                            <div class="flex items-center gap-2.5">
+                                <span class="inline-flex size-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                    <x-icons.ui name="check-circle" class="size-4" />
+                                </span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Penyelenggaraan Fungsi UPTD</h3>
+                            </div>
+                            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">6 Poin Fungsi</span>
+                        </div>
+                        <ol class="mt-5 grid gap-3 sm:grid-cols-2">
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">01</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Perencanaan & Sistem Manajemen Mutu:</strong> Menyusun rencana program kegiatan, mengesahkan panduan mutu, serta melakukan kaji ulang dan perbaikan Sistem Manajemen Mutu Laboratorium secara berkala.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">02</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Teknis Pengambilan Sampel & Pengujian:</strong> Melaksanakan pengambilan contoh uji sesuai standar (Good Sampling Practice), melakukan pengujian dan kalibrasi, memverifikasi data hasil uji, hingga menerbitkan laporan/sertifikat hasil pengujian.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">03</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Penjaminan Mutu (QA/QC) & Audit:</strong> Menerapkan dan mengawasi Quality Assurance/Quality Control (QA/QC), menyelenggarakan audit internal, memvalidasi metode uji, serta berpartisipasi dalam uji profisiensi/uji banding antar laboratorium.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">04</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Pengelolaan Fasilitas & Logistik:</strong> Merencanakan, mengadakan, memverifikasi, dan memelihara peralatan, instrumen, serta bahan habis pakai laboratorium beserta rekaman pemasoknya.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">05</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Pelayanan & Penanganan Keluhan:</strong> Menangani administrasi penerimaan sampel, merespons pengaduan pelanggan, serta melakukan penelusuran atau pengujian ulang (terhadap retained sample) jika diperlukan.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">06</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Ketatausahaan & Pelaporan:</strong> Melaksanakan urusan tata usaha, rumah tangga, koordinasi lintas instansi, penyusunan laporan evaluasi, serta melaksanakan tugas kedinasan lain dari Kepala Dinas.</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- 9. DETAIL UPTD TPA KAWATUNA -->
+                <div x-show="activeSub === 'uptd-tpa'" x-cloak x-transition.opacity.duration.250ms class="space-y-6">
+                    <div class="relative isolate overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-800 via-teal-800 to-slate-950 p-6 text-white shadow-xl shadow-emerald-950/20 sm:p-8">
+                        <div class="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full bg-emerald-400/20 blur-3xl"></div>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex size-11 items-center justify-center rounded-xl bg-white/10 text-emerald-300 ring-1 ring-white/20 backdrop-blur-md">
+                                <x-icons.ui name="recycle" class="size-6" />
+                            </span>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-200/90">{{ __('Unit Pelaksana Teknis Daerah') }}</span>
+                                <h2 class="text-xl font-extrabold text-white sm:text-2xl">UPTD TPA Kawatuna</h2>
+                            </div>
+                        </div>
+                        <div class="mt-5 border-t border-white/10 pt-5">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">{{ __('Tugas Pokok:') }}</h3>
+                            <p class="mt-2 text-sm leading-relaxed text-emerald-50/90 text-justify">
+                                Membantu Kepala Dinas dalam melaksanakan kegiatan teknis operasional penyelenggaraan dan pengelolaan Tempat Pemrosesan Akhir (TPA).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                            <div class="flex items-center gap-2.5">
+                                <span class="inline-flex size-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                    <x-icons.ui name="check-circle" class="size-4" />
+                                </span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Penyelenggaraan Fungsi UPTD</h3>
+                            </div>
+                            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">6 Poin Fungsi</span>
+                        </div>
+                        <ol class="mt-5 grid gap-3 sm:grid-cols-2">
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">01</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Perencanaan:</strong> Menyusun rencana program dan kegiatan operasional pengelolaan TPA.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">02</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Pengelolaan:</strong> Melaksanakan penanganan dan pengelolaan sampah secara langsung di lokasi TPA.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">03</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Pemeliharaan:</strong> Merawat dan memelihara seluruh sarana serta prasarana operasional TPA.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">04</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Administrasi:</strong> Menjalankan kegiatan ketatausahaan dan urusan rumah tangga internal UPTD.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">05</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Evaluasi & Pelaporan:</strong> Melakukan evaluasi kinerja dan menyusun laporan pelaksanaan tugas secara berkala.</span>
+                            </li>
+                            <li class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800">
+                                <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-xs font-black text-white">06</span>
+                                <span class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300"><strong class="font-bold text-slate-900 dark:text-white">Tugas Tambahan:</strong> Melaksanakan instruksi dan tugas lain yang diberikan oleh Kepala Dinas sesuai dengan bidang terkait.</span>
+                            </li>
+                        </ol>
                     </div>
                 </div>
 

@@ -61,7 +61,7 @@
             x-on:click="open = !open"
             x-bind:aria-expanded="open"
             aria-controls="quick-action-menu"
-            class="quick-action-btn min-h-10 transition-[background-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            class="quick-action-btn quick-action-btn--responsive min-h-9 transition-[background-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 lg:min-h-10 dark:focus-visible:ring-offset-slate-900"
             aria-label="Buat data baru"
             title="Buat data baru"
         >

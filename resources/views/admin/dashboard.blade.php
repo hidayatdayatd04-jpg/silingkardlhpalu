@@ -36,7 +36,7 @@
                     {{ $greet }}, {{ $firstName }} 👋
                 </h1>
                 <p class="mt-2 text-sm text-forest-100/80 leading-relaxed">
-                    Selamat datang di Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu. Pantau pengaduan, verifikasi permohonan, dan sebaran spasial secara real-time.
+                    Selamat datang di Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu. Pantau pengaduan, verifikasi permohonan.
                 </p>
 
                 <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/80">

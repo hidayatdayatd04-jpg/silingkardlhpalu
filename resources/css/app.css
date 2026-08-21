@@ -1222,6 +1222,13 @@ html.js .public-main[data-public-page] {
 .quick-action-btn:active {
     transform: translateY(0) scale(0.98);
 }
+/* Tablet variant — lebih compact */
+@media (min-width: 640px) and (max-width: 1023px) {
+    .quick-action-btn--responsive {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
 
 .profile-menu-item {
     display: flex;

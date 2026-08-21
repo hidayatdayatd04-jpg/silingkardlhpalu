@@ -47,18 +47,10 @@ Route::get('/profil', fn () => view('public.profil'));
 Route::get('/tentang', fn () => view('public.tentang-kami'));
 
 // UPTD
-Route::get('/uptd/{slug}', function (string $slug) {
-    $titles = [
-        'topoksi-lab' => 'Topoksi Lab',
-        'jurnal-lab' => 'Jurnal Lab',
-        'tpa-kawatuna' => 'UPTD TPA Kawatuna',
-    ];
-    $title = $titles[$slug] ?? 'UPTD';
-    if ($slug === 'topoksi-lab') {
-        return view('public.topoksi-lab');
-    }
-    return view('public.coming-soon', ['title' => $title]);
-})->whereIn('slug', ['topoksi-lab', 'jurnal-lab', 'tpa-kawatuna']);
+Route::get('/uptd/lab-lingkungan', fn () => view('public.uptd-lab-lingkungan'));
+Route::get('/uptd/jurnal-lab', fn () => view('public.coming-soon', ['title' => 'Jurnal Lab']));
+Route::get('/uptd/tpa-kawatuna', fn () => view('public.tpa-kawatuna'));
+Route::get('/uptd/tpa-kawatuna/sejarah', fn () => view('public.tpa-kawatuna-sejarah'));
 
 // Tata Lingkungan — dokumen publik dari Google Drive
 Route::get('/tata-lingkungan', [App\Http\Controllers\TataLingkunganController::class, 'index'])
