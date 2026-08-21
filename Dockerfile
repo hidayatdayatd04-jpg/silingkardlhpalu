@@ -70,8 +70,7 @@ RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 RUN printf 'upload_max_filesize = 512M\npost_max_size = 512M\n' \
     > /usr/local/etc/php/conf.d/uploads.ini
 
-# Expose port
-EXPOSE 9000
-
-# Start PHP-FPM
-CMD ["php-fpm"]
+# Railway: expose 8080 dan jalankan artisan serve (bukan php-fpm 9000)
+# php-fpm butuh nginx terpisah, di Railway cukup artisan serve agar 502 hilang
+EXPOSE 8080
+CMD sh -c "php artisan migrate --force --no-interaction && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
