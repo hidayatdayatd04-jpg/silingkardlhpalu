@@ -96,7 +96,7 @@ new class extends Component
         <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
             <div class="flex-1">
                 <x-public.input
-                    wire:model.live.debounce.250ms="search"
+                    wire:model="search"
                     name="search"
                     placeholder="RPT-YYYY-XXXX atau 08123456789"
                     required

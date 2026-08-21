@@ -97,7 +97,7 @@ new class extends Component
         <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
             <div class="flex-1">
                 <x-public.input
-                    wire:model.live.debounce.250ms="search"
+                    wire:model="search"
                     name="search"
                     placeholder="{{ __('Nomor tiket atau nomor telepon') }}"
                     required
