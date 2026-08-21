@@ -353,6 +353,6 @@ class ChatStreamController extends Controller
                "- Tanggal Lapor: {$tgl}\n" .
                "- Status Penanganan: **{$statusStr}**\n" .
                "- Catatan Petugas: {$catatanStr}\n\n" .
-               "INSTRUKSI: Sampaikan status laporan di atas dengan jelas dan ramah. Sebutkan nomor tiketnya, tanggal, dan status penanganan terbarunya. Tawarkan bantuan lebih lanjut dan sertakan tombol aksi ke halaman lacak: :::action[🔍 Buka Halaman Pelacakan](https://dlh.palukota.go.id/lacak):::";
+               "INSTRUKSI: Sampaikan status laporan di atas dengan jelas dan ramah. Sebutkan nomor tiketnya, tanggal, dan status penanganan terbarunya. Tawarkan bantuan lebih lanjut dan sertakan tombol aksi ke halaman lacak: :::action[🔍 Buka Halaman Pelacakan](https://www.silingkardlhpalu.web.id/lacak):::";
     }
 }

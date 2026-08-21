@@ -46,6 +46,8 @@ Route::get('/profil', fn () => view('public.profil'));
 
 Route::get('/tentang', fn () => view('public.tentang-kami'));
 
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // UPTD
 Route::get('/uptd/lab-lingkungan', fn () => view('public.uptd-lab-lingkungan'));
 Route::get('/uptd/jurnal-lab', fn () => view('public.coming-soon', ['title' => 'Jurnal Lab']));

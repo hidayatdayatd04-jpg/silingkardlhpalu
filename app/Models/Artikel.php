@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ArtikelStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Artikel extends Model
@@ -47,6 +48,16 @@ class Artikel extends Model
             if ($model->isDirty('judul') && ! $model->isDirty('slug') && filled($model->judul)) {
                 $model->slug = static::generateUniqueSlug($model->judul, $model->id);
             }
+        });
+
+        // Invalidasi cache sitemap agar artikel baru/terupdate langsung masuk sitemap
+        // (fallback TTL 1 jam tetap ada bila event tidak terpicu).
+        static::saved(function (): void {
+            Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
+        });
+
+        static::deleted(function (): void {
+            Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
         });
     }
 

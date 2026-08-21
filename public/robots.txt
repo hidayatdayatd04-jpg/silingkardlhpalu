@@ -1,3 +1,4 @@
 User-agent: *
 Disallow: /admin
 Disallow: /api/
+Sitemap: https://www.silingkardlhpalu.web.id/sitemap.xml

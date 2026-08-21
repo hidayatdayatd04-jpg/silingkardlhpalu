@@ -15,13 +15,25 @@
             }
         })();
     </script>
+    @php
+        // Canonical SEO fleksibel via config('app.url') agar perubahan domain cukup via APP_URL.
+        // Tanpa query string, mengikuti spec: '/' -> base saja, '/lacak' -> base.'/lacak', dll.
+        // Host request (Railway *.up.railway.app / Cloudflare Tunnel) tidak akan jadi canonical.
+        $canonicalBase = rtrim((string) config('app.url'), '/');
+        $canonicalPath = request()->getPathInfo(); // '/' , '/lacak', '/berita/slug' — tanpa query string
+        if ($canonicalBase === '') {
+            $canonicalUrl = url()->current();
+        } else {
+            $canonicalUrl = $canonicalPath === '/' ? $canonicalBase : $canonicalBase . $canonicalPath;
+        }
+    @endphp
     <title>@yield('title', 'Portal Operasional DLH Kota Palu')</title>
 
     <meta name="description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:title" content="@yield('title', 'Portal Operasional DLH Kota Palu')">
     <meta property="og:description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
     <meta property="og:image" content="@yield('og_image', asset('assets/images/logo_kota_palu.png'))">
@@ -30,12 +42,12 @@
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ url()->current() }}">
+    <meta property="twitter:url" content="{{ $canonicalUrl }}">
     <meta property="twitter:title" content="@yield('title', 'Portal Operasional DLH Kota Palu')">
     <meta property="twitter:description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
     <meta property="twitter:image" content="@yield('og_image', asset('assets/images/logo_kota_palu.png'))">
 
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
