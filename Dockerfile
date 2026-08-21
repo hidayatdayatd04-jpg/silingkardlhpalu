@@ -11,10 +11,11 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions for Laravel
 RUN docker-php-ext-install opcache
 
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+# Install Node.js 22 (Vite 7 butuh >=20.19)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm
+    && npm install -g npm@latest \
+    && node -v && npm -v
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -26,8 +27,9 @@ WORKDIR /var/www
 FROM base AS build
 
 # Install npm dependencies first (for caching)
+# --include=optional wajib untuk @tailwindcss/oxide native binding
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --include=optional || npm install --include=optional
 
 # Install composer dependencies
 COPY composer.json composer.lock* ./
