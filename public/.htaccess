@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Sitemap dinamis — paksa ke index.php meski public/sitemap.xml ada (fallback statis)
+    RewriteRule ^sitemap\.xml$ index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
