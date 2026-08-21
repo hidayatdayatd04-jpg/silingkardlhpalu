@@ -51,13 +51,15 @@ class Artikel extends Model
         });
 
         // Invalidasi cache sitemap agar artikel baru/terupdate langsung masuk sitemap
-        // (fallback TTL 1 jam tetap ada bila event tidak terpicu).
+        // + regenerate file fisik public/sitemap.xml agar fallback tetap auto-update (dinamis prioritas via nginx/.htaccess).
         static::saved(function (): void {
             Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
+            \App\Http\Controllers\SitemapController::regenerateStaticFile();
         });
 
         static::deleted(function (): void {
             Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
+            \App\Http\Controllers\SitemapController::regenerateStaticFile();
         });
     }
 
