@@ -30,10 +30,12 @@ class RunBackupJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Guard anti-eksekusi-ganda: bila job duplikat ikut terambil worker
-        // (mis. dua worker sempat berjalan bersamaan), job kedua keluar
-        // diam-diam tanpa menyentuh state progres milik job pertama.
-        $lock = Cache::lock('backup:task:run', $this->timeout + 60);
+        // Guard anti-eksekusi-ganda — gunakan database lock agar konsisten dengan BackupProgress store
+        $lock = Cache::store('database')->lock('backup:task:run', $this->timeout + 60);
+        // Fallback ke default store bila database lock tidak tersedia
+        if (! $lock) {
+            $lock = Cache::lock('backup:task:run', $this->timeout + 60);
+        }
         if (! $lock->get()) {
             return;
         }

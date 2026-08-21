@@ -77,9 +77,10 @@ services:
     container_name: dlh-palu-queue
     restart: unless-stopped
     working_dir: /var/www
-    # --timeout mengikuti DB_QUEUE_RETRY_AFTER (1900) agar job panjang
+    # --tries=1 WAJIB sama dengan RunBackupJob::$tries agar tidak retry berulang
+    # --timeout=1900 mengikuti DB_QUEUE_RETRY_AFTER (1900) agar job panjang
     # (backup/restore ~30 menit) tidak dibunuh di tengah jalan.
-    command: php artisan queue:work --tries=3 --timeout=1900
+    command: php artisan queue:work --queue=default --sleep=3 --tries=1 --timeout=1900 --max-time=3600 -v
     volumes: *app-volumes
     environment: *app-env
     depends_on:

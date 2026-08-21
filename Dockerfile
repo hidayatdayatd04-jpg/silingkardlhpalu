@@ -72,5 +72,7 @@ RUN printf 'upload_max_filesize = 512M\npost_max_size = 512M\n' \
 
 # Railway: expose 8080 dan jalankan artisan serve (bukan php-fpm 9000)
 # php-fpm butuh nginx terpisah, di Railway cukup artisan serve agar 502 hilang
+# Queue worker & scheduler dijalankan sebagai background loop dengan auto-restart
+# agar backup/restore (timeout 1900) tidak stuck 0% saat worker mati.
 EXPOSE 8080
-CMD ["sh", "-c", "echo \"=== Starting on PORT=${PORT:-8080} ===\"; php artisan migrate --force --no-interaction || echo \"migrate failed, continue\"; php artisan config:clear; php artisan storage:link || true; echo \"=== Starting queue worker in background ===\"; php artisan queue:work --queue=default --sleep=3 --tries=3 --timeout=1900 -v & exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["sh", "-c", "echo \"=== Starting on PORT=${PORT:-8080} ===\"; php artisan migrate --force --no-interaction || echo \"migrate failed, continue\"; php artisan config:clear; php artisan storage:link || true; echo \"=== Starting queue worker (tries=1 timeout=1900) in background ===\"; (while true; do php artisan queue:work --queue=default --sleep=3 --tries=1 --timeout=1900 --max-time=3600 -v; echo \"queue worker exited code $? - restarting in 5s\"; sleep 5; done) & echo \"=== Starting scheduler in background ===\"; (while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done) & exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]

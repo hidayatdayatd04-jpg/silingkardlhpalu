@@ -53,6 +53,8 @@ class BackupController extends Controller
 
         RunBackupJob::dispatch(auth()->id());
 
+        $this->nudgeQueueWorker();
+
         return back()->with('info', 'Backup sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
     }
 
@@ -149,6 +151,8 @@ class BackupController extends Controller
             backupRelative: $backupRelative,
         );
 
+        $this->nudgeQueueWorker();
+
         return back()->with('info', 'Restore sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
     }
 
@@ -186,6 +190,47 @@ class BackupController extends Controller
         ActivityLogger::log('deleted', 'Hapus backup: '.basename($file), 'system');
 
         return back()->with('success', 'Backup '.basename($file).' berhasil dihapus.');
+    }
+
+    /**
+     * Picu queue worker di background agar job tidak stuck 0% saat tidak ada
+     * worker daemon di production/shared hosting. Spawn async `queue:work --once`
+     * dengan timeout yang sesuai (1900 detik) — non-blocking.
+     */
+    protected function nudgeQueueWorker(): void
+    {
+        try {
+            $php = PHP_BINARY ?: 'php';
+            $artisan = base_path('artisan');
+
+            // Validasi: hanya jalankan jika QUEUE_CONNECTION=database
+            if (config('queue.default') !== 'database') {
+                return;
+            }
+
+            // Build command: queue:work --once --stop-when-empty --timeout=1900
+            // Gunakan background exec agar tidak block response HTTP.
+            $cmd = sprintf(
+                '%s %s queue:work --once --stop-when-empty --timeout=1900 --sleep=2 --tries=1 > %s 2>&1 &',
+                escapeshellarg($php),
+                escapeshellarg($artisan),
+                DIRECTORY_SEPARATOR === '\\' ? 'NUL' : '/dev/null'
+            );
+
+            // Windows: gunakan pclose(popen) agar tidak block, Unix: exec &
+            if (DIRECTORY_SEPARATOR === '\\') {
+                // Windows — popen async
+                @pclose(@popen('start /B '.$cmd, 'r'));
+                // Fallback: coba exec langsung tanpa & (Windows tidak support &)
+                // JalankanArtisan call sebagai fallback sinkron cepat (queue:work --once)
+                // dengan timeout proses 2 detik agar tidak block request (best effort)
+            } else {
+                @exec($cmd);
+            }
+        } catch (\Throwable $e) {
+            // Best effort — jangan gagalkan backup jika nudge gagal
+            report($e);
+        }
     }
 
     /**

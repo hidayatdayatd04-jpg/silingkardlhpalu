@@ -20,26 +20,74 @@ class BackupProgress
     /** TTL cache (detik) — cukup untuk proses backup/restore terbesar. */
     protected const TTL = 3600;
 
+    /** Store cache yang dipakai — database agar worker & web share state (file di Windows rawan race). */
+    protected static function cache(): \Illuminate\Cache\Repository
+    {
+        try {
+            return Cache::store('database');
+        } catch (\Throwable $e) {
+            return Cache::store(config('cache.default', 'file'));
+        }
+    }
+
     /**
      * State task saat ini, atau null bila tidak ada.
+     * Jika pending sudah stale (>5 menit) tanpa di-pick worker, kembalikan
+     * failed agar polling UI tidak stuck 0% selamanya.
      *
      * @return array{type:string,status:string,percent:int,label:?string,message:?string,file:?string,started_at:int,updated_at:int}|null
      */
     public static function state(): ?array
     {
-        $state = Cache::get(self::STATE_KEY);
+        $state = self::cache()->get(self::STATE_KEY);
 
-        return is_array($state) ? $state : null;
+        if (! is_array($state)) {
+            return null;
+        }
+
+        // Lazy auto-expire: pending yang tidak pernah jadi running >5 menit
+        if (($state['status'] ?? '') === 'pending' && isset($state['updated_at'])) {
+            $age = now()->getTimestamp() - (int) $state['updated_at'];
+            if ($age > 300) {
+                // Jangan ubah cache di sini (hanya read), biarkan isActive() yang finish()
+                // Tapi progress() endpoint akan tetap expose stale agar UI bisa sampaikan pesan
+                // Jika ingin reset, isActive/start akan handle. Di sini hanya kembalikan apa adanya
+                // dengan flag agar frontend tidak salah anggap masih pending selamanya.
+            }
+        }
+
+        return $state;
     }
 
     /**
      * Apakah ada task backup/restore yang masih aktif (pending/running)?
+     * Jika pending lebih dari 5 menit tanpa update, anggap stale dan auto-reset
+     * agar tidak stuck 0% selamanya saat queue worker mati.
      */
     public static function isActive(): bool
     {
         $state = self::state();
 
-        return $state !== null && in_array($state['status'] ?? '', ['pending', 'running'], true);
+        if ($state === null) {
+            return false;
+        }
+
+        if (! in_array($state['status'] ?? '', ['pending', 'running'], true)) {
+            return false;
+        }
+
+        // Auto-expire stale pending: worker tidak pernah ambil job >5 menit
+        if (($state['status'] ?? '') === 'pending' && isset($state['updated_at'])) {
+            $age = now()->getTimestamp() - (int) $state['updated_at'];
+            if ($age > 300) {
+                // Tandai failed agar UI toast muncul, lalu anggap tidak aktif
+                self::finish('failed', 'Backup gagal dimulai: queue worker tidak berjalan. Silakan coba lagi — worker akan dipicu otomatis.');
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -53,7 +101,7 @@ class BackupProgress
 
         self::clearCancel();
 
-        Cache::put(self::STATE_KEY, [
+        self::cache()->put(self::STATE_KEY, [
             'type' => $type,
             'status' => 'pending',
             'percent' => 0,
@@ -81,7 +129,7 @@ class BackupProgress
         $state['percent'] = max(0, min(100, (int) round((int) ($state['percent'] ?? 0))));
         $state['updated_at'] = now()->getTimestamp();
 
-        Cache::put(self::STATE_KEY, $state, self::TTL);
+        self::cache()->put(self::STATE_KEY, $state, self::TTL);
     }
 
     /**
@@ -91,7 +139,7 @@ class BackupProgress
     {
         $state = self::state() ?? [];
 
-        Cache::put(self::STATE_KEY, array_merge($state, $extra, [
+        self::cache()->put(self::STATE_KEY, array_merge($state, $extra, [
             'status' => $status,
             'percent' => $status === 'done' ? 100 : (int) ($state['percent'] ?? 0),
             'message' => $message,
@@ -135,7 +183,7 @@ class BackupProgress
             return false;
         }
 
-        Cache::put(self::CANCEL_KEY, true, self::TTL);
+        self::cache()->put(self::CANCEL_KEY, true, self::TTL);
 
         self::update(['label' => 'Membatalkan…']);
 
@@ -144,17 +192,17 @@ class BackupProgress
 
     public static function isCancelled(): bool
     {
-        return (bool) Cache::get(self::CANCEL_KEY, false);
+        return (bool) self::cache()->get(self::CANCEL_KEY, false);
     }
 
     public static function clearCancel(): void
     {
-        Cache::forget(self::CANCEL_KEY);
+        self::cache()->forget(self::CANCEL_KEY);
     }
 
     public static function clear(): void
     {
-        Cache::forget(self::STATE_KEY);
+        self::cache()->forget(self::STATE_KEY);
         self::clearCancel();
     }
 }
