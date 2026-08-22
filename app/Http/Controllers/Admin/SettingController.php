@@ -80,27 +80,60 @@ class SettingController extends Controller
 
         $validated = $this->validateProvider($request, $provider);
 
-        $old = $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active']);
-
-        $provider->fill([
-            'name'      => $validated['name'],
-            'type'      => $validated['type'],
-            'base_url'  => $validated['base_url'],
-            'model'     => $validated['model'],
-            'priority'  => $validated['priority'] ?? $provider->priority,
-            'is_active' => $validated['is_active'],
-        ]);
-
-        // API key kosong berarti pertahankan key lama.
-        if (! empty($validated['api_key'])) {
-            $provider->api_key = $validated['api_key'];
+        // API key kosong berarti pertahankan key lama — tapi pastikan key lama
+        // masih terbaca dengan APP_KEY aktif. Kalau tidak (mis. APP_KEY pernah
+        // berganti setelah key disimpan), minta admin mengetik ulang key
+        // daripada membiarkan provider rusak atau melempar error 500.
+        if (empty($validated['api_key']) && ! $this->storedKeyReadable($provider)) {
+            return back()
+                ->withInput()
+                ->withErrors(['api_key' => 'API key lama tidak dapat dibaca (kemungkinan APP_KEY berubah). Masukkan API key baru untuk provider ini.']);
         }
 
-        $provider->save();
+        try {
+            $old = $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active']);
 
-        ActivityLogger::log('updated', "Provider AI \"{$provider->name}\" diperbarui", 'settings', $old, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active'])], $provider);
+            $provider->fill([
+                'name'      => $validated['name'],
+                'type'      => $validated['type'],
+                'base_url'  => $validated['base_url'],
+                'model'     => $validated['model'],
+                'priority'  => $validated['priority'] ?? $provider->priority,
+                'is_active' => $validated['is_active'],
+            ]);
+
+            if (! empty($validated['api_key'])) {
+                $provider->api_key = $validated['api_key'];
+            }
+
+            $provider->save();
+
+            ActivityLogger::log('updated', "Provider AI \"{$provider->name}\" diperbarui", 'settings', $old, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active'])], $provider);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors(['provider' => 'Gagal menyimpan provider: ' . $e->getMessage()]);
+        }
 
         return back()->with('success', "Provider \"{$provider->name}\" berhasil diperbarui.");
+    }
+
+    /**
+     * Cek apakah api_key tersimpan masih dapat didekripsi dengan APP_KEY aktif.
+     *
+     * Membaca api_key provider yang terenkripsi dengan APP_KEY lama akan
+     * melempar DecryptException; bungkus di sini agar pemanggil bisa memberi
+     * pesan yang ramah alih-alih 500.
+     */
+    private function storedKeyReadable(AiProvider $provider): bool
+    {
+        try {
+            return filled($provider->api_key);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function destroyProvider(AiProvider $provider)
@@ -137,7 +170,13 @@ class SettingController extends Controller
         $apiKey = $validated['api_key'] ?? '';
 
         if ($apiKey === '' && ! empty($validated['provider_id'])) {
-            $apiKey = (string) (AiProvider::find($validated['provider_id'])?->api_key ?? '');
+            try {
+                $apiKey = (string) (AiProvider::find($validated['provider_id'])?->api_key ?? '');
+            } catch (\Throwable) {
+                // Key tersimpan tidak dapat didekripsi dengan APP_KEY aktif
+                // (mis. APP_KEY berganti setelah key disimpan).
+                return response()->json(['error' => 'API key tersimpan tidak dapat dibaca (kemungkinan APP_KEY berubah). Masukkan API key secara manual.'], 422);
+            }
         }
 
         if ($apiKey === '') {
