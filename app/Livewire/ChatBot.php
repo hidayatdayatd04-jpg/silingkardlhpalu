@@ -144,7 +144,7 @@ class ChatBot extends Component
     {
         return [
             'role'      => 'assistant',
-            'content'   => "Halo, selamat datang 👋\nSaya dari DLH Kota Palu. Ada yang bisa saya bantu?\n\nKalau mau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan, langsung chat saja ya.",
+            'content'   => "Halo, selamat datang!\nSaya dari DLH Kota Palu. Ada yang bisa saya bantu?\n\nKalau mau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan, langsung chat saja ya.",
             'timestamp' => now()->toIso8601String(),
         ];
     }

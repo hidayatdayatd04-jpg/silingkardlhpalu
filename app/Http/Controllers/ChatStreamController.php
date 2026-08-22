@@ -112,11 +112,17 @@ class ChatStreamController extends Controller
      * sendiri di satu baris maupun yang tersisip di tengah kalimat — diubah
      * menjadi kartu aksi :::action[Judul](URL)::: supaya selalu tampil sebagai
      * tombol yang rapi dan bisa diklik, apa pun gaya penulisan model.
-     * URL yang sudah dibungkus markdown [teks](url) atau :::action tidak
-     * diproses ulang; baris dalam blok kode ``` ``` dilewati.
+     * Emoji juga dilucuti di sini sehingga output ke pengguna selalu teks
+     * bersih tanpa emotikon. URL yang sudah dibungkus markdown [teks](url)
+     * atau :::action tidak diproses ulang; baris dalam blok kode ``` ```
+     * dilewati.
      */
     private function normalizeActionCards(string $text): string
     {
+        // Jaminan server-side: tidak ada emoji yang lolos ke output,
+        // sekalipun model melanggar aturan prompt.
+        $text = $this->stripEmojis($text);
+
         // Bersihkan emoji dari judul kartu yang ditulis AI supaya kartu selalu
         // tampil rapi satu baris tanpa simbol.
         $stripped = preg_replace_callback(
@@ -205,6 +211,30 @@ class ChatStreamController extends Controller
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Buang semua emoji dari teks respons. Dijalankan di sisi server sehingga
+     * output AI dijamin bebas emotikon meskipun model tetap menyisipkannya.
+     * Spasi yang menempel pada emoji ikut dibuang supaya tidak menyisakan
+     * spasi ganda; ZWJ, variation selector, dan modifier kulit juga dilucuti.
+     */
+    private function stripEmojis(string $text): string
+    {
+        // Kelas karakter emoji (perhatikan tanda [...]): simbol & emotikon
+        // utama, panah/ikon media, keycap, variation selector, dan zero-width
+        // joiner.
+        $emoji = '[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}'
+            . '\x{231A}-\x{231B}\x{23E9}-\x{23FA}\x{203C}\x{2049}\x{20E3}\x{FE0F}\x{200D}]';
+
+        // Emoji yang didahului spasi: spasi itu ikut dihapus agar kata tidak
+        // menempel dengan kata berikutnya.
+        $clean = preg_replace('~ ' . $emoji . '+~u', '', $text);
+        // Sisa emoji (awal baris / tanpa spasi di depan): spasi sesudahnya
+        // ikut dihapus bila ada.
+        $clean = preg_replace('~' . $emoji . '+ ?~u', '', $clean ?? $text);
+
+        return $clean ?? $text;
     }
 
     /**
@@ -454,6 +484,6 @@ class ChatStreamController extends Controller
                "- Tanggal Lapor: {$tgl}\n" .
                "- Status Penanganan: **{$statusStr}**\n" .
                "- Catatan Petugas: {$catatanStr}\n\n" .
-               "INSTRUKSI: Sampaikan status laporan di atas dengan jelas dan ramah. Sebutkan nomor tiketnya, tanggal, dan status penanganan terbarunya. Tawarkan bantuan lebih lanjut dan sertakan tombol aksi ke halaman lacak: :::action[🔍 Buka Halaman Pelacakan](https://www.silingkardlhpalu.web.id/lacak):::";
+               "INSTRUKSI: Sampaikan status laporan di atas dengan jelas dan ramah. Sebutkan nomor tiketnya, tanggal, dan status penanganan terbarunya. Tawarkan bantuan lebih lanjut dan sertakan tombol aksi ke halaman lacak: :::action[Buka Halaman Pelacakan](https://www.silingkardlhpalu.web.id/lacak):::";
     }
 }

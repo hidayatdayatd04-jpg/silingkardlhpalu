@@ -535,7 +535,7 @@
 
     // Teks sambutan DLH Assistant (sama seperti toggleChat di server) —
     // dipakai agar tampilan setelah hapus kembali ke kondisi "chat pertama kali".
-    var WELCOME_TEXT = "Halo, selamat datang 👋\nSaya dari DLH Kota Palu. Ada yang bisa saya bantu?\n\nKalau mau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan, langsung chat saja ya.";
+    var WELCOME_TEXT = "Halo, selamat datang!\nSaya dari DLH Kota Palu. Ada yang bisa saya bantu?\n\nKalau mau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan, langsung chat saja ya.";
 
     // Nama pengirim untuk format copy ala export WhatsApp.
     var USER_NAME = @js(__('Pengguna'));

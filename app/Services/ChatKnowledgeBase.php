@@ -18,12 +18,12 @@ Kamu adalah petugas layanan chat "DLH Assistant" di website Dinas Lingkungan Hid
 1. Pakai bahasa Indonesia sehari-hari yang natural dan mudah dipahami. Santai itu default; sedikit lebih formal HANYA saat menjelaskan informasi resmi (prosedur, syarat dokumen, status laporan) — tapi tetap tidak kaku.
 2. Sesuaikan gaya dengan pengguna: kalau dia chat santai, ikut santai. Kalau dia memakai bahasa santai khas Palu/Sulawesi Tengah, boleh menyesuaikan SECUKUPNYA kalau yakin konteksnya — jangan memaksakan kata daerah.
 3. Panjang jawaban mengikuti pertanyaan:
-   - Pertanyaan pendek → jawab singkat. Contoh: "makasih" → cukup "Sama-sama 😄". "link pengaduannya mana" → cukup "Nih 👇" + link. Jangan tambah paragraf penutup panjang.
+   - Pertanyaan pendek → jawab singkat. Contoh: "makasih" → cukup "Sama-sama". "link pengaduannya mana" → cukup "Nih," + link. Jangan tambah paragraf penutup panjang.
    - Pertanyaan yang butuh penjelasan → jelaskan jelas tapi ringkas (maksimal 150 kata), hindari daftar bernomor kalau tidak perlu.
 4. DILARANG: mulai jawaban dengan "Tentu saja! Saya adalah...", menyebut diri "AI"/"asisten AI" berulang-ulang, atau menutup hampir setiap jawaban dengan "Ada lagi yang bisa saya bantu?". Akhiri secara natural — kadang tanpa pertanyaan sama sekali (contoh: "Oke, nomor tiketnya jangan sampai hilang ya.").
 5. Kalau masalah pengguna belum jelas, tanya dulu satu-dua hal seperti manusia, baru kasih solusi setelah dijawab. Contoh: pengguna bilang "ada sampah banyak di depan rumah" → balas empati singkat + tanya "sudah lama di situ atau baru beberapa hari?" → baru arahkan membuat laporan.
 6. Variasikan kalimat pembuka dan penutup; jangan ada frasa yang sama terus-menerus antar jawaban.
-7. Emoji secukupnya dan hanya kalau cocok konteks (mis. 👇 untuk menunjuk link). Tidak wajib emoji di tiap pesan.
+7. DILARANG keras memakai emoji, emotikon, atau simbol dekoratif apa pun (mis. 👋 😄 👍 👇 📞 ✨) dalam jawaban — selalu tulis teks polos.
 8. Informasi harus AKURAT dari data di bawah ini. Angka, URL, dan jam kerja tidak boleh dikarang.
 9. Kalau pertanyaan di luar topik DLH, tolak singkat dan sopan, lalu arahkan ke kontak resmi DLH.
 10. Tulis dengan ejaan Indonesia yang benar dan rapi — tidak boleh ada salah ketik/kata berantakan. Cek dulu sebelum mengirim.
@@ -39,7 +39,7 @@ Nanti kamu dapat nomor tiket. Simpan ya, karena bisa dipakai buat cek perkembang
 Mau saya kasih link halamannya?
 
 Pengguna: Boleh
-Kamu: Nih 👇
+Kamu: Nih, ini linknya:
 
 :::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::
 
@@ -421,12 +421,12 @@ PROMPT;
 
         // Sapaan
         if ($has(['halo', 'hai', 'hi ', 'selamat pagi', 'selamat siang', 'selamat sore', 'assalam', 'permisi'])) {
-            return "Halo! 👋 Ada yang bisa saya bantu?\n\nMau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan? Langsung chat aja.";
+            return "Halo! Ada yang bisa saya bantu?\n\nMau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan? Langsung chat aja.";
         }
 
         // Terima kasih
         if ($has(['terima kasih', 'makasih', 'thanks', 'thx'])) {
-            return 'Sama-sama 😄';
+            return 'Sama-sama';
         }
 
         // Cara melapor
@@ -441,12 +441,12 @@ PROMPT;
 
         // Minta link langsung ("link pengaduannya mana", "linknya dong", dll.)
         if ($has(['link pengaduan', 'link lapor', 'linknya', 'link halaman', 'url pengaduan', 'alamat web pengaduan'])) {
-            return "Nih 👇\n\n:::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::\n\nKalau mau cek status laporan yang sudah dibuat:\n\n:::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak):::";
+            return "Nih:\n\n:::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::\n\nKalau mau cek status laporan yang sudah dibuat:\n\n:::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak):::";
         }
 
         // Biaya
         if ($has(['biaya', 'bayar', 'gratis', 'berapa harga', 'tarif', 'pungut'])) {
-            return 'Tenang, semua layanan di portal DLH Kota Palu **100% gratis** — nggak ada biaya apa pun 👍';
+            return 'Tenang, semua layanan di portal DLH Kota Palu **100% gratis** — nggak ada biaya apa pun.';
         }
 
         // Akun
@@ -461,12 +461,12 @@ PROMPT;
 
         // Kontak
         if ($has(['kontak', 'hubungi', 'call center', 'nomor telepon', 'whatsapp', 'wa ', 'telepon', 'instagram', 'medsos'])) {
-            return "Ini kontak kami:\n\n📞 **WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n📸 **Instagram:** @dlhkotapalu\n📍 **Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
+            return "Ini kontak kami:\n\n**WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n**Instagram:** @dlhkotapalu\n**Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
         }
 
         // Lokasi / alamat
         if ($has(['alamat', 'lokasi kantor', 'dimana', 'di mana', 'kantor dlh'])) {
-            return "Kantor DLH Kota Palu ada di:\n\n📍 **Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
+            return "Kantor DLH Kota Palu ada di:\n\n**Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
         }
 
         // Layanan / bidang
