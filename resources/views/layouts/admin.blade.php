@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0a2f24">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Prefix panel admin untuk skrip klien (mis. cek halaman backup di alpine.js). --}}
+    <script>window.ADMIN_BASE_URL = @js('/'.trim((string) config('app.admin_path'), '/'));</script>
     <title>@yield('title', 'Admin DLH Kota Palu')</title>
     <meta name="description" content="Panel admin Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu — kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna.">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">

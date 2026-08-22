@@ -31,7 +31,7 @@ class TrackWebsiteVisit
         }
         flush();
 
-        if (! $request->isMethod('GET') || $request->is('admin*') || $request->is('api/*')) {
+        if (! $request->isMethod('GET') || $request->is(config('app.admin_path').'*') || $request->is('api/*')) {
             return;
         }
 

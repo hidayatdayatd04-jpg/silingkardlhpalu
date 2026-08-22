@@ -13,7 +13,8 @@ class CheckMaintenanceMode
     /**
      * Prefix path yang selalu dilewati (tidak diblokir) oleh mode pemeliharaan.
      *
-     * - admin   : panel admin harus tetap bisa diakses (termasuk /admin/login).
+     * - admin   : panel admin harus tetap bisa diakses, termasuk halaman
+     *   loginnya di bawah prefix ADMIN_PATH.
      * - up      : health check hosting.
      * - assets / build / storage / favicon : aset statis (ditangani web server,
      *             dicek di sini sebagai pengaman tambahan).
@@ -92,12 +93,14 @@ class CheckMaintenanceMode
     protected function isExcludedPath(string $path): bool
     {
         // Pengecualian tepat (tidak boleh memotong route lain).
-        if (in_array($path, ['up', 'admin', 'login'], true)) {
+        // Prefix panel admin dinamis (env ADMIN_PATH) agar mode pemeliharaan
+        // tetap mengikuti lokasi panel yang sebenarnya.
+        if (in_array($path, ['up', trim((string) config('app.admin_path'), '/')], true)) {
             return true;
         }
 
         // Pengecualian berbasis awalan segmen.
-        foreach (['admin/', 'assets/', 'build/', 'storage/', 'favicon'] as $prefix) {
+        foreach ([trim((string) config('app.admin_path'), '/').'/', 'assets/', 'build/', 'storage/', 'favicon'] as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 return true;
             }

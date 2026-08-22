@@ -27,6 +27,15 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', "camera=(), microphone=(self), geolocation=(self)");
 
+        // Area panel admin (prefix dari env ADMIN_PATH, termasuk halaman
+        // login) tidak boleh diindeks mesin pencari. Larangan ditempatkan
+        // via header ini — BUKAN Disallow robots.txt — karena robots.txt
+        // bersifat publik dan justru mempublikasikan prefix rahasianya.
+        $headSegment = explode('/', $request->path())[0] ?? '';
+        if ($headSegment !== '' && $headSegment === trim((string) config('app.admin_path'), '/')) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
         if ($request->secure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }

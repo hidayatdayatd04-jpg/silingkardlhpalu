@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Prefix URL Panel Admin
+    |--------------------------------------------------------------------------
+    |
+    | Path panel admin diambil dari env ADMIN_PATH agar tidak tertulis
+    | (tidak bisa ditebak) dari kode sumber. Nilai bawaan 'admin' hanya
+    | fallback agar aplikasi tetap berjalan bila env belum diisi.
+    |
+    */
+
+    'admin_path' => env('ADMIN_PATH', 'admin'),
+
 ];

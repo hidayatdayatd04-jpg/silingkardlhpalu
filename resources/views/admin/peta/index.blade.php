@@ -10,6 +10,10 @@
 
     $publicPageMap = \App\Models\GisDataLayer::publicPages();
 
+    // Base URL endpoint peta mengikuti prefix panel admin (env ADMIN_PATH),
+    // dipakai semua fetch() di bawah via {{ $petaApiBase }}.
+    $petaApiBase = url('/'.trim((string) config('app.admin_path'), '/'));
+
     // Js::from() menghasilkan ekspresi JSON yang aman disisipkan ke <script>
     // (karakter <, >, & di-escape) sehingga tidak perlu {!! !!} mentah.
     $layersJs = \Illuminate\Support\Js::from($layers->map(fn($l) => [
@@ -1632,7 +1636,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             toggleLayerVisibility(layer) {
                 if (layer.is_visible) { this.showLayer(layer.id); }
                 else { this.hideLayer(layer.id); }
-                fetch(`/admin/peta/layer/${layer.id}`, {
+                fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ is_visible: layer.is_visible }),
@@ -1643,7 +1647,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     child.is_visible = layer.is_visible;
                     if (child.is_visible) { this.showLayer(child.id); }
                     else { this.hideLayer(child.id); }
-                    fetch(`/admin/peta/layer/${child.id}`, {
+                    fetch(`{{ $petaApiBase }}/peta/layer/${child.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ is_visible: child.is_visible }),
@@ -1658,7 +1662,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 children.forEach(child => { child.is_public = layer.is_public; });
                 const targets = [layer, ...children];
                 Promise.all(targets.map(l =>
-                    fetch(`/admin/peta/layer/${l.id}`, {
+                    fetch(`{{ $petaApiBase }}/peta/layer/${l.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ is_public: l.is_public }),
@@ -1690,7 +1694,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 children.forEach(child => { child.show_in_filter = layer.show_in_filter; });
                 const targets = [layer, ...children];
                 Promise.all(targets.map(l =>
-                    fetch(`/admin/peta/layer/${l.id}`, {
+                    fetch(`{{ $petaApiBase }}/peta/layer/${l.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ show_in_filter: l.show_in_filter }),
@@ -1807,7 +1811,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     if (targetVisible) { this.showLayer(layer.id); }
                     else { this.hideLayer(layer.id); }
                 });
-                fetch('/admin/peta/layers/bulk-visibility', {
+                fetch('{{ $petaApiBase }}/peta/layers/bulk-visibility', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ visible: targetVisible }),
@@ -1924,7 +1928,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 delete props._marker_type;
 
                 try {
-                    const res = await fetch(`/admin/peta/layer/${this.editModal.layerId}/feature/${this.editModal.featureIndex}`, {
+                    const res = await fetch(`{{ $petaApiBase }}/peta/layer/${this.editModal.layerId}/feature/${this.editModal.featureIndex}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({
@@ -1959,7 +1963,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             async deleteFeature(layer, item) {
                 if (!confirm('Hapus marker "' + this.getMarkerName(item, layer) + '"?')) return;
                 try {
-                    const res = await fetch(`/admin/peta/layer/${layer.id}/feature`, {
+                    const res = await fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}/feature`, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ feature_index: item.featureIndex }),
@@ -2057,7 +2061,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 };
 
                 try {
-                    const res = await fetch('/admin/peta/draw', {
+                    const res = await fetch('{{ $petaApiBase }}/peta/draw', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ layer_id: layerId, features: [feature] }),
@@ -2097,7 +2101,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 const targetLayerId = this.importForm.layer_id;
 
                 try {
-                    const res = await fetch(`/admin/peta/import`, {
+                    const res = await fetch(`{{ $petaApiBase }}/peta/import`, {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: formData,
@@ -2174,7 +2178,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 }
                 this.creating = true;
                 try {
-                    const res = await fetch('/admin/peta/layers', {
+                    const res = await fetch('{{ $petaApiBase }}/peta/layers', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2263,7 +2267,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             }
             m.saving = true;
             try {
-                const res = await fetch(`/admin/peta/layer/${m.layerId}`, {
+                const res = await fetch(`{{ $petaApiBase }}/peta/layer/${m.layerId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({
@@ -2303,7 +2307,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 if (!layer) return;
                 this.deleteModal.deleting = true;
                 try {
-                    const res = await fetch(`/admin/peta/layer/${layer.id}`, {
+                    const res = await fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}`, {
                         method: 'DELETE',
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     });
@@ -2334,7 +2338,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                         this.deleteModal.deleting = false;
                         this.showToast(`Layer "${layer.nama_layer}" berhasil dihapus`, 'success', async () => {
                             try {
-                                const restoreRes = await fetch(`/admin/peta/layer/${data.layer_id}/restore`, {
+                                const restoreRes = await fetch(`{{ $petaApiBase }}/peta/layer/${data.layer_id}/restore`, {
                                     method: 'POST',
                                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 });
@@ -2373,7 +2377,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 if (!confirm(`Hapus ${this.selectedLayers.length} layer terpilih?`)) return;
 
                 try {
-                    const res = await fetch('/admin/peta/layers/bulk-delete', {
+                    const res = await fetch('{{ $petaApiBase }}/peta/layers/bulk-delete', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -47,7 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // terblokir mode pemeliharaan sehingga admin tidak bisa login.
         // (di Laravel 12, guest() memperlakukan nilai ini sebagai path,
         // bukan nama route, sehingga harus berupa path lengkap.)
-        $middleware->redirectGuestsTo('/admin/login');
+        // Closure (bukan nilai langsung): saat withMiddleware dijalankan,
+        // container/config belum siap — evaluasi ditunda sampai redirect
+        // benar-benar dibutuhkan.
+        $middleware->redirectGuestsTo(fn () => config('app.admin_path') . '/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

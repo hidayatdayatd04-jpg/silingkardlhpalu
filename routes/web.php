@@ -32,7 +32,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::redirect('/login', '/admin/login')->name('login');
+// /login tidak dialihkan ke panel admin — biarkan 404 agar lokasi panel
+// (prefix dari ADMIN_PATH) tidak bocor lewat redirect. Nama route 'login'
+// tidak dipakai kode mana pun; guest middleware memakai redirectGuestsTo.
 
 Route::redirect('/lapor', '/pengaduan');
 
@@ -70,7 +72,7 @@ Route::redirect('/cek-pengaduan-tata-penataan', '/lacak');
 
 Route::post('/feedback/{nomor_tiket}', [FeedbackController::class, 'store'])->middleware('throttle:30,1')->name('feedback.store');
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix(config('app.admin_path'))->name('admin.')->group(function () {
     Route::middleware(['guest'])->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->middleware('throttle:30,1')->name('login');
         // Batasi percobaan login per identitas + IP, dengan batas IP global.
@@ -81,7 +83,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 });
 
-Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin.access', 'no-store'])->prefix(config('app.admin_path'))->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     // Peta Laporan — sebaran pengaduan berkoordinat (hanya admin, akses per bidang)

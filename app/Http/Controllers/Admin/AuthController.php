@@ -46,11 +46,13 @@ class AuthController extends Controller
         // menyimpan URL asal (mis. halaman publik '/' yang sedang dalam mode
         // pemeliharaan), sehingga tanpa pengecekan ini admin bisa terlempar
         // ke halaman pemeliharaan setelah login. Kita validasi target-nya
-        // agar hanya URL bertipe /admin yang diperbolehkan.
+        // agar hanya URL di dalam prefix panel admin yang diperbolehkan
+        // (prefix diambil dari env ADMIN_PATH, bukan /admin hardcoded).
         $intended = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
         $intendedPath = parse_url($intended, PHP_URL_PATH) ?: '/';
+        $adminBase = '/' . trim((string) config('app.admin_path'), '/');
 
-        if (! str_starts_with($intendedPath, '/admin')) {
+        if ($intendedPath !== $adminBase && ! str_starts_with($intendedPath, $adminBase.'/')) {
             return redirect()->route('admin.dashboard');
         }
 

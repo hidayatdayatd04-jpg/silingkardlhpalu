@@ -37,7 +37,7 @@
         },
         async markRead(id) {
             try {
-                const response = await fetch('{{ url('admin/notifications') }}/' + id + '/read', {
+                const response = await fetch('{{ url(trim((string) config('app.admin_path'), '/').'/notifications') }}/' + id + '/read', {
                     method: 'POST',
                     headers: { Accept: 'application/json', 'X-CSRF-TOKEN': this.csrf }
                 });

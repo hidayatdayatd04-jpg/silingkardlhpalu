@@ -111,7 +111,7 @@ class GenerateExportJob implements ShouldQueue
         $method = new \ReflectionMethod($controller, 'query');
         $method->setAccessible(true);
 
-        $request = Request::create('/admin/'.$this->slug, 'GET', $this->filters);
+        $request = Request::create('/'.trim((string) config('app.admin_path'), '/').'/'.$this->slug, 'GET', $this->filters);
 
         return $method->invoke($controller, $meta, $request);
     }

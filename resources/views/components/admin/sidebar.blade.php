@@ -149,7 +149,7 @@
                             @php
                                 $isPetaItem = ($item['slug'] ?? null) === 'peta';
                                 $isLink = ! empty($item['link']);
-                                $isExternalLink = $isLink && ! \Illuminate\Support\Str::startsWith($item['link'], '/admin');
+                                $isExternalLink = $isLink && ! \Illuminate\Support\Str::startsWith($item['link'], '/'.trim((string) config('app.admin_path'), '/'));
                                 $url = $isPetaItem
                                     ? route('admin.peta.index')
                                     : ($isLink ? $item['link'] : route('admin.resources.index', ['resource' => $item['slug']]));
@@ -259,7 +259,7 @@
                         @php
                             $isPetaItem = ($item['slug'] ?? null) === 'peta';
                             $isLink = ! empty($item['link']);
-                            $isExternalLink = $isLink && ! \Illuminate\Support\Str::startsWith($item['link'], '/admin');
+                            $isExternalLink = $isLink && ! \Illuminate\Support\Str::startsWith($item['link'], '/'.trim((string) config('app.admin_path'), '/'));
                             $url = $isPetaItem
                                 ? route('admin.peta.index')
                                 : ($isLink ? $item['link'] : route('admin.resources.index', ['resource' => $item['slug']]));

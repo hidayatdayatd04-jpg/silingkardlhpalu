@@ -75,7 +75,7 @@ class AdminRegistry
                 'items' => [
                     self::resource('artikel', 'Artikel', Artikel::class, ['judul', 'status', 'tanggal_publish']),
                     self::resource('user', 'Pengguna Admin', User::class, ['name', 'username', 'email', 'role', 'is_active']),
-                    ['slug' => 'ulasan-masyarakat', 'label' => 'Ulasan Masyarakat', 'link' => '/admin/ulasan-masyarakat', 'icon' => 'star'],
+                    ['slug' => 'ulasan-masyarakat', 'label' => 'Ulasan Masyarakat', 'link' => '/'.trim((string) config('app.admin_path'), '/').'/ulasan-masyarakat', 'icon' => 'star'],
                 ],
             ],
         ];
