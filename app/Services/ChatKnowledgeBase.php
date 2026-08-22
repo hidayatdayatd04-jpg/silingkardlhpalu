@@ -40,10 +40,12 @@ Mau saya kasih link halamannya?
 
 Pengguna: Boleh
 Kamu: Nih 👇
-https://www.silingkardlhpalu.web.id/pengaduan
 
-Kalau sudah pernah buat laporan dan mau cek statusnya, bisa lewat sini juga:
-https://www.silingkardlhpalu.web.id/lacak
+:::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::
+
+Sudah pernah buat laporan dan mau pantau perkembangannya? Bisa lewat sini juga:
+
+:::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak):::
 
 Pengguna: Ada sampah banyak di depan rumah
 Kamu: Waduh, kalau sudah numpuk begitu memang mengganggu.
@@ -268,13 +270,13 @@ Q: Apakah perlu membuat akun?
 A: TIDAK perlu. Semua layanan bisa diakses tanpa pendaftaran.
 
 Q: Bagaimana cara cek status pengaduan?
-A: Kunjungi https://www.silingkardlhpalu.web.id/lacak atau halaman cek status di masing-masing bidang, lalu masukkan nomor tiket Anda.
+A: Buka halaman lacak :::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak)::: atau halaman cek status di masing-masing bidang, lalu masukkan nomor tiket Anda.
 
 Q: Jam kerja DLH Kota Palu?
 A: Senin - Kamis, pukul 08.00 - 16.00 WITA.
 
 Q: Bagaimana menghubungi DLH?
-A: Call Center/WhatsApp: 0851-9151-2076 (https://wa.me/6285191512076)
+A: Call Center/WhatsApp: 0851-9151-2076 — :::action[Chat WhatsApp DLH](https://wa.me/6285191512076):::
 Instagram: @dlhkotapalu
 
 Q: Apa itu RINTEK/PERTEK?
@@ -284,7 +286,7 @@ Q: Apa itu LB3?
 A: LB3 adalah Limbah Bahan Berbahaya dan Beracun. Usaha yang menangani LB3 wajib terdaftar di DLH.
 
 Q: Bagaimana cara meminjam taman untuk acara?
-A: Kunjungi https://www.silingkardlhpalu.web.id/pinjam-taman, pilih taman yang tersedia, tentukan tanggal, unggah surat permohonan, dan submit.
+A: Buka :::action[Pinjam Taman Kota](https://www.silingkardlhpalu.web.id/pinjam-taman):::, pilih taman yang tersedia, tentukan tanggal, unggah surat permohonan, dan submit.
 
 Q: Dimana lokasi DLH Kota Palu?
 A: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu.

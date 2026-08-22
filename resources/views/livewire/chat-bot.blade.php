@@ -577,12 +577,16 @@
 
     // Voice Recognition (Web Speech API)
     var _capturedVoiceText = '';
+    // Chrome di perangkat mobile (khususnya Android) tidak mendukung mode
+    // continuous dengan benar: layanan Google Speech sering restart internal
+    // lalu mem-final-kan ulang audio yang sama sebagai result baru dengan isi
+    // yang makin panjang, sehingga teks jadi berlipat ("cara melapor cara
+    // melapor sesuatu ..."). Di mobile pakai mode satu tembakan; desktop
+    // tetap continuous seperti sebelumnya.
+    var _isMobileDevice = /android|iphone|ipad|ipod|windows phone|iemobile|opera mini/i.test(navigator.userAgent || '');
     // Penangkap hasil per-indeks: teks final disimpan sekali per indeks result,
-    // interim tidak pernah masuk teks permanen. Mencegah kata tercatat dobel
-    // ketika layanan Google Speech restart internal lalu mem-final-kan ulang
-    // audio yang sama sebagai result baru (gejala "bagaimana bagaimana ...").
-    var _finalByIndex  = {};
-    var _lastFinalNorm = '';
+    // interim tidak pernah masuk teks permanen.
+    var _finalByIndex = {};
 
     function normVoiceSegment(t) {
         return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -598,13 +602,36 @@
         return parts.join(' ');
     }
 
+    // Gabungkan segmen final baru ke teks terkumpul: bagian awal segmen yang
+    // tumpang tindih dengan akhir teks terkumpul dibuang, hanya kata baru
+    // yang diterima. Ini penangkal re-emission Chrome mobile — segmen ulangan
+    // berisi kalimat lama ditambah potongan baru di ekornya.
+    function mergeVoiceSegment(prevNorm, nextNorm) {
+        if (!nextNorm) return '';
+        if (!prevNorm) return nextNorm;
+        var pw = prevNorm.split(' ');
+        var nw = nextNorm.split(' ');
+        for (var ov = Math.min(pw.length, nw.length); ov > 0; ov--) {
+            var sama = true;
+            for (var j = 0; j < ov; j++) {
+                if (pw[pw.length - ov + j] !== nw[j]) { sama = false; break; }
+            }
+            if (sama) {
+                if (ov === nw.length) return '';             // seluruh segmen sudah ada — buang
+                if (ov >= 2) return nw.slice(ov).join(' ');  // pangkas bagian lama, sisakan kata baru
+                return nextNorm;                             // kebetulan 1 kata — terima utuh
+            }
+        }
+        return nextNorm;
+    }
+
     function initSpeechRecognition() {
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return null;
         
         var rec = new SpeechRecognition();
         rec.lang = 'id-ID';
-        rec.continuous = true;
+        rec.continuous = !_isMobileDevice;
         rec.interimResults = true;
         rec.maxAlternatives = 1;
 
@@ -612,7 +639,6 @@
             _isListening = true;
             _capturedVoiceText = '';
             _finalByIndex = {};
-            _lastFinalNorm = '';
             if (_voiceWatchdog) { clearTimeout(_voiceWatchdog); _voiceWatchdog = null; }
             var overlay = el('chatbot-voice-overlay');
             if (overlay) overlay.classList.add('active');
@@ -627,8 +653,8 @@
             var interimTranscript = '';
 
             // Proses hanya result yang berubah sejak event sebelumnya (resultIndex).
-            // Segmen final dicatat maksimal satu kali per indeks; segmen final yang
-            // identik dengan segmen terakhir dianggap re-emission Chrome dan dibuang.
+            // Segmen final dicatat maksimal satu kali per indeks; segmen yang
+            // berisi ulangan kalimat lama dipangkas oleh mergeVoiceSegment.
             for (var i = event.resultIndex; i < event.results.length; ++i) {
                 var res = event.results[i];
                 if (!res || !res.length) continue;
@@ -636,14 +662,13 @@
                 if (!txt) continue;
 
                 if (res.isFinal) {
-                    var norm = normVoiceSegment(txt);
                     if (Object.prototype.hasOwnProperty.call(_finalByIndex, i)) {
                         // indeks ini sudah tercatat — pertahankan versi pertama
-                    } else if (norm && norm === _lastFinalNorm) {
-                        // duplikat hasil restart internal Chrome — abaikan
                     } else {
-                        _finalByIndex[i] = txt;
-                        _lastFinalNorm = norm;
+                        // Pangkas bagian segmen yang merupakan ulangan kalimat
+                        // lama (restart internal layanan speech) sebelum dicatat.
+                        var merged = mergeVoiceSegment(normVoiceSegment(rebuildFinalVoiceText()), normVoiceSegment(txt));
+                        if (merged) _finalByIndex[i] = merged;
                     }
                 } else {
                     interimTranscript += txt + ' ';
@@ -736,8 +761,13 @@
             }, 2500);
         } catch (e) {
             try {
-                _speechRec.stop();
-                setTimeout(function () { _speechRec.start(); }, 150);
+                // Pegang instance di variabel lokal: pada mobile instance bisa
+                // sudah dibuang oleh stopVoiceInput sebelum retry jalan.
+                var recRetry = _speechRec;
+                recRetry.stop();
+                setTimeout(function () {
+                    try { recRetry.start(); } catch (e3) {}
+                }, 150);
             } catch (e2) {
                 showVoiceError(@js(__('Tidak dapat memulai input suara. Pastikan mikrofon tersedia dan tidak digunakan aplikasi lain.')));
             }
@@ -745,7 +775,15 @@
     }
 
     function stopVoiceInput(shouldSend) {
+        // Hentikan recognizer yang masih hidup (tombol Kirim/Batal tidak
+        // otomatis menghentikannya) agar mikrofon benar-benar mati.
+        if (_isListening && _speechRec) {
+            try { _speechRec.stop(); } catch (e) {}
+        }
         _isListening = false;
+        // Mobile: buang instance agar sesi berikutnya selalu mulai bersih —
+        // memakai ulang instance di Chrome Android sering bermasalah.
+        if (_isMobileDevice) _speechRec = null;
         if (_voiceWatchdog) { clearTimeout(_voiceWatchdog); _voiceWatchdog = null; }
         var overlay = el('chatbot-voice-overlay');
         if (overlay) overlay.classList.remove('active');

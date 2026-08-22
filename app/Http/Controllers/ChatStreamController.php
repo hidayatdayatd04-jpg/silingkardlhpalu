@@ -108,11 +108,12 @@ class ChatStreamController extends Controller
     }
 
     /**
-     * Normalisasi link pada respons AI: URL mentah yang berdiri sendiri di
-     * satu baris diubah menjadi kartu aksi :::action[Judul](URL)::: supaya
-     * selalu tampil sebagai kartu link/langkah yang rapi dan bisa diklik,
-     * apa pun gaya penulisan model. URL di tengah kalimat atau di dalam
-     * markdown tidak diubah; baris dalam blok kode ``` ``` dilewati.
+     * Normalisasi link pada respons AI: SEMUA URL mentah — baik yang berdiri
+     * sendiri di satu baris maupun yang tersisip di tengah kalimat — diubah
+     * menjadi kartu aksi :::action[Judul](URL)::: supaya selalu tampil sebagai
+     * tombol yang rapi dan bisa diklik, apa pun gaya penulisan model.
+     * URL yang sudah dibungkus markdown [teks](url) atau :::action tidak
+     * diproses ulang; baris dalam blok kode ``` ``` dilewati.
      */
     private function normalizeActionCards(string $text): string
     {
@@ -141,9 +142,19 @@ class ChatStreamController extends Controller
             '/cek-rintek-pertek'          => 'Cek Status RINTEK/PERTEK',
             '/registrasi-usaha-lb3'       => 'Registrasi Usaha LB3',
             '/peta-persampahan'           => 'Peta Persampahan',
+            'wa.me/6285191512076'         => 'Chat WhatsApp DLH',
+            'instagram.com/dlhkotapalu'   => 'Instagram DLH Kota Palu',
+            'facebook.com/share'          => 'Facebook DLH Kota Palu',
         ];
 
         $resolveTitle = function (string $url) use ($titles): string {
+            // Domain utama tanpa path → judul khusus beranda, bukan "Buka Halaman".
+            $host = strtolower((string) (parse_url($url, PHP_URL_HOST) ?? ''));
+            $path = trim((string) (parse_url($url, PHP_URL_PATH) ?? ''), '/');
+            if (($host === 'www.silingkardlhpalu.web.id' || $host === 'silingkardlhpalu.web.id') && $path === '') {
+                return 'Portal Resmi DLH Kota Palu';
+            }
+
             foreach ($titles as $needle => $title) {
                 if (str_contains($url, $needle)) {
                     return $title;
@@ -151,7 +162,6 @@ class ChatStreamController extends Controller
             }
 
             // Judul generik dari segmen path terakhir, mis. /unit-komposter → "Buka Unit Komposter".
-            $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
             $segment = trim(str_replace('-', ' ', basename($path)));
 
             return $segment !== '' ? 'Buka ' . ucfirst($segment) : 'Buka Halaman';
@@ -167,10 +177,24 @@ class ChatStreamController extends Controller
                 continue;
             }
 
+            // Konversi semua URL mentah pada baris, termasuk yang ditulis di
+            // tengah kalimat. Tanpa ini, jawaban model yang menyisipkan link
+            // dalam kalimat tampil sebagai teks URL mentah, bukan kartu.
+            // Lookbehind mencegah URL di dalam [teks](url) / :::action(...):::
+            // ikut terproses ulang.
             $converted = preg_replace_callback(
-                '/^\s*(https?:\/\/[^\s<>"]+)\s*$/',
+                '/(?<!\\]\\()(?<!\\()(https?:\\/\\/[^\\s<>"()]+)/',
                 function (array $m) use ($resolveTitle): string {
-                    return ':::action[' . $resolveTitle($m[1]) . '](' . $m[1] . '):::';
+                    $url  = $m[1];
+                    $tail = '';
+                    // Tanda baca penutup kalimat yang menempel di ujung URL
+                    // dilepas dari kartu lalu dikembalikan setelahnya.
+                    while ($url !== '' && str_contains('.,;:!?', substr($url, -1))) {
+                        $tail = substr($url, -1) . $tail;
+                        $url  = substr($url, 0, -1);
+                    }
+
+                    return ':::action[' . $resolveTitle($url) . '](' . $url . '):::' . $tail;
                 },
                 $line
             );

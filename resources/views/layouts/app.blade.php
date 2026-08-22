@@ -806,7 +806,10 @@
         </div>
     </footer>
 
-    @livewire('chat-bot')
+    {{-- Chatbot hanya tersedia di halaman beranda --}}
+    @if(request()->routeIs('home'))
+        @livewire('chat-bot')
+    @endif
     <style>
         /* Umpan balik submit yang dipakai semua form layanan publik. */
         .dlh-form--loading button[type="submit"] {

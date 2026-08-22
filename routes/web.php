@@ -30,7 +30,7 @@ Route::get('/', function () {
         'statistik' => app(StatistikService::class)->summary(),
         'artikels' => Cache::remember('artikel:beranda', now()->addMinutes(30), fn () => Artikel::published()->latest('tanggal_publish')->take(6)->with('user')->get()),
     ]);
-});
+})->name('home');
 
 Route::redirect('/login', '/admin/login')->name('login');
 
