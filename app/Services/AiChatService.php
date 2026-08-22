@@ -85,6 +85,18 @@ class AiChatService
 
             return null;
         } catch (\Throwable $e) {
+            // Kegagalan dekripsi api_key berarti APP_KEY lingkungan ini berbeda
+            // dengan yang dipakai saat key terakhir disimpan. Beri pesan log
+            // yang langsung mengarah ke solusinya, bukan sekadar stack trace.
+            if ($e instanceof \Illuminate\Contracts\Encryption\DecryptException) {
+                Log::error('AI provider: api_key tidak dapat didekripsi', [
+                    'provider' => $provider->name,
+                    'hint'     => 'APP_KEY lingkungan ini berbeda dengan saat api_key terakhir disimpan. Samakan APP_KEY di semua lingkungan yang memakai database yang sama, atau masukkan ulang API key lewat panel admin.',
+                ]);
+
+                return null;
+            }
+
             Log::error('AI provider exception', [
                 'provider' => $provider->name,
                 'message'  => $e->getMessage(),

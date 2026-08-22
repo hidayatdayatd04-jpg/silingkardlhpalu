@@ -435,7 +435,7 @@ PROMPT;
         }
 
         // Cek status
-        if ($has(['cek status', 'lacak', 'status pengaduan', 'status laporan', 'nomor tiket', 'tracking'])) {
+        if ($has(['cek status', 'lacak', 'status pengaduan', 'status laporan', 'nomor tiket', 'tiket', 'ticket', 'tracking'])) {
             return "Bisa lewat halaman [Lacak Pelaporan](/lacak) — tinggal masukkan **nomor tiket** yang kamu terima waktu lapor.\n\nSudah punya nomor tiketnya, atau mau buat laporan dulu?";
         }
 
@@ -464,8 +464,10 @@ PROMPT;
             return "Ini kontak kami:\n\n**WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n**Instagram:** @dlhkotapalu\n**Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
         }
 
-        // Lokasi / alamat
-        if ($has(['alamat', 'lokasi kantor', 'dimana', 'di mana', 'kantor dlh'])) {
+        // Lokasi / alamat — kata "dimana" polos terlalu rakus (menangkap
+        // pertanyaan "dimana saya cek tiket" dll.), jadi wajib
+        // dipasangkan dengan konteks kantor/alamat.
+        if ($has(['alamat', 'alamat dlh', 'lokasi kantor', 'kantor dlh', 'dimana kantor', 'di mana kantor', 'kantor dimana', 'kantor di mana'])) {
             return "Kantor DLH Kota Palu ada di:\n\n**Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
         }
 
