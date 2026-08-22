@@ -24,7 +24,8 @@
         if ($canonicalBase === '') {
             $canonicalUrl = url()->current();
         } else {
-            $canonicalUrl = $canonicalPath === '/' ? $canonicalBase : $canonicalBase . $canonicalPath;
+            // Root path memakai trailing slash agar canonical beranda persis 'https://domain.tld/'.
+            $canonicalUrl = $canonicalPath === '/' ? $canonicalBase.'/' : $canonicalBase . $canonicalPath;
         }
     @endphp
     <title>@yield('title', 'Portal Operasional DLH Kota Palu')</title>
@@ -33,6 +34,7 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Dinas Lingkungan Hidup Kota Palu">
     <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:title" content="@yield('title', 'Portal Operasional DLH Kota Palu')">
     <meta property="og:description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
@@ -48,6 +50,22 @@
     <meta property="twitter:image" content="@yield('og_image', asset('assets/images/logo_kota_palu.png'))">
 
     <link rel="canonical" href="{{ $canonicalUrl }}">
+
+    {{-- Structured data site name untuk Google Search — hanya di beranda agar tidak duplikat.
+         Dokumentasi: https://developers.google.com/search/docs/appearance/site-names --}}
+    @if(request()->getPathInfo() === '/')
+        @php
+            // Dibangun di PHP murni — key '@context' tidak boleh lewat parser Blade langsung.
+            $websiteJsonLd = json_encode([
+                '@context'      => 'https://schema.org',
+                '@type'         => 'WebSite',
+                'name'          => 'Dinas Lingkungan Hidup Kota Palu',
+                'alternateName' => ['DLH Kota Palu', 'SILP DLH Kota Palu'],
+                'url'           => $canonicalUrl,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        @endphp
+        <script type="application/ld+json">{!! $websiteJsonLd !!}</script>
+    @endif
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">

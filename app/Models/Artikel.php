@@ -19,6 +19,7 @@ class Artikel extends Model
         'konten',
         'tanggal_publish',
         'status',
+        'komentar_enabled',
         'user_id',
     ];
 
@@ -27,6 +28,7 @@ class Artikel extends Model
         return [
             'status' => ArtikelStatus::class,
             'tanggal_publish' => 'date',
+            'komentar_enabled' => 'boolean',
         ];
     }
 
@@ -82,6 +84,16 @@ class Artikel extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function komentars(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ArtikelKomentar::class, 'artikel_id');
+    }
+
+    public function visibleKomentars(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ArtikelKomentar::class, 'artikel_id')->where('is_hidden', false);
     }
 
     public function scopePublished($query)

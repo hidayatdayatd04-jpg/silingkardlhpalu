@@ -137,7 +137,15 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix('admin')->name('
 
     // D. (Import dihapus) — export tetap di bawah wildcard /{resource}
 
-    // F. Ulasan Masyarakat
+    // F. Komentar Artikel — infinite scroll + bulk
+    Route::get('/artikel/{artikel}/komentar', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'index'])->name('artikel.komentar.index');
+    Route::post('/artikel/{artikel}/komentar', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'store'])->name('artikel.komentar.store');
+    Route::delete('/artikel/{artikel}/komentar/bulk', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'bulkDestroy'])->name('artikel.komentar.bulkDestroy');
+    Route::post('/artikel/{artikel}/komentar/{id}/hide', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'toggleHide'])->name('artikel.komentar.hide');
+    Route::post('/artikel/{artikel}/komentar/{id}/pin', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'togglePin'])->name('artikel.komentar.pin');
+    Route::delete('/artikel/{artikel}/komentar/{id}', [\App\Http\Controllers\Admin\ArtikelKomentarAdminController::class, 'destroy'])->name('artikel.komentar.destroy');
+
+    // G. Ulasan Masyarakat
     Route::get('/ulasan-masyarakat', [\App\Http\Controllers\Admin\UlasanMasyarakatController::class, 'index'])->name('ulasan-masyarakat.index');
 
     Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'uploadImage'])->name('upload-image');
@@ -236,6 +244,12 @@ Route::get('/berita/{slug}', function (string $slug) {
 
     return view('public.berita.show', compact('artikel'));
 })->middleware('throttle:60,1');
+
+// Komentar Berita (public)
+Route::get('/api/berita/{slug}/komentar', [App\Http\Controllers\ArtikelKomentarController::class, 'index'])->middleware('throttle:60,1')->name('berita.komentar.index');
+Route::get('/api/berita/{slug}/komentar/count', [App\Http\Controllers\ArtikelKomentarController::class, 'count'])->middleware('throttle:120,1')->name('berita.komentar.count');
+Route::post('/api/berita/{slug}/komentar', [App\Http\Controllers\ArtikelKomentarController::class, 'store'])->middleware('throttle:30,1')->name('berita.komentar.store');
+Route::post('/api/komentar/{id}/reaction', [App\Http\Controllers\ArtikelKomentarController::class, 'toggleReaction'])->middleware('throttle:60,1')->name('berita.komentar.reaction');
 
 Route::get('/api/armada-aktif', function () {
     return response()->json([

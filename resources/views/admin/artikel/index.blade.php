@@ -363,19 +363,25 @@
                             {{-- Aksi --}}
                             <x-admin.table.cell class="text-center">
                                 <div class="flex items-center justify-center gap-1">
+                                    @php $komenCount = \App\Models\ArtikelKomentar::where('artikel_id', $record->id)->count(); @endphp
+                                    <a href="{{ route('admin.artikel.komentar.index', $record->id) }}"
+                                        class="group relative grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-violet-50 hover:text-violet-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-slate-500 dark:hover:bg-violet-950/35 dark:hover:text-violet-300" title="Komentar ({{ $komenCount }})" aria-label="Komentar {{ $record->judul }}">
+                                          <x-admin.icon name="message" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
+                                          @if($komenCount>0)<span class="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-violet-600 px-1 py-0.5 text-[10px] font-bold leading-none text-white">{{ $komenCount > 99 ? '99+' : $komenCount }}</span>@endif
+                                     </a>
                                     <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
                                         class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ $record->judul }}">
-                                         <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
-                                    </a>
+                                          <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
+                                     </a>
                                     <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
                                         class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ $record->judul }}">
-                                         <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
-                                    </a>
+                                          <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
+                                     </a>
                                     <button type="button"
                                         x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
                                         class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ $record->judul }}">
-                                         <x-admin.icon name="trash" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
-                                    </button>
+                                          <x-admin.icon name="trash" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
+                                     </button>
                                 </div>
 
                                 <x-admin.confirm-delete

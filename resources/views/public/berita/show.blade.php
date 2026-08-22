@@ -114,6 +114,9 @@
             {{ $dariBeranda ? __('Kembali ke Beranda') : __('Semua Berita') }}
         </a>
     </div>
+
+    {{-- Komentar — UI selalu tampil; saat dinonaktifkan popup menampilkan pemberitahuan --}}
+    <x-public.komentar-artikel :artikel="$artikel" />
 </article>
 
 @push('scripts')

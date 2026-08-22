@@ -33,6 +33,10 @@ _ide_helper_models.php
 /.claude/
 /.cursor/
 /.mimocode/
+/.playwright-mcp/
+
+# Temporary lint cache
+/storage/framework/lint_*
 
 # Project extras (large files, data, logs)
 /Data SHP Valid/

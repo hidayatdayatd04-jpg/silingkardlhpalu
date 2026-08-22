@@ -36,7 +36,8 @@ class ChatStreamController extends Controller
         // Cari apakah pengguna menanyakan / memasukkan No Tiket atau Email
         $ticketContext = $this->searchTicketOrEmailContext($userMessage);
 
-        $systemPrompt = $knowledgeBase->getSystemPrompt();
+        $systemPrompt = $knowledgeBase->getSystemPrompt()
+            . $knowledgeBase->getSkillsPrompt();
         if ($ticketContext !== null) {
             $systemPrompt .= "\n\n" . $ticketContext;
         }
@@ -72,7 +73,7 @@ class ChatStreamController extends Controller
             // Fallback cerdas bila AI mengembalikan respons kosong.
             if ($fullResponse === '') {
                 $fullResponse = $knowledgeBase->localAnswer($userMessage)
-                    ?? 'Maaf, saya belum dapat memproses pertanyaan itu. Silakan coba susun ulang, atau hubungi call center kami di **0851-9151-2076** (WhatsApp).';
+                    ?? 'Hmm, saya belum berhasil memproses pertanyaan itu. Coba ketik ulang ya, atau chat kami di **0851-9151-2076** (WhatsApp).';
             }
 
             \Illuminate\Support\Facades\Log::info('ChatBot: Got response', [
@@ -81,7 +82,7 @@ class ChatStreamController extends Controller
 
             return response()->json([
                 'success' => true,
-                'content' => $fullResponse,
+                'content' => $this->normalizeActionCards($fullResponse),
             ]);
 
         } catch (\Throwable $e) {
@@ -95,15 +96,91 @@ class ChatStreamController extends Controller
             if ($fallback !== null) {
                 return response()->json([
                     'success'  => true,
-                    'content'  => $fallback,
+                    'content'  => $this->normalizeActionCards($fallback),
                     'fallback' => true,
                 ]);
             }
 
             return response()->json([
-                'error' => 'Maaf, asisten sedang sibuk. Silakan coba lagi sebentar lagi atau hubungi call center kami di **0851-9151-2076** (WhatsApp).',
+                'error' => 'Waduh, asisten lagi sibuk. Coba lagi sebentar ya, atau hubungi kami di **0851-9151-2076** (WhatsApp).',
             ], 503);
         }
+    }
+
+    /**
+     * Normalisasi link pada respons AI: URL mentah yang berdiri sendiri di
+     * satu baris diubah menjadi kartu aksi :::action[Judul](URL)::: supaya
+     * selalu tampil sebagai kartu link/langkah yang rapi dan bisa diklik,
+     * apa pun gaya penulisan model. URL di tengah kalimat atau di dalam
+     * markdown tidak diubah; baris dalam blok kode ``` ``` dilewati.
+     */
+    private function normalizeActionCards(string $text): string
+    {
+        // Bersihkan emoji dari judul kartu yang ditulis AI supaya kartu selalu
+        // tampil rapi satu baris tanpa simbol.
+        $stripped = preg_replace_callback(
+            '/:::action\[([^\]]*)\]\(([^)\s]+)\):::/u',
+            function (array $m): string {
+                $clean = trim((string) preg_replace("/[^\p{L}\p{N}\s.,:'\-()\/&+]+/u", ' ', $m[1]));
+                $clean = (string) preg_replace('/\s+/', ' ', $clean);
+
+                return ':::action[' . ($clean !== '' ? $clean : 'Buka Halaman') . '](' . $m[2] . '):::';
+            },
+            $text
+        );
+
+        $lines = explode("\n", $stripped !== null ? $stripped : $text);
+
+        $titles = [
+            '/pengaduan'                  => 'Buat Pengaduan',
+            '/lacak'                      => 'Lacak Status Laporan',
+            '/pinjam-taman'               => 'Pinjam Taman Kota',
+            '/permohonan-rekomendasi'     => 'Permohonan Rekomendasi',
+            '/cek-permohonan-rekomendasi' => 'Cek Status Permohonan',
+            '/pengajuan-rintek-pertek'    => 'Ajukan RINTEK/PERTEK',
+            '/cek-rintek-pertek'          => 'Cek Status RINTEK/PERTEK',
+            '/registrasi-usaha-lb3'       => 'Registrasi Usaha LB3',
+            '/peta-persampahan'           => 'Peta Persampahan',
+        ];
+
+        $resolveTitle = function (string $url) use ($titles): string {
+            foreach ($titles as $needle => $title) {
+                if (str_contains($url, $needle)) {
+                    return $title;
+                }
+            }
+
+            // Judul generik dari segmen path terakhir, mis. /unit-komposter → "Buka Unit Komposter".
+            $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
+            $segment = trim(str_replace('-', ' ', basename($path)));
+
+            return $segment !== '' ? 'Buka ' . ucfirst($segment) : 'Buka Halaman';
+        };
+
+        $inCode = false;
+        foreach ($lines as $i => $line) {
+            if (preg_match('/^\s*```/', $line)) {
+                $inCode = ! $inCode;
+                continue;
+            }
+            if ($inCode) {
+                continue;
+            }
+
+            $converted = preg_replace_callback(
+                '/^\s*(https?:\/\/[^\s<>"]+)\s*$/',
+                function (array $m) use ($resolveTitle): string {
+                    return ':::action[' . $resolveTitle($m[1]) . '](' . $m[1] . '):::';
+                },
+                $line
+            );
+
+            if ($converted !== null) {
+                $lines[$i] = $converted;
+            }
+        }
+
+        return implode("\n", $lines);
     }
 
     /**

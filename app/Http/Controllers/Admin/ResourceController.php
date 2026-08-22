@@ -844,6 +844,13 @@ class ResourceController extends Controller
             }
         }
 
+        // Toggle "Izinkan Komentar" dirender khusus oleh form artikel
+        // (bukan bagian dari definisi field generik AdminRegistry), sehingga
+        // nilainya disimpan manual agar status on/off benar-benar terpersist.
+        if (str_starts_with((string) ($meta['slug'] ?? ''), 'artikel') && $request->exists('komentar_enabled')) {
+            $payload['komentar_enabled'] = $request->boolean('komentar_enabled');
+        }
+
         return $payload;
     }
 
@@ -1082,6 +1089,7 @@ class ResourceController extends Controller
         $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'thumbnail' => $thumbnailRule,
+            'komentar_enabled' => ['nullable', 'boolean'],
             'konten' => [
                 'required',
                 'string',

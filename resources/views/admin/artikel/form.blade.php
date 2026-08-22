@@ -138,6 +138,34 @@
                                 />
                                 <p x-show="errors.status" x-cloak x-text="errors.status" class="mt-2 text-xs font-semibold text-rose-600"></p>
                             </div>
+
+                            <div data-error-key="komentar_enabled">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 transition hover:border-brand-200 hover:bg-brand-50/20 dark:border-slate-700 dark:bg-slate-800/40"
+                                     x-data="{ enabled: {{ old('komentar_enabled', $record->komentar_enabled ?? true) ? 'true' : 'false' }} }">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 dark:from-emerald-900/30 dark:to-teal-900/30 dark:text-emerald-400">
+                                                <x-admin.icon name="message-circle" :size="18" />
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-slate-900 dark:text-white">Izinkan Komentar</p>
+                                                <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Tampilkan fitur komentar di halaman publik.</p>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4 shrink-0">
+                                            <input type="hidden" name="komentar_enabled" :value="enabled ? '1' : '0'" />
+                                            <button type="button" @click="enabled = !enabled"
+                                                class="spring-toggle" :class="{ 'is-on': enabled }"
+                                                role="switch" :aria-checked="enabled ? 'true' : 'false'"
+                                                aria-label="Izinkan komentar">
+                                                <span class="spring-track"></span>
+                                                <span class="spring-thumb"><x-admin.icon name="check" :size="14" /></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p x-show="errors.komentar_enabled" x-cloak x-text="errors.komentar_enabled" class="mt-2 text-xs font-semibold text-rose-600"></p>
+                            </div>
                         </div>
                     </x-admin.section-card>
 
@@ -283,5 +311,19 @@
         };
     }
 </script>
+@endpush
+
+@push('styles')
+<style>
+.spring-toggle{position:relative;width:64px;height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.spring-track{position:absolute;inset:0;border-radius:999px;background:#CBD5E1;border:1px solid rgba(0,0,0,0.04);transition:background 0.4s ease,box-shadow 0.3s ease}
+.spring-toggle.is-on .spring-track{background:#059669;box-shadow:0 0 0 1px rgba(5,150,105,0.15)}
+.spring-thumb{position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.15),0 1px 2px rgba(0,0,0,0.06);transition:left 0.45s cubic-bezier(0.34,1.56,0.64,1)}
+.spring-toggle.is-on .spring-thumb{left:33px}
+.spring-toggle:active .spring-thumb{width:34px;border-radius:16px}
+.spring-toggle.is-on:active .spring-thumb{left:27px}
+.spring-thumb svg{width:14px;height:14px;color:#94A3B8;transition:transform 0.4s ease,color 0.4s ease}
+.spring-toggle.is-on .spring-thumb svg{transform:rotate(360deg);color:#059669}
+</style>
 @endpush
 @endsection

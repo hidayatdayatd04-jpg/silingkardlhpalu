@@ -2,7 +2,14 @@
 
 @php
     $chatMessages = $messages ?? [];
-    $chatHistory  = array_map(fn ($m) => ['role' => $m['role'], 'content' => $m['content']], $chatMessages);
+    // Riwayat untuk JS: sertakan timestamp asli dari server + nama pengirim
+    // agar fitur copy memakai waktu saat pesan dikirim (bukan saat di-copy).
+    $chatHistory  = array_map(fn ($m) => [
+        'role'    => $m['role'],
+        'content' => $m['content'],
+        'ts'      => $m['timestamp'] ?? '',
+        'name'    => ($m['role'] === 'user') ? __('Pengguna') : 'DLH Assistant',
+    ], $chatMessages);
     $avatar       = asset('assets/images/chatbot.png');
     $cityLogo     = asset('assets/images/logo-web.webp');
 @endphp
@@ -55,6 +62,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
+                    <button id="chatbot-copy-all-btn" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Copy percakapan') }}" aria-label="{{ __('Copy percakapan') }}">
+                        <x-icons.ui name="copy" class="h-4 w-4" />
+                    </button>
                     <button id="chatbot-clear-btn" class="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all cursor-pointer" title="{{ __('Hapus percakapan') }}" aria-label="{{ __('Hapus percakapan') }}">
                         <x-icons.ui name="trash" class="h-4 w-4" />
                     </button>
@@ -70,16 +80,26 @@
             style="scrollbar-width:thin;scrollbar-color:#a7f3d0 transparent;">
 
             @foreach($chatMessages as $msg)
-                @php $isUser = $msg['role'] === 'user'; @endphp
+                @php
+                    $isUser = $msg['role'] === 'user';
+                    $ts = $msg['timestamp'] ?? null;
+                    $timeShort = $ts ? \Carbon\Carbon::parse($ts)->format('H.i') : '';
+                @endphp
                 @if($isUser)
-                <div class="cb-msg-row flex justify-end" data-sender="user">
+                <div class="cb-msg-row flex justify-end gap-1.5" data-sender="user" data-name="{{ __('Pengguna') }}" data-ts="{{ $ts }}" data-content="{{ $msg['content'] }}">
+                    <button type="button" class="cb-copy-btn" title="{{ __('Salin pesan') }}" aria-label="{{ __('Salin pesan') }}">
+                        <x-icons.ui name="copy" class="h-3.5 w-3.5" />
+                    </button>
                     <div class="cb-bubble cb-bubble--user max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium"
-                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);"><div class="cb-raw">{{ $msg['content'] }}</div></div>
+                        style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);"><div class="cb-raw">{{ $msg['content'] }}</div><span class="cb-time">{{ $timeShort }}</span></div>
                 </div>
                 @else
-                <div class="cb-msg-row flex items-start gap-2" data-sender="bot">
+                <div class="cb-msg-row flex items-start gap-2" data-sender="bot" data-name="DLH Assistant" data-ts="{{ $ts }}" data-content="{{ $msg['content'] }}">
                     <img src="{{ $avatar }}" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">
-                    <div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-raw">{{ $msg['content'] }}</div></div>
+                    <div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-raw">{{ $msg['content'] }}</div><span class="cb-time">{{ $timeShort }}</span></div>
+                    <button type="button" class="cb-copy-btn self-center" title="{{ __('Salin pesan') }}" aria-label="{{ __('Salin pesan') }}">
+                        <x-icons.ui name="copy" class="h-3.5 w-3.5" />
+                    </button>
                 </div>
                 @endif
             @endforeach
@@ -166,7 +186,7 @@
                     <textarea
                         id="chatbot-input"
                         rows="1"
-                        placeholder="{{ __('Ketik pertanyaan Anda atau tekan mic...') }}"
+                        placeholder="{{ __('Ketik pertanyaan Anda...') }}"
                         class="w-full resize-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all cb-no-scrollbar"
                         style="min-height:42px;max-height:100px;line-height:1.4;overflow-y:hidden;"
                     ></textarea>
@@ -302,6 +322,202 @@
     .cb-status--done { background: #dcfce7; color: #15803d; }
     .cb-status--process { background: #fef3c7; color: #b45309; }
     .cb-status--pending { background: #fee2e2; color: #b91c1c; }
+
+    /* Wrapper kartu link / langkah */
+    .cb-cards-wrap {
+        margin: 10px 0 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Skeleton loading kartu (tampil saat kartu sedang diketik AI) */
+    .cb-skel-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 14px;
+    }
+    .cb-skel-box,
+    .cb-skel-bar { background: #e2e8f0; animation: cbSkelPulse 1.1s ease-in-out infinite; }
+    .cb-skel-box { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; }
+    .cb-skel-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+    .cb-skel-bar { height: 9px; border-radius: 999px; }
+    .cb-skel-bar--w60 { width: 62%; }
+    .cb-skel-bar--w40 { width: 38%; }
+    @keyframes cbSkelPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .45; }
+    }
+    .dark .cb-skel-card { background: #1e293b; border-color: rgba(255, 255, 255, 0.08); }
+    .dark .cb-skel-box,
+    .dark .cb-skel-bar { background: #334155; }
+
+    /* Kartu link tunggal (ikon + judul + URL + panah) */
+    .cb-link-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        text-decoration: none !important;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .cb-link-card:hover {
+        border-color: #34d399;
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.16);
+        transform: translateY(-1px);
+    }
+    .cb-link-card__icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        flex-shrink: 0;
+        background: #f1f5f9;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .cb-link-card__body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+    .cb-link-card__title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cb-link-card__url {
+        font-size: 11px;
+        font-weight: 600;
+        color: #10b981;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .cb-card-arrow {
+        width: 16px;
+        height: 16px;
+        margin-left: auto;
+        flex-shrink: 0;
+        color: #94a3b8;
+        transition: transform .18s ease, color .18s ease;
+    }
+    .cb-link-card:hover .cb-card-arrow,
+    .cb-step-card:hover .cb-card-arrow { color: #059669; transform: translateX(2px); }
+
+    /* Kartu langkah bernomor (link bertahap) */
+    .cb-step-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+        background: #ffffff;
+        border: 1.5px dashed #34d399;
+        border-radius: 14px;
+        text-decoration: none !important;
+        transition: background .18s ease;
+    }
+    .cb-step-card:hover { background: #ecfdf5; }
+    .cb-step-num {
+        min-width: 27px;
+        height: 27px;
+        border-radius: 999px;
+        flex-shrink: 0;
+        background: #059669;
+        color: #ffffff;
+        font-size: 12.5px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+    }
+    .cb-step-sub { font-size: 10.5px; font-weight: 500; color: #94a3b8; white-space: nowrap; }
+
+    /* Dark mode */
+    .dark .cb-link-card { background: #1e293b; border-color: rgba(255, 255, 255, 0.08); }
+    .dark .cb-link-card:hover { border-color: #34d399; }
+    .dark .cb-link-card__icon { background: #334155; color: #cbd5e1; }
+    .dark .cb-link-card__title { color: #f1f5f9; }
+    .dark .cb-step-card { background: #1e293b; }
+    .dark .cb-step-card:hover { background: rgba(6, 78, 59, 0.35); }
+
+    /* Tombol salin per pesan (muncul saat hover baris pesan) */
+    .cb-copy-btn {
+        opacity: 0;
+        pointer-events: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        color: #64748b;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        transition: opacity .18s ease, transform .18s ease, color .18s ease;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .dark .cb-copy-btn {
+        background: #1e293b;
+        color: #94a3b8;
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+    .cb-msg-row:hover .cb-copy-btn,
+    .cb-msg-row:focus-within .cb-copy-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .cb-copy-btn:hover { color: #059669; transform: translateY(-1px); }
+
+    /* Label waktu kecil di dalam gelembung (ala WhatsApp) */
+    .cb-time {
+        display: block;
+        margin-top: 5px;
+        font-size: 10px;
+        line-height: 1;
+        text-align: right;
+        user-select: none;
+        pointer-events: none;
+    }
+    .cb-bubble--user .cb-time { color: rgba(209, 250, 229, 0.85); }
+    .cb-bubble--bot .cb-time { color: #94a3b8; }
+
+    /* Toast "Tersalin" */
+    #chatbot-toast {
+        position: fixed;
+        bottom: 96px;
+        right: 24px;
+        z-index: 10000;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: #065f46;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity .25s ease, transform .25s ease;
+        pointer-events: none;
+    }
+    #chatbot-toast.show { opacity: 1; transform: translateY(0); }
 </style>
 
 <script>
@@ -319,7 +535,30 @@
 
     // Teks sambutan DLH Assistant (sama seperti toggleChat di server) —
     // dipakai agar tampilan setelah hapus kembali ke kondisi "chat pertama kali".
-    var WELCOME_TEXT = "Halo!\n\nSaya adalah **DLH Assistant**, asisten AI untuk Dinas Lingkungan Hidup Kota Palu.\n\nAda yang bisa saya bantu? Silakan ketik pertanyaan Anda atau lacak status menggunakan **Nomor Tiket** / **Nomor HP** Anda.";
+    var WELCOME_TEXT = "Halo, selamat datang 👋\nSaya dari DLH Kota Palu. Ada yang bisa saya bantu?\n\nKalau mau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan, langsung chat saja ya.";
+
+    // Nama pengirim untuk format copy ala export WhatsApp.
+    var USER_NAME = @js(__('Pengguna'));
+    var BOT_NAME  = 'DLH Assistant';
+
+    var COPY_SVG = '<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="8" y="4" width="11.5" height="13.5" rx="2"/>' +
+        '<path d="M8 7H6.5A2.5 2.5 0 0 0 4 9.5v8A2.5 2.5 0 0 0 6.5 20H14a2.5 2.5 0 0 0 2.5-2.5V17.5M8 4h9.5A2 2 0 0 1 19.5 6v9.5a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z"/></svg>';
+    var CHECK_SVG = '<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>';
+
+    var COPY_LABEL = @js(__('Salin pesan'));
+    var COPY_BTN_HTML = '<button type="button" class="cb-copy-btn" aria-label="' + COPY_LABEL + '" title="' + COPY_LABEL + '">' + COPY_SVG + '</button>';
+
+    // Skeleton loading kartu — tampil saat kartu aksi sedang diketik AI,
+    // lalu otomatis digantikan kartu aslinya begitu barisnya lengkap.
+    var CARD_SKELETON_HTML =
+        '<div class="cb-cards-wrap"><div class="cb-skel-card">' +
+            '<span class="cb-skel-box"></span>' +
+            '<span class="cb-skel-lines">' +
+                '<span class="cb-skel-bar cb-skel-bar--w60"></span>' +
+                '<span class="cb-skel-bar cb-skel-bar--w40"></span>' +
+            '</span>' +
+        '</div></div>';
 
     function el(id) { return document.getElementById(id); }
     var panel = function () { return el('chatbot-panel'); };
@@ -338,6 +577,26 @@
 
     // Voice Recognition (Web Speech API)
     var _capturedVoiceText = '';
+    // Penangkap hasil per-indeks: teks final disimpan sekali per indeks result,
+    // interim tidak pernah masuk teks permanen. Mencegah kata tercatat dobel
+    // ketika layanan Google Speech restart internal lalu mem-final-kan ulang
+    // audio yang sama sebagai result baru (gejala "bagaimana bagaimana ...").
+    var _finalByIndex  = {};
+    var _lastFinalNorm = '';
+
+    function normVoiceSegment(t) {
+        return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    // Susun ulang teks final dari segmen tersimpan (urutan indeks menaik —
+    // kunci angka objek JS dijamin teriterasi berurutan secara numerik).
+    function rebuildFinalVoiceText() {
+        var parts = [];
+        for (var k in _finalByIndex) {
+            if (Object.prototype.hasOwnProperty.call(_finalByIndex, k)) parts.push(_finalByIndex[k]);
+        }
+        return parts.join(' ');
+    }
 
     function initSpeechRecognition() {
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -352,6 +611,8 @@
         rec.onstart = function () {
             _isListening = true;
             _capturedVoiceText = '';
+            _finalByIndex = {};
+            _lastFinalNorm = '';
             if (_voiceWatchdog) { clearTimeout(_voiceWatchdog); _voiceWatchdog = null; }
             var overlay = el('chatbot-voice-overlay');
             if (overlay) overlay.classList.add('active');
@@ -363,18 +624,33 @@
         };
 
         rec.onresult = function (event) {
-            var finalTranscript = '';
             var interimTranscript = '';
 
-            for (var i = 0; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
+            // Proses hanya result yang berubah sejak event sebelumnya (resultIndex).
+            // Segmen final dicatat maksimal satu kali per indeks; segmen final yang
+            // identik dengan segmen terakhir dianggap re-emission Chrome dan dibuang.
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+                var res = event.results[i];
+                if (!res || !res.length) continue;
+                var txt = String(res[0].transcript || '').replace(/\s+/g, ' ').trim();
+                if (!txt) continue;
+
+                if (res.isFinal) {
+                    var norm = normVoiceSegment(txt);
+                    if (Object.prototype.hasOwnProperty.call(_finalByIndex, i)) {
+                        // indeks ini sudah tercatat — pertahankan versi pertama
+                    } else if (norm && norm === _lastFinalNorm) {
+                        // duplikat hasil restart internal Chrome — abaikan
+                    } else {
+                        _finalByIndex[i] = txt;
+                        _lastFinalNorm = norm;
+                    }
                 } else {
-                    interimTranscript += event.results[i][0].transcript;
+                    interimTranscript += txt + ' ';
                 }
             }
 
-            var fullText = (finalTranscript + ' ' + interimTranscript).trim();
+            var fullText = (rebuildFinalVoiceText() + ' ' + interimTranscript).replace(/\s+/g, ' ').trim();
             if (fullText) {
                 _capturedVoiceText = fullText;
                 var prev = el('chatbot-voice-preview');
@@ -507,8 +783,17 @@
 
         if (!_welcomed && _history.length === 0) {
             _welcomed = true;
-            wire()?.call('toggleChat');
             showWelcome();
+            // Ambil timestamp asli sambutan dari server (disimpan juga ke DB).
+            Promise.resolve(wire()?.call('toggleChat')).then(function (ts) {
+                var entry = _history[0];
+                if (!ts || !entry) return;
+                entry.ts = ts;
+                if (entry.el) {
+                    entry.el.setAttribute('data-ts', ts);
+                    updateTimeLabel(entry.el, ts);
+                }
+            }).catch(function () {});
         }
         scrollBottom();
         setTimeout(function () { input()?.focus(); }, 300);
@@ -530,7 +815,8 @@
 
     window.chatbotClear = function () {
         if (_isStreaming) return;
-        _history = [{ role: 'assistant', content: WELCOME_TEXT }];
+        var provisionalTs = new Date().toISOString();
+        _history = [{ role: 'assistant', content: WELCOME_TEXT, ts: provisionalTs, name: BOT_NAME }];
         _welcomed = true;
         var m = msgs();
         // Panel ber-wire:ignore, jadi re-render Livewire tidak menyentuh DOM ini.
@@ -543,10 +829,22 @@
         if (placeholder()) placeholder().innerHTML = '';
         var chips = el('chatbot-chips');
         if (chips) chips.style.display = 'flex';
-        appendAIBubble(WELCOME_TEXT);
+        var row = appendAIBubble(WELCOME_TEXT);
+        if (row) _history[0].el = row;
         scrollBottom();
-        // Reset riwayat server dan DOM sekaligus ke sapaan pembuka yang sama.
-        try { wire()?.call('clearChat'); } catch (e) {}
+        // Reset riwayat server dan DOM sekaligus ke sapaan pembuka yang sama,
+        // lalu pakai timestamp asli sambutan baru dari server.
+        try {
+            Promise.resolve(wire()?.call('clearChat')).then(function (ts) {
+                var entry = _history[0];
+                if (!ts || !entry) return;
+                entry.ts = ts;
+                if (entry.el) {
+                    entry.el.setAttribute('data-ts', ts);
+                    updateTimeLabel(entry.el, ts);
+                }
+            }).catch(function () {});
+        } catch (e) {}
     };
 
     window.chatbotSuggest = function (text) {
@@ -559,14 +857,29 @@
         var text = input().value.trim();
         if (!text || _isStreaming) return;
 
-        appendUserBubble(text);
-        var historyForApi = _history.slice();
-        _history.push({ role: 'user', content: text });
+        // Riwayat untuk API cukup role + content; timestamp & nama hanya untuk tampilan/copy.
+        var historyForApi = _history.map(function (m) {
+            return { role: m.role, content: m.content };
+        });
+
+        var row = appendUserBubble(text);
+        var entry = { role: 'user', content: text, ts: new Date().toISOString(), name: USER_NAME, el: row };
+        _history.push(entry);
 
         input().value = '';
         input().style.height = 'auto';
 
-        wire()?.call('addUserMessage', text);
+        // Timestamp asli dari server menimpa waktu provisional dari browser,
+        // sehingga hasil copy tetap konsisten walau jam mesin pengguna beda.
+        Promise.resolve(wire()?.call('addUserMessage', text)).then(function (ts) {
+            if (!ts) return;
+            entry.ts = ts;
+            if (row) {
+                row.setAttribute('data-ts', ts);
+                updateTimeLabel(row, ts);
+            }
+        }).catch(function () {});
+
         startStream(text, historyForApi);
     };
 
@@ -605,7 +918,7 @@
         .then(function (data) {
             var content = (data && data.content) ? data.content : @js(__('Maaf, tidak ada respons. Silakan coba lagi.'));
             typewriterInto(typingId, content, function () {
-                finalize(content);
+                finalize(typingId, content);
             });
         })
         .catch(function (err) {
@@ -625,11 +938,14 @@
         if (typingEl) {
             typingEl.innerHTML =
                 '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-                '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-body"></div><span class="cb-caret"></span></div>';
+                '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5"><div class="cb-body"></div><span class="cb-caret"></span><span class="cb-time"></span></div>' +
+                COPY_BTN_HTML;
         }
         if (typingEl) {
             typingEl.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
             typingEl.setAttribute('data-sender', 'bot');
+            typingEl.setAttribute('data-name', BOT_NAME);
+            typingEl.setAttribute('data-content', fullText);
         }
         var body = typingEl ? typingEl.querySelector('.cb-body') : null;
         var caret = typingEl ? typingEl.querySelector('.cb-caret') : null;
@@ -644,6 +960,74 @@
         var i = 0;
         // Kecepatan adaptif: teks panjang mengetik lebih cepat agar tidak lama menunggu.
         var step = fullText.length > 400 ? 4 : (fullText.length > 160 ? 2 : 1);
+
+        // Potongan yang ditampilkan saat mengetik: marker yang belum selesai
+        // diketik dibuang dari ujung teks supaya pembaca tidak pernah melihat
+        // sintaks mentah (mis. "**kata", "[teks](url", ":::action[...").
+        function displaySlice(txt) {
+            // Kartu aksi terakhir yang belum tertutup ':::' → buang ekornya dulu,
+            // supaya semua hitungan indeks berikutnya memakai koordinat yang sama.
+            var ai = txt.lastIndexOf(':::action');
+            if (ai !== -1 && txt.slice(ai).indexOf('):::') === -1) {
+                txt = txt.slice(0, ai);
+            }
+
+            // Kartu aksi yang sudah lengkap disembunyikan dulu dari pratinjau;
+            // penggantinya adalah skeleton yang disuntikkan di tick().
+            txt = txt.replace(/:::action\[[^\]]*\]\([^)]*\):::/g, '');
+
+            var cuts = [];
+
+            // Awalan ':::action' yang sedang diketik (mis. ':::', ':::ac')
+            // juga dibuang agar tidak pernah terlihat.
+            var maxL = Math.min(9, txt.length);
+            for (var L = maxL; L >= 3; L--) {
+                if (':::action'.slice(0, L) === txt.slice(-L)) {
+                    cuts.push(txt.length - L);
+                    break;
+                }
+            }
+
+            // Bold '**': kalau jumlah kemunculannya ganjil, yang terakhir
+            // adalah pembuka yang belum ditutup.
+            var boldCount = 0, boldLast = -1, bm;
+            var bre = /\*\*/g;
+            while ((bm = bre.exec(txt)) !== null) { boldCount++; boldLast = bm.index; }
+            if (boldCount % 2 === 1) cuts.push(boldLast);
+
+            // Italic '*': bintang tunggal (bukan bagian '**', bukan bullet
+            // di awal baris). Ganjil berarti penandanya belum ditutup.
+            var singles = 0, singleLast = -1, k = 0;
+            while ((k = txt.indexOf('*', k)) !== -1) {
+                var inBold = txt.charAt(k - 1) === '*' || txt.charAt(k + 1) === '*';
+                var afterBold = txt.charAt(k - 2) === '*' && txt.charAt(k - 1) === '*';
+                var bullet = (k === 0 || txt.charAt(k - 1) === '\n') &&
+                             (txt.charAt(k + 1) === ' ' || txt.charAt(k + 1) === '\t');
+                if (!inBold && !afterBold && !bullet) { singles++; singleLast = k; }
+                k++;
+            }
+            if (singles % 2 === 1) cuts.push(singleLast);
+
+            // Backtick ganjil: potongan kode belum ditutup.
+            if ((txt.split('`').length - 1) % 2 === 1) cuts.push(txt.lastIndexOf('`'));
+
+            // Link '[teks](url' yang belum lengkap: potong dari '['-nya,
+            // kecuali '[' itu memang bagian dari link yang sudah utuh.
+            var li = txt.lastIndexOf('[');
+            if (li !== -1) {
+                var rest = txt.slice(li);
+                var done = /^\[[^\]\n]*\]\((?:https?:\/\/|\/)[^)\s]*\)/.test(rest);
+                var wip = /^\[[^\]\n]*(\]\([^()\n]*)?$/.test(rest);
+                if (!done && wip) cuts.push(li);
+            }
+
+            if (cuts.length) {
+                cuts.sort(function (a, b) { return a - b; });
+                txt = txt.slice(0, cuts[0]);
+            }
+            return plainText(txt);
+        }
+
         (function tick() {
             i += step;
             if (i >= fullText.length) {
@@ -653,24 +1037,48 @@
                 onDone();
                 return;
             }
-            body.textContent = fullText.slice(0, i);
+            var partial = fullText.slice(0, i);
+            body.innerHTML = format(displaySlice(partial));
+            // Ada kartu aksi dalam teks (selesai/belum) → tampilkan skeleton
+            // loading sampai tick terakhir ketika kartu aslinya dirender.
+            if (partial.indexOf(':::action') !== -1) {
+                body.insertAdjacentHTML('beforeend', CARD_SKELETON_HTML);
+            }
             scrollBottom();
             setTimeout(tick, 12);
         })();
     }
 
-    function finalize(text) {
+    function finalize(typingId, text) {
         endStream();
         if (!text) return;
 
+        var rowEl = el(typingId);
+        var entry = { role: 'assistant', content: text, ts: new Date().toISOString(), name: BOT_NAME, el: rowEl };
+
         var dup = _history.some(function (m) { return m.role === 'assistant' && m.content === text; });
-        if (!dup) _history.push({ role: 'assistant', content: text });
+        if (!dup) _history.push(entry);
+
+        // Lengkapi atribut baris agar fitur copy memakai data yang benar.
+        if (rowEl) {
+            rowEl.setAttribute('data-ts', entry.ts);
+            rowEl.setAttribute('data-name', BOT_NAME);
+            rowEl.setAttribute('data-content', text);
+            updateTimeLabel(rowEl, entry.ts);
+        }
 
         setTimeout(function () {
             try {
                 var token = document.getElementById('chatbot-wrapper')
                     ?.getAttribute('data-pending-token') || '';
-                wire()?.call('saveAssistantMessage', text, token);
+                Promise.resolve(wire()?.call('saveAssistantMessage', text, token)).then(function (ts) {
+                    if (!ts) return;
+                    entry.ts = ts;
+                    if (rowEl) {
+                        rowEl.setAttribute('data-ts', ts);
+                        updateTimeLabel(rowEl, ts);
+                    }
+                }).catch(function () {});
             } catch (e) {}
         }, 400);
 
@@ -722,32 +1130,96 @@
         if (!typingEl) { appendAIBubble(text); return; }
         typingEl.innerHTML =
             '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '<span class="cb-time"></span></div>' +
+            COPY_BTN_HTML;
+        typingEl.setAttribute('data-name', BOT_NAME);
+        typingEl.setAttribute('data-ts', new Date().toISOString());
+        typingEl.setAttribute('data-content', text);
+        updateTimeLabel(typingEl, typingEl.getAttribute('data-ts'));
         scrollBottom();
     }
 
     function appendUserBubble(text) {
         var d = document.createElement('div');
-        d.className = 'cb-msg-row flex justify-end cb-dynamic-bubble';
+        d.className = 'cb-msg-row flex justify-end gap-1.5 cb-dynamic-bubble';
         d.setAttribute('data-sender', 'user');
-        d.innerHTML = '<div class="cb-bubble cb-bubble--user max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '</div>';
+        d.setAttribute('data-name', USER_NAME);
+        d.setAttribute('data-ts', new Date().toISOString());
+        d.setAttribute('data-content', text);
+        d.innerHTML = COPY_BTN_HTML +
+            '<div class="cb-bubble cb-bubble--user max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white font-medium" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 2px 12px rgba(16,185,129,0.25);">' + escHtml(text).replace(/\n/g, '<br>') + '<span class="cb-time"></span></div>';
+        updateTimeLabel(d, d.getAttribute('data-ts'));
         placeholder().before(d);
         scrollBottom();
+        return d;
     }
 
     function showWelcome() {
         if (_history.length > 0) return;
-        appendAIBubble(WELCOME_TEXT);
+        var row = appendAIBubble(WELCOME_TEXT);
+        _history.push({ role: 'assistant', content: WELCOME_TEXT, ts: new Date().toISOString(), name: BOT_NAME, el: row });
     }
 
     function appendAIBubble(text) {
         var d = document.createElement('div');
         d.className = 'cb-msg-row flex items-start gap-2 cb-dynamic-bubble';
         d.setAttribute('data-sender', 'bot');
+        d.setAttribute('data-name', BOT_NAME);
+        d.setAttribute('data-ts', new Date().toISOString());
+        d.setAttribute('data-content', text);
         d.innerHTML = '<img src="' + AVATAR + '" alt="AI" class="shrink-0 h-7 w-7 rounded-full bg-white ring-1 ring-brand-500/20 p-1 object-contain">' +
-            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '</div>';
+            '<div class="cb-bubble cb-bubble--bot max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm border border-black/5 dark:border-white/5">' + format(text) + '<span class="cb-time"></span></div>' +
+            COPY_BTN_HTML;
+        updateTimeLabel(d, d.getAttribute('data-ts'));
         placeholder().before(d);
         scrollBottom();
+        return d;
+    }
+
+    // ── Kartu link & kartu langkah (render :::action) ──
+    // Link tunggal → kartu link; beberapa link berurutan → kartu langkah bernomor.
+    var CARD_ARROW_SVG = '<svg class="cb-card-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
+    var CARD_LINK_SVG = '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 6H6.75A2.25 2.25 0 0 0 4.5 8.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25V10.5"/><path d="M14.25 4.5h5.25v5.25M19.5 4.5 11 13"/></svg>';
+    var STEP_LABELS = ['Langkah pertama', 'Langkah kedua', 'Langkah ketiga', 'Langkah keempat', 'Langkah kelima'];
+
+    function attrEsc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Buang emoji/simbol dari judul kartu agar selalu rapi satu baris.
+    function cleanTitle(t) {
+        var c = String(t == null ? '' : t).replace(/[^\p{L}\p{N}\s.,:'()\-/&+]+/gu, ' ');
+        return c.replace(/\s+/g, ' ').trim() || 'Buka Halaman';
+    }
+
+    function shortUrl(url) {
+        return String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+    }
+
+    function buildLinkCard(item) {
+        return '<div class="cb-cards-wrap">' +
+            '<a href="' + attrEsc(item.url) + '" target="_blank" rel="noopener noreferrer" class="cb-link-card">' +
+                '<span class="cb-link-card__icon">' + CARD_LINK_SVG + '</span>' +
+                '<span class="cb-link-card__body"><span class="cb-link-card__title">' + escHtml(cleanTitle(item.title)) + '</span>' +
+                '<span class="cb-link-card__url">' + escHtml(shortUrl(item.url)) + '</span></span>' +
+                CARD_ARROW_SVG +
+            '</a></div>';
+    }
+
+    function buildStepCards(items) {
+        var html = '<div class="cb-cards-wrap">';
+        for (var k = 0; k < items.length; k++) {
+            var label = STEP_LABELS[k] || ('Langkah ke-' + (k + 1));
+            html += '<a href="' + attrEsc(items[k].url) + '" target="_blank" rel="noopener noreferrer" class="cb-step-card">' +
+                '<span class="cb-step-num">' + (k + 1) + '</span>' +
+                '<span class="cb-link-card__body"><span class="cb-link-card__title">' + escHtml(cleanTitle(items[k].title)) + '</span>' +
+                '<span class="cb-step-sub">' + label + '</span></span>' +
+                CARD_ARROW_SVG +
+                '</a>';
+        }
+        return html + '</div>';
     }
 
     // ── Format output AI (markdown ringan → HTML rapi + Action Cards) ──
@@ -761,15 +1233,27 @@
 
             if (!line.trim()) { i++; continue; }
 
-            // Action Cards :::action[Text](url):::
+            // Kartu link :::action[Judul](url):::
+            // Link tunggal → kartu link; beberapa link berurutan → kartu langkah bernomor.
             if (line.indexOf(':::action') !== -1) {
-                var actHtml = line.replace(/:::action\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\):::/g, function (m, title, url) {
-                    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="cb-action-btn">' +
-                           '<span>' + escHtml(title) + '</span>' +
-                           '<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>';
-                });
-                out.push('<div class="my-2 flex flex-wrap gap-1.5">' + actHtml + '</div>');
-                i++;
+                var actItems = [], actTexts = [];
+                var actRe = /:::action\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\):::/g;
+                while (i < lines.length && lines[i].indexOf(':::action') !== -1) {
+                    var ln = lines[i], lastIdx = 0, am;
+                    actRe.lastIndex = 0;
+                    while ((am = actRe.exec(ln)) !== null) {
+                        if (am.index > lastIdx) actTexts.push(ln.slice(lastIdx, am.index));
+                        actItems.push({ title: am[1], url: am[2] });
+                        lastIdx = actRe.lastIndex;
+                    }
+                    if (lastIdx < ln.length) actTexts.push(ln.slice(lastIdx));
+                    i++;
+                }
+                for (var tx = 0; tx < actTexts.length; tx++) {
+                    if (actTexts[tx].trim()) out.push('<p>' + inline(actTexts[tx]) + '</p>');
+                }
+                if (actItems.length === 1) out.push(buildLinkCard(actItems[0]));
+                else if (actItems.length > 1) out.push(buildStepCards(actItems));
                 continue;
             }
 
@@ -848,6 +1332,127 @@
 
     function escHtml(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
+    // ── Copy percakapan dengan format ala export WhatsApp ──
+    // "[HH.mm, D/M/YYYY] Nama: Pesan" — timezone WITA (Asia/Makassar),
+    // memakai timestamp asli saat pesan dikirim (disimpan di DB/session),
+    // bukan waktu saat tombol copy ditekan.
+
+    function waStamp(iso) {
+        var d;
+        try { d = new Date(iso); } catch (e) { d = null; }
+        if (!d || isNaN(d.getTime())) d = new Date();
+        try {
+            var parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Makassar', hourCycle: 'h23',
+                year: 'numeric', month: 'numeric', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }).formatToParts(d);
+            var get = function (t) {
+                for (var i = 0; i < parts.length; i++) { if (parts[i].type === t) return parts[i].value; }
+                return '';
+            };
+            // Hari & bulan tanpa nol depan agar mengikuti pola D/M/YYYY.
+            var dd = get('day').replace(/^0/, '');
+            var mm = get('month').replace(/^0/, '');
+            return '[' + get('hour') + '.' + get('minute') + ', ' + dd + '/' + mm + '/' + get('year') + ']';
+        } catch (e) {
+            // Fallback manual untuk browser tanpa dukungan Intl/timezone.
+            var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+            var wita = new Date(d.getTime() + (8 * 60 + d.getTimezoneOffset()) * 60000);
+            return '[' + p2(wita.getHours()) + '.' + p2(wita.getMinutes()) + ', ' +
+                wita.getDate() + '/' + (wita.getMonth() + 1) + '/' + wita.getFullYear() + ']';
+        }
+    }
+
+    // Perbarui label jam kecil pada gelembung setelah timestamp resmi
+    // datang dari server (hasil sama dengan format copy).
+    function updateTimeLabel(row, iso) {
+        if (!row || !iso) return;
+        var lbl = row.querySelector('.cb-time');
+        if (!lbl) return;
+        var m = waStamp(iso).match(/\[(\d{2}\.\d{2})/);
+        if (m) lbl.textContent = m[1];
+    }
+
+    // Bersihkan isi pesan untuk hasil copy: action card & markdown dilepas,
+    // baris dan baris kosong dipertahankan apa adanya.
+    function plainText(content) {
+        var t = String(content == null ? '' : content);
+        t = t.replace(/:::action\[([^\]]*)\]\(([^)\s]+)\):::/g, '$2');
+        t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '$2');
+        t = t.replace(/\*\*([^*]+)\*\*/g, '$1');
+        t = t.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1$2');
+        t = t.replace(/^\s{0,3}#{1,3}\s+/gm, '');
+        t = t.replace(/`([^`]+)`/g, '$1');
+        t = t.replace(/\r\n/g, '\n');
+        return t.trim();
+    }
+
+    function formatWa(name, ts, content) {
+        return waStamp(ts) + ' ' + name + ': ' + plainText(content);
+    }
+
+    function copySingleMessage(row) {
+        if (!row) return;
+        var name = row.getAttribute('data-name') ||
+            (row.getAttribute('data-sender') === 'user' ? USER_NAME : BOT_NAME);
+        var ts = row.getAttribute('data-ts') || '';
+        var content = row.getAttribute('data-content') || row.textContent || '';
+        copyToClipboard(formatWa(name, ts, content));
+        flashCopied(row.querySelector('.cb-copy-btn'), @js(__('Pesan disalin')));
+    }
+
+    window.chatbotCopyAll = function () {
+        if (!_history.length) return;
+        var lines = _history.map(function (m) {
+            return formatWa(m.name || (m.role === 'user' ? USER_NAME : BOT_NAME), m.ts, m.content);
+        });
+        copyToClipboard(lines.join('\n\n'));
+        flashCopied(el('chatbot-copy-all-btn'), @js(__('Percakapan disalin')));
+    };
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+            return;
+        }
+        legacyCopy(text);
+    }
+
+    function legacyCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        if (ta.parentNode) ta.parentNode.removeChild(ta);
+    }
+
+    function flashCopied(btn, msg) {
+        if (btn) {
+            if (!btn.getAttribute('data-orig-html')) btn.setAttribute('data-orig-html', btn.innerHTML);
+            btn.innerHTML = CHECK_SVG;
+            setTimeout(function () {
+                var orig = btn.getAttribute('data-orig-html');
+                if (orig) btn.innerHTML = orig;
+            }, 1500);
+        }
+        showToast(msg || @js(__('Disalin')));
+    }
+
+    var _toastTimer = null;
+    function showToast(msg) {
+        var t = el('chatbot-toast');
+        if (!t) return;
+        t.textContent = msg;
+        t.classList.add('show');
+        if (_toastTimer) clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+
     function scrollBottom() {
         var m = msgs();
         if (m) setTimeout(function () { m.scrollTo({ top: m.scrollHeight, behavior: _reduced ? 'auto' : 'smooth' }); }, 40);
@@ -885,6 +1490,21 @@
             btn.addEventListener('click', function () { chatbotSuggest(btn.getAttribute('data-suggest')); });
         });
     }
+    var copyAllBtn = el('chatbot-copy-all-btn');
+    if (copyAllBtn) copyAllBtn.addEventListener('click', function () { chatbotCopyAll(); });
+
+    // Delegasi klik tombol salin per pesan — berlaku untuk bubble hasil
+    // render server maupun bubble dinamis yang dibuat lewat JS.
+    var msgsEl = msgs();
+    if (msgsEl) {
+        msgsEl.addEventListener('click', function (event) {
+            if (!event.target || !event.target.closest) return;
+            var btn = event.target.closest('.cb-copy-btn');
+            if (!btn) return;
+            copySingleMessage(btn.closest('.cb-msg-row'));
+        });
+    }
+
     var inputEl = input();
     if (inputEl) {
         inputEl.addEventListener('keydown', function (event) {
@@ -897,4 +1517,5 @@
     }
 })();
 </script>
+<div id="chatbot-toast" role="status" aria-live="polite"></div>
 </div>

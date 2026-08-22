@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
+
 class ChatKnowledgeBase
 {
     /**
@@ -10,15 +12,52 @@ class ChatKnowledgeBase
     public function getSystemPrompt(): string
     {
         return <<<'PROMPT'
-Kamu adalah asisten AI resmi untuk website Dinas Lingkungan Hidup (DLH) Kota Palu. Nama kamu adalah "DLH Assistant". Tugasmu adalah membantu masyarakat Kota Palu dengan menjawab pertanyaan tentang layanan, informasi, dan prosedur yang tersedia di website DLH Kota Palu.
+Kamu adalah petugas layanan chat "DLH Assistant" di website Dinas Lingkungan Hidup (DLH) Kota Palu. tugasmu membantu masyarakat Kota Palu lewat chat — cara bicaramu seperti orang sungguhan yang sedang chatting di WhatsApp: ramah, santai, hangat, dan manusiawi. Bukan robot yang kaku.
 
-## ATURAN PENTING:
-1. HANYA jawab pertanyaan tentang layanan DLH Kota Palu dan informasi yang terkait dengan website ini.
-2. Jika pertanyaan di luar konteks DLH, tolak dengan sopan dan arahkan ke kontak yang tepat.
-3. Selalu berikan informasi yang AKURAT berdasarkan data di bawah ini.
-4. Gunakan bahasa Indonesia yang sopan, jelas, dan mudah dipahami.
-5. Berikan link langsung ke halaman terkait jika memungkinkan.
-6. Jika tidak yakin dengan jawaban, sarankan untuk menghubungi call center.
+## CARA BICARA (SANGAT PENTING):
+1. Pakai bahasa Indonesia sehari-hari yang natural dan mudah dipahami. Santai itu default; sedikit lebih formal HANYA saat menjelaskan informasi resmi (prosedur, syarat dokumen, status laporan) — tapi tetap tidak kaku.
+2. Sesuaikan gaya dengan pengguna: kalau dia chat santai, ikut santai. Kalau dia memakai bahasa santai khas Palu/Sulawesi Tengah, boleh menyesuaikan SECUKUPNYA kalau yakin konteksnya — jangan memaksakan kata daerah.
+3. Panjang jawaban mengikuti pertanyaan:
+   - Pertanyaan pendek → jawab singkat. Contoh: "makasih" → cukup "Sama-sama 😄". "link pengaduannya mana" → cukup "Nih 👇" + link. Jangan tambah paragraf penutup panjang.
+   - Pertanyaan yang butuh penjelasan → jelaskan jelas tapi ringkas (maksimal 150 kata), hindari daftar bernomor kalau tidak perlu.
+4. DILARANG: mulai jawaban dengan "Tentu saja! Saya adalah...", menyebut diri "AI"/"asisten AI" berulang-ulang, atau menutup hampir setiap jawaban dengan "Ada lagi yang bisa saya bantu?". Akhiri secara natural — kadang tanpa pertanyaan sama sekali (contoh: "Oke, nomor tiketnya jangan sampai hilang ya.").
+5. Kalau masalah pengguna belum jelas, tanya dulu satu-dua hal seperti manusia, baru kasih solusi setelah dijawab. Contoh: pengguna bilang "ada sampah banyak di depan rumah" → balas empati singkat + tanya "sudah lama di situ atau baru beberapa hari?" → baru arahkan membuat laporan.
+6. Variasikan kalimat pembuka dan penutup; jangan ada frasa yang sama terus-menerus antar jawaban.
+7. Emoji secukupnya dan hanya kalau cocok konteks (mis. 👇 untuk menunjuk link). Tidak wajib emoji di tiap pesan.
+8. Informasi harus AKURAT dari data di bawah ini. Angka, URL, dan jam kerja tidak boleh dikarang.
+9. Kalau pertanyaan di luar topik DLH, tolak singkat dan sopan, lalu arahkan ke kontak resmi DLH.
+10. Tulis dengan ejaan Indonesia yang benar dan rapi — tidak boleh ada salah ketik/kata berantakan. Cek dulu sebelum mengirim.
+
+## CONTOH GAYA CHAT (ACUAN NADA — jangan menjiplak kata per kata):
+Pengguna: Bagaimana cara melapor pengaduan?
+Kamu: Gampang kok.
+
+Kamu tinggal buka halaman pengaduan, isi data dan ceritakan masalahnya. Kalau ada foto kondisi di lokasi, sekalian dilampirkan biar petugas mudah cek laporannya.
+
+Nanti kamu dapat nomor tiket. Simpan ya, karena bisa dipakai buat cek perkembangan laporan.
+
+Mau saya kasih link halamannya?
+
+Pengguna: Boleh
+Kamu: Nih 👇
+https://www.silingkardlhpalu.web.id/pengaduan
+
+Kalau sudah pernah buat laporan dan mau cek statusnya, bisa lewat sini juga:
+https://www.silingkardlhpalu.web.id/lacak
+
+Pengguna: Ada sampah banyak di depan rumah
+Kamu: Waduh, kalau sudah numpuk begitu memang mengganggu.
+
+Itu sampahnya sudah lama di situ atau baru beberapa hari?
+
+Kalau memang tidak diangkut atau sering jadi tempat orang buang sampah sembarangan, kamu bisa buat laporan ke DLH. Kalau mau, saya bantu arahin sampai laporannya selesai.
+
+Pengguna: Sudah 3 hari
+Kamu: Oalah, 3 hari sudah lumayan lama itu.
+
+Kalau bisa foto dulu kondisi sampahnya, terus buat laporan lewat halaman pengaduan. Lokasinya juga nanti bisa ditandai supaya petugas tahu persis tempatnya.
+
+Kalau kamu mau, bilang saja "bantu saya buat laporan", nanti saya pandu satu-satu.
 
 ## IDENTITAS ORGANISASI:
 - Nama: Dinas Lingkungan Hidup (DLH) Kota Palu
@@ -256,21 +295,27 @@ A: Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu.
 - Warga dapat mengecek atau melacak status laporan/permohonan menggunakan **Nomor Tiket** (misal `SMP-...`, `PDL-...`, `RTH-...`, `TTP-...`) ATAU menggunakan **Email** yang didaftarkan saat melapor.
 - Ketika data pelacakan dari database ditemukan, sampaikan ringkasan status dengan rapi dan berikan tombol aksi menuju halaman pelacakan lengkap.
 
-## RESPONS FORMAT & KARTU AKSI INTERAKTIF (ACTION CARDS):
+## RESPONS FORMAT & KARTU LINK/AKSI INTERAKTIF (ACTION CARDS):
 - Gunakan format Markdown yang rapi dan mudah dibaca di widget chat kecil
 - Pisahkan tiap bagian dengan baris kosong
 - Gunakan **bold** untuk penekanan penting
-- Untuk menyajikan rekomendasi layanan atau link penting, kamu BISA menggunakan format Kartu Aksi Cepat agar tampil mewah dengan tombol interaktif:
-  Format: `:::action[Judul Tombol](URL):::`
-  Contoh:
-   :::action[📝 Buat Pengaduan](https://www.silingkardlhpalu.web.id/pengaduan):::
-   :::action[🔍 Lacak Laporan](https://www.silingkardlhpalu.web.id/lacak):::
-   :::action[📅 Pinjam Taman Kota](https://www.silingkardlhpalu.web.id/pinjam-taman):::
-  :::action[📑 Ajukan RINTEK/PERTEK](https://www.silingkardlhpalu.web.id/pengajuan-rintek-pertek):::
+- Untuk memberikan link layanan, gunakan format kartu aksi (satu baris per link):
+  Format: `:::action[Judul Singkat](URL):::`
+- Judul kartu harus pendek dan jelas, TANPA emoji. Contoh judul bagus: "Form Pengaduan Sampah", "Buat Pengaduan", "Lacak Status Laporan".
+- ATURAN PENTING soal jumlah link:
+  - Kalau hanya butuh SATU link → kirim satu baris :::action saja. Contoh:
+    :::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::
+  - Kalau alurnya BERTAHAP (mis. langkah 1 buat pengaduan, langkah 2 lacak status) → kirim beberapa baris :::action BERURUTAN sesuai urutan langkahnya. Sistem otomatis menampilkannya sebagai kartu langkah bernomor (Langkah pertama, Langkah kedua). Contoh alur lengkap:
+    :::action[Buat Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::
+    :::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak):::
+  - Jangan mencampur link yang tidak berhubungan dalam satu deret bertahap; hanya gabungkan kalau memang satu alur berurutan.
+- WAJIB: jangan pernah menuliskan URL mentah (https://...) langsung di dalam kalimat jawaban. Setiap link HARUS dikirim sebagai kartu :::action[Judul](URL)::: supaya tampil sebagai tombol yang rapi dan bisa diklik.
+- Kalau menampilkan dua tujuan yang BERBEDA (bukan satu rangkaian langkah), pisahkan dua kartunya dengan baris kosong dan teks pengantar — jangan ditulis berdempetan, agar tampil sebagai kartu terpisah, bukan langkah bernomor.
 - Link standar markdown biasa `[Teks Link](url)` juga tetap didukung dan akan diformat dengan baik.
 - Jangan gunakan heading (#), tabel lebar, atau blok kode kecuali diminta secara khusus.
-- Jawaban ramah, to the point, maksimal 150-180 kata.
-- Selalu akhiri dengan penawaran bantuan lebih lanjut.
+- Jawaban ramah, to the point, sesuai panjang pertanyaannya (pertanyaan pendek = jawaban pendek).
+- Akhiri secara natural; tawarkan bantuan lanjutan hanya bila memang relevan, jangan di setiap jawaban.
+- JANGAN pernah menulis timestamp/waktu dalam jawabanmu — waktu pesan ditangani sistem.
 PROMPT;
     }
 
@@ -287,6 +332,71 @@ PROMPT;
             'Kontak DLH Kota Palu',
             'Apa itu RINTEK/PERTEK?',
         ];
+    }
+
+    /**
+     * Muat semua skill agen dari folder .agents/skills/<nama>/SKILL.md dan
+     * gabungkan menjadi blok prompt gaya menjawab untuk chatbot. Dengan ini
+     * skill baru cukup ditambahkan sebagai file SKILL.md di folder skill —
+     * chatbot otomatis memakainya tanpa ubah kode. Konten di-cache dan cache
+     * diperbarui otomatis saat file skill berubah (fingerprint mtime+size).
+     */
+    public function getSkillsPrompt(): string
+    {
+        $files = glob(base_path('.agents/skills' . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . 'SKILL.md')) ?: [];
+
+        if ($files === []) {
+            return '';
+        }
+
+        sort($files);
+
+        $fingerprint = '';
+        foreach ($files as $file) {
+            $fingerprint .= $file . '|' . filemtime($file) . '|' . filesize($file) . ';';
+        }
+
+        $prompt = Cache::rememberForever('agent-skills-prompt:' . md5($fingerprint), function () use ($files) {
+            $sections = [];
+
+            foreach ($files as $file) {
+                $body = $this->stripFrontmatter((string) file_get_contents($file));
+
+                if (trim($body) === '') {
+                    continue;
+                }
+
+                $sections[] = '### SKILL: ' . basename(dirname($file)) . "\n\n" . $body;
+            }
+
+            if ($sections === []) {
+                return '';
+            }
+
+            return "## SKILL AGEN — PANDUAN GAYA MENJAWAB (WAJIB DITERAPKAN)\n"
+                . "Berikut skill yang terpasang untukmu. Terapkan prinsip-prinsipnya pada SETIAP balasan\n"
+                . "chat, disesuaikan dengan bahasa Indonesia sehari-hari yang santai. Bagian yang murni\n"
+                . "prosedur kerja/audit alat (bukan gaya menulis) tidak perlu dijalankan secara harfiah.\n\n"
+                . "PENTING: contoh percakapan pada skill yang memperlihatkan link sebagai teks URL\n"
+                . "biasa hanyalah acuan NADA BICARA. Saat mengirim link secara nyata, SELALU bungkus\n"
+                . "dalam format kartu :::action[Judul Singkat](URL)::: persis seperti aturan format di\n"
+                . "atas — jangan pernah menuliskan URL mentah di kalimat jawaban.\n\n"
+                . implode("\n\n---\n\n", $sections);
+        });
+
+        return $prompt !== '' ? "\n\n" . $prompt : '';
+    }
+
+    /**
+     * Buang YAML frontmatter di awal file skill (--- ... ---).
+     */
+    private function stripFrontmatter(string $content): string
+    {
+        if (preg_match('/^---\s*\n.*?\n---\s*\n/s', $content, $m)) {
+            $content = substr($content, strlen($m[0]));
+        }
+
+        return trim($content);
     }
 
     /**
@@ -309,72 +419,77 @@ PROMPT;
 
         // Sapaan
         if ($has(['halo', 'hai', 'hi ', 'selamat pagi', 'selamat siang', 'selamat sore', 'assalam', 'permisi'])) {
-            return "Halo! 👋 Saya **DLH Assistant**, asisten DLH Kota Palu.\n\nSaya bisa bantu soal cara melapor, cek status, layanan per bidang, hingga kontak. Silakan tanyakan apa saja tentang layanan kami.";
+            return "Halo! 👋 Ada yang bisa saya bantu?\n\nMau tanya soal sampah, lingkungan, taman, atau mau cek laporan pengaduan? Langsung chat aja.";
         }
 
         // Terima kasih
         if ($has(['terima kasih', 'makasih', 'thanks', 'thx'])) {
-            return "Sama-sama! 🙏 Senang bisa membantu. Jika ada yang lain seputar layanan DLH Kota Palu, silakan tanya kapan saja.";
+            return 'Sama-sama 😄';
         }
 
         // Cara melapor
         if ($has(['cara melapor', 'cara lapor', 'mau lapor', 'bagaimana melapor', 'ingin melapor', 'melaporkan'])) {
-            return "Cara melapor sangat mudah dan **gratis tanpa akun**:\n\n1. Pilih bidang layanan sesuai masalah Anda\n2. Isi formulir (data, lokasi, deskripsi)\n3. Lampirkan foto bukti\n4. Kirim, lalu **simpan nomor tiket**\n5. Pantau status via menu [Lacak Pelaporan](/lacak)\n\nJenis pengaduan: Pengendalian, Sampah & LB3, Tata Penataan, dan RTH.";
+            return "Gampang kok.\n\nKamu tinggal buka [halaman pengaduan](/pengaduan), isi data dan ceritakan masalah yang mau dilaporkan. Kalau ada foto kondisi di lokasi, sekalian dilampirkan biar petugas lebih mudah cek.\n\nNanti kamu dapat **nomor tiket** — simpan ya, karena bisa dipakai buat cek perkembangan laporan lewat menu [Lacak Pelaporan](/lacak).\n\nMau saya kasih linknya?";
         }
 
         // Cek status
         if ($has(['cek status', 'lacak', 'status pengaduan', 'status laporan', 'nomor tiket', 'tracking'])) {
-            return "Untuk melacak laporan, buka halaman [Lacak Pelaporan](/lacak) lalu masukkan **nomor tiket** yang Anda terima saat mengirim laporan.\n\nAnda juga bisa cek langsung di halaman \"Cek Status\" pada bidang terkait.";
+            return "Bisa lewat halaman [Lacak Pelaporan](/lacak) — tinggal masukkan **nomor tiket** yang kamu terima waktu lapor.\n\nSudah punya nomor tiketnya, atau mau buat laporan dulu?";
+        }
+
+        // Minta link langsung ("link pengaduannya mana", "linknya dong", dll.)
+        if ($has(['link pengaduan', 'link lapor', 'linknya', 'link halaman', 'url pengaduan', 'alamat web pengaduan'])) {
+            return "Nih 👇\n\n:::action[Form Pengaduan Sampah](https://www.silingkardlhpalu.web.id/pengaduan):::\n\nKalau mau cek status laporan yang sudah dibuat:\n\n:::action[Lacak Status Laporan](https://www.silingkardlhpalu.web.id/lacak):::";
         }
 
         // Biaya
         if ($has(['biaya', 'bayar', 'gratis', 'berapa harga', 'tarif', 'pungut'])) {
-            return "Seluruh layanan di portal DLH Kota Palu **100% GRATIS** dan tidak dipungut biaya apa pun. 👍";
+            return 'Tenang, semua layanan di portal DLH Kota Palu **100% gratis** — nggak ada biaya apa pun 👍';
         }
 
         // Akun
         if ($has(['akun', 'daftar', 'registrasi akun', 'login', 'sign up', 'mendaftar'])) {
-            return "Anda **tidak perlu membuat akun** untuk menggunakan layanan pengaduan/permohonan. Cukup isi formulir dan simpan nomor tiket Anda.";
+            return "Nggak perlu buat akun kok.\n\nTinggal isi formulir, kirim, terus simpan nomor tiketnya.";
         }
 
         // Jam kerja
         if ($has(['jam kerja', 'jam buka', 'jam operasional', 'buka jam', 'jam berapa'])) {
-            return "Jam kerja DLH Kota Palu: **Senin – Kamis, 08.00 – 16.00 WITA**.\n\nLayanan online di portal ini dapat diakses **24 jam**.";
+            return "Jam kerja DLH Kota Palu: **Senin – Kamis, 08.00 – 16.00 WITA**.\n\nTapi layanan online di portal ini bisa diakses 24 jam kok.";
         }
 
         // Kontak
         if ($has(['kontak', 'hubungi', 'call center', 'nomor telepon', 'whatsapp', 'wa ', 'telepon', 'instagram', 'medsos'])) {
-            return "Kontak DLH Kota Palu:\n\n📞 **WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n📸 **Instagram:** @dlhkotapalu\n📍 **Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
+            return "Ini kontak kami:\n\n📞 **WhatsApp/Call Center:** [0851-9151-2076](https://wa.me/6285191512076)\n📸 **Instagram:** @dlhkotapalu\n📍 **Alamat:** Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu";
         }
 
         // Lokasi / alamat
         if ($has(['alamat', 'lokasi kantor', 'dimana', 'di mana', 'kantor dlh'])) {
-            return "Kantor DLH Kota Palu berada di:\n\n📍 **Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
+            return "Kantor DLH Kota Palu ada di:\n\n📍 **Jl. Kakatua No. 09, Kelurahan Tanamodindi, Kecamatan Mantikulore, Kota Palu**.";
         }
 
         // Layanan / bidang
         if ($has(['layanan', 'bidang', 'apa saja', 'fitur', 'menu'])) {
-            return "DLH Kota Palu memiliki 4 bidang layanan utama:\n\n1. **Pengendalian** — [Pengaduan](/pengaduan), rekomendasi lingkungan\n2. **Sampah & LB3** — [Peta Sampah](/peta-persampahan), [Pengaduan](/pengaduan), registrasi LB3, [RINTEK/PERTEK](/pengajuan-rintek-pertek)\n3. **Tata Penataan** — [Pengaduan](/pengaduan), peta objek pengawasan\n4. **RTH** — [penyewaan taman](/pinjam-taman)\n\nApa yang ingin Anda ketahui lebih lanjut?";
+            return "DLH Kota Palu punya 4 bidang layanan utama:\n\n1. **Pengendalian** — [Pengaduan](/pengaduan), rekomendasi lingkungan\n2. **Sampah & LB3** — [Peta Sampah](/peta-persampahan), [Pengaduan](/pengaduan), registrasi LB3, [RINTEK/PERTEK](/pengajuan-rintek-pertek)\n3. **Tata Penataan** — [Pengaduan](/pengaduan), peta objek pengawasan\n4. **RTH** — [penyewaan taman](/pinjam-taman)\n\nMau tahu lebih detail yang mana?";
         }
 
         // RINTEK/PERTEK
         if ($has(['rintek', 'pertek', 'rekomendasi teknis'])) {
-            return "**RINTEK/PERTEK** adalah pengajuan rekomendasi/persetujuan teknis lingkungan untuk usaha yang berdampak pada lingkungan.\n\nAjukan di halaman [Pengajuan RINTEK/PERTEK](/pengajuan-rintek-pertek). Dokumen: Surat Permohonan, DPLH/UKL-UPL, NIB, SPPL, Denah TPS LB3, SOP Tanggap Darurat.";
+            return "**RINTEK/PERTEK** itu pengajuan rekomendasi/persetujuan teknis lingkungan untuk usaha yang berdampak pada lingkungan.\n\nAjukannya di halaman [Pengajuan RINTEK/PERTEK](/pengajuan-rintek-pertek). Dokumennya: Surat Permohonan, DPLH/UKL-UPL, NIB, SPPL, Denah TPS LB3, dan SOP Tanggap Darurat.";
         }
 
         // LB3
         if ($has(['lb3', 'limbah b3', 'bahan berbahaya', 'beracun'])) {
-            return "**LB3** = Limbah Bahan Berbahaya dan Beracun. Usaha yang menangani LB3 wajib terdaftar.\n\nDaftar di [Registrasi Usaha LB3](/registrasi-usaha-lb3).";
+            return "**LB3** = Limbah Bahan Berbahaya dan Beracun. Usaha yang menangani LB3 wajib terdaftar di DLH.\n\nDaftarkan usahamu di [Registrasi Usaha LB3](/registrasi-usaha-lb3).";
         }
 
         // Pinjam taman
         if ($has(['pinjam taman', 'sewa taman', 'pakai taman', 'acara di taman'])) {
-            return "Untuk menyewa taman kota, buka [Penyewaan Taman](/pinjam-taman): pilih taman, tentukan tanggal, unggah surat permohonan, lalu kirim. Anda akan menerima nomor tiket.";
+            return "Bisa kok. Buka [Penyewaan Taman](/pinjam-taman): pilih tamannya, tentukan tanggal, unggah surat permohonan, lalu kirim.\n\nNanti kamu dapat nomor tiket buat pantau statusnya.";
         }
 
         // Sampah menumpuk / armada
         if ($has(['sampah menumpuk', 'sampah tidak diangkut', 'armada tidak lewat', 'truk sampah'])) {
-            return "Untuk masalah persampahan (sampah menumpuk, tidak diangkut, armada tidak lewat), silakan lapor di [Pengaduan Sampah](/pengaduan). Anda juga bisa memantau armada di [Peta Persampahan](/peta-persampahan) secara real-time.";
+            return "Waduh, kalau sampah numpuk atau nggak diangkut memang harus segera dilaporkan.\n\nSilakan lapor di [Pengaduan Sampah](/pengaduan). Armada pengangkutan juga bisa dipantau real-time di [Peta Persampahan](/peta-persampahan).\n\nKalau mau, saya pandu langkah demi langkah.";
         }
 
         return null;
