@@ -115,7 +115,7 @@ class DatabaseBackup
         @set_time_limit(900);
 
         $this->checkCancelled();
-        $this->reportProgress(2, 'Menyiapkan backup…');
+        $this->reportProgress(2, 'Menyiapkan cadangan…');
 
         $filename ??= 'backup-'.now()->format('Ymd-His').'.zip';
         $relative = self::DIR.'/'.$filename;
@@ -126,7 +126,7 @@ class DatabaseBackup
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Gagal membuat file ZIP backup.');
+            throw new \RuntimeException('Gagal membuat file cadangan.');
         }
 
         $stats = ['tables' => 0, 'rows' => 0];
@@ -134,7 +134,7 @@ class DatabaseBackup
         // 1) Dump database → database.sql
         $zip->addFromString('database.sql', $this->generateSqlDump($stats, $this->subProgress(5, 55)));
 
-        // 2) Seluruh file dari disk penyimpanan aplikasi (B2) — foto, dokumen, shp, dll.
+        // 2) Seluruh file dari disk penyimpanan aplikasi — foto, dokumen, shp, dll.
         $fileStats = $this->addStorageFiles($zip, $this->subProgress(55, 85));
 
         // 3) Metadata backup
@@ -152,19 +152,19 @@ class DatabaseBackup
 
         $zip->close();
 
-        // 4) Upload ZIP ke disk backup (B2) via stream
+        // 4) Upload ZIP ke disk backup via stream
         $this->checkCancelled();
-        $this->reportProgress(88, 'Mengunggah backup ke storage…');
+        $this->reportProgress(88, 'Menyimpan cadangan…');
 
         $stream = @fopen($zipPath, 'r');
         if (! $stream) {
-            throw new \RuntimeException('Gagal membaca file backup sementara.');
+            throw new \RuntimeException('Gagal membaca file cadangan.');
         }
 
         try {
             Storage::disk(self::diskName())->put($relative, $stream);
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Gagal menyimpan backup ke storage: '.$e->getMessage(), 0, $e);
+            throw new \RuntimeException('Gagal menyimpan cadangan.', 0, $e);
         } finally {
             if (is_resource($stream)) {
                 fclose($stream);
@@ -174,7 +174,7 @@ class DatabaseBackup
 
         $this->deleteOldBackups($relative);
 
-        $this->reportProgress(100, 'Backup selesai');
+        $this->reportProgress(100, 'Cadangan berhasil dibuat');
 
         return $relative;
     }
@@ -208,7 +208,7 @@ class DatabaseBackup
         }
 
         $this->checkCancelled();
-        $this->reportProgress(1, 'Membuka file backup…');
+        $this->reportProgress(1, 'Membuka cadangan…');
 
         // 1) Tulis file storage (B2) dari ZIP — file yang ada di backup ditimpa,
         //    file lain yang tidak ada di backup tetap dipertahankan (non-destruktif).
@@ -250,14 +250,14 @@ class DatabaseBackup
             // objek baru yang mubazir di B2 (versioning aktif) dan menutup
             // kemungkinan file membengkak akibat penulisan berulang.
             if ($disk->exists($relative) && $disk->get($relative) === $content) {
-                $this->reportProgress((int) round(($i + 1) / max(1, $total) * 55), 'File '.($i + 1).'/'.$total.' sudah identik, dilewati');
+                $this->reportProgress((int) round(($i + 1) / max(1, $total) * 55), 'Dokumen '.($i + 1).'/'.$total.' sudah sesuai');
 
                 continue;
             }
 
             $disk->put($relative, $content);
 
-            $this->reportProgress((int) round(($i + 1) / max(1, $total) * 55), 'Mengembalikan file '.($i + 1).'/'.$total);
+            $this->reportProgress((int) round(($i + 1) / max(1, $total) * 55), 'Memulihkan dokumen '.($i + 1).'/'.$total);
         }
 
         // 2) Restore database dari database.sql (merge, non-destruktif).
@@ -268,7 +268,7 @@ class DatabaseBackup
             throw new \RuntimeException('File database.sql tidak ditemukan atau kosong dalam backup.');
         }
 
-        $this->reportProgress(60, 'Memulihkan database…');
+        $this->reportProgress(60, 'Memulihkan data…');
 
         return $this->executeSql($sqlContent, $this->subProgress(60, 100));
     }
@@ -279,7 +279,7 @@ class DatabaseBackup
     protected function restoreSqlFile(string $fullPath): int
     {
         $this->checkCancelled();
-        $this->reportProgress(2, 'Membaca file backup…');
+        $this->reportProgress(2, 'Membuka file cadangan…');
 
         $sql = file_get_contents($fullPath);
 
@@ -352,7 +352,7 @@ class DatabaseBackup
 
         $this->checkCancelled();
         if ($progress) {
-            $progress(0, 'Mendaftarkan file storage…');
+            $progress(0, 'Mengumpulkan dokumen…');
         }
 
         $allFiles = array_values(array_filter(
@@ -833,9 +833,7 @@ class DatabaseBackup
                 $pdo->rollBack();
             }
 
-            throw new \RuntimeException(
-                'Restore database gagal: '.$e->getMessage().' — statement: '.substr(trim($current), 0, 160)
-            );
+            throw new \RuntimeException('Pemulihan data gagal dijalankan.', 0, $e);
         } finally {
             try {
                 $pdo->exec('SET session_replication_role = DEFAULT');

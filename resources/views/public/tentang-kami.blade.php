@@ -285,10 +285,6 @@
                     referrerpolicy="no-referrer-when-downgrade"
                     class="absolute inset-0 h-full w-full contrast-[1.04] saturate-[.88] dark:brightness-75">
                 </iframe>
-                <div class="pointer-events-none absolute inset-x-4 top-4 flex items-center gap-2.5 rounded-xl bg-slate-950/80 px-3 py-2.5 text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md" aria-hidden="true">
-                    <span class="flex size-8 items-center justify-center rounded-lg bg-brand-400/20 text-brand-100" style="--icon-accent: #6ee7b7"><x-icons.alamat class="size-4" /></span>
-                    <span class="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">{{ __('Lokasi Kantor DLH Palu') }}</span>
-                </div>
             </div>
         </div>
     </section>

@@ -90,7 +90,7 @@
         ]"
     >
         <x-slot:actions>
-            <x-admin.status-pill :variant="$record->exists ? 'info' : 'success'" :label="$record->exists ? 'Mode Edit' : 'Data Baru'" />
+            <x-admin.status-pill :variant="$record->exists ? 'info' : 'success'" :label="$record->exists ? 'Edit Data' : 'Data Baru'" />
         </x-slot:actions>
     </x-admin.page-header>
 
@@ -172,7 +172,7 @@
                 $isUserForm = $resource['slug'] === 'user';
                 $sectionMeta = match ($section['label']) {
                     'Informasi Akun' => ['icon' => 'user', 'subtitle' => 'Data login & identitas pengguna'],
-                    'Role & Akses' => ['icon' => 'shield', 'subtitle' => 'Tetapkan peran & hak akses menu'],
+                    'Jabatan & Akses' => ['icon' => 'shield', 'subtitle' => 'Tetapkan jabatan & hak akses menu'],
                     default => ['icon' => 'file-text', 'subtitle' => null],
                 };
                 $sectionKegiatanShow = $section['show_on_kegiatan'] ?? null;

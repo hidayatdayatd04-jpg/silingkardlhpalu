@@ -66,7 +66,7 @@
       <div>
         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Tulis sebagai Admin</h3>
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Komentar admin ditandai lencana <span class="font-semibold">Penulis</span> di halaman publik.
+          Komentar admin ditandai lencana <span class="font-semibold">Admin</span> di halaman publik.
         </p>
       </div>
       <span x-show="replyId" x-cloak class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
@@ -179,13 +179,13 @@
               <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                 <span class="text-[13.5px] font-bold leading-tight text-slate-900 dark:text-white">{{ $k->display_name }}</span>
                 @if($k->is_admin)
-                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-900 px-1.5 py-[2px] text-[9.5px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Penulis<span class="grid size-3 place-items-center rounded-full bg-sky-500 text-white"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg></span></span>
+                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-900 px-1.5 py-[2px] text-[9.5px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Admin<span class="grid size-3 place-items-center rounded-full bg-sky-500 text-white"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg></span></span>
                 @endif
                 @if($k->is_pinned)
                   <span class="rounded-full bg-amber-400 px-1.5 py-px text-[9.5px] font-black uppercase tracking-wider leading-[1.5] text-amber-950">Semat</span>
                 @endif
                 @if($k->is_hidden)
-                  <span class="rounded-full bg-rose-500 px-1.5 py-px text-[9.5px] font-black uppercase tracking-wider leading-[1.5] text-white">Hidden</span>
+                  <span class="rounded-full bg-rose-500 px-1.5 py-px text-[9.5px] font-black uppercase tracking-wider leading-[1.5] text-white">Disembunyikan</span>
                 @endif
                 <span class="text-[11.5px] font-medium text-slate-400 dark:text-slate-500"
                   title="{{ $k->created_at->translatedFormat('d M Y, H:i') }}@if($k->ip_address) · IP {{ $k->ip_address }}@endif">· {{ $k->time_ago }}</span>
@@ -253,8 +253,8 @@
                         <div class="min-w-0 flex-1">
                           <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                             <span class="text-[12.5px] font-bold leading-tight text-slate-900 dark:text-white">{{ $r->display_name }}</span>
-                            @if($r->is_admin)<span class="inline-flex items-center gap-0.5 rounded-md bg-slate-900 px-1.5 py-[2px] text-[9px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Penulis<span class="grid size-2.5 place-items-center rounded-full bg-sky-500 text-white"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg></span></span>@endif
-                            @if($r->is_hidden)<span class="rounded-full bg-rose-500 px-1.5 py-px text-[9px] font-black uppercase tracking-wider leading-[1.5] text-white">Hidden</span>@endif
+                            @if($r->is_admin)<span class="inline-flex items-center gap-0.5 rounded-md bg-slate-900 px-1.5 py-[2px] text-[9px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Admin<span class="grid size-2.5 place-items-center rounded-full bg-sky-500 text-white"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg></span></span>@endif
+                            @if($r->is_hidden)<span class="rounded-full bg-rose-500 px-1.5 py-px text-[9px] font-black uppercase tracking-wider leading-[1.5] text-white">Disembunyikan</span>@endif
                             <span class="text-[11px] font-medium text-slate-400 dark:text-slate-500"
                               title="{{ $r->created_at->translatedFormat('d M Y, H:i') }}@if($r->ip_address) · IP {{ $r->ip_address }}@endif">· {{ $r->time_ago }}</span>
                           </div>

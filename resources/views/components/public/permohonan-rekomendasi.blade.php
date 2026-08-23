@@ -275,7 +275,7 @@ new class extends Component {
                 </button>
             </form>
         @else
-            <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-6">
+            <form wire:submit.prevent="submit" @if(\App\Support\Captcha::enabled()) data-dlh-recaptcha-action="submit" @endif class="space-y-6">
                 <div class="fi-field">
                     <label class="fi-label">
                         <span class="fi-icon-badge"><x-icons.ui name="document" /></span>

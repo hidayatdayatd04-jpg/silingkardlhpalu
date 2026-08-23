@@ -154,7 +154,7 @@ new class extends Component
                 <p class="lc-search-desc">{{ __('Gunakan nomor tiket atau nomor telepon yang tercantum pada bukti laporan.') }}</p>
             </div>
         </div>
-        <form data-dlh-recaptcha-action="lookup" class="tracking-search-form">
+        <form wire:submit="lookup" @if(\App\Support\Captcha::enabled()) data-dlh-recaptcha-action="lookup" @endif class="tracking-search-form">
             <div class="flex-1">
                 <x-public.input
                     wire:model="search"

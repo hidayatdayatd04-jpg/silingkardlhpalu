@@ -59,7 +59,7 @@ class RunRestoreJob implements ShouldQueue
                 BackupProgress::update([
                     'status' => 'running',
                     'percent' => 1,
-                    'label' => 'Mengambil file backup dari storage…',
+                    'label' => 'Membuka cadangan…',
                 ]);
 
                 $downloaded = DatabaseBackup::downloadToTemp($this->backupRelative);
@@ -86,19 +86,39 @@ class RunRestoreJob implements ShouldQueue
 
             ActivityLogger::log(
                 'restore',
-                'Restore database + storage dari: '.$this->sourceName.' ('.$count.' statement, latar belakang)',
+                'Pemulihan data + dokumen dari: '.$this->sourceName.' (latar belakang)',
                 'system',
                 null, null, null, $user,
             );
 
-            BackupProgress::finish('done', "Restore berhasil dari {$this->sourceName}. {$count} statement dieksekusi. Pre-restore: {$preRestore}.");
+            BackupProgress::finish('done', 'Data berhasil dipulihkan dari cadangan.');
+
+            if ($user) {
+                \App\Support\AdminNotifier::toUser($user, [
+                    'title' => 'Pemulihan Berhasil',
+                    'message' => 'Data dan dokumen aplikasi berhasil dipulihkan.',
+                    'icon' => 'refresh',
+                    'color' => 'emerald',
+                    'href' => route('admin.backup.index'),
+                    'module' => 'system',
+                ]);
+            }
         } catch (BackupCancelledException $e) {
-            $hint = $preRestore ? " Pre-restore {$preRestore} tersedia bila diperlukan." : '';
-            BackupProgress::finish('cancelled', 'Restore dibatalkan oleh pengguna.'.$hint);
+            BackupProgress::finish('cancelled', 'Proses pemulihan dibatalkan.');
         } catch (\Throwable $e) {
             report($e);
-            $hint = $preRestore ? " (Pre-restore {$preRestore} masih tersedia bila diperlukan.)" : '';
-            BackupProgress::finish('failed', 'Gagal restore: '.$e->getMessage().$hint);
+            BackupProgress::finish('failed', 'Pemulihan data belum berhasil. Silakan coba lagi atau hubungi pengelola sistem.');
+
+            if ($user) {
+                \App\Support\AdminNotifier::toUser($user, [
+                    'title' => 'Pemulihan Gagal',
+                    'message' => 'Pemulihan data belum berhasil. Silakan coba lagi atau hubungi pengelola sistem.',
+                    'icon' => 'alert-triangle',
+                    'color' => 'rose',
+                    'href' => route('admin.backup.index'),
+                    'module' => 'system',
+                ]);
+            }
         } finally {
             // Bersihkan file lokal sementara (upload maupun hasil unduhan).
             foreach (array_filter([$this->filePath, $downloaded]) as $f) {
@@ -114,14 +134,26 @@ class RunRestoreJob implements ShouldQueue
     /** Bila worker gagal fatal (timeout/kill) sebelum handle() sempat catch. */
     public function failed(\Throwable $e): void
     {
-        // Jangan timpa status akhir bila job sebenarnya sudah selesai —
-        // mis. worker menandai job gagal karena retry_after terlampaui
-        // padahal handle() sudah menulis status 'done'.
+        report($e);
+
+        // Jangan timpa status akhir bila job sebenarnya sudah selesai
         if ((BackupProgress::state()['status'] ?? null) === 'done') {
             return;
         }
 
-        BackupProgress::finish('failed', 'Gagal restore: '.$e->getMessage());
+        BackupProgress::finish('failed', 'Pemulihan data belum berhasil. Silakan coba lagi.');
+
+        $user = User::query()->find($this->userId);
+        if ($user) {
+            \App\Support\AdminNotifier::toUser($user, [
+                'title' => 'Pemulihan Gagal',
+                'message' => 'Pemulihan data belum berhasil. Silakan coba lagi atau hubungi pengelola sistem.',
+                'icon' => 'alert-triangle',
+                'color' => 'rose',
+                'href' => route('admin.backup.index'),
+                'module' => 'system',
+            ]);
+        }
 
         if ($this->filePath && is_file($this->filePath)) {
             @unlink($this->filePath);

@@ -23,13 +23,17 @@ class TrackWebsiteVisit
      */
     public function terminate(Request $request, Response $response): void
     {
-        // mod_php menahan response sampai script selesai. Flush buffer SEKARANG
-        // agar byte response terdorong ke browser sebelum query DB remote yang
-        // lambat di bawah dijalankan — TTFB tidak lagi membayar query ini.
-        while (ob_get_level() > 0) {
-            ob_end_flush();
+        // Jangan sentuh output buffer saat unit/feature test — PHPUnit memiliki
+        // buffer sendiri yang tidak boleh ditutup dari dalam aplikasi.
+        if (! app()->runningUnitTests()) {
+            // mod_php menahan response sampai script selesai. Flush buffer SEKARANG
+            // agar byte response terdorong ke browser sebelum query DB remote yang
+            // lambat di bawah dijalankan — TTFB tidak lagi membayar query ini.
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
+            flush();
         }
-        flush();
 
         if (! $request->isMethod('GET') || $request->is(config('app.admin_path').'*') || $request->is('api/*')) {
             return;

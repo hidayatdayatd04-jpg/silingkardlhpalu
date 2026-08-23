@@ -22,7 +22,7 @@
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
                 </span>
-                <span>Pembaruan Real-time</span>
+                <span>Data terkini</span>
             </div>
             <div class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
                 <span class="size-2 rounded-full bg-brand-500"></span>
@@ -132,7 +132,7 @@
         {{-- Map + Interactive Sidebar Layout --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-100 dark:divide-slate-800">
             {{-- Map Viewport (8 Kolom) --}}
-            <div class="relative lg:col-span-8 h-[540px] sm:h-[600px] w-full bg-slate-100 dark:bg-slate-950 overflow-hidden">
+            <div class="relative lg:col-span-8 h-[380px] sm:h-[600px] w-full bg-slate-100 dark:bg-slate-950 overflow-hidden">
                 <div id="sebaran-pengaduan-map" class="w-full h-full"></div>
 
                 {{-- Floating Legend Overlay --}}
@@ -174,7 +174,7 @@
             </div>
 
             {{-- Interactive Report Feed / List (4 Kolom) --}}
-            <div class="lg:col-span-4 flex flex-col h-[540px] sm:h-[600px] bg-white dark:bg-slate-900">
+            <div class="lg:col-span-4 flex flex-col h-[380px] sm:h-[600px] bg-white dark:bg-slate-900">
                 {{-- List Header --}}
                 <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3.5 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40">
                     <div>

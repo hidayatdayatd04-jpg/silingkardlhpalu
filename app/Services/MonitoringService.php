@@ -91,11 +91,15 @@ class MonitoringService
      * State saat terjadi kegagalan (koneksi/query error) — card tetap tampil
      * dengan pesan yang jelas tanpa merusak halaman.
      */
-    protected function errorState(string $label, \Throwable $e, float $limit, string $plan): array
+    protected function errorState(string $label, \Throwable $e, float $limit, string $plan = ''): array
     {
+        // Detail teknis cukup dicatat di log server, bukan di UI admin.
+        report($e);
+
         return [
             'error' => true,
-            'message' => 'Gagal memuat data '.$label.'.',
+            // Pesan netral untuk admin — detail teknis hanya masuk log server.
+            'message' => 'Data kapasitas gagal dimuat. Silakan muat ulang halaman.',
             'details' => $e->getMessage(),
             'bytes' => 0,
             'human' => '—',

@@ -762,3 +762,125 @@ window.DlhWeatherControl = class {
         return { label: 'Cuaca', color: '#64748b', svg: cloud };
     }
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// Tools Control — satu tombol dropdown untuk tombol-tombol sekunder peta
+// (layar penuh, cuaca, lokasi saya) agar kanvas peta tetap bersih, terutama
+// di layar kecil. Tool berupa instance kontrol MapLibre (punya onAdd) atau
+// descriptor { title, icon, action(map, btn) }.
+// ════════════════════════════════════════════════════════════════════════════
+window.DlhToolsControl = class {
+    constructor(tools) {
+        this._tools = tools || [];
+        this._map = null;
+        this._container = null;
+        this._panel = null;
+        this._toggleBtn = null;
+        this._open = false;
+        this._outsideHandler = null;
+    }
+
+    onAdd(map) {
+        this._map = map;
+        if (!document.getElementById('dlh-tools-style')) {
+            var style = document.createElement('style');
+            style.id = 'dlh-tools-style';
+            style.textContent = ''
+                + '.maplibregl-ctrl.dlh-tools-ctrl{background:transparent;border:none;box-shadow:none}'
+                + '.dlh-tools-ctrl__toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0}'
+                + '.dlh-tools-ctrl__toggle:hover{background:#f1f5f9;color:#0f172a}'
+                + '.dlh-tools-ctrl__toggle:focus-visible{outline:2px solid #10b981;outline-offset:-2px}'
+                + '.dlh-tools-ctrl__toggle.is-open{background:#ecfdf5;color:#059669}'
+                + '.dlh-tools-ctrl__panel{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px}'
+                + '.dlh-tools-ctrl__panel[hidden]{display:none}'
+                + '.dlh-tools-ctrl__panel .maplibregl-ctrl{margin:0}';
+            document.head.appendChild(style);
+        }
+
+        var self = this;
+        this._container = document.createElement('div');
+        this._container.className = 'maplibregl-ctrl dlh-tools-ctrl';
+
+        this._toggleBtn = document.createElement('button');
+        this._toggleBtn.type = 'button';
+        this._toggleBtn.title = 'Alat Peta';
+        this._toggleBtn.setAttribute('aria-label', 'Alat Peta');
+        this._toggleBtn.setAttribute('aria-expanded', 'false');
+        this._toggleBtn.innerHTML = DlhToolsControl._icon();
+        this._toggleBtn.onclick = function (e) { e.stopPropagation(); self.toggle(); };
+
+        this._panel = document.createElement('div');
+        this._panel.className = 'dlh-tools-ctrl__panel';
+        this._panel.hidden = true;
+
+        this._tools.forEach(function (tool) {
+            if (tool && typeof tool.onAdd === 'function') {
+                // Kontrol MapLibre biasa — elemennya ditampung di dalam panel.
+                var el = tool.onAdd(map);
+                if (el) {
+                    el.classList.add('dlh-tools-ctrl__item');
+                    self._panel.appendChild(el);
+                }
+            } else if (tool && tool.title && typeof tool.action === 'function') {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.title = tool.title;
+                btn.setAttribute('aria-label', tool.title);
+                btn.innerHTML = tool.icon || '';
+                btn.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0';
+                btn.onmouseenter = function () { btn.style.background = '#f1f5f9'; btn.style.color = '#0f172a'; };
+                btn.onmouseleave = function () { btn.style.background = '#ffffff'; btn.style.color = '#334155'; };
+                btn.onclick = function (e) { e.stopPropagation(); tool.action(map, btn); };
+                self._panel.appendChild(btn);
+            }
+        });
+
+        this._container.appendChild(this._toggleBtn);
+        this._container.appendChild(this._panel);
+
+        this._outsideHandler = function (e) {
+            if (self._open && self._container && !self._container.contains(e.target)) self.close();
+        };
+        document.addEventListener('click', this._outsideHandler);
+
+        return this._container;
+    }
+
+    toggle() { this._open ? this.close() : this.open(); }
+
+    open() {
+        this._open = true;
+        this._panel.hidden = false;
+        this._toggleBtn.classList.add('is-open');
+        this._toggleBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    close() {
+        this._open = false;
+        this._panel.hidden = true;
+        this._toggleBtn.classList.remove('is-open');
+        this._toggleBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    onRemove() {
+        if (this._outsideHandler) {
+            document.removeEventListener('click', this._outsideHandler);
+            this._outsideHandler = null;
+        }
+        if (this._container && this._container.parentNode) {
+            this._container.parentNode.removeChild(this._container);
+        }
+        this._map = null;
+    }
+
+    static _icon() {
+        return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            + '<path d="M4 6h8M16.5 6H20"/>'
+            + '<circle cx="14.5" cy="6" r="2"/>'
+            + '<path d="M4 12h3M11.5 12H20"/>'
+            + '<circle cx="9.5" cy="12" r="2"/>'
+            + '<path d="M4 18h8M16.5 18H20"/>'
+            + '<circle cx="14.5" cy="18" r="2"/>'
+            + '</svg>';
+    }
+};

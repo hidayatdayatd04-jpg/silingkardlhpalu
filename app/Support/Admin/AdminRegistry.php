@@ -220,13 +220,13 @@ class AdminRegistry
                 ],
                 [
                     'name' => '_section_access',
-                    'label' => 'Role & Akses',
+                    'label' => 'Jabatan & Akses',
                     'type' => 'section',
                     'options' => [],
                 ],
                 [
                     'name' => 'role',
-                    'label' => 'Role / Jabatan',
+                    'label' => 'Jabatan',
                     'type' => 'select',
                     'options' => collect(\App\Enums\AdminRole::cases())
                         ->mapWithKeys(fn ($role) => [$role->value => $role->label()])
@@ -260,7 +260,7 @@ class AdminRegistry
                 ],
                 [
                     'name' => 'thumbnail',
-                    'label' => 'Thumbnail',
+                    'label' => 'Gambar Utama',
                     'type' => 'file',
                     'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
                     'options' => [],
@@ -288,7 +288,7 @@ class AdminRegistry
                 ],
                 [
                     'name' => 'tanggal_publish',
-                    'label' => 'Tanggal Publish',
+                    'label' => 'Tanggal Tayang',
                     'type' => 'date',
                     'options' => [],
                     'required' => true,
@@ -1827,7 +1827,7 @@ class AdminRegistry
             'user' => [
                 'role' => [
                     'key'     => 'role',
-                    'label'   => 'Role',
+                    'label'   => 'Jabatan',
                     'type'    => 'select',
                     'column'  => 'role',
                     'options' => collect(\App\Enums\AdminRole::cases())

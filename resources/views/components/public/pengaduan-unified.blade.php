@@ -287,7 +287,7 @@ new class extends Component {
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="grid gap-8"
+        <form wire:submit.prevent="submit" @if(\App\Support\Captcha::enabled()) data-dlh-recaptcha-action="submit" @endif class="grid gap-8"
             :class="located ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'"
             x-data="{
                 located: false,
@@ -502,7 +502,7 @@ new class extends Component {
                 />
 
                 <div class="fi-field">
-                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span> <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(min 1, max 5, JPG/PNG/WebP/AVIF/HEIC maksimal 5MB)</span></label>
+                    <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span></label>
                     <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Foto Bukti', exts: ['jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5, maxCount: 5, countSelector: '[data-photo-item]' })">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.fileInput.click()">{{ __('Choose Files') }}</button>
                         <span class="fi-file-status">{{ __('No file chosen') }}</span>

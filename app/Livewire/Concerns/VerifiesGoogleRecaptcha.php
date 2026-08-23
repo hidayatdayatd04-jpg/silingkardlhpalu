@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Concerns;
 
+use App\Support\Captcha;
 use Illuminate\Support\Facades\Http;
 
 /**
  * Server-side gate for Google reCAPTCHA v2 Invisible on public Livewire actions.
  * The browser token is always verified with Google before the action continues.
+ *
+ * Verifikasi dapat dimatikan dari menu Pengaturan (Verifikasi Captcha).
  */
 trait VerifiesGoogleRecaptcha
 {
@@ -16,6 +19,11 @@ trait VerifiesGoogleRecaptcha
 
     public function verifyCaptcha(string $action = ''): bool
     {
+        // Captcha dinonaktifkan dari Pengaturan — lewati pemeriksaan.
+        if (! Captcha::enabled()) {
+            return true;
+        }
+
         if ($this->recaptchaToken !== '') {
             if ($this->verifyRecaptchaToken()) {
                 $this->recaptchaPendingAction = '';

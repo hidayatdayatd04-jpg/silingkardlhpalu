@@ -283,7 +283,7 @@
                                         <span class="flex min-w-0 flex-col">
                                             <span class="truncate text-sm font-semibold text-slate-900">{{ $format($record->{$column} ?? null, $column) }}</span>
                                             @if($record->primaryRoleName())
-                                                <span class="text-xs text-slate-500">{{ $record->primaryRoleName() }}</span>
+                                                <span class="text-xs text-slate-500">{{ \App\Enums\AdminRole::tryFrom($record->primaryRoleName())?->label() ?? $record->primaryRoleName() }}</span>
                                             @endif
                                         </span>
                                     </span>

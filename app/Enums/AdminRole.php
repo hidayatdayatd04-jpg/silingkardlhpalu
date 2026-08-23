@@ -13,7 +13,7 @@ enum AdminRole: string
     public function label(): string
     {
         return match ($this) {
-            self::ADMIN => 'Admin',
+            self::ADMIN => 'Administrator Utama',
             self::BIDANG_PENGENDALIAN => 'Bidang Pengendalian Dampak Lingkungan',
             self::BIDANG_SAMPAH_LB3 => 'Bidang Pengelolaan Sampah & LB3',
             self::BIDANG_TATA_PENATAAN => 'Bidang Tata Penataan',

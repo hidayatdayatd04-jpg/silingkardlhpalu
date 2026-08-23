@@ -87,7 +87,7 @@ class GenerateExportJob implements ShouldQueue
                 href: route('admin.exports.download', $token),
                 downloadName: $meta['slug'].'-'.$this->scope.'-'.now()->format('Ymd-His').'.'.$format,
             ));
-            Cache::forget('admin:notifications:'.$user->id);
+            \App\Support\Admin\AdminNotificationFeed::forget($user);
         } catch (\Throwable $e) {
             // Notifikasi gagal bukan alasan job dianggap gagal — file tetap ada.
             report($e);

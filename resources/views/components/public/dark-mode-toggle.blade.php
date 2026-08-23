@@ -27,7 +27,7 @@
     {{-- Bulan --}}
     <x-icons.ui
         name="moon"
-        class="absolute size-5 text-indigo-300 transition-all duration-500"
+        class="absolute size-5 text-indigo-400 transition-all duration-500"
         ::class="dark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'"
     />
 </button>

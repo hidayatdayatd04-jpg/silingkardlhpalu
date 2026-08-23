@@ -34,7 +34,6 @@
                 ]"
             >
                 <x-slot:actions>
-                    <x-admin.status-pill :variant="$isEdit ? 'info' : 'success'" :label="$isEdit ? 'Mode Edit' : 'Mode Tambah'" />
                 </x-slot:actions>
             </x-admin.page-header>
 
@@ -79,7 +78,7 @@
                             <div data-error-key="thumbnail">
                                 <x-admin.file-upload
                                     name="thumbnail"
-                                    label="Thumbnail"
+                                    label="Gambar Utama"
                                     accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
                                     :required="!$record->thumbnail"
                                     :current-file="$record->thumbnail"
@@ -117,7 +116,7 @@
                                     id="artikel_tanggal"
                                     name="tanggal_publish"
                                     type="date"
-                                    label="Tanggal Publish"
+                                    label="Tanggal Tayang"
                                     required
                                     :value="$selectedTanggal"
                                     :error="$errors->first('tanggal_publish')"
@@ -197,7 +196,7 @@
                                 </div>
                                 <div class="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white/80 px-3.5 py-3 dark:border-brand-900/70 dark:bg-slate-900/80">
                                     <dt class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                        <x-admin.icon name="image" :size="14" class="text-brand-600 dark:text-brand-300" aria-hidden="true" /> Thumbnail
+                                        <x-admin.icon name="image" :size="14" class="text-brand-600 dark:text-brand-300" aria-hidden="true" /> Gambar Utama
                                     </dt>
                                     <dd class="text-sm font-bold" :class="summaryThumb ? 'text-emerald-600' : 'text-amber-600'"
                                         x-text="summaryThumb ? 'Sudah terisi' : 'Belum diunggah'"></dd>
@@ -273,7 +272,7 @@
 
                 const fileInput = document.querySelector('#artikel-form input[name="thumbnail"]');
                 const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
-                if (!hasFile && !this.hasExistingThumb) { errors.thumbnail = 'Thumbnail wajib diunggah.'; }
+                if (!hasFile && !this.hasExistingThumb) { errors.thumbnail = 'Gambar utama wajib diunggah.'; }
 
                 const ta = document.getElementById('artikel_konten');
                 const html = (ta?.value || '').trim();

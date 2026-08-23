@@ -9,7 +9,7 @@
     {{-- Prefix panel admin untuk skrip klien (mis. cek halaman backup di alpine.js). --}}
     <script>window.ADMIN_BASE_URL = @js('/'.trim((string) config('app.admin_path'), '/'));</script>
     <title>@yield('title', 'Admin DLH Kota Palu')</title>
-    <meta name="description" content="Panel admin Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu — kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna.">
+    <meta name="description" content="Panel administrasi Dinas Lingkungan Hidup Kota Palu — kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna.">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     @include('partials.web-fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-common.js'])

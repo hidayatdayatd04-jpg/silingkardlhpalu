@@ -49,8 +49,10 @@ class NotificationObserver
                     'Kegiatan monitoring dan evaluasi baru: '.$model->judul, 'sosialisasi', $model->getKey())
                 : $this->notify('tata-penataan', 'presentation', 'sky', 'Sosialisasi Baru',
                     'Kegiatan sosialisasi baru: '.$model->judul, 'sosialisasi', $model->getKey()),
-            $model instanceof Artikel => $this->notify('konten', 'news', 'blue', 'Artikel Baru',
-                'Artikel "'.$model->judul.'" telah dipublikasikan.', 'artikel', $model->getKey()),
+            $model instanceof Artikel => ($model->status instanceof \BackedEnum ? $model->status->value : $model->status) === 'published'
+                ? $this->notify('konten', 'news', 'blue', 'Artikel Ditayangkan',
+                    'Artikel "'.$model->judul.'" telah ditayangkan.', 'artikel', $model->getKey())
+                : null,
             $model instanceof DataTanamPohon => $this->notify('rth', 'seedling', 'green', 'Data Tanam Pohon Baru',
                 'Data tanam pohon baru ditambahkan.', 'data-tanam-pohon', $model->getKey()),
             default => null,
@@ -63,21 +65,38 @@ class NotificationObserver
             return;
         }
 
-        $newStatus = $model->getOriginal('status');
+        $originalStatus = $model->getOriginal('status');
+        $origStatusValue = $originalStatus instanceof \BackedEnum ? $originalStatus->value : $originalStatus;
         $statusValue = $model->status instanceof \BackedEnum ? $model->status->value : $model->status;
 
         match (true) {
+            $model instanceof Artikel => ($statusValue === 'published' && $origStatusValue !== 'published')
+                ? $this->notify('konten', 'news', 'blue', 'Artikel Ditayangkan',
+                    'Artikel "'.$model->judul.'" telah ditayangkan.', 'artikel', $model->getKey())
+                : null,
             $model instanceof PengaduanPengendalian => $this->pengaduanStatusChanged($model, 'pengendalian', 'pengaduan-pengendalian', $statusValue),
             $model instanceof PengaduanSampah => $this->pengaduanStatusChanged($model, 'sampah-lb3', 'pengaduan-sampah', $statusValue),
             $model instanceof PengaduanRth => $this->pengaduanStatusChanged($model, 'rth', 'pengaduan-rth', $statusValue),
             $model instanceof PermohonanRekomendasi => $this->notify('rth', 'clipboard-check', 'indigo', 'Status Permohonan Berubah',
-                'Status permohonan #'.$model->id.' berubah menjadi '.$statusValue.'.', 'permohonan-rekomendasi', $model->getKey()),
+                'Status permohonan #'.$model->id.' berubah menjadi '.$this->statusLabel($model->status).'.', 'permohonan-rekomendasi', $model->getKey()),
             $model instanceof RegistrasiUsahaLb3 => $this->notify('sampah-lb3', 'building', 'amber', 'Status Registrasi LB3 Berubah',
-                'Status registrasi "'.$model->nama_usaha.'" berubah menjadi '.$statusValue.'.', 'registrasi-usaha-lb3', $model->getKey()),
+                'Status registrasi "'.$model->nama_usaha.'" berubah menjadi '.$this->statusLabel($model->status).'.', 'registrasi-usaha-lb3', $model->getKey()),
             $model instanceof PengaduanTataPenataan => $this->notify('tata-penataan', 'building', 'purple', 'Status Pengaduan Berubah',
-                'Status pengaduan tata penataan #'.$model->id.' berubah menjadi '.$statusValue.'.', 'pengaduan-tata-penataan', $model->getKey()),
+                'Status pengaduan tata penataan #'.$model->id.' berubah menjadi '.$this->statusLabel($model->status).'.', 'pengaduan-tata-penataan', $model->getKey()),
             default => null,
         };
+    }
+
+    /**
+     * Label status yang mudah dibaca (memakai label() milik enum bila ada).
+     */
+    protected function statusLabel(mixed $status): string
+    {
+        if ($status instanceof \BackedEnum && method_exists($status, 'label')) {
+            return $status->label();
+        }
+
+        return (string) $status;
     }
 
     protected function pengaduanStatusChanged(Model $model, string $group, string $slug, string $newStatus): void

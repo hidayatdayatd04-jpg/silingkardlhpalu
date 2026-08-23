@@ -7,14 +7,13 @@
 <div class="admin-settings">
     {{-- Hero Header --}}
     <div class="admin-dashboard-hero relative overflow-hidden p-6 text-white sm:p-8">
-
         <div class="relative flex items-center gap-4">
             <div class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/10 backdrop-blur-sm">
                 <x-admin.icon name="settings" :size="26" />
             </div>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Pengaturan</h1>
-                <p class="mt-1 text-sm text-white/60">Konfigurasi sistem aplikasi.</p>
+                <p class="mt-1 text-sm text-white/60">Kelola pengaturan aplikasi yang tersedia untuk akun Anda.</p>
             </div>
         </div>
     </div>
@@ -74,13 +73,13 @@
 
             <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-5 transition hover:border-brand-200 hover:bg-brand-50/20"
                  x-data="{ enabled: {{ $maintenanceEnabled ? 'true' : 'false' }} }">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 flex-1 items-center gap-4">
                         <div class="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600">
                             <x-admin.icon name="settings" :size="22" />
                         </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <p class="text-sm font-bold text-ink-700">Aktifkan Mode Pemeliharaan</p>
                                 <span :class="enabled ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'"
                                     class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300">
@@ -113,8 +112,55 @@
                             label="Estimasi Selesai"
                             icon="clock"
                             :value="$maintenanceEstimatedAt"
-                            hint="Opsional. Jika diisi, pengunjung akan melihat perkiraan waktu & hitung mundur."
+                            hint="Opsional. Jika diisi, pengunjung akan melihat perkiraan waktu selesainya pemeliharaan."
                         />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Verifikasi Captcha --}}
+        <div class="rounded-2xl border border-white/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
+            <div class="mb-6 flex items-center gap-3">
+                <div class="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-600">
+                    <x-admin.icon name="shield" :size="20" />
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-ink-900">Verifikasi Captcha</h2>
+                    <p class="text-sm text-slate-500">Aktifkan atau matikan pemeriksaan keamanan pada formulir publik.</p>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-5 transition hover:border-brand-200 hover:bg-brand-50/20"
+                 x-data="{ enabled: {{ $captchaEnabled ? 'true' : 'false' }} }">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 flex-1 items-center gap-4">
+                        <div class="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-sky-100 to-blue-100 text-sky-600">
+                            <x-admin.icon name="shield" :size="22" />
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="text-sm font-bold text-ink-700">Aktifkan Verifikasi Captcha</p>
+                                <span :class="enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'"
+                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300">
+                                    <span x-text="enabled ? 'Aktif' : 'Nonaktif'"></span>
+                                </span>
+                            </div>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-500">Berlaku untuk formulir publik: pengaduan, lacak laporan, permohonan, pengajuan, dan peminjaman taman.</p>
+                        </div>
+                    </div>
+                    <div class="ml-4 shrink-0">
+                        <input type="hidden" name="captcha_enabled" :value="enabled ? '1' : '0'" />
+                        <button type="button" @click="enabled = !enabled"
+                            class="spring-toggle" :class="{ 'is-on': enabled }"
+                            role="switch" :aria-checked="enabled ? 'true' : 'false'"
+                            aria-label="Aktifkan verifikasi captcha">
+                            <span class="spring-track"></span>
+                            <span class="spring-thumb">
+                                <x-admin.icon name="check" :size="16" />
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -133,8 +179,8 @@
                     <x-admin.icon name="lock" :size="18" />
                 </span>
                 <div>
-                    <h2 class="text-base font-bold text-ink-900 dark:text-white">Pengaturan sistem</h2>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Mode pemeliharaan dan konfigurasi AI hanya dapat diubah oleh superadmin.</p>
+                    <h2 class="text-base font-bold text-ink-900 dark:text-white">Pengaturan Sistem</h2>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Mode pemeliharaan dan konfigurasi AI hanya dapat diubah oleh Administrator Utama.</p>
                     <p class="mt-2 text-xs font-medium text-slate-500">Status pemeliharaan saat ini: <span class="{{ $maintenanceEnabled ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300' }}">{{ $maintenanceEnabled ? 'Aktif' : 'Nonaktif' }}</span>.</p>
                 </div>
             </div>
@@ -144,13 +190,11 @@
     @if($isSuperadmin)
         {{-- Konfigurasi AI Assistant --}}
         @php
-            // Form edit antar provider memakai nama field yang sama, jadi hanya
-            // form yang barusan dikirim (provider_id via old()) yang menampilkan error.
             $failedProviderId = old('provider_id');
             $providerTypeLabels = [
                 'openrouter' => 'OpenRouter',
                 'google'     => 'Google Gemini',
-                'custom'     => 'Custom',
+                'custom'     => 'Kustom',
             ];
         @endphp
         <div class="mt-8">
@@ -159,8 +203,8 @@
                     <x-admin.icon name="message" :size="20" />
                 </div>
                 <div>
-                    <h2 class="text-lg font-bold text-ink-900">Konfigurasi AI Assistant</h2>
-                    <p class="text-sm text-slate-500">Pilih provider OpenRouter, Google Gemini, atau Custom (OpenAI-compatible seperti TokenRouter). Provider dicoba berurutan dari prioritas terkecil — bila satu gagal/kuota habis, otomatis lanjut ke berikutnya.</p>
+                    <h2 class="text-lg font-bold text-ink-900">Layanan Asisten AI</h2>
+                    <p class="text-sm text-slate-500">Kelola penyedia kecerdasan buatan untuk asisten virtual aplikasi. Layanan digunakan berurutan sesuai urutan prioritas.</p>
                 </div>
             </div>
 
@@ -184,14 +228,14 @@
                                 @endif
                             </div>
                             <button type="button" x-data x-on:click="$dispatch('open-modal', 'del-provider-{{ $provider->id }}')"
-                                    class="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Hapus provider" aria-label="Hapus provider {{ $provider->name }}">
+                                    class="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Hapus layanan" aria-label="Hapus layanan {{ $provider->name }}">
                                 <x-admin.icon name="trash" :size="16" />
                             </button>
                             <x-admin.confirm-delete
                                 name="del-provider-{{ $provider->id }}"
                                 :action="route('admin.settings.providers.destroy', $provider)"
-                                title="Hapus Provider"
-                                message='Provider "{{ $provider->name }}" akan dihapus permanen dari daftar.' />
+                                title="Hapus Layanan AI"
+                                message='Layanan "{{ $provider->name }}" akan dihapus permanen dari daftar.' />
                         </div>
 
                         <form method="POST" action="{{ route('admin.settings.providers.update', $provider) }}"
@@ -205,7 +249,7 @@
 
                             <x-admin.form-input
                                 name="name"
-                                label="Nama Provider"
+                                label="Nama Layanan"
                                 :required="true"
                                 :value="$provider->name"
                                 :error="$showErr && $errors->has('name') ? $errors->first('name') : ''"
@@ -213,27 +257,27 @@
 
                             <x-admin.select
                                 name="type"
-                                label="Tipe Provider"
+                                label="Penyedia Layanan"
                                 :required="true"
                                 :options="[
                                     'openrouter' => 'OpenRouter',
                                     'google' => 'Google Gemini',
-                                    'custom' => 'Custom (OpenAI-compatible)',
+                                    'custom' => 'Kustom (OpenAI-compatible)',
                                 ]"
                                 :selected="$provider->type"
-                                placeholder="Pilih tipe provider"
+                                placeholder="Pilih penyedia layanan"
                                 x-model="type"
                                 :error="$showErr && $errors->has('type') ? $errors->first('type') : ''"
                             />
 
                             <x-admin.form-input
                                 name="api_key"
-                                label="API Key"
+                                label="Kunci API"
                                 toggleable
                                 value=""
-                                placeholder="•••• (terenkripsi — kosongkan untuk mempertahankan)"
+                                placeholder="•••• (tersimpan — kosongkan untuk mempertahankan)"
                                 data-provider-id="{{ $provider->id }}"
-                                hint="Key tersimpan terenkripsi di database. Kosongkan bila tidak ingin mengubah key; key tersimpan akan dipakai saat memuat daftar model."
+                                hint="Kosongkan bila tidak ingin mengubah kunci layanan yang tersimpan."
                                 :error="$showErr && $errors->has('api_key') ? $errors->first('api_key') : ''"
                             />
 
@@ -252,17 +296,17 @@
                             <div x-show="type === 'custom'" x-cloak class="md:col-span-2">
                                 <x-admin.form-input
                                     name="base_url"
-                                    label="Base URL"
+                                    label="Alamat URL Layanan (Base URL)"
                                     type="url"
                                     ::required="type === 'custom'"
-                                    placeholder="https://api.tokenrouter.com/v1"
-                                    hint="Akhiran /chat/completions ditambahkan otomatis bila belum ada."
+                                    placeholder="https://api.domain-layanan.com/v1"
+                                    hint="Alamat server penyedia layanan AI."
                                     :value="$provider->base_url"
                                     :error="$showErr && $errors->has('base_url') ? $errors->first('base_url') : ''"
                                 />
                             </div>
 
-                            {{-- Muat daftar model (semua tipe provider) --}}
+                            {{-- Muat daftar model --}}
                             <div class="md:col-span-2">
                                 <div class="flex flex-wrap items-center gap-3">
                                     <button type="button" @click="loadModels()" :disabled="loading"
@@ -272,10 +316,10 @@
                                     </button>
                                     <p class="text-xs font-medium" :class="statusError ? 'text-red-500' : 'text-slate-500'" x-text="status" x-show="status" x-cloak></p>
                                 </div>
-                                <p class="mt-1.5 text-xs text-slate-500">OpenRouter menampilkan model gratis, Google menampilkan model Gemini untuk API key Anda, dan Custom membaca dari endpoint {base_url}/models.</p>
+                                <p class="mt-1.5 text-xs text-slate-500">Klik tombol di atas untuk menyinkronkan daftar model yang tersedia untuk akun Anda.</p>
                             </div>
 
-                            {{-- Field Model: dropdown pilihan + opsi tulis manual --}}
+                            {{-- Field Model --}}
                             <div class="fi-field md:col-span-2">
                                 <label class="fi-label">Model<span class="fi-required">*</span></label>
                                 <input type="hidden" name="model" x-model="modelValue" />
@@ -314,7 +358,7 @@
 
                                 <div x-show="modelChoice === '__custom__'" x-cloak class="mt-2">
                                     <input type="text" x-model="customModel"
-                                           placeholder="Tulis nama model secara manual, mis. qwen/qwen3.8-max-free"
+                                           placeholder="Tulis nama model secara manual"
                                            class="fi-pill-input" />
                                 </div>
 
@@ -324,7 +368,7 @@
                                         {{ $errors->first('model') }}
                                     </p>
                                 @else
-                                    <p class="fi-hint-sub">Pilih model dari daftar, atau pilih "Lainnya" untuk menulis nama model secara manual.</p>
+                                    <p class="fi-hint-sub">Pilih model dari daftar yang tersedia, atau pilih "Lainnya" untuk mengetik nama model.</p>
                                 @endif
                             </div>
 
@@ -333,13 +377,13 @@
                                 <button type="button" @click="active = !active"
                                     class="spring-toggle" :class="{ 'is-on': active }"
                                     role="switch" :aria-checked="active ? 'true' : 'false'"
-                                    aria-label="Aktifkan provider">
+                                    aria-label="Aktifkan layanan">
                                     <span class="spring-track"></span>
                                     <span class="spring-thumb">
                                         <x-admin.icon name="check" :size="16" />
                                     </span>
                                 </button>
-                                <span class="text-sm font-medium text-slate-600">Aktif</span>
+                                <span class="text-sm font-medium text-slate-600">Status Aktif</span>
                                 <div class="ml-auto">
                                     <x-admin.button variant="primary" type="submit" icon="check" class="rounded-xl px-5">
                                         Simpan
@@ -350,7 +394,7 @@
                     </div>
                 @empty
                     <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-                        Belum ada provider AI. Tambahkan provider pertama lewat formulir di bawah.
+                        Belum ada layanan AI. Tambahkan layanan pertama melalui formulir di bawah.
                     </div>
                 @endforelse
 
@@ -360,7 +404,7 @@
                         <div class="grid size-9 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
                             <x-admin.icon name="plus" :size="18" />
                         </div>
-                        <p class="text-sm font-bold text-ink-900">Tambah Provider Baru</p>
+                        <p class="text-sm font-bold text-ink-900">Tambah Layanan AI Baru</p>
                     </div>
 
                     @php $showAddErr = $failedProviderId === null && $errors->any(); @endphp
@@ -372,33 +416,33 @@
 
                         <x-admin.form-input
                             name="name"
-                            label="Nama Provider"
+                            label="Nama Layanan"
                             :required="true"
-                            placeholder="mis. TokenRouter"
+                            placeholder="mis. Asisten Utama"
                             :error="$showAddErr && $errors->has('name') ? $errors->first('name') : ''"
                         />
 
                         <x-admin.select
                             name="type"
-                            label="Tipe Provider"
+                            label="Penyedia Layanan"
                             :required="true"
                             :options="[
                                 'openrouter' => 'OpenRouter',
                                 'google' => 'Google Gemini',
-                                'custom' => 'Custom (OpenAI-compatible)',
+                                'custom' => 'Kustom (OpenAI-compatible)',
                             ]"
                             selected="openrouter"
-                            placeholder="Pilih tipe provider"
+                            placeholder="Pilih penyedia layanan"
                             x-model="type"
                             :error="$showAddErr && $errors->has('type') ? $errors->first('type') : ''"
                         />
 
                         <x-admin.form-input
                             name="api_key"
-                            label="API Key"
+                            label="Kunci API"
                             toggleable
                             :required="true"
-                            placeholder="sk-..."
+                            placeholder="Masukkan kunci API"
                             :error="$showAddErr && $errors->has('api_key') ? $errors->first('api_key') : ''"
                         />
 
@@ -417,16 +461,16 @@
                         <div x-show="type === 'custom'" x-cloak class="md:col-span-2">
                             <x-admin.form-input
                                 name="base_url"
-                                label="Base URL"
+                                label="Alamat URL Layanan (Base URL)"
                                 type="url"
                                 ::required="type === 'custom'"
-                                placeholder="https://api.tokenrouter.com/v1"
-                                hint="Akhiran /chat/completions ditambahkan otomatis bila belum ada."
+                                placeholder="https://api.domain-layanan.com/v1"
+                                hint="Alamat server penyedia layanan AI."
                                 :error="$showAddErr && $errors->has('base_url') ? $errors->first('base_url') : ''"
                             />
                         </div>
 
-                        {{-- Muat daftar model (semua tipe provider) --}}
+                        {{-- Muat daftar model --}}
                         <div class="md:col-span-2">
                             <div class="flex flex-wrap items-center gap-3">
                                 <button type="button" @click="loadModels()" :disabled="loading"
@@ -436,10 +480,10 @@
                                 </button>
                                 <p class="text-xs font-medium" :class="statusError ? 'text-red-500' : 'text-slate-500'" x-text="status" x-show="status" x-cloak></p>
                             </div>
-                            <p class="mt-1.5 text-xs text-slate-500">OpenRouter menampilkan model gratis, Google menampilkan model Gemini untuk API key Anda, dan Custom membaca dari endpoint {base_url}/models.</p>
+                            <p class="mt-1.5 text-xs text-slate-500">Klik tombol di atas untuk menyinkronkan daftar model yang tersedia untuk akun Anda.</p>
                         </div>
 
-                        {{-- Field Model: dropdown pilihan + opsi tulis manual --}}
+                        {{-- Field Model --}}
                         <div class="fi-field md:col-span-2">
                             <label class="fi-label">Model<span class="fi-required">*</span></label>
                             <input type="hidden" name="model" x-model="modelValue" />
@@ -478,7 +522,7 @@
 
                             <div x-show="modelChoice === '__custom__'" x-cloak class="mt-2">
                                 <input type="text" x-model="customModel"
-                                       placeholder="Tulis nama model secara manual, mis. qwen/qwen3.8-max-free"
+                                       placeholder="Tulis nama model secara manual"
                                        class="fi-pill-input" />
                             </div>
 
@@ -488,7 +532,7 @@
                                     {{ $errors->first('model') }}
                                 </p>
                             @else
-                                <p class="fi-hint-sub">Pilih model dari daftar, atau pilih "Lainnya" untuk menulis nama model secara manual.</p>
+                                <p class="fi-hint-sub">Pilih model dari daftar yang tersedia, atau pilih "Lainnya" untuk mengetik nama model.</p>
                             @endif
                         </div>
 
@@ -497,16 +541,16 @@
                             <button type="button" @click="active = !active"
                                 class="spring-toggle" :class="{ 'is-on': active }"
                                 role="switch" :aria-checked="active ? 'true' : 'false'"
-                                aria-label="Aktifkan provider">
+                                aria-label="Aktifkan layanan">
                                 <span class="spring-track"></span>
                                 <span class="spring-thumb">
                                     <x-admin.icon name="check" :size="16" />
                                 </span>
                             </button>
-                            <span class="text-sm font-medium text-slate-600">Aktif</span>
+                            <span class="text-sm font-medium text-slate-600">Status Aktif</span>
                             <div class="ml-auto">
                                 <x-admin.button variant="primary" type="submit" icon="plus" class="rounded-xl px-5">
-                                    Tambah Provider
+                                    Tambah Layanan
                                 </x-admin.button>
                             </div>
                         </div>
@@ -516,20 +560,20 @@
         </div>
     @endif
 
-    {{-- Monitoring Infrastruktur --}}
+    {{-- Monitoring Kapasitas Sistem --}}
     <div class="mt-8">
         <div class="mb-4 flex items-center gap-3">
-            <div class="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <x-admin.icon name="chart" :size="20" />
+            <div class="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-600">
+                <x-admin.icon name="activity" :size="20" />
             </div>
             <div>
-                <h2 class="text-lg font-bold text-ink-900">Monitoring Infrastruktur</h2>
-                <p class="text-sm text-slate-500">Pantauan penggunaan penyimpanan cloud &amp; database (diperbarui otomatis tiap 5 menit).</p>
+                <h2 class="text-lg font-bold text-ink-900">Kapasitas Sistem</h2>
+                <p class="text-sm text-slate-500">Pantau penggunaan ruang penyimpanan berkas dan data aplikasi.</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {{-- Card: Penyimpanan Awan --}}
+            {{-- Card: Penyimpanan Berkas --}}
             <div class="rounded-2xl border border-white/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -537,29 +581,28 @@
                             <x-admin.icon name="package" :size="22" />
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-ink-900">Penyimpanan Awan</p>
-                            <p class="text-xs text-slate-500">Total storage terpakai</p>
+                            <p class="text-sm font-bold text-ink-900">Penyimpanan Berkas</p>
+                            <p class="text-xs text-slate-500">Total ruang berkas terpakai</p>
                         </div>
                     </div>
                     @if($b2['error'])
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-700">
-                            <span class="size-1.5 rounded-full bg-red-500"></span> Error
+                            <span class="size-1.5 rounded-full bg-red-500"></span> Kendala
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
-                            <span class="size-1.5 rounded-full bg-emerald-500"></span> Live
+                            <span class="size-1.5 rounded-full bg-emerald-500"></span> Normal
                         </span>
                     @endif
                 </div>
 
                 @if($b2['error'])
                     <p class="mt-5 text-sm font-medium text-red-600">{{ $b2['message'] }}</p>
-                    <p class="mt-1 break-words text-xs text-slate-400">{{ $b2['details'] }}</p>
                 @else
                     <div class="mt-5">
                         <p class="text-2xl font-bold tracking-tight text-ink-900">{{ $b2['human'] }}</p>
                         <p class="mt-1 text-xs text-slate-500">
-                            dari kuota {{ $b2['limit_human'] }}
+                            dari kapasitas {{ $b2['limit_human'] }}
                             <span class="font-semibold text-slate-600">({{ $b2['percent'] }}%)</span>
                         </p>
                     </div>
@@ -571,14 +614,12 @@
 
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
                         <span>{{ $b2['files'] }} file</span>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Penyimpanan Awan">
-                            <x-admin.icon name="tag" :size="12" /> {{ $b2['plan'] }}
-                        </span>
+                        <span title="Status ruang berkas">{{ __('Terpakai') }} {{ $b2['percent'] }}%</span>
                     </div>
                 @endif
             </div>
 
-            {{-- Card: Database --}}
+            {{-- Card: Penyimpanan Data --}}
             <div class="rounded-2xl border border-white/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -586,29 +627,28 @@
                             <x-admin.icon name="database" :size="22" />
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-ink-900">Database</p>
-                            <p class="text-xs text-slate-500">Database size terpakai</p>
+                            <p class="text-sm font-bold text-ink-900">Penyimpanan Data</p>
+                            <p class="text-xs text-slate-500">Total ruang data terpakai</p>
                         </div>
                     </div>
                     @if($neon['error'])
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-700">
-                            <span class="size-1.5 rounded-full bg-red-500"></span> Error
+                            <span class="size-1.5 rounded-full bg-red-500"></span> Kendala
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
-                            <span class="size-1.5 rounded-full bg-emerald-500"></span> Live
+                            <span class="size-1.5 rounded-full bg-emerald-500"></span> Normal
                         </span>
                     @endif
                 </div>
 
                 @if($neon['error'])
                     <p class="mt-5 text-sm font-medium text-red-600">{{ $neon['message'] }}</p>
-                    <p class="mt-1 break-words text-xs text-slate-400">{{ $neon['details'] }}</p>
                 @else
                     <div class="mt-5">
                         <p class="text-2xl font-bold tracking-tight text-ink-900">{{ $neon['human'] }}</p>
                         <p class="mt-1 text-xs text-slate-500">
-                            dari kuota {{ $neon['limit_human'] }}
+                            dari kapasitas {{ $neon['limit_human'] }}
                             <span class="font-semibold text-slate-600">({{ $neon['percent'] }}%)</span>
                         </p>
                     </div>
@@ -619,10 +659,8 @@
                     </div>
 
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
-                        <span class="truncate" title="Database: {{ $neon['database'] }}">DB: {{ $neon['database'] }}</span>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Database">
-                            <x-admin.icon name="tag" :size="12" /> {{ $neon['plan'] }}
-                        </span>
+                        <span>Koneksi Terhubung</span>
+                        <span title="Status ruang data">{{ __('Terpakai') }} {{ $neon['percent'] }}%</span>
                     </div>
                 @endif
             </div>
@@ -723,7 +761,6 @@
             get modelOptions() {
                 const options = [];
 
-                // Model tersimpan yang tidak ada di daftar hasil muat tetap ditampilkan.
                 if (this.modelChoice && this.modelChoice !== '__custom__'
                     && !this.models.some((m) => m.id === this.modelChoice)) {
                     options.push({ value: this.modelChoice, label: this.modelChoice });
@@ -760,12 +797,10 @@
             async loadModels() {
                 const apiKeyInput = this.$root.querySelector('[name="api_key"]');
                 const apiKey = apiKeyInput?.value?.trim();
-                // Form edit menyimpan provider_id di data-attribute agar backend bisa
-                // memakai api_key terenkripsi dari DB saat input dikosongkan.
                 const providerId = apiKeyInput?.dataset?.providerId || null;
 
                 if (!apiKey && !providerId) {
-                    this.status = 'Isi API key terlebih dahulu untuk memuat daftar model.';
+                    this.status = 'Isi Kunci API terlebih dahulu untuk memuat daftar model.';
                     this.statusError = true;
                     return;
                 }
@@ -774,7 +809,7 @@
                 if (this.type === 'custom') {
                     baseUrl = this.$root.querySelector('[name="base_url"]')?.value?.trim();
                     if (!baseUrl) {
-                        this.status = 'Isi Base URL terlebih dahulu untuk memuat daftar model.';
+                        this.status = 'Isi Alamat URL Layanan terlebih dahulu untuk memuat daftar model.';
                         this.statusError = true;
                         return;
                     }

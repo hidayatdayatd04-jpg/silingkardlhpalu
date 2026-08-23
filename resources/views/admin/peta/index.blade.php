@@ -46,6 +46,7 @@
         /* â•â•â• Sidebar â•â•â• */
         .map-sidebar {
             position: absolute; top: 0; right: 0; height: 100%; width: 400px; z-index: 10;
+            display: flex; flex-direction: column;
             overflow-y: auto; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
             background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(249,250,251,0.97) 100%);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -56,10 +57,14 @@
         .map-sidebar::-webkit-scrollbar-track { background: transparent; }
         .map-sidebar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
         .map-sidebar.collapsed { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        @media (max-width: 640px) {
+            .map-sidebar { width: 100%; }
+        }
 
         .sidebar-toggle-btn {
             position: absolute;
-            top: 260px;
+            top: 50%;
+            transform: translateY(-50%);
             z-index: 99;
             background: white;
             border-radius: 12px;
@@ -74,7 +79,7 @@
         }
         .sidebar-toggle-btn:hover {
             background: #f8fafc;
-            transform: translateY(-1px);
+            transform: translateY(-50%) translateY(-1px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         }
 
@@ -295,7 +300,7 @@
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REDESIGNED SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <div class="map-sidebar" :class="sidebarOpen ? '' : 'collapsed'" x-show="sidebarOpen">
             <!-- Header -->
-            <div class="px-5 pt-5 pb-4 border-b border-slate-100">
+            <div class="px-5 pt-5 pb-4 border-b border-slate-100 shrink-0">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -325,8 +330,8 @@
             </div>
 
             <!-- Action Bar -->
-            <div class="px-5 py-3 border-b border-slate-100">
-                <div class="grid grid-cols-3 gap-2">
+            <div class="px-5 py-3 border-b border-slate-100 shrink-0">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <!-- Buat Layer -->
                     <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong" aria-label="Buat layer kosong"
                         class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
@@ -350,7 +355,7 @@
                 </div>
             </div>
             <!-- Bulk Action Panel (Visible in Selection Mode) -->
-            <div x-show="isSelectionMode" x-transition class="px-5 py-2.5 bg-slate-50 border-b border-slate-200/60 flex items-center justify-between" style="display: none;">
+            <div x-show="isSelectionMode" x-transition class="px-5 py-2.5 bg-slate-50 border-b border-slate-200/60 flex items-center justify-between shrink-0" style="display: none;">
                 <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                     <input type="checkbox" @change="toggleSelectAll($event.target.checked)" :checked="selectedLayers.length === layers.length && layers.length > 0"
                         class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer" />
@@ -367,7 +372,7 @@
             </div>
 
             <!-- â•â•â• Layer List (REDESIGNED) â•â•â• -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-2.5" style="max-height: calc(100vh - 260px);">
+            <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
 <template x-for="(layer, idx) in visibleLayers()" :key="layer.id">
 <div class="layer-card" :class="{ 'expanded': isExpanded(layer), 'opacity-50': !layer.is_visible && !isSelectionMode }" :style="'margin-left:' + (depth(layer) * 16) + 'px'">
                         <!-- Layer Header -->
@@ -560,7 +565,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             </div>
 
         <!-- Floating Legend (Collapsible) -->
-        <div class="fixed bottom-6 left-6 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/50 p-4 max-w-[260px] transition-all duration-300"
+        <div class="absolute bottom-6 left-6 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/50 p-4 max-w-[260px] transition-all duration-300"
             x-data="{ legendCollapsed: true }" :class="legendCollapsed ? 'w-10 h-10 overflow-hidden !p-0 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-50' : 'w-[260px]'"
             @click="if (legendCollapsed) legendCollapsed = false" style="bottom: 24px; left: 24px;">
             

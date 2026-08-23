@@ -24,32 +24,34 @@ class SanksiJatuhTempoNotification extends Notification
     public function toArray(object $notifiable): array
     {
         $perusahaan = $this->sanksi->pelanggaran?->objekPengawasan?->nama_perusahaan ?? 'Tidak diketahui';
-        $batasWaktu = $this->sanksi->batas_waktu_perbaikan->format('d M Y');
+        $batasWaktuObj = $this->sanksi->batas_waktu_perbaikan ? \Illuminate\Support\Carbon::parse($this->sanksi->batas_waktu_perbaikan) : now();
+        $batasWaktu = $batasWaktuObj->format('d M Y');
 
         if ($this->type === 'overdue') {
             return [
                 'type' => 'sanksi_overdue',
                 'sanksi_id' => $this->sanksi->id,
-                'title' => 'Sanksi Terlambat!',
-                'message' => "Sanksi untuk {$perusahaan} sudah melewati batas waktu perbaikan ({$batasWaktu}). Segera tindaklanjuti!",
+                'title' => 'Sanksi Melewati Batas Waktu',
+                'message' => "Sanksi untuk {$perusahaan} telah melewati batas waktu ({$batasWaktu}). Segera tindak lanjuti.",
                 'icon' => 'alert-triangle',
-                'color' => 'red',
-                'href' => route('admin.resources.show', ['sanksi', $this->sanksi->id]),
-                'module' => 'tata-penataan',
+                'color' => 'rose',
+                'href' => route('admin.resources.show', ['pelanggaran', $this->sanksi->pelanggaran_id]),
+                'module' => 'pelanggaran',
             ];
         }
 
-        $hari = $this->sanksi->batas_waktu_perbaikan->diffInDays(now());
+        $hari = (int) ceil(now()->startOfDay()->diffInDays($batasWaktuObj->copy()->startOfDay(), false));
+        $hariText = $hari <= 0 ? 'hari ini' : "{$hari} hari";
 
         return [
             'type' => 'sanksi_approaching_deadline',
             'sanksi_id' => $this->sanksi->id,
             'title' => 'Sanksi Mendekati Jatuh Tempo',
-            'message' => "Sanksi untuk {$perusahaan} akan jatuh tempo dalam {$hari} hari lagi ({$batasWaktu}).",
+            'message' => "Sanksi untuk {$perusahaan} akan jatuh tempo dalam {$hariText} ({$batasWaktu}).",
             'icon' => 'clock',
             'color' => 'amber',
-            'href' => route('admin.resources.show', ['sanksi', $this->sanksi->id]),
-            'module' => 'tata-penataan',
+            'href' => route('admin.resources.show', ['pelanggaran', $this->sanksi->pelanggaran_id]),
+            'module' => 'pelanggaran',
         ];
     }
 }

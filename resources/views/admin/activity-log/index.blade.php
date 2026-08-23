@@ -61,7 +61,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-2 lg:col-span-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:col-span-1">
                     <div>
                         <label for="al-from" class="mb-1 block text-xs font-bold text-slate-500">Dari</label>
                         <input id="al-from" type="date" name="date_from" value="{{ $filters['date_from'] }}"
@@ -151,12 +151,24 @@
                                                                 $old = $log->properties['old'] ?? [];
                                                                 $new = $log->properties['new'] ?? [];
                                                                 $keys = collect(array_keys($old))->merge(array_keys($new))->unique();
+                                                                $formatProp = function ($val) {
+                                                                    if (is_null($val) || $val === '') return '—';
+                                                                    if (is_bool($val)) return $val ? 'Ya' : 'Tidak';
+                                                                    if (is_array($val)) {
+                                                                        if (empty($val)) return '—';
+                                                                        if (array_is_list($val)) {
+                                                                            return implode(', ', array_map(fn($v) => is_scalar($v) ? (string)$v : json_encode($v, JSON_UNESCAPED_UNICODE), $val));
+                                                                        }
+                                                                        return collect($val)->map(fn($v, $k) => ucfirst(str_replace('_', ' ', $k)).': '.(is_scalar($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE)))->implode(', ');
+                                                                    }
+                                                                    return (string) $val;
+                                                                };
                                                             @endphp
                                                             @foreach($keys as $key)
                                                                 <tr>
                                                                     <td class="px-3 py-2 font-semibold text-ink-700">{{ \Illuminate\Support\Str::headline($key) }}</td>
-                                                                    <td class="px-3 py-2 text-danger-600">{{ \Illuminate\Support\Str::limit(is_array($old[$key] ?? null) ? json_encode($old[$key]) : ($old[$key] ?? '—'), 120) }}</td>
-                                                                    <td class="px-3 py-2 text-success-700">{{ \Illuminate\Support\Str::limit(is_array($new[$key] ?? null) ? json_encode($new[$key]) : ($new[$key] ?? '—'), 120) }}</td>
+                                                                    <td class="px-3 py-2 text-danger-600">{{ \Illuminate\Support\Str::limit($formatProp($old[$key] ?? null), 160) }}</td>
+                                                                    <td class="px-3 py-2 text-success-700">{{ \Illuminate\Support\Str::limit($formatProp($new[$key] ?? null), 160) }}</td>
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>

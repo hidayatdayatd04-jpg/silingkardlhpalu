@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use App\Notifications\AdminNotification;
+use App\Support\Admin\AdminNotificationFeed;
 use App\Support\Admin\AdminRegistry;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
@@ -73,6 +74,7 @@ class AdminNotifier
             }
 
             Notification::send($users, new AdminNotification($payload));
+            AdminNotificationFeed::forget($users);
         } catch (Throwable $e) {
             report($e);
         }
@@ -85,6 +87,7 @@ class AdminNotifier
     {
         try {
             $user->notify(new AdminNotification($payload));
+            AdminNotificationFeed::forget($user);
         } catch (Throwable $e) {
             report($e);
         }

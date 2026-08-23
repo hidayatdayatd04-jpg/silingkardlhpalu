@@ -29,44 +29,24 @@
                 <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-20 w-auto">
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">DLH Kota Palu</p>
-                    <p class="text-xl font-bold">Ruang Kendali Operasional</p>
+                    <p class="text-xl font-bold">Panel Administrasi</p>
                 </div>
             </div>
 
             <div class="relative max-w-xl">
-                <p class="mb-5 text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">Portal Admin</p>
+                <p class="mb-5 text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">Portal Pegawai</p>
                 <h1 class="text-3xl font-bold leading-tight xl:text-4xl">Dinas Lingkungan Hidup Kota Palu</h1>
-                <p class="mt-5 text-lg leading-8 text-white/80">Kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna dalam satu panel yang cepat &amp; rapi.</p>
+                <p class="mt-5 text-lg leading-8 text-white/80">Kelola permohonan layanan, pengaduan masyarakat, data persampahan, RTH, tata penataan, dan publikasi informasi dalam satu panel kerja terpadu.</p>
 
-                <div class="mt-10 grid grid-cols-3 gap-4">
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                        <div class="grid size-8 place-items-center rounded-lg bg-brand-500/20 text-brand-300">
-                            <x-admin.icon name="dashboard" :size="18" />
-                        </div>
-                        <p class="mt-3 text-xl font-bold">20+</p>
-                        <p class="text-xs text-white/50">Modul Data</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                        <div class="grid size-8 place-items-center rounded-lg bg-info-500/20 text-info-300">
-                            <x-admin.icon name="eye" :size="18" />
-                        </div>
-                        <p class="mt-3 text-xl font-bold">Real-time</p>
-                        <p class="text-xs text-white/50">Monitoring</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                        <div class="grid size-8 place-items-center rounded-lg bg-warning-500/20 text-warning-300">
-                            <x-admin.icon name="circle-check" :size="18" />
-                        </div>
-                        <p class="mt-3 text-xl font-bold">Akurat</p>
-                        <p class="text-xs text-white/50">Pelaporan</p>
-                    </div>
+                <div class="mt-10 max-w-md rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+                    <p class="text-sm leading-6 text-white/70">Masuk dengan akun pegawai yang telah diberikan oleh pengelola sistem. Jika belum memiliki akun atau lupa password, hubungi Administrator Utama.</p>
                 </div>
             </div>
 
             <p class="relative text-sm text-white/60">&copy; {{ date('Y') }} Dinas Lingkungan Hidup Kota Palu</p>
         </section>
 
-        {{-- â•â•â•â•â•â•â•â•â•â• Form panel (kanan) â•â•â•â•â•â•â•â•â•â• --}}
+        {{-- ══════════ Form panel (kanan) ══════════ --}}
         <section class="flex items-center justify-center px-5 py-10">
             <div class="login-card w-full max-w-md">
                 {{-- Mobile brand --}}
@@ -74,7 +54,7 @@
                     <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-16 w-auto">
                     <div>
                         <p class="text-sm font-bold text-brand-700">DLH Kota Palu</p>
-                        <p class="text-xs text-slate-500">Ruang Kendali Admin</p>
+                        <p class="text-xs text-slate-500">Panel Administrasi</p>
                     </div>
                 </div>
 
@@ -84,7 +64,7 @@
                             <x-admin.icon name="lock" :size="24" />
                         </div>
                         <h1 class="mt-4 text-h1 font-bold tracking-tight text-ink-950">Selamat Datang</h1>
-                        <p class="mt-2 text-sm text-slate-500">Masuk untuk mengakses ruang kendali admin DLH Kota Palu.</p>
+                        <p class="mt-2 text-sm text-slate-500">Masuk untuk mengelola data dan layanan DLH Kota Palu.</p>
                     </div>
 
                     @if (session('error'))
@@ -150,19 +130,19 @@
                                 <input type="checkbox" name="remember" class="rounded border-slate-300 text-brand-600 transition focus:ring-brand-500">
                                 Ingat saya
                             </label>
-                            <span class="text-sm font-semibold text-slate-500" title="Hubungi administrator untuk reset password">Lupa password?</span>
+                            <span class="text-sm font-semibold text-slate-500" title="Hubungi Administrator Utama untuk reset password">Lupa password?</span>
                         </div>
 
                         <button type="submit" :disabled="submitting" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-3 text-sm font-semibold text-white shadow-[0_2px_5px_rgb(5_120_83_/_0.25)] transition-[background-color,transform,box-shadow] duration-150 hover:bg-brand-800 focus:outline-none focus:ring-4 focus:ring-brand-100 active:scale-[0.99] disabled:opacity-70">
                             <span x-show="submitting" x-cloak class="size-4 animate-spin rounded-full border-2 border-white/35 border-t-white" aria-hidden="true"></span>
-                            <span x-text="submitting ? 'Memproses...' : 'Masuk ke Dashboard'"></span>
+                            <span x-text="submitting ? 'Memproses...' : 'Masuk'"></span>
                             <x-admin.icon x-show="!submitting" name="chevron-right" :size="18" class="transition group-hover:translate-x-0.5" />
                         </button>
                     </form>
                 </div>
 
                 <p class="mt-6 text-center text-xs text-slate-400">
-                    &copy; {{ date('Y') }} Dinas Lingkungan Hidup Kota Palu &middot; Ruang Kendali Operasional
+                    &copy; {{ date('Y') }} Dinas Lingkungan Hidup Kota Palu
                 </p>
             </div>
         </section>

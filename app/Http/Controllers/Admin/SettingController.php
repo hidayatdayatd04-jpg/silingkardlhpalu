@@ -22,6 +22,7 @@ class SettingController extends Controller
             'isSuperadmin' => auth()->user()->isSuperadmin(),
             'maintenanceEnabled'    => (bool) Setting::get('maintenance_enabled', false),
             'maintenanceEstimatedAt' => $estimatedAt ? Carbon::parse($estimatedAt)->format('Y-m-d\TH:i') : '',
+            'captchaEnabled' => \App\Support\Captcha::enabled(),
             'b2'   => $monitoring->b2Storage(),
             'neon' => $monitoring->neonDatabase(),
             'providers' => AiProvider::orderBy('priority')->get(),
@@ -35,6 +36,7 @@ class SettingController extends Controller
         $validated = $request->validate([
             'maintenance_enabled' => ['nullable', 'string', 'in:1,0'],
             'maintenance_estimated_at' => ['nullable', 'string'],
+            'captcha_enabled' => ['nullable', 'string', 'in:1,0'],
         ]);
 
         // Setting global — hanya superadmin
@@ -46,6 +48,7 @@ class SettingController extends Controller
 
             Setting::put('maintenance_enabled', $maintenanceValue, 'system');
             Setting::put('maintenance_estimated_at', $estimatedAt, 'system');
+            Setting::put('captcha_enabled', ($validated['captcha_enabled'] ?? '0') === '1', 'system');
         }
 
         ActivityLogger::log('updated', 'Pengaturan diperbarui', 'settings', null, ['settings' => $validated], $user);
@@ -87,7 +90,7 @@ class SettingController extends Controller
         if (empty($validated['api_key']) && ! $this->storedKeyReadable($provider)) {
             return back()
                 ->withInput()
-                ->withErrors(['api_key' => 'API key lama tidak dapat dibaca (kemungkinan APP_KEY berubah). Masukkan API key baru untuk provider ini.']);
+                ->withErrors(['api_key' => 'Kunci layanan tidak dapat digunakan. Masukkan kunci baru untuk layanan ini.']);
         }
 
         try {
@@ -108,16 +111,16 @@ class SettingController extends Controller
 
             $provider->save();
 
-            ActivityLogger::log('updated', "Provider AI \"{$provider->name}\" diperbarui", 'settings', $old, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active'])], $provider);
+            ActivityLogger::log('updated', "Layanan AI \"{$provider->name}\" diperbarui", 'settings', $old, ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority', 'is_active'])], $provider);
         } catch (\Throwable $e) {
             report($e);
 
             return back()
                 ->withInput()
-                ->withErrors(['provider' => 'Gagal menyimpan provider: ' . $e->getMessage()]);
+                ->withErrors(['provider' => 'Gagal menyimpan konfigurasi layanan AI. Silakan periksa kembali data Anda.']);
         }
 
-        return back()->with('success', "Provider \"{$provider->name}\" berhasil diperbarui.");
+        return back()->with('success', "Layanan AI \"{$provider->name}\" berhasil diperbarui.");
     }
 
     /**
@@ -142,11 +145,11 @@ class SettingController extends Controller
 
         $name = $provider->name;
 
-        ActivityLogger::log('deleted', "Provider AI \"{$name}\" dihapus", 'settings', ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority'])], null, $provider);
+        ActivityLogger::log('deleted', "Layanan AI \"{$name}\" dihapus", 'settings', ['provider' => $provider->only(['name', 'type', 'base_url', 'model', 'priority'])], null, $provider);
 
         $provider->delete();
 
-        return back()->with('success', "Provider \"{$name}\" berhasil dihapus.");
+        return back()->with('success', "Layanan AI \"{$name}\" berhasil dihapus.");
     }
 
     /**
@@ -174,13 +177,12 @@ class SettingController extends Controller
                 $apiKey = (string) (AiProvider::find($validated['provider_id'])?->api_key ?? '');
             } catch (\Throwable) {
                 // Key tersimpan tidak dapat didekripsi dengan APP_KEY aktif
-                // (mis. APP_KEY berganti setelah key disimpan).
-                return response()->json(['error' => 'API key tersimpan tidak dapat dibaca (kemungkinan APP_KEY berubah). Masukkan API key secara manual.'], 422);
+                return response()->json(['error' => 'Kunci layanan tidak dapat digunakan. Masukkan kunci baru secara manual.'], 422);
             }
         }
 
         if ($apiKey === '') {
-            return response()->json(['error' => 'API key wajib diisi.'], 422);
+            return response()->json(['error' => 'Kunci API wajib diisi.'], 422);
         }
 
         try {
@@ -196,7 +198,9 @@ class SettingController extends Controller
 
             return response()->json(['models' => $models]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => 'Gagal memuat daftar model: ' . $e->getMessage()], 422);
+            report($e);
+
+            return response()->json(['error' => 'Gagal memuat daftar model. Pastikan kunci layanan valid dan memiliki akses internet.'], 422);
         }
     }
 

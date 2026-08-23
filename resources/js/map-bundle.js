@@ -39,6 +39,35 @@ import './dlh-markers';
  * ============================================================ */
 
 /** Helper: tambahkan tombol Lokasi Saya ke peta (pojok kiri bawah) */
+/** Ikon crosshair "Lokasi Saya" (dipakai tombol melayang & dropdown alat). */
+window.dlhLocateIcon = function dlhLocateIcon(color) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+};
+
+/** Ambil posisi pengguna, terbangkan peta ke sana, dan pasang marker. */
+window.dlhLocate = function dlhLocate(map, btn, onLocate) {
+    if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
+    btn.innerHTML = dlhLocateIcon('#3b82f6');
+    navigator.geolocation.getCurrentPosition(function (p) {
+        var lng = p.coords.longitude, lat = p.coords.latitude;
+        map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
+        if (window._dlhLocMarker) window._dlhLocMarker.remove();
+        var dot = document.createElement('div');
+        dot.innerHTML = '<div style="width:20px;height:20px;background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,0.3),0 2px 8px rgba(0,0,0,0.2)"></div>';
+        window._dlhLocMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
+            .setLngLat([lng, lat])
+            .setPopup(new maplibregl.Popup({ offset: [0, -14], closeButton: false, maxWidth: '200px' })
+                .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
+            .addTo(map);
+        window._dlhLocMarker.togglePopup();
+        btn.innerHTML = dlhLocateIcon('#10b981');
+        if (onLocate) onLocate(lat, lng);
+    }, function () {
+        btn.innerHTML = dlhLocateIcon('#475569');
+        alert('Gagal mendapatkan lokasi.');
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+};
+
 window.dlhAddLocBtn = function dlhAddLocBtn(map, onLocate) {
     /* Tunggu map siap lalu tempel tombol di dalam container peta */
     function addBtn() {
@@ -51,33 +80,25 @@ window.dlhAddLocBtn = function dlhAddLocBtn(map, onLocate) {
         btn.title = 'Lokasi Saya';
         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
         btn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#475569';
-        btn.onclick = function () {
-            if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
-            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
-            navigator.geolocation.getCurrentPosition(function (p) {
-                var lng = p.coords.longitude, lat = p.coords.latitude;
-                map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
-                if (window._dlhLocMarker) window._dlhLocMarker.remove();
-                var dot = document.createElement('div');
-                dot.innerHTML = '<div style="width:20px;height:20px;background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,0.3),0 2px 8px rgba(0,0,0,0.2)"></div>';
-                window._dlhLocMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
-                    .setLngLat([lng, lat])
-                    .setPopup(new maplibregl.Popup({ offset: [0, -14], closeButton: false, maxWidth: '200px' })
-                        .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
-                    .addTo(map);
-                window._dlhLocMarker.togglePopup();
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
-                if (onLocate) onLocate(lat, lng);
-            }, function () {
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
-                alert('Gagal mendapatkan lokasi.');
-            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-        };
+        btn.onclick = function () { dlhLocate(map, btn, onLocate); };
         grp.appendChild(btn);
         container.appendChild(grp);
     }
     if (map.loaded()) { addBtn(); } else { map.on('load', addBtn); }
 }
+
+/** Dropdown "Alat" untuk peta publik: layar penuh + cuaca + lokasi saya dalam satu tombol. */
+window.dlhToolsDropdown = function dlhToolsDropdown() {
+    var tools = [];
+    if (window.DlhFullscreenControl) tools.push(new DlhFullscreenControl());
+    if (window.DlhWeatherControl) tools.push(new DlhWeatherControl({ position: 'top-left' }));
+    tools.push({
+        title: 'Lokasi Saya',
+        icon: dlhLocateIcon(),
+        action: function (map, btn) { dlhLocate(map, btn); },
+    });
+    return new window.DlhToolsControl(tools);
+};
 
 /** Simple map with single marker (admin show, cek pages) */
 window.dlhSimpleMap = function (containerId, cfg) {
@@ -240,8 +261,11 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
         });
         map.addControl(new DlhZoomControl(), 'top-right');
         if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
-        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
-        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        if (window.DlhToolsControl) map.addControl(dlhToolsDropdown(), 'top-left');
+        else {
+            if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        }
 
         window._dlhMap = map;
         window._dlhArmadaMarkers = [];
@@ -486,7 +510,6 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
             }, 150);
         });
 
-        dlhAddLocBtn(map);
     });
 };
 
@@ -502,8 +525,11 @@ window.dlhPetaObjekPengawasan = function (containerId, points) {
         });
         map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
-        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
-        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        if (window.DlhToolsControl) map.addControl(dlhToolsDropdown(), 'top-left');
+        else {
+            if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        }
 
         var markers = [];
 
@@ -543,7 +569,6 @@ window.dlhPetaObjekPengawasan = function (containerId, points) {
             setTimeout(addMarkers, 150);
         });
 
-        dlhAddLocBtn(map);
         setTimeout(function () { map.resize(); }, 200);
     });
 };
@@ -560,8 +585,11 @@ window.dlhPetaRth = function (containerId, mapData) {
         });
         map.addControl(new DlhZoomControl(), 'top-right');
         map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
-        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
-        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        if (window.DlhToolsControl) map.addControl(dlhToolsDropdown(), 'top-left');
+        else {
+            if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        }
 
         // Custom GIS Layers
         var gisLayers = mapData.gis_layers || [];
@@ -695,7 +723,6 @@ window.dlhPetaRth = function (containerId, mapData) {
             }, 150);
         });
 
-        dlhAddLocBtn(map);
         setTimeout(function () { map.resize(); }, 200);
     });
 };

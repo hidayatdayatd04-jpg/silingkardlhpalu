@@ -110,7 +110,7 @@
                 :href="route('admin.resources.index', $resource['slug'])"
             />
             <x-admin.stat-card
-                label="Published"
+                label="Tayang"
                 :value="$totalPublished"
                 icon="send"
                 color="teal"
@@ -118,11 +118,11 @@
                 :href="route('admin.resources.index', ['resource' => $resource['slug'], 'status' => [ArtikelStatus::PUBLISHED->value]])"
             />
             <x-admin.stat-card
-                label="Draft"
+                label="Draf"
                 :value="$totalDraft"
                 icon="file-text"
                 color="amber"
-                sublabel="Belum dipublikasikan"
+                sublabel="Masih draf"
                 :href="route('admin.resources.index', ['resource' => $resource['slug'], 'status' => [ArtikelStatus::DRAFT->value]])"
             />
         </div>
@@ -280,7 +280,7 @@
                         <x-admin.table.header sortable column="tanggal_publish"
                             class="whitespace-nowrap"
                             :direction="$sortColumn === 'tanggal_publish' ? $sortDirection : null">
-                            Tanggal Publish
+                            Tanggal Tayang
                         </x-admin.table.header>
                         <x-admin.table.header>Penulis</x-admin.table.header>
                         <x-admin.table.header class="text-center">Aksi</x-admin.table.header>
@@ -325,9 +325,9 @@
                             {{-- Status --}}
                             <x-admin.table.cell>
                                 @if($record->status === ArtikelStatus::PUBLISHED)
-                                    <x-admin.status-pill variant="success" label="Published" pulse />
+                                    <x-admin.status-pill variant="success" label="Tayang" pulse />
                                 @else
-                                    <x-admin.status-pill variant="warning" label="Draft" />
+                                    <x-admin.status-pill variant="warning" label="Draf" />
                                 @endif
                             </x-admin.table.cell>
 

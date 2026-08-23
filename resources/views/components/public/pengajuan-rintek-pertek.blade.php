@@ -171,7 +171,7 @@ new class extends Component
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-8">
+        <form wire:submit.prevent="submit" @if(\App\Support\Captcha::enabled()) data-dlh-recaptcha-action="submit" @endif class="space-y-8">
             {{-- Section: Data Perusahaan --}}
             <section class="space-y-5">
                 <header class="fi-section-head">
@@ -192,7 +192,7 @@ new class extends Component
                             label="{{ __('Perusahaan Terdaftar LB3') }}"
                             :options="$this->getPerusahaanOptions()"
                             :searchable="true"
-                            placeholder="{{ __('-- Pilih perusahaan terdaftar LB3 / Lainnya --') }}"
+                            placeholder="{{ __('Pilih perusahaan / Lainnya') }}"
                             hint="{{ __('Pilih perusahaan jika sudah terdaftar LB3. Jika belum terdaftar, pilih “Lainnya” lalu tulis nama perusahaan secara manual.') }}"
                         />
                         @if($registrasi_usaha_lb3_id === '__lainnya__')

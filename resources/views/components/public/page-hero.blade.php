@@ -33,7 +33,7 @@
             </span>
         @endif
 
-        <h1 class="page-hero-enter mt-5 max-w-2xl text-3xl font-extrabold tracking-[-0.035em] text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.08]" style="--hero-delay:90ms">{{ $title }}</h1>
+        <h1 class="page-hero-enter mt-5 max-w-2xl min-w-0 text-[1.7rem] leading-tight font-extrabold tracking-[-0.035em] text-white break-words sm:text-4xl sm:leading-[1.15] lg:text-[2.75rem] lg:leading-[1.08]" style="--hero-delay:90ms">{{ $title }}</h1>
 
         @if ($description)
             <p class="page-hero-enter mt-4 max-w-2xl text-sm leading-7 text-brand-50/95 sm:text-base" style="--hero-delay:180ms">{{ $description }}</p>

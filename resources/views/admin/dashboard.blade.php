@@ -36,7 +36,7 @@
                     {{ $greet }}, {{ $firstName }} 👋
                 </h1>
                 <p class="mt-2 text-sm text-forest-100/80 leading-relaxed">
-                    Selamat datang di Ruang Kendali Operasional Dinas Lingkungan Hidup Kota Palu. Pantau pengaduan, verifikasi permohonan.
+                    Selamat datang di Panel Administrasi Dinas Lingkungan Hidup Kota Palu. Pantau pengaduan masyarakat, verifikasi permohonan, dan kelola data lingkungan hidup.
                 </p>
 
                 <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/80">
@@ -62,7 +62,7 @@
                     <p class="truncate text-xs text-white/70">{{ $user?->email }}</p>
                     <div class="mt-1 flex items-center gap-1 text-[11px] text-brand-200">
                         <span class="size-1.5 rounded-full bg-emerald-400"></span>
-                        <span>Sistem Aktif & Terhubung</span>
+                        <span>Akun aktif</span>
                     </div>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                     <x-admin.icon name="layers" :size="18" />
                 </span>
                 <h2 class="text-lg font-extrabold tracking-tight text-ink-900 dark:text-white">
-                    Ringkasan Modul & Layanan
+                    Ringkasan Layanan
                 </h2>
             </div>
             <span class="text-xs text-slate-500">Data terkini per bidang</span>
@@ -124,8 +124,8 @@
                             <x-admin.icon name="clipboard-check" :size="20" />
                         </span>
                         <div>
-                            <h2 class="text-base font-bold text-ink-900 dark:text-white">Kinerja & Status Penanganan Pengaduan</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Tingkat responsivitas penyelesaian laporan pengaduan masyarakat</p>
+                            <h2 class="text-base font-bold text-ink-900 dark:text-white">Tindak Lanjut Pengaduan</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Status penyelesaian pengaduan masyarakat</p>
                         </div>
                     </div>
                     <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -215,7 +215,7 @@
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-ink-900 dark:text-white">Tren Pengaduan Bulanan</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Aktivitas volume laporan masuk 6 bulan terakhir</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Jumlah pengaduan dalam 6 bulan terakhir</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-1 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800">

@@ -51,17 +51,39 @@ class RunBackupJob implements ShouldQueue
 
             ActivityLogger::log(
                 'backup',
-                'Backup database + storage: '.$name.' → '.DatabaseBackup::diskName().' (latar belakang)',
+                'Cadangan data + dokumen: '.$name.' (latar belakang)',
                 'system',
                 null, null, null, $user,
             );
 
-            BackupProgress::finish('done', 'Backup berhasil dibuat: '.$name, ['file' => $name]);
+            BackupProgress::finish('done', 'Cadangan data berhasil dibuat.', ['file' => $name]);
+
+            if ($user) {
+                \App\Support\AdminNotifier::toUser($user, [
+                    'title' => 'Cadangan Berhasil',
+                    'message' => 'Cadangan data dan dokumen aplikasi berhasil dibuat.',
+                    'icon' => 'archive',
+                    'color' => 'emerald',
+                    'href' => route('admin.backup.index'),
+                    'module' => 'system',
+                ]);
+            }
         } catch (BackupCancelledException $e) {
-            BackupProgress::finish('cancelled', 'Backup dibatalkan oleh pengguna.');
+            BackupProgress::finish('cancelled', 'Pembuatan cadangan dibatalkan.');
         } catch (\Throwable $e) {
             report($e);
-            BackupProgress::finish('failed', 'Gagal membuat backup: '.$e->getMessage());
+            BackupProgress::finish('failed', 'Pembuatan cadangan belum berhasil. Silakan coba lagi.');
+
+            if ($user) {
+                \App\Support\AdminNotifier::toUser($user, [
+                    'title' => 'Cadangan Gagal',
+                    'message' => 'Pembuatan cadangan belum berhasil dibuat. Silakan coba lagi.',
+                    'icon' => 'alert-triangle',
+                    'color' => 'rose',
+                    'href' => route('admin.backup.index'),
+                    'module' => 'system',
+                ]);
+            }
         } finally {
             $lock->release();
         }
@@ -70,13 +92,25 @@ class RunBackupJob implements ShouldQueue
     /** Bila worker gagal fatal (timeout/kill) sebelum handle() sempat catch. */
     public function failed(\Throwable $e): void
     {
-        // Jangan timpa status akhir bila job sebenarnya sudah selesai —
-        // mis. worker menandai job gagal karena retry_after terlampaui
-        // padahal handle() sudah menulis status 'done'.
+        report($e);
+
+        // Jangan timpa status akhir bila job sebenarnya sudah selesai
         if ((BackupProgress::state()['status'] ?? null) === 'done') {
             return;
         }
 
-        BackupProgress::finish('failed', 'Gagal membuat backup: '.$e->getMessage());
+        BackupProgress::finish('failed', 'Pembuatan cadangan belum berhasil. Silakan coba lagi.');
+
+        $user = User::query()->find($this->userId);
+        if ($user) {
+            \App\Support\AdminNotifier::toUser($user, [
+                'title' => 'Cadangan Gagal',
+                'message' => 'Pembuatan cadangan belum berhasil dibuat. Silakan coba lagi.',
+                'icon' => 'alert-triangle',
+                'color' => 'rose',
+                'href' => route('admin.backup.index'),
+                'module' => 'system',
+            ]);
+        }
     }
 }

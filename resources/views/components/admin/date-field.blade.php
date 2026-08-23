@@ -302,7 +302,7 @@
         <div class="df-time-control">
             <label class="sr-only" for="{{ $id }}-time">{{ __('Jam') }}</label>
             <span class="df-native-icon" aria-hidden="true">
-                <x-admin.icon :name="$resolvedIcon" :size="18" />
+                <x-admin.icon :name="$resolvedIcon" :size="17" />
             </span>
             <input
                 type="time"
@@ -345,7 +345,7 @@
 
     <div class="relative" x-ref="field">
         <span class="df-native-icon">
-            <x-admin.icon :name="$resolvedIcon" :size="18" />
+            <x-admin.icon :name="$resolvedIcon" :size="17" />
         </span>
         <input
             type="{{ $type }}"
@@ -420,12 +420,12 @@
     .df-datetime-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8.5rem, .42fr); gap: 8px; align-items: start; }
     .df-time-control { position: relative; min-width: 0; }
     .df-time-control .df-native-input { font-variant-numeric: tabular-nums; }
-    .df-native-input { width: 100%; height: 48px; border-radius: 14px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 14px 0 44px; font-family: inherit; font-size: 13.5px; font-weight: 500; color: #12201a; outline: none; transition: border-color .18s ease, box-shadow .18s ease; }
+    .df-native-input { width: 100%; height: 48px; border-radius: 14px; border: 1.5px solid #dfe9e3; background: #fff; padding: 0 14px 0 54px; font-family: inherit; font-size: 13.5px; font-weight: 500; color: #12201a; outline: none; transition: border-color .18s ease, box-shadow .18s ease; }
     .df-native-input:hover:not(:focus):not(.df-native-input--error) { border-color: #c3d8cc; }
     .df-native-input:focus { border-color: #1ea567; box-shadow: 0 0 0 4px rgba(30, 165, 103, 0.12); }
     .df-native-input--error { border-color: #e0533d !important; box-shadow: 0 0 0 4px rgba(224, 83, 61, 0.1) !important; }
     .df-native-input:disabled, .df-native-input[readonly] { cursor: not-allowed; opacity: 0.6; background: #f8fafc; }
-    .df-native-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #1ea567; pointer-events: none; display: flex; z-index: 1; }
+    .df-native-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 9px; background: #ecfdf3; color: #1ea567; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 1; }
 
     /* ── Error / hint ── */
     .df-error { display: flex; align-items: center; gap: 5px; margin-top: 7px; font-size: 12px; font-weight: 500; color: #e0533d; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }

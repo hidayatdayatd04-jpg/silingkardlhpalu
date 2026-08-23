@@ -120,7 +120,7 @@
                                 <span class="block font-display text-lg font-bold leading-none text-slate-900">{{ $record->tanggal_publish->format('d') }}</span>
                             </div>
                             <div>
-                                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700/70">Tanggal Publish</p>
+                                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700/70">Tanggal Tayang</p>
                                 <p class="font-display text-base font-bold text-slate-900">{{ $record->tanggal_publish->translatedFormat('l, d F Y') }}</p>
                             </div>
                         </div>
@@ -170,7 +170,7 @@
 
             {{-- Sidebar --}}
             <div class="space-y-7">
-                <x-admin.section-card class="stagger-item" title="Thumbnail & File" icon="image" subtitle="Gambar utama artikel.">
+                <x-admin.section-card class="stagger-item" title="Gambar Utama & File" icon="image" subtitle="Gambar utama artikel.">
                     @if ($record->thumbnail)
                         <x-admin.file-preview :path="$record->thumbnail" :label="$record->judul" :resource="$resource['slug']" />
                     @else
@@ -194,7 +194,7 @@
                             </dd>
                         </div>
                         <div class="flex items-center justify-between gap-3 py-3">
-                            <dt class="text-sm text-slate-500">Tanggal Publish</dt>
+                            <dt class="text-sm text-slate-500">Tanggal Tayang</dt>
                             <dd class="text-sm font-semibold text-slate-800">{{ $record->tanggal_publish?->translatedFormat('d M Y') ?? '—' }}</dd>
                         </div>
                         <div class="flex items-center justify-between gap-3 py-3">

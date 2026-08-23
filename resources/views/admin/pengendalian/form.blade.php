@@ -51,9 +51,6 @@
             ['label' => $record->exists ? 'Edit Data' : 'Tambah Data Baru'],
         ]"
     >
-        <x-slot:actions>
-            <x-admin.status-pill :variant="$record->exists ? 'info' : 'success'" :label="$record->exists ? 'Mode Edit' : 'Data Baru'" />
-        </x-slot:actions>
     </x-admin.page-header>
 
     <form method="POST" action="{{ $action }}" enctype="multipart/form-data" id="pengendalian-form"

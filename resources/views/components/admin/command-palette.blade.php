@@ -42,7 +42,7 @@
     ];
 
     if ($isSuperadmin) {
-        $systemPages[] = ['id' => 'system-backup', 'label' => 'Backup Database', 'url' => route('admin.backup.index'), 'group' => 'Sistem', 'icon' => 'database'];
+        $systemPages[] = ['id' => 'system-backup', 'label' => 'Cadangan Data', 'url' => route('admin.backup.index'), 'group' => 'Sistem', 'icon' => 'database'];
         $systemPages[] = ['id' => 'system-activity-log', 'label' => 'Log Aktivitas', 'url' => route('admin.activity-log.index'), 'group' => 'Sistem', 'icon' => 'clipboard-list'];
     }
 

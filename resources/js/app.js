@@ -103,34 +103,13 @@ window.dlhMapInit = function (containerId) {
         map.addControl(new DlhZoomControl(), 'top-right');
         if (window.DlhScaleControl) map.addControl(new DlhScaleControl(), 'bottom-left');
         if (window.DlhBasemapSwitcher) map.addControl(new DlhBasemapSwitcher(), 'bottom-right');
-        if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
-        if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
-
-        var locGrp = document.createElement('div');
-        locGrp.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-        locGrp.style.cssText = 'position:absolute;top:120px;right:10px;z-index:1';
-        var locBtn = document.createElement('button');
-        locBtn.type = 'button'; locBtn.title = 'Lokasi Saya';
-        locBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
-        locBtn.style.cssText = 'width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#4a5568';
-        locBtn.onclick = function () {
-            if (!navigator.geolocation) { alert('Geolocation tidak didukung.'); return; }
-            navigator.geolocation.getCurrentPosition(function (p) {
-                var lng = p.coords.longitude, lat = p.coords.latitude;
-                map.flyTo({ center: [lng, lat], zoom: 15, duration: 1500 });
-                if (window._dlhLocMarker) window._dlhLocMarker.remove();
-                var dot = document.createElement('div');
-                dot.innerHTML = '<div style="width:20px;height:20px;background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,0.3),0 2px 8px rgba(0,0,0,0.2)"></div>';
-                window._dlhLocMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
-                    .setLngLat([lng, lat])
-                    .setPopup(new maplibregl.Popup({ offset: [0, -14], closeButton: false, maxWidth: '200px' })
-                        .setHTML('<div style="padding:8px 12px;font-family:system-ui;text-align:center"><p style="font-size:11px;font-weight:600;color:#1e293b;margin:0">Lokasi Anda</p><p style="font-size:10px;color:#94a3b8;margin:2px 0 0">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</p></div>'))
-                    .addTo(map);
-                window._dlhLocMarker.togglePopup();
-            }, function () { alert('Gagal mendapatkan lokasi.'); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-        };
-        locGrp.appendChild(locBtn);
-        map._container.appendChild(locGrp);
+        if (window.DlhToolsControl && window.dlhToolsDropdown) {
+            // Tombol sekunder (layar penuh, cuaca, lokasi saya) digabung dalam satu dropdown.
+            map.addControl(dlhToolsDropdown(), 'top-left');
+        } else {
+            if (window.DlhFullscreenControl) map.addControl(new DlhFullscreenControl(), 'top-left');
+            if (window.DlhWeatherControl) map.addControl(new DlhWeatherControl({ position: 'top-left' }), 'top-left');
+        }
 
         window._dlhMap = map;
         window._dlhMarkers = [];

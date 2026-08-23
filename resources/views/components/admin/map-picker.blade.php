@@ -50,7 +50,7 @@
 
     @if(!$readonly)
     <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">
-        Klik peta untuk menandai titik. Koordinat akan mengisi kolom Latitude &amp; Longitude di bawah otomatis. Bisa juga ketik manual.
+        Klik peta untuk memilih lokasi. Titik lokasi akan terisi otomatis.
     </p>
     @endif
 </div>

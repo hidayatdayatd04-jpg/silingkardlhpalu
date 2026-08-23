@@ -76,12 +76,12 @@ class BackupProgress
             return false;
         }
 
-        // Auto-expire stale pending: worker tidak pernah ambil job >5 menit
+        // Auto-expire stale pending: proses tidak berjalan >5 menit
         if (($state['status'] ?? '') === 'pending' && isset($state['updated_at'])) {
             $age = now()->getTimestamp() - (int) $state['updated_at'];
             if ($age > 300) {
                 // Tandai failed agar UI toast muncul, lalu anggap tidak aktif
-                self::finish('failed', 'Backup gagal dimulai: queue worker tidak berjalan. Silakan coba lagi — worker akan dipicu otomatis.');
+                self::finish('failed', 'Proses belum dimulai. Sistem akan mencoba kembali secara otomatis.');
 
                 return false;
             }
@@ -105,7 +105,7 @@ class BackupProgress
             'type' => $type,
             'status' => 'pending',
             'percent' => 0,
-            'label' => $type === 'restore' ? 'Menyiapkan restore…' : 'Menyiapkan backup…',
+            'label' => $type === 'restore' ? 'Menyiapkan pemulihan…' : 'Menyiapkan cadangan…',
             'message' => null,
             'file' => $file,
             'started_at' => now()->getTimestamp(),

@@ -52,7 +52,7 @@
 
     <div class="flex items-center justify-between gap-2 px-4 py-3">
         <p class="text-[11px] text-slate-400" x-show="stalePending" x-cloak>
-            Menunggu antrian — pastikan queue worker berjalan.
+            Menyiapkan proses di latar belakang…
         </p>
         <p class="text-[11px] text-slate-400" x-show="!stalePending">
             Progres diperbarui otomatis.

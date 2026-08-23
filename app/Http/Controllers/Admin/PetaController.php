@@ -162,11 +162,11 @@ $collections = $layers->map(fn ($layer) => [
 
         $tempPath = $file->storeAs('temp/gis', $fileName, 'local');
 
-        \Log::info("IMPORT DEBUG: ext={$extension}, stored={$tempPath}, size=" . $file->getSize());
+        Log::info("IMPORT DEBUG: ext={$extension}, stored={$tempPath}, size=" . $file->getSize());
 
         try {
             $realPath = Storage::disk('local')->path($tempPath);
-            \Log::info("IMPORT DEBUG: realPath={$realPath}, exists=" . (file_exists($realPath) ? 'YES' : 'NO'));
+            Log::info("IMPORT DEBUG: realPath={$realPath}, exists=" . (file_exists($realPath) ? 'YES' : 'NO'));
 
             // ═══ IMPORT KE DALAM LAYER (parent) → buat SUB-LAYER per folder/file ═══
             if ($isAppend) {
@@ -365,15 +365,11 @@ $collections = $layers->map(fn ($layer) => [
                 ],
             ]);
         } catch (\Exception $e) {
-            \Log::error("IMPORT FAILED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+            Log::error("IMPORT FAILED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
             Storage::disk('local')->delete($tempPath);
             return response()->json([
                 'success' => false,
-                // Detail teknis (file:line) hanya di mode debug agar tidak
-                // membocorkan struktur internal ke pengguna produksi.
-                'message' => app()->hasDebugModeEnabled()
-                    ? 'Gagal import: ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']'
-                    : 'Gagal import file. Periksa format file lalu coba lagi.',
+                'message' => 'Gagal mengimpor berkas peta. Pastikan format berkas sesuai (SHP/ZIP, GeoJSON, KML, atau CSV) dan berkas tidak rusak.',
             ], 422);
         }
     }
@@ -800,7 +796,7 @@ $collections = $layers->map(fn ($layer) => [
         );
         $totalExtracted = 0;
         foreach ($tempFiles as $f) { $totalExtracted++; }
-        \Log::info("IMPORT DEBUG: tempDir={$tempDir}, totalFilesExtracted={$totalExtracted}");
+        Log::info("IMPORT DEBUG: tempDir={$tempDir}, totalFilesExtracted={$totalExtracted}");
 
         // Step 1: Scan semua file, temukan .shp dan geojson
         $shpGroups = []; // [dirPath => shpPath]
@@ -827,7 +823,7 @@ $collections = $layers->map(fn ($layer) => [
             }
         }
 
-        \Log::info("IMPORT DEBUG: shpGroups=" . count($shpGroups) . ", geojsonSingles=" . count($geojsonSingles));
+        Log::info("IMPORT DEBUG: shpGroups=" . count($shpGroups) . ", geojsonSingles=" . count($geojsonSingles));
 
         // Step 2: Scan geojson — hanya yang BUKAN di folder yang punya .shp
         // Dan namanya TIDAK sama dengan nama folder yang punya .shp
@@ -870,7 +866,7 @@ foreach ($shpGroups as $dir => $shpPath) {
                     $layers[] = ['name' => $name, 'features' => $features];
                 }
             } catch (\Throwable $e) {
-                \Log::warning("SHP parse failed for {$name}: " . $e->getMessage());
+                Log::warning("SHP parse failed for {$name}: " . $e->getMessage());
                 continue;
             }
         }

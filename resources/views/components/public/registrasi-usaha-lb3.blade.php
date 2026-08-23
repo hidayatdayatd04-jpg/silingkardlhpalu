@@ -84,7 +84,7 @@ new class extends Component
             </div>
         </div>
     @else
-        <form wire:submit.prevent="submit" data-dlh-recaptcha-action="submit" class="space-y-5">
+        <form wire:submit.prevent="submit" @if(\App\Support\Captcha::enabled()) data-dlh-recaptcha-action="submit" @endif class="space-y-5">
             <x-public.input
                 wire:model="nama_perusahaan"
                 name="nama_perusahaan"

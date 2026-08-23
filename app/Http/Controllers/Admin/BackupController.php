@@ -22,7 +22,7 @@ class BackupController extends Controller
     protected function authorizeSuperadmin(): void
     {
         if (! auth()->user()?->isSuperadmin()) {
-            throw new AccessDeniedHttpException('Hanya Admin yang dapat mengakses backup database.');
+            throw new AccessDeniedHttpException('Hanya Administrator Utama yang dapat mengakses cadangan data.');
         }
     }
 
@@ -31,7 +31,7 @@ class BackupController extends Controller
         $this->authorizeSuperadmin();
 
         // Konfirmasi dua langkah: kode acak per-sesi yang harus diketik ulang
-        // saat restore, selain kata RESTORE. Kode di-regenerasi tiap kali
+        // saat restore, selain kata PULIHKAN. Kode di-regenerasi tiap kali
         // halaman dibuka dan hangus setelah satu kali restore sukses.
         $restoreCode = strtoupper(Str::random(6));
         session(['restore_code' => $restoreCode]);
@@ -48,14 +48,14 @@ class BackupController extends Controller
         $this->authorizeSuperadmin();
 
         if (! BackupProgress::start('backup')) {
-            return back()->with('error', 'Masih ada proses backup/restore yang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
+            return back()->with('error', 'Masih ada proses yang sedang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
         }
 
         RunBackupJob::dispatch(auth()->id());
 
         $this->nudgeQueueWorker();
 
-        return back()->with('info', 'Backup sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
+        return back()->with('info', 'Pembuatan cadangan sedang berjalan di latar belakang. Anda dapat menggunakan menu lain — progres tampil di pojok kanan bawah.');
     }
 
     public function download(string $file)
@@ -63,10 +63,10 @@ class BackupController extends Controller
         $this->authorizeSuperadmin();
 
         $relative = DatabaseBackup::safePath($file);
-        abort_if($relative === null, 404, 'File backup tidak ditemukan.');
+        abort_if($relative === null, 404, 'File cadangan tidak ditemukan.');
 
         $tmp = DatabaseBackup::downloadToTemp($relative);
-        abort_if($tmp === null, 404, 'Gagal mengambil file backup dari storage.');
+        abort_if($tmp === null, 404, 'Gagal mengambil file cadangan.');
 
         $name = basename($relative);
         $headers = [];
@@ -84,12 +84,12 @@ class BackupController extends Controller
         $request->validate([
             'file' => ['nullable', 'file', 'max:512000'],
             'existing' => ['nullable', 'string'],
-            'confirmation' => ['required', 'in:RESTORE'],
+            'confirmation' => ['required', 'in:PULIHKAN,RESTORE'],
             'restore_code' => ['required', 'string'],
         ], [
-            'confirmation.required' => 'Ketik RESTORE untuk konfirmasi.',
-            'confirmation.in' => 'Konfirmasi tidak valid. Ketik RESTORE persis.',
-            'restore_code.required' => 'Masukkan kode keamanan yang tampil di halaman backup.',
+            'confirmation.required' => 'Ketik PULIHKAN untuk konfirmasi.',
+            'confirmation.in' => 'Konfirmasi tidak valid. Ketik PULIHKAN persis.',
+            'restore_code.required' => 'Masukkan kode keamanan yang tampil di halaman cadangan & pemulihan.',
             'file.max' => 'Ukuran file terlalu besar (maks 500MB).',
         ]);
 
@@ -98,7 +98,7 @@ class BackupController extends Controller
         // dipakai ulang (one-time use).
         $sessionCode = session('restore_code');
         if (! $sessionCode || ! hash_equals($sessionCode, (string) $request->input('restore_code'))) {
-            return back()->with('error', 'Kode keamanan tidak cocok. Buka kembali halaman backup untuk mendapatkan kode terbaru.');
+            return back()->with('error', 'Kode keamanan tidak cocok. Buka kembali halaman ini untuk mendapatkan kode terbaru.');
         }
 
         session()->forget('restore_code');
@@ -129,11 +129,11 @@ class BackupController extends Controller
             $uploadedFile->move($dir, basename($filePath));
         } elseif ($request->filled('existing')) {
             $backupRelative = DatabaseBackup::safePath($request->input('existing'));
-            abort_if($backupRelative === null, 404, 'File backup tidak ditemukan.');
+            abort_if($backupRelative === null, 404, 'File cadangan tidak ditemukan.');
 
             $source = basename($request->input('existing'));
         } else {
-            return back()->with('error', 'Pilih file backup atau unggah file .zip/.sql untuk restore.');
+            return back()->with('error', 'Pilih file cadangan atau unggah file .zip/.sql untuk memulihkan data.');
         }
 
         if (! BackupProgress::start('restore', $source)) {
@@ -141,7 +141,7 @@ class BackupController extends Controller
                 @unlink($filePath);
             }
 
-            return back()->with('error', 'Masih ada proses backup/restore yang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
+            return back()->with('error', 'Masih ada proses yang sedang berjalan. Tunggu hingga selesai atau batalkan terlebih dahulu.');
         }
 
         RunRestoreJob::dispatch(
@@ -153,7 +153,7 @@ class BackupController extends Controller
 
         $this->nudgeQueueWorker();
 
-        return back()->with('info', 'Restore sedang berjalan di latar belakang. Anda bebas berpindah halaman — progres tampil di pojok kanan bawah.');
+        return back()->with('info', 'Pemulihan data sedang berjalan di latar belakang. Anda dapat menggunakan menu lain — progres tampil di pojok kanan bawah.');
     }
 
     /**
@@ -181,15 +181,14 @@ class BackupController extends Controller
         $this->authorizeSuperadmin();
 
         $relative = DatabaseBackup::safePath($file);
-        abort_if($relative === null, 404, 'File backup tidak ditemukan.');
+        abort_if($relative === null, 404, 'File cadangan tidak ditemukan.');
 
-        // Hapus lewat service terpusat agar versi lama objek di B2
-        // (versioning: delete biasa hanya membuat hide marker) ikut ter-purge.
+        // Hapus lewat service terpusat agar versi lama objek ikut ter-purge.
         app(FileUploadService::class)->deletePath($relative, DatabaseBackup::diskName());
 
-        ActivityLogger::log('deleted', 'Hapus backup: '.basename($file), 'system');
+        ActivityLogger::log('deleted', 'Hapus cadangan: '.basename($file), 'system');
 
-        return back()->with('success', 'Backup '.basename($file).' berhasil dihapus.');
+        return back()->with('success', 'Cadangan '.basename($file).' berhasil dihapus.');
     }
 
     /**
@@ -221,9 +220,6 @@ class BackupController extends Controller
             if (DIRECTORY_SEPARATOR === '\\') {
                 // Windows — popen async
                 @pclose(@popen('start /B '.$cmd, 'r'));
-                // Fallback: coba exec langsung tanpa & (Windows tidak support &)
-                // JalankanArtisan call sebagai fallback sinkron cepat (queue:work --once)
-                // dengan timeout proses 2 detik agar tidak block request (best effort)
             } else {
                 @exec($cmd);
             }
@@ -243,7 +239,7 @@ class BackupController extends Controller
         $files = array_values(array_unique(array_filter((array) $request->input('files', []))));
 
         if (empty($files)) {
-            return back()->with('error', 'Pilih minimal satu file backup untuk dihapus.');
+            return back()->with('error', 'Pilih minimal satu file cadangan untuk dihapus.');
         }
 
         $deleted = 0;
@@ -264,16 +260,16 @@ class BackupController extends Controller
             }
         }
 
-        ActivityLogger::log('deleted', 'Hapus '.count($files).' backup (berhasil '.$deleted.')', 'system');
+        ActivityLogger::log('deleted', 'Hapus '.count($files).' cadangan (berhasil '.$deleted.')', 'system');
 
         if ($deleted > 0 && empty($failed)) {
-            return back()->with('success', $deleted.' file backup berhasil dihapus.');
+            return back()->with('success', $deleted.' file cadangan berhasil dihapus.');
         }
 
         if ($deleted > 0) {
-            return back()->with('warning', $deleted.' file dihapus; '.count($failed).' gagal: '.implode(', ', $failed));
+            return back()->with('warning', $deleted.' file cadangan dihapus; '.count($failed).' file gagal dihapus.');
         }
 
-        return back()->with('error', 'Gagal menghapus file backup: '.implode(', ', $failed));
+        return back()->with('error', 'Gagal menghapus file cadangan.');
     }
 }

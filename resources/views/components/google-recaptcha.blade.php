@@ -1,3 +1,4 @@
+@if (\App\Support\Captcha::enabled())
 <div class="dlh-recaptcha">
     <p class="dlh-recaptcha-status" role="status" aria-live="polite">
         <img src="{{ asset('assets/images/RecaptchaLogo.svg') }}" alt="" class="dlh-recaptcha-logo" aria-hidden="true">
@@ -15,22 +16,29 @@
             <button type="button" class="dlh-captcha-modal__close" data-dlh-captcha-close aria-label="{{ __('Tutup verifikasi') }}">
                 <span aria-hidden="true"></span>
             </button>
-            <img src="{{ asset('assets/images/RecaptchaLogo.svg') }}" alt="" class="dlh-captcha-modal__logo" aria-hidden="true">
-            <h2 id="dlh-captcha-title-{{ $this->getId() }}">{{ __('Verifikasi keamanan') }}</h2>
+            <div class="dlh-captcha-modal__head">
+                <img src="{{ asset('assets/images/RecaptchaLogo.svg') }}" alt="" class="dlh-captcha-modal__logo" aria-hidden="true">
+                <div>
+                    <span class="dlh-captcha-modal__eyebrow">{{ __('Langkah Keamanan') }}</span>
+                    <h2 id="dlh-captcha-title-{{ $this->getId() }}">{{ __('Verifikasi keamanan') }}</h2>
+                </div>
+            </div>
             <p>{{ __('Centang kotak di bawah untuk melanjutkan. Google dapat meminta verifikasi tambahan bila diperlukan.') }}</p>
-            <div
-                wire:ignore
-                data-dlh-recaptcha
-                data-component-id="{{ $this->getId() }}"
-                data-sitekey="{{ config('services.recaptcha.site_key') }}"
-            ></div>
+            <div class="dlh-captcha-frame">
+                <div
+                    wire:ignore
+                    data-dlh-recaptcha
+                    data-component-id="{{ $this->getId() }}"
+                    data-sitekey="{{ config('services.recaptcha.site_key') }}"
+                ></div>
+            </div>
         </section>
     </div>
 </div>
 
 @once
     <style>
-        [data-dlh-recaptcha] { min-height: 78px; display: grid; place-items: center; }
+        [data-dlh-recaptcha] { min-height: 74px; display: grid; place-items: center; padding: 8px 6px; }
         .dlh-recaptcha { margin-top: 12px; }
         .dlh-recaptcha-status {
             display: inline-flex; align-items: center; gap: 6px; margin: 0;
@@ -47,13 +55,18 @@
         .dlh-captcha-modal { display: flex; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .24s ease, visibility 0s linear .24s; }
         .dlh-captcha-modal.is-open, .dlh-captcha-modal.is-closing { visibility: visible; transition-delay: 0s; }
         .dlh-captcha-modal.is-open { opacity: 1; pointer-events: auto; }
-        .dlh-captcha-modal__backdrop { position: absolute; inset: 0; background: rgba(4, 36, 24, .64); backdrop-filter: blur(0); transition: backdrop-filter .28s ease, background .28s ease; }
-        .dlh-captcha-modal.is-open .dlh-captcha-modal__backdrop { backdrop-filter: blur(8px); }
-        .dlh-captcha-modal__dialog { position: relative; z-index: 1; width: min(100%, 438px); padding: 34px 36px 30px; border-radius: 28px; background: linear-gradient(145deg, #ffffff, #f7fbf8); border: 1px solid rgba(255,255,255,.86); box-shadow: 0 34px 90px -26px rgba(0, 35, 21, .70); text-align: center; opacity: 0; transform: translateY(18px) scale(.965); transition: transform .28s cubic-bezier(.16, 1, .3, 1), opacity .20s ease; }
+        /* Latar hanya digelapkan tipis — tanpa blur — agar formulir tetap terlihat jelas. */
+        .dlh-captcha-modal__backdrop { position: absolute; inset: 0; background: rgba(6, 32, 22, .46); transition: background .28s ease; }
+        .dlh-captcha-modal__dialog { position: relative; z-index: 1; width: min(100%, 408px); padding: 28px 30px 26px; border-radius: 24px; background: linear-gradient(160deg, #ffffff, #f5faf7); border: 1px solid rgba(255,255,255,.86); box-shadow: 0 34px 90px -26px rgba(0, 35, 21, .55); text-align: center; opacity: 0; transform: translateY(18px) scale(.965); transition: transform .28s cubic-bezier(.16, 1, .3, 1), opacity .20s ease; }
         .dlh-captcha-modal.is-open .dlh-captcha-modal__dialog { opacity: 1; transform: translateY(0) scale(1); }
-        .dlh-captcha-modal__logo { width: 62px; height: 62px; margin: 0 auto 10px; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(66,133,244,.16)); }
-        .dlh-captcha-modal__dialog h2 { margin: 0; color: #10251b; font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
-        .dlh-captcha-modal__dialog p { margin: 9px auto 20px; color: #5f7067; font-size: 13px; line-height: 1.6; max-width: 34ch; }
+        .dlh-captcha-modal__head { display: flex; align-items: center; justify-content: center; gap: 13px; }
+        .dlh-captcha-modal__head > div:last-child { text-align: left; }
+        .dlh-captcha-modal__logo { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; filter: drop-shadow(0 6px 10px rgba(66,133,244,.18)); }
+        .dlh-captcha-modal__eyebrow { display: inline-block; margin-bottom: 5px; padding: 3px 10px; border-radius: 999px; background: #e7f6ee; color: #0b8757; font: 700 10px/1.2 'Inter Variable', ui-sans-serif, system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+        .dlh-captcha-modal__dialog h2 { margin: 0; color: #10251b; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+        .dlh-captcha-modal__dialog p { margin: 12px auto 18px; color: #5f7067; font-size: 13px; line-height: 1.6; max-width: 36ch; }
+        /* Bingkai kotak verifikasi Google agar menyatu dengan gaya halaman. */
+        .dlh-captcha-frame { max-width: 340px; margin: 0 auto; border-radius: 16px; border: 1px solid rgba(11,116,74,.16); background: #fff; box-shadow: 0 14px 30px -20px rgba(9, 71, 46, .5); overflow: hidden; }
         .dlh-captcha-modal__close { position: absolute; top: 15px; right: 16px; width: 42px; height: 42px; border: 1px solid rgba(11,116,74,.10); border-radius: 14px; background: rgba(247,251,248,.92); color: #476256; cursor: pointer; box-shadow: 0 8px 18px -14px rgba(9,71,46,.75); transition: transform .20s cubic-bezier(.16,1,.3,1), background .20s ease, color .20s ease, box-shadow .20s ease; }
         .dlh-captcha-modal__close span, .dlh-captcha-modal__close span::after { position: absolute; top: 50%; left: 50%; width: 16px; height: 2px; border-radius: 99px; background: currentColor; content: ''; transform: translate(-50%, -50%) rotate(45deg); transition: transform .24s cubic-bezier(.16,1,.3,1); }
         .dlh-captcha-modal__close span::after { transform: translate(-50%, -50%) rotate(90deg); }
@@ -62,79 +75,13 @@
         .dark .dlh-captcha-modal__dialog { background: #17251f; border-color: rgba(110,231,183,.15); }
         .dark .dlh-captcha-modal__dialog h2 { color: #ecfdf5; }
         .dark .dlh-captcha-modal__dialog p { color: #b5c9bd; }
+        .dark .dlh-captcha-modal__eyebrow { background: rgba(110, 231, 183, .12); color: #6ee7b7; }
+        .dark .dlh-captcha-frame { background: #1d2b24; border-color: rgba(110, 231, 183, .16); box-shadow: none; }
         .dlh-captcha-modal__close:active { transform: translateY(0) scale(.90); }
         .dlh-button-loader { width: 18px; height: 18px; flex: 0 0 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 999px; animation: dlh-button-spin .68s linear infinite; }
         .dlh-form--loading button[type="submit"] { min-width: 148px; justify-content: center; gap: 9px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), 0 9px 22px -12px rgba(5, 92, 62, .74) !important; }
         @keyframes dlh-button-spin { to { transform: rotate(360deg); } }
 
-        /* Kartu cek: satu bahasa visual untuk seluruh layanan pelacakan. */
-        .ck-wrap, .lc-wrap { position: relative; }
-        .ck-card, .lc-search-card {
-            position: relative;
-            overflow: hidden;
-            border-radius: 26px;
-            border-color: rgba(20, 106, 68, .14);
-            box-shadow: 0 20px 50px -32px rgba(8, 77, 47, .38), 0 2px 6px rgba(8, 77, 47, .04);
-        }
-        .ck-card::before, .lc-search-card::before {
-            content: '';
-            position: absolute;
-            inset: 0 0 auto;
-            height: 4px;
-            background: linear-gradient(90deg, #0b744a, #18a96d 56%, #72d6a6);
-        }
-        .ck-card-head, .lc-search-head { margin-top: 5px; }
-        .ck-card-icon, .lc-search-icon {
-            border-radius: 15px;
-            background: linear-gradient(145deg, #0b8757, #075c3e);
-            box-shadow: 0 10px 22px -10px rgba(5, 92, 62, .72);
-        }
-        .ck-search-btn, .lc-search-btn {
-            min-width: 164px;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #087a50, #10ae73);
-            box-shadow: 0 12px 26px -12px rgba(7, 122, 80, .72);
-        }
-        .ck-search-btn::after, .lc-search-btn::after {
-            content: '';
-            position: absolute;
-            inset: 0 auto 0 -130%;
-            width: 70%;
-            transform: skewX(-22deg);
-            background: rgba(255, 255, 255, .20);
-            transition: left .45s ease;
-        }
-        .ck-search-btn:hover::after, .lc-search-btn:hover::after { left: 145%; }
-        .ck-result-card, .lc-result-card {
-            border-radius: 26px;
-            border-color: rgba(20, 106, 68, .13);
-            box-shadow: 0 18px 44px -32px rgba(8, 77, 47, .34);
-        }
-        /* Kolom input dapat bertambah tinggi saat validasi gagal. Grid menjaga
-           tombol tetap sejajar dengan input, bukan dengan pesan error. */
-        .tracking-search-form {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
-            align-items: start;
-            gap: 12px;
-        }
-        .tracking-search-form .ck-search-btn,
-        .tracking-search-form .lc-search-btn { align-self: start; }
-        @media (min-width: 768px) {
-            .tracking-search-form { grid-template-columns: minmax(0, 1fr) auto; }
-        }
-        .dark .ck-card, .dark .lc-search-card, .dark .ck-result-card, .dark .lc-result-card {
-            border-color: rgba(110, 231, 183, .16);
-            box-shadow: none;
-        }
-        @media (max-width: 767px) {
-            .ck-card, .lc-search-card, .ck-result-card, .lc-result-card { border-radius: 20px; padding: 18px; }
-            .ck-search-btn, .lc-search-btn { width: 100%; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .ck-search-btn::after, .lc-search-btn::after { transition: none; }
-        }
     </style>
 
     <script>
@@ -145,7 +92,12 @@
                 `[data-dlh-recaptcha][data-component-id="${componentId}"]`,
             );
 
-            const getForm = (element) => element.closest('[wire\\:id]')?.querySelector('form[data-dlh-recaptcha-action]');
+            // Saat modal dipindahkan sementara ke <body>, elemen captcha tidak
+            // lagi berada di dalam komponen Livewire. Cari formulir lewat ID
+            // komponen yang tersimpan pada atribut data-* elemen captcha.
+            const getFormByComponent = (componentId) => document
+                .querySelector(`[wire\\:id="${componentId}"]`)
+                ?.querySelector('form[data-dlh-recaptcha-action]');
             const setFormLoading = (form, loading) => {
                 if (!form) return;
 
@@ -166,6 +118,26 @@
                     }
                 });
             };
+            const openModal = (element) => {
+                const modal = element.closest('[data-dlh-captcha-modal]');
+                if (!modal) return;
+
+                // Portal ke <body>: position:fixed "menempel" pada induk mana
+                // pun yang memiliki transform/filter (mis. animasi reveal
+                // formulir), sehingga modal bisa tidak tepat di tengah layar.
+                // Memindahkan modal sementara ke body menjamin centering
+                // selalu dihitung terhadap viewport.
+                if (!modal.dataset.dlhPortal) {
+                    modal._dlhHome = { parent: modal.parentNode, next: modal.nextSibling };
+                    modal.dataset.dlhPortal = '1';
+                    document.body.appendChild(modal);
+                }
+
+                modal.classList.remove('is-closing');
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden', 'false');
+            };
+
             const closeModal = (element) => {
                 const modal = element.closest('[data-dlh-captcha-modal]');
                 if (!modal || !modal.classList.contains('is-open')) return;
@@ -175,6 +147,19 @@
                 window.setTimeout(() => {
                     modal.classList.remove('is-closing');
                     modal.setAttribute('aria-hidden', 'true');
+
+                    // Kembalikan ke tempat semula agar morph Livewire kembali
+                    // menemukan struktur DOM komponen seperti sebelumnya.
+                    const home = modal._dlhHome;
+                    if (home?.parent?.isConnected) {
+                        if (home.next && home.next.parentNode === home.parent) {
+                            home.parent.insertBefore(modal, home.next);
+                        } else {
+                            home.parent.appendChild(modal);
+                        }
+                    }
+                    delete modal.dataset.dlhPortal;
+                    modal._dlhHome = null;
                 }, 240);
             };
 
@@ -237,14 +222,16 @@
                                         });
                                 },
                                 'error-callback': () => {
+                                    const form = getFormByComponent(element.dataset.componentId);
                                     window.Livewire.find(element.dataset.componentId)?.$call('recaptchaFailed');
-                                    getForm(element)?.removeAttribute('data-recaptcha-submitting');
-                                    setFormLoading(getForm(element), false);
+                                    form?.removeAttribute('data-recaptcha-submitting');
+                                    setFormLoading(form, false);
                                 },
                                 'expired-callback': () => {
+                                    const form = getFormByComponent(element.dataset.componentId);
                                     window.Livewire.find(element.dataset.componentId)?.$call('recaptchaFailed');
-                                    getForm(element)?.removeAttribute('data-recaptcha-submitting');
-                                    setFormLoading(getForm(element), false);
+                                    form?.removeAttribute('data-recaptcha-submitting');
+                                    setFormLoading(form, false);
                                 },
                             });
 
@@ -275,18 +262,16 @@
                 if (!element) return;
 
                 element.dataset.action = action;
-                const modal = element.closest('[data-dlh-captcha-modal]');
-                modal?.classList.remove('is-closing');
-                modal?.classList.add('is-open');
-                modal?.setAttribute('aria-hidden', 'false');
+                openModal(element);
 
                 try {
                     await renderWidget(element);
                 } catch (error) {
                     console.error('[DLH] Google reCAPTCHA gagal dimuat:', error);
                     window.Livewire.find(componentId)?.$call('recaptchaFailed');
-                    getForm(element)?.removeAttribute('data-recaptcha-submitting');
-                    setFormLoading(getForm(element), false);
+                    const form = getFormByComponent(componentId);
+                    form?.removeAttribute('data-recaptcha-submitting');
+                    setFormLoading(form, false);
                     closeModal(element);
                 }
             };
@@ -353,11 +338,16 @@
                 const element = modal?.querySelector('[data-dlh-recaptcha]');
                 if (!modal || !element) return;
 
+                // Modal sedang di-portal ke <body>, jadi formulir dicari lewat
+                // ID komponen Livewire, bukan lewat posisi DOM elemen captcha.
+                const form = getFormByComponent(element.dataset.componentId);
+
                 closeModal(element);
-                setFormLoading(getForm(element), false);
-                element.closest('[wire\\:id]')?.querySelector('form[data-dlh-recaptcha-action]')?.removeAttribute('data-recaptcha-submitting');
+                setFormLoading(form, false);
+                form?.removeAttribute('data-recaptcha-submitting');
             });
         })();
     </script>
     <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 @endonce
+@endif

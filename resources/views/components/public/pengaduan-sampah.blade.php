@@ -156,7 +156,7 @@ new class extends Component
                 />
 
                 <div class="space-y-2.5">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti (min 1, max 5, JPG/PNG/WebP/AVIF/HEIC maksimal 5MB)') }}</label>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti') }}</label>
                     <input wire:model="photos" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" aria-label="{{ __('Foto Bukti') }}" class="flex h-10 w-full rounded-md border border-slate-200 px-3 text-sm dark:border-slate-800" />
                     @error('photos') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                     @error('photos.*') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror

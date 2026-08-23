@@ -16,7 +16,21 @@
             return $value ? 'Ya' : 'Tidak';
         }
         if (is_array($value)) {
-            return filled($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : '-';
+            if (empty($value)) return '-';
+            $formatItem = function ($v) use (&$format, &$formatItem) {
+                if (is_array($v)) {
+                    return collect($v)->map(fn ($vv, $kk) => str_replace('_', ' ', ucfirst((string) $kk)).': '.$format($vv))->implode('; ');
+                }
+                return $format($v);
+            };
+            if (array_is_list($value)) {
+                // Daftar nilai ditampilkan sebagai teks biasa, bukan JSON mentah.
+                return implode(', ', array_map($formatItem, $value));
+            }
+            // Pasangan label => nilai dirapikan menjadi "Label: nilai".
+            return collect($value)
+                ->map(fn ($v, $k) => str_replace('_', ' ', ucfirst((string) $k)).': '.$formatItem($v))
+                ->implode('; ');
         }
         return filled($value) ? (string) $value : '-';
     };
@@ -54,9 +68,9 @@
 
     $relationConfigs = [
         ['relation' => 'fotos', 'title' => 'Foto Bukti', 'path' => 'path_foto', 'name' => null, 'image' => true],
-        ['relation' => 'dokumens', 'title' => 'Dokumen Relasi', 'path' => null, 'name' => null, 'image' => false],
+        ['relation' => 'dokumens', 'title' => 'Dokumen Terkait', 'path' => null, 'name' => null, 'image' => false],
         ['relation' => 'media', 'title' => 'Media', 'path' => 'path', 'name' => null, 'image' => true],
-        ['relation' => 'files', 'title' => 'File Relasi', 'path' => 'path', 'name' => 'nama', 'image' => false],
+        ['relation' => 'files', 'title' => 'Berkas Terkait', 'path' => 'path', 'name' => 'nama', 'image' => false],
         ['relation' => 'pesertas', 'title' => 'Peserta/Objek Terkait', 'path' => 'sertifikat_path', 'name' => null, 'image' => false],
     ];
 
@@ -237,7 +251,7 @@
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Password</p>
                                 <p class="mt-0.5 text-sm font-semibold text-slate-900">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</p>
-                                <p class="mt-0.5 text-xs text-slate-400">Password terenkripsi — gunakan tombol Reset Password bila perlu mengganti.</p>
+                                <p class="mt-0.5 text-xs text-slate-400">Password tidak dapat ditampilkan. Gunakan Reset Password jika perlu menggantinya.</p>
                             </div>
                         </div>
                     </div>
@@ -259,20 +273,19 @@
 
             {{-- Role & Access --}}
             <div class="stagger-item">
-                <x-admin.section-card title="Role & Akses Menu" icon="shield">
+                <x-admin.section-card title="Jabatan & Akses Menu" icon="shield">
                     <div class="space-y-5">
-                        {{-- Role --}}
+                        {{-- Jabatan --}}
                         <div class="flex items-start gap-3">
                             <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600">
                                 <x-admin.icon name="shield" :size="18" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Role / Jabatan</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Jabatan</p>
                                 @if($roleEnum)
                                     <p class="mt-0.5 text-sm font-bold text-slate-900">{{ $roleEnum->label() }}</p>
-                                    <p class="mt-0.5 text-xs text-slate-500">Kode : <span class="font-mono">{{ $roleEnum->value }}</span></p>
                                 @else
-                                    <p class="mt-0.5 text-sm text-slate-400">Tidak ada role</p>
+                                    <p class="mt-0.5 text-sm text-slate-400">Tidak ada jabatan</p>
                                 @endif
                             </div>
                         </div>
@@ -363,8 +376,7 @@
             <x-admin.modal name="reset-password-user" title="Reset Password Pengguna" max-width="md">
                 <p class="text-sm leading-relaxed text-slate-600">
                     Masukkan password baru untuk <span class="font-semibold text-slate-900">{{ $record->name }}</span>.
-                    Password saat ini <span class="font-semibold">tidak diperlukan</span>. Setelah direset, password baru akan
-                    langsung ditampilkan di halaman ini (kolom Password).
+                    Password baru minimal 10 karakter dengan kombinasi huruf besar, huruf kecil, dan angka.
                 </p>
                 <form method="POST" action="{{ route('admin.user.reset-password', $record) }}" class="mt-4 space-y-4"
                     x-data="{ submitting: false }" x-on:submit="submitting = true">
@@ -372,8 +384,8 @@
         <div x-data="{ show: false }">
             <label class="mb-1.5 block text-sm font-semibold text-slate-700">Password Baru</label>
             <div class="relative">
-                <input :type="show ? 'text' : 'password'" name="password" required minlength="8" autocomplete="new-password"
-                    class="admin-field pr-11" placeholder="Minimal 8 karakter">
+                <input :type="show ? 'text' : 'password'" name="password" required minlength="10" autocomplete="new-password"
+                    class="admin-field pr-11" placeholder="Minimal 10 karakter (huruf besar, kecil, angka)">
                 <button type="button" @click="show = !show"
                     class="absolute inset-y-0 right-0 grid w-11 place-items-center text-slate-400 transition hover:text-slate-600 focus:outline-none focus:text-emerald-600"
                     :title="show ? 'Sembunyikan password' : 'Tampilkan password'">

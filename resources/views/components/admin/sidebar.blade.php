@@ -113,7 +113,7 @@
                 <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo DLH Kota Palu" width="320" height="337" class="h-12 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
                 <div class="min-w-0">
                     <p class="truncate text-[15px] font-bold tracking-tight text-white">DLH Kota Palu</p>
-                    <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/65">Ruang Kendali</p>
+                    <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/65">Panel Admin</p>
                 </div>
             </a>
             <button
@@ -190,7 +190,7 @@
                         <span class="grid size-9 shrink-0 place-items-center rounded-lg {{ $isBackupActive ? 'bg-emerald-400 text-emerald-950' : 'bg-white/[0.07] text-emerald-200' }}">
                             <x-admin.icon name="database" :size="18" />
                         </span>
-                        <span class="text-[13px] font-medium">Backup Database</span>
+                        <span class="text-[13px] font-medium">Cadangan Data</span>
                     </a>
                 </section>
             @endif
@@ -219,7 +219,7 @@
             <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo DLH Kota Palu" width="320" height="337" class="h-12 w-auto shrink-0" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));">
             <div x-show="!$store.sidebar.collapsed" x-cloak x-transition:enter="transition-opacity ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="min-w-0">
                 <p class="text-[15px] font-bold leading-tight tracking-tight text-white">DLH Kota Palu</p>
-                <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/65">Ruang Kendali</p>
+                <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/65">Panel Admin</p>
             </div>
         </a>
     </header>
@@ -296,14 +296,14 @@
                     href="{{ route('admin.backup.index') }}"
                     class="group relative flex min-h-11 items-center gap-3 rounded-xl py-2.5 transition-colors duration-150 {{ $isBackupActive ? 'border border-emerald-400/20 bg-emerald-400/15 text-white' : 'border border-transparent text-white/70 hover:bg-white/[0.07] hover:text-white' }}"
                     x-bind:class="$store.sidebar.collapsed ? 'justify-center px-0' : 'px-3'"
-                    aria-label="Backup Database"
-                    title="Backup Database"
+                    aria-label="Cadangan Data"
+                    title="Cadangan Data"
                     @if($isBackupActive) aria-current="page" @endif
                 >
                     <span class="grid size-9 shrink-0 place-items-center rounded-lg {{ $isBackupActive ? 'bg-emerald-400 text-emerald-950' : 'bg-white/[0.07] text-emerald-200' }}">
                         <x-admin.icon name="database" :size="18" />
                     </span>
-                    <span x-show="!$store.sidebar.collapsed" x-cloak class="min-w-0 flex-1 truncate text-[13px] font-medium">Backup Database</span>
+                    <span x-show="!$store.sidebar.collapsed" x-cloak class="min-w-0 flex-1 truncate text-[13px] font-medium">Cadangan Data</span>
                 </a>
             </section>
         @endif

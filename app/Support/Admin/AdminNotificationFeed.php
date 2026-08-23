@@ -28,9 +28,32 @@ class AdminNotificationFeed
         );
     }
 
-    public static function cacheKey(User $user): string
+    public static function cacheKey(User|int|string $user): string
     {
-        return 'admin:notifications:' . $user->id;
+        $id = $user instanceof User ? $user->id : $user;
+
+        return 'admin:notifications:' . $id;
+    }
+
+    /**
+     * Hapus cache feed notifikasi untuk satu user atau kelompok user.
+     */
+    public static function forget(User|int|string|iterable|null $users): void
+    {
+        if ($users === null) {
+            return;
+        }
+
+        if ($users instanceof User || is_int($users) || is_string($users)) {
+            Cache::forget(static::cacheKey($users));
+            return;
+        }
+
+        if (is_iterable($users)) {
+            foreach ($users as $u) {
+                static::forget($u);
+            }
+        }
     }
 
     /**

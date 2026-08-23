@@ -6,7 +6,7 @@
 @section('content')
     <x-admin.page-header
         title="Ulasan Masyarakat"
-        subtitle="Ringkasan rating dan komentar dari masyarakat"
+        subtitle="Ringkasan penilaian dan komentar dari masyarakat."
     />
 
     {{-- Summary Cards --}}
@@ -18,7 +18,7 @@
             color="amber"
         /></div>
         <div data-animate class="stagger-item" style="--reveal-delay: 60ms"><x-admin.stat-card
-            label="Rata-rata Rating"
+            label="Rata-rata Penilaian"
             :value="number_format($avgOverall, 1)"
             icon="trending-up"
             color="emerald"
@@ -31,11 +31,11 @@
         /></div>
     </section>
 
-    {{-- Rating per Bidang --}}
+    {{-- Penilaian per Bidang --}}
     <div data-animate class="stagger-item mb-8"><x-admin.card class="mb-8">
         <div class="mb-4">
-            <h2 class="text-h4 font-bold text-ink-900">Rating per Jenis Layanan</h2>
-            <p class="text-xs text-slate-500">Rata-rata penilaian masyarakat per bidang</p>
+            <h2 class="text-h4 font-bold text-ink-900">Penilaian per Jenis Layanan</h2>
+            <p class="text-xs text-slate-500">Rata-rata penilaian masyarakat per bidang tugas</p>
         </div>
 
         @if ($ratingPerBidang->isEmpty())

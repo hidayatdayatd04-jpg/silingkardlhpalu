@@ -24,7 +24,7 @@
                 </label>
                 <p class="mt-1 text-xs text-slate-500">
                     @if($isSuperadmin)
-                        Superadmin memiliki akses penuh ke semua menu
+                        Administrator Utama memiliki akses penuh ke semua menu
                     @else
                         Kelola akses tambahan ke menu bidang lain, termasuk sub-menu spesifik
                     @endif
@@ -37,10 +37,10 @@
             <div class="rounded-lg bg-amber-50 p-4 text-center">
                 <x-admin.icon name="lock" :size="32" class="mx-auto text-amber-600" />
                 <p class="mt-2 text-sm font-semibold text-amber-800">
-                    Role Superadmin Terlindungi
+                    Administrator Utama
                 </p>
                 <p class="mt-1 text-xs text-amber-700">
-                    Superadmin memiliki akses penuh ke semua menu secara default
+                    Administrator Utama memiliki akses penuh ke semua menu secara default
                 </p>
             </div>
         @else
@@ -48,7 +48,7 @@
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3" x-show="defaultGroups.length > 0">
                 <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
                     <x-admin.icon name="check" :size="12" class="inline" />
-                    Akses Default (dari Role)
+                    Akses Bawaan (dari Jabatan / Peran)
                 </p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($allGroups as $groupKey => $group)
@@ -109,7 +109,7 @@
                 <div class="flex gap-2">
                     <x-admin.icon name="info-circle" :size="14" class="mt-0.5 shrink-0 text-blue-600" />
                     <p class="text-xs text-blue-700">
-                        <strong>Catatan:</strong> Menu default dari role tetap akan muncul (ditandai non-aktif). Akses tambahan ini memberikan fleksibilitas memilih menu/sub-menu spesifik lintas bidang.
+                        <strong>Catatan:</strong> Menu bawaan dari peran akun tetap aktif secara otomatis. Akses tambahan ini digunakan jika akun memerlukan akses menu lintas bidang tugas.
                     </p>
                 </div>
             </div>

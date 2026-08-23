@@ -276,10 +276,10 @@
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-ink-700 dark:text-slate-200">Password Baru</label>
                         <div class="relative">
-                            <input :type="revealNew ? 'text' : 'password'" name="password" required autocomplete="new-password"
+                            <input :type="revealNew ? 'text' : 'password'" name="password" required minlength="10" autocomplete="new-password"
                                 x-model="newPassword"
                                 class="admin-field pr-11 dark:border-white/10 dark:bg-slate-800/60 dark:text-white {{ $errors->has('password') ? 'field-shake border-rose-400 focus:border-rose-500 focus:ring-rose-100' : '' }}"
-                                placeholder="Minimal 8 karakter">
+                                placeholder="Minimal 10 karakter (huruf besar, kecil, angka)">
                             <button type="button" @click="revealNew = !revealNew"
                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 transition hover:text-brand-600 focus:outline-none focus-visible:text-brand-600 dark:text-slate-500 dark:hover:text-brand-300"
                                 :aria-label="revealNew ? 'Sembunyikan password' : 'Tampilkan password'">

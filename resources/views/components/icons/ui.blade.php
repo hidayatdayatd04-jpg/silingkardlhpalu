@@ -269,8 +269,9 @@
             @break
 
         @case('moon')
-            <path class="icon-accent" d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8a8.5 8.5 0 1 0 11.5 11.5Z"/>
-            <path d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8a8.5 8.5 0 1 0 11.5 11.5Z"/>
+            <path class="icon-accent" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            <path d="M19 3.5v4M17 5.5h4"/>
             @break
 
         @case('arrow-right')

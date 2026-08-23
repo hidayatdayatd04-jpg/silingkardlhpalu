@@ -543,7 +543,7 @@
     const isReply = depth > 0;
     const size = isReply ? 'size-7' : 'size-8';
     const adminBadge = c.is_admin
-      ? `<span class="inline-flex items-center gap-1 rounded-md bg-slate-900 px-1.5 py-[2px] text-[10px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Penulis<span class="grid size-3 place-items-center rounded-full bg-sky-500 text-white">${iconVerified()}</span></span>`
+      ? `<span class="inline-flex items-center gap-1 rounded-md bg-slate-900 px-1.5 py-[2px] text-[10px] font-bold uppercase tracking-wide leading-none text-white dark:bg-white dark:text-slate-900">Admin<span class="grid size-3 place-items-center rounded-full bg-sky-500 text-white">${iconVerified()}</span></span>`
       : '';
     const pinnedBadge = c.is_pinned
       ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">${iconPin()}Disematkan</span>`

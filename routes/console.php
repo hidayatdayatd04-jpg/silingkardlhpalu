@@ -19,3 +19,9 @@ Schedule::command('queue:work --stop-when-empty --timeout=1900 --sleep=2 --tries
 
 // Bersihkan file yatim di B2 (objek tanpa referensi di database) tiap Minggu 03:00.
 Schedule::command('dlh:cleanup-orphan-files --delete')->weeklyOn(0, '03:00')->onOneServer();
+
+// Periksa sanksi mendekati jatuh tempo atau lewat batas waktu tiap hari pukul 08:00 WITA.
+Schedule::command('dlh:check-sanksi-due-date')
+    ->dailyAt('08:00')
+    ->timezone(config('app.timezone', 'Asia/Makassar'))
+    ->onOneServer();

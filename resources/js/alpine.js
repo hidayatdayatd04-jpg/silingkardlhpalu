@@ -82,8 +82,8 @@ function registerAlpineExtensions(Alpine) {
 
         get title() {
             if (!this.task) return '';
-            if (this.task.status === 'pending') return 'Menunggu antrian…';
-            return this.task.type === 'restore' ? 'Melakukan restore…' : 'Membuat backup…';
+            if (this.task.status === 'pending') return 'Menyiapkan proses…';
+            return this.task.type === 'restore' ? 'Memulihkan data…' : 'Membuat cadangan…';
         },
 
         get stalePending() {
@@ -157,7 +157,7 @@ function registerAlpineExtensions(Alpine) {
         },
 
         async cancel() {
-            if (!confirm('Batalkan proses ini? Perubahan yang belum selesai akan digulungkan.')) return;
+            if (!confirm('Batalkan proses ini? Tindakan yang sedang berjalan akan dihentikan.')) return;
 
             this.cancelling = true;
             try {

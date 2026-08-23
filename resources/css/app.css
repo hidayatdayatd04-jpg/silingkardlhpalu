@@ -1288,3 +1288,76 @@ html.js .public-main[data-public-page] {
 .user-resource-form .sticky {
     transform: none;
 }
+
+/* ==========================================================================
+   Kartu cek & pelacakan layanan (cek-*, lacak-laporan).
+   Style ini dulunya ada di google-recaptcha.blade.php — dipindah ke sini agar
+   tetap terpasang saat verifikasi captcha dimatikan dari pengaturan.
+   ========================================================================== */
+.ck-wrap, .lc-wrap { position: relative; }
+.ck-card, .lc-search-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 26px;
+    border-color: rgba(20, 106, 68, .14);
+    box-shadow: 0 20px 50px -32px rgba(8, 77, 47, .38), 0 2px 6px rgba(8, 77, 47, .04);
+}
+.ck-card::before, .lc-search-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: linear-gradient(90deg, #0b744a, #18a96d 56%, #72d6a6);
+}
+.ck-card-head, .lc-search-head { margin-top: 5px; }
+.ck-card-icon, .lc-search-icon {
+    border-radius: 15px;
+    background: linear-gradient(145deg, #0b8757, #075c3e);
+    box-shadow: 0 10px 22px -10px rgba(5, 92, 62, .72);
+}
+.ck-search-btn, .lc-search-btn {
+    min-width: 164px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #087a50, #10ae73);
+    box-shadow: 0 12px 26px -12px rgba(7, 122, 80, .72);
+}
+.ck-search-btn::after, .lc-search-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 -130%;
+    width: 70%;
+    transform: skewX(-22deg);
+    background: rgba(255, 255, 255, .20);
+    transition: left .45s ease;
+}
+.ck-search-btn:hover::after, .lc-search-btn:hover::after { left: 145%; }
+.ck-result-card, .lc-result-card {
+    border-radius: 26px;
+    border-color: rgba(20, 106, 68, .13);
+    box-shadow: 0 18px 44px -32px rgba(8, 77, 47, .34);
+}
+/* Kolom input dapat bertambah tinggi saat validasi gagal. Grid menjaga
+   tombol tetap sejajar dengan input, bukan dengan pesan error. */
+.tracking-search-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+}
+.tracking-search-form .ck-search-btn,
+.tracking-search-form .lc-search-btn { align-self: start; }
+@media (min-width: 768px) {
+    .tracking-search-form { grid-template-columns: minmax(0, 1fr) auto; }
+}
+.dark .ck-card, .dark .lc-search-card, .dark .ck-result-card, .dark .lc-result-card {
+    border-color: rgba(110, 231, 183, .16);
+    box-shadow: none;
+}
+@media (max-width: 767px) {
+    .ck-card, .lc-search-card, .ck-result-card, .lc-result-card { border-radius: 20px; padding: 18px; }
+    .ck-search-btn, .lc-search-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ck-search-btn::after, .lc-search-btn::after { transition: none; }
+}

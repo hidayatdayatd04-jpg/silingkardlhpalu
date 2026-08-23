@@ -132,6 +132,31 @@ class ArtikelKomentarController extends Controller
             'user_agent' => Str::limit($request->userAgent() ?? '', 500, ''),
         ]);
 
+        try {
+            $senderName = $komentar->display_name ?: 'Pengunjung';
+            if ($parent) {
+                \App\Support\AdminNotifier::toGroup('konten', [
+                    'title' => 'Balasan Komentar Baru',
+                    'message' => "{$senderName} membalas komentar pada artikel \"{$artikel->judul}\".",
+                    'icon' => 'message-circle',
+                    'color' => 'sky',
+                    'href' => route('admin.artikel.komentar.index', $artikel->id),
+                    'module' => 'artikel',
+                ]);
+            } else {
+                \App\Support\AdminNotifier::toGroup('konten', [
+                    'title' => 'Komentar Artikel Baru',
+                    'message' => "{$senderName} mengomentari artikel \"{$artikel->judul}\".",
+                    'icon' => 'message-circle',
+                    'color' => 'sky',
+                    'href' => route('admin.artikel.komentar.index', $artikel->id),
+                    'module' => 'artikel',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return response()->json([
             'message' => 'Komentar terkirim.',
             'komentar' => $this->serializeComment($komentar),

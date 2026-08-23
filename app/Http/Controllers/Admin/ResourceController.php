@@ -1150,19 +1150,19 @@ class ResourceController extends Controller
             'status' => ['required', Rule::in(array_keys(ArtikelStatus::options()))],
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
-            'thumbnail.required' => 'Thumbnail wajib diunggah.',
-            'thumbnail.mimes' => 'Thumbnail harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
-            'thumbnail.max' => 'Ukuran thumbnail maksimal 5MB.',
+            'thumbnail.required' => 'Gambar utama wajib diunggah.',
+            'thumbnail.mimes' => 'Gambar utama harus berformat JPG, JPEG, PNG, WEBP, AVIF, HEIC, atau HEIF.',
+            'thumbnail.max' => 'Ukuran gambar utama maksimal 5MB.',
             'konten.required' => 'Konten artikel wajib diisi.',
-            'tanggal_publish.required' => 'Tanggal publish wajib diisi.',
-            'tanggal_publish.date' => 'Tanggal publish tidak valid.',
+            'tanggal_publish.required' => 'Tanggal tayang wajib diisi.',
+            'tanggal_publish.date' => 'Tanggal tayang tidak valid.',
             'status.required' => 'Status wajib dipilih.',
             'status.in' => 'Status tidak valid.',
         ], [
             'judul' => 'Judul',
-            'thumbnail' => 'Thumbnail',
+            'thumbnail' => 'Gambar Utama',
             'konten' => 'Konten',
-            'tanggal_publish' => 'Tanggal Publish',
+            'tanggal_publish' => 'Tanggal Tayang',
             'status' => 'Status',
         ]);
     }

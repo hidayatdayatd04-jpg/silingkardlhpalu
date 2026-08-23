@@ -59,7 +59,10 @@ class ProcessPhotoUpload implements ShouldQueue
             'error_message' => $exception->getMessage(),
         ]);
 
-        Storage::disk('local')->delete($this->stagingPath);
+        // File staging SENGAJA dipertahankan agar proses dapat diulang
+        // lewat "php artisan dlh:photos:retry-failed" setelah kendala di
+        // server (mis. encoder gambar) diperbaiki. Staging hanya dihapus
+        // pada keberhasilan di handle().
 
         Log::error('ProcessPhotoUpload failed', [
             'fotoModel' => $this->fotoModelClass,
