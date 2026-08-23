@@ -529,7 +529,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {{-- Card: Backblaze B2 --}}
+            {{-- Card: Penyimpanan Awan --}}
             <div class="rounded-2xl border border-white/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -537,7 +537,7 @@
                             <x-admin.icon name="package" :size="22" />
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-ink-900">Backblaze B2</p>
+                            <p class="text-sm font-bold text-ink-900">Penyimpanan Awan</p>
                             <p class="text-xs text-slate-500">Total storage terpakai</p>
                         </div>
                     </div>
@@ -571,14 +571,14 @@
 
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
                         <span>{{ $b2['files'] }} file</span>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Backblaze B2">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Penyimpanan Awan">
                             <x-admin.icon name="tag" :size="12" /> {{ $b2['plan'] }}
                         </span>
                     </div>
                 @endif
             </div>
 
-            {{-- Card: Neon PostgreSQL --}}
+            {{-- Card: Database --}}
             <div class="rounded-2xl border border-white/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -586,7 +586,7 @@
                             <x-admin.icon name="database" :size="22" />
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-ink-900">Neon PostgreSQL</p>
+                            <p class="text-sm font-bold text-ink-900">Database</p>
                             <p class="text-xs text-slate-500">Database size terpakai</p>
                         </div>
                     </div>
@@ -620,7 +620,7 @@
 
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
                         <span class="truncate" title="Database: {{ $neon['database'] }}">DB: {{ $neon['database'] }}</span>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Neon PostgreSQL">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600" title="Status paket Database">
                             <x-admin.icon name="tag" :size="12" /> {{ $neon['plan'] }}
                         </span>
                     </div>

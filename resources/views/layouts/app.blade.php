@@ -18,7 +18,7 @@
     @php
         // Canonical SEO fleksibel via config('app.url') agar perubahan domain cukup via APP_URL.
         // Tanpa query string, mengikuti spec: '/' -> base saja, '/lacak' -> base.'/lacak', dll.
-        // Host request (Railway *.up.railway.app / Cloudflare Tunnel) tidak akan jadi canonical.
+        // Host request dari domain sementara atau tunnel tidak akan jadi canonical.
         $canonicalBase = rtrim((string) config('app.url'), '/');
         $canonicalPath = request()->getPathInfo(); // '/' , '/lacak', '/berita/slug' — tanpa query string
         if ($canonicalBase === '') {

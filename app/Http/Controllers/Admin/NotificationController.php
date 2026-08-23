@@ -43,7 +43,7 @@ class NotificationController extends Controller
      * Endpoint JSON untuk polling bell (fetch tiap 30 detik).
      *
      * Memakai cache feed yang sama dengan topbar (AdminNotificationFeed),
-     * sehingga polling tidak memicu query DB remote (Neon) tiap 30 detik
+     * sehingga polling tidak memicu query DB remote tiap 30 detik
      * per tab — cukup saat cache expired (5 menit).
      */
     public function poll(Request $request)

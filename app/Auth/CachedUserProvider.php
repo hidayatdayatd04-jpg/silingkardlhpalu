@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 /**
  * User provider yang meng-cache hasil retrieveById ke cache (file).
  *
- * Di environment ini DB utama adalah Neon PostgreSQL remote, sehingga setiap
+ * Di environment ini DB utama adalah database remote, sehingga setiap
  * request membuka koneksi TLS baru dan me-resolve role/permission (Spatie)
  * dari jauh -> TTFB tinggi. Dengan cache, user (beserta relation role/permission
  * yang sudah ter-load) diambil dari cache sehingga tidak ada query remote per
@@ -30,7 +30,7 @@ class CachedUserProvider extends EloquentUserProvider
                 $model = $this->createModel();
 
                 // Eager-load role & permission agar tidak ada query pivot
-                // (model_has_roles / model_has_permissions) ke Neon tiap request.
+                // (model_has_roles / model_has_permissions) ke database utama tiap request.
                 // Model ter-hydrate ini di-cache, sehingga request berikutnya
                 // mengembalikan user lengkap tanpa satu pun query remote.
                 return $model->newQuery()

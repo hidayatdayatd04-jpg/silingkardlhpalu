@@ -10,7 +10,7 @@ class AdminNotificationFeed
     /**
      * TTL cache untuk feed topbar & polling. Notifikasi cukup segar untuk UI,
      * dan cache ini mencegah polling (tiap 30 detik per tab) menghantam DB
-     * remote (Neon) berulang kali.
+     * remote berulang kali.
      */
     public const CACHE_MINUTES = 5;
 
