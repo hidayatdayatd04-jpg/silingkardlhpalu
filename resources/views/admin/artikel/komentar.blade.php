@@ -147,7 +147,7 @@
         </label>
         <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ $komentars->count() }} dari {{ $komentars->total() }} komentar utama · {{ Str::lower($sortLabels[$sort ?? 'terbaru']) }}</span>
       </div>
-      <form id="komentar-bulk-form" method="POST" action="{{ route('admin.artikel.komentar.bulkDestroy',$artikel->id) }}" onsubmit="return confirm('Hapus ' + document.querySelectorAll('.komentar-check:checked').length + ' komentar terpilih beserta balasannya?')" class="hidden">
+      <form id="komentar-bulk-form" method="POST" action="{{ route('admin.artikel.komentar.bulkDestroy',$artikel->id) }}" class="hidden">
         @csrf @method('DELETE')
         <div id="komentar-bulk-ids"></div>
         <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700">
@@ -225,11 +225,15 @@
                   <button type="submit" class="rounded-full px-2 py-1 text-[12px] font-bold transition-colors {{ $k->is_pinned ? 'text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/30' : 'text-slate-500 hover:bg-slate-100 hover:text-violet-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-violet-400' }}">{{ $k->is_pinned ? 'Lepas Semat' : 'Sematkan' }}</button>
                 </form>
 
-                <form method="POST" action="{{ route('admin.artikel.komentar.destroy',[$artikel->id,$k->id]) }}"
-                  onsubmit="return confirm({{ Illuminate\Support\Js::from($k->replies_count > 0 ? 'Hapus komentar ini beserta '.$k->replies_count.' balasannya? Tindakan ini tidak dapat dibatalkan dari panel.' : 'Hapus komentar ini? Tindakan ini tidak dapat dibatalkan dari panel.') }})">
-                  @csrf @method('DELETE')
-                  <button type="submit" class="rounded-full px-2 py-1 text-[12px] font-bold text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-400">Hapus</button>
-                </form>
+                <button type="button" x-data x-on:click="$dispatch('open-modal', 'del-komentar-{{ $k->id }}')"
+                  class="rounded-full px-2 py-1 text-[12px] font-bold text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-400">Hapus</button>
+                <x-admin.confirm-delete
+                  name="del-komentar-{{ $k->id }}"
+                  :action="route('admin.artikel.komentar.destroy',[$artikel->id,$k->id])"
+                  title="Hapus Komentar"
+                  :message="$k->replies_count > 0
+                    ? 'Komentar ini beserta '.$k->replies_count.' balasannya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.'
+                    : 'Komentar ini akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.'" />
               </div>
 
               {{-- balasan tersarang --}}
@@ -271,9 +275,13 @@
                             <form method="POST" action="{{ route('admin.artikel.komentar.hide',[$artikel->id,$r->id]) }}">@csrf
                               <button type="submit" class="rounded-full px-1.5 py-0.5 text-[11px] font-bold transition-colors {{ $r->is_hidden ? 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30' : 'text-slate-500 hover:bg-slate-100 hover:text-amber-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-amber-400' }}">{{ $r->is_hidden ? 'Tampilkan' : 'Sembunyikan' }}</button>
                             </form>
-                            <form method="POST" action="{{ route('admin.artikel.komentar.destroy',[$artikel->id,$r->id]) }}" onsubmit="return confirm('Hapus balasan ini? Tindakan ini tidak dapat dibatalkan dari panel.')">@csrf @method('DELETE')
-                              <button type="submit" class="rounded-full px-1.5 py-0.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-400">Hapus</button>
-                            </form>
+                            <button type="button" x-data x-on:click="$dispatch('open-modal', 'del-balasan-{{ $r->id }}')"
+                              class="rounded-full px-1.5 py-0.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-400">Hapus</button>
+                            <x-admin.confirm-delete
+                              name="del-balasan-{{ $r->id }}"
+                              :action="route('admin.artikel.komentar.destroy',[$artikel->id,$r->id])"
+                              title="Hapus Balasan"
+                              message="Balasan ini akan dihapus permanen. Tindakan ini tidak dapat dibatalkan." />
                           </div>
                         </div>
                       </div>
@@ -303,6 +311,24 @@
       <span id="admin-sentinel-text" class="hidden text-xs font-medium text-slate-400">Memuat...</span>
     </div>
   </x-admin.card>
+
+  {{-- Modal konfirmasi hapus massal --}}
+  <x-admin.modal name="komentar-bulk-confirm" title="Hapus Komentar Terpilih" variant="danger">
+    <p class="text-sm leading-relaxed text-ink-700 dark:text-slate-200">
+      <span id="komentar-bulk-count-label" class="font-bold">0</span> komentar terpilih akan dihapus beserta seluruh balasannya. Tindakan ini tidak dapat dibatalkan.
+    </p>
+    <x-slot:footer>
+      <button type="button" data-modal-autofocus x-on:click="closeModal()"
+        class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition-[background-color,border-color,color] duration-150 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60 dark:border-white/[.1] dark:bg-white/[.04] dark:text-slate-200 dark:hover:bg-white/[.08]">
+        Batal
+      </button>
+      <button type="button" id="komentar-bulk-confirm-btn"
+        class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(225,29,72,0.6)] transition-[background-color,box-shadow] duration-150 hover:bg-danger-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-400">
+        <x-admin.icon name="trash" :size="16" aria-hidden="true" />
+        Ya, Hapus
+      </button>
+    </x-slot:footer>
+  </x-admin.modal>
 </div>
 @endsection
 
@@ -365,6 +391,23 @@ div[role="dialog"] .fi-select-options-scroll{max-height:none;overflow-y:visible}
   }
   document.addEventListener('change', (e)=>{
     if(e.target.classList.contains('komentar-check')) syncBulk();
+  });
+
+  // konfirmasi hapus massal via modal (bukan dialog bawaan browser).
+  // Delegasi di document — konten modal di-teleport Alpine ke <body>, jadi
+  // getElementById saat skrip awal bisa null; delegasi imun terhadap itu.
+  document.addEventListener('submit', (e)=>{
+    if(e.target.id !== 'komentar-bulk-form') return;
+    e.preventDefault();
+    const label = document.getElementById('komentar-bulk-count-label');
+    if(label) label.textContent = document.querySelectorAll('.komentar-check:checked').length;
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'komentar-bulk-confirm' }));
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('#komentar-bulk-confirm-btn')) return;
+    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'komentar-bulk-confirm' }));
+    const f = document.getElementById('komentar-bulk-form');
+    if(f) f.submit();
   });
 
   // toggle balasan (delegasi — baris baru dari infinite scroll tetap berfungsi)

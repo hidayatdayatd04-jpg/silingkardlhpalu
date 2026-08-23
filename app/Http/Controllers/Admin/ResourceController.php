@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -992,12 +993,14 @@ class ResourceController extends Controller
     }
 
     /**
-     * Validasi server tambahan.
-     * - 'user': mencegah error NOT NULL (500) pada name/username/password saat
-     *   create, dan menjamin username/email unik.
-     * - 'artikel': memastikan judul wajib diisi (mencegah slug/model crash).
-     * Resource lain memakai atribut required pada form serta
-     * validateSpecialFields() untuk pengaduan.
+     * Validasi server generik untuk semua resource.
+     * - Field bertanda required pada definisi resource wajib diisi.
+     * - Bila tidak ditandai, kewajiban diambil dari skema DB (kolom NOT NULL
+     *   tanpa default) agar submit kosong menghasilkan 422, bukan 500.
+     * - Saat update, field readonly_on_edit dikunci dari data lama sehingga
+     *   tidak wajib diisi ulang.
+     * - 'user' punya aturan tambahan username/email unik.
+     * - 'artikel' memakai validateArtikelFields().
      */
     protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
     {
@@ -1007,18 +1010,18 @@ class ResourceController extends Controller
             return;
         }
 
-        if ($meta['slug'] !== 'user') {
-            return;
-        }
-
         $rules = [];
         $attributes = [];
+
+        // Model pembanding skema: record saat update, atau instance baru
+        // saat create (store() memanggil dengan $model = null).
+        $schemaModel = $model ?? new $meta['model'];
 
         foreach (AdminRegistry::formFields($meta) as $field) {
             $name = $field['name'] ?? null;
             $type = $field['type'] ?? 'text';
 
-            if (! $name || in_array($type, ['section', 'photos', 'relation_files'], true)) {
+            if (! $name || in_array($type, ['section', 'photos', 'relation_files', 'daftar_hadir'], true)) {
                 continue;
             }
             if (($field['readonly'] ?? false) === true) {
@@ -1026,6 +1029,15 @@ class ResourceController extends Controller
             }
 
             $required = ($field['required'] ?? false) === true;
+
+            if (! array_key_exists('required', $field)) {
+                $required = $this->columnIsRequired($schemaModel, $name);
+            }
+
+            if ($updating && ($field['readonly_on_edit'] ?? false) === true) {
+                $required = false;
+            }
+
             $rule = [];
 
             if ($type === 'password') {
@@ -1049,6 +1061,9 @@ class ResourceController extends Controller
             } elseif ($type === 'date') {
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'date';
+            } elseif ($type === 'select' && Str::endsWith($name, '_id')) {
+                $rule[] = $required ? 'required' : 'nullable';
+                $rule[] = 'integer';
             } else {
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'string';
@@ -1072,6 +1087,29 @@ class ResourceController extends Controller
         if (! empty($rules)) {
             $request->validate($rules, [], $attributes);
         }
+    }
+
+    /**
+     * Kolom dianggap wajib bila NOT NULL, tanpa default, dan bukan
+     * auto increment. Hasilnya di-cache statis per kolom tabel.
+     */
+    protected function columnIsRequired(Model $model, string $column): bool
+    {
+        static $cache = [];
+
+        $key = $model->getTable().'.'.$column;
+
+        if (! array_key_exists($key, $cache)) {
+            $definition = collect(Schema::getColumns($model->getTable()))
+                ->firstWhere('name', $column);
+
+            $cache[$key] = $definition !== null
+                && ! ($definition['nullable'] ?? true)
+                && ($definition['default'] ?? null) === null
+                && ! ($definition['auto_increment'] ?? false);
+        }
+
+        return $cache[$key];
     }
 
     /**

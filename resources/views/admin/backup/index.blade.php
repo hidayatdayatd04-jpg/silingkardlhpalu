@@ -21,7 +21,7 @@
     {{-- Compact hero header --}}
     <x-admin.page-header
         title="Backup & Restore Database"
-        subtitle="Cadangan lengkap database {{ $database }} + seluruh file storage (foto, dokumen, .shp) ke Backblaze B2. Restore bersifat merge — data di backup dipulihkan, data di luar backup tetap aman."
+        subtitle="Cadangan lengkap database {{ $database }} + seluruh file storage (foto, dokumen, .shp) ke penyimpanan awan. Restore bersifat merge — data di backup dipulihkan, data di luar backup tetap aman."
         icon="database"
         :breadcrumbs="[['label' => 'System'], ['label' => 'Backup Database']]"
     >
@@ -38,8 +38,7 @@
     </x-admin.page-header>
 
     <p class="mt-2 text-[11px] text-slate-500">
-        Proses backup & restore berjalan di latar belakang — Anda bebas berpindah halaman.
-        Progres tampil di pojok kanan bawah dan dapat dibatalkan kapan saja.
+        Backup diproses sebagai tugas antrian. Progres tampil di pojok kanan bawah dan bisa dibatalkan kapan saja.
     </p>
 
     {{-- Compact KPI strip --}}
@@ -103,7 +102,7 @@
                         </div>
 
                         <button type="button" x-show="selected.length > 0"
-                            x-on:click="if (confirm('Hapus ' + selected.length + ' file backup terpilih secara permanen?')) $refs.bulkDelete.submit()"
+                            x-on:click="$dispatch('open-modal', 'bulk-delete-backup')"
                             class="inline-flex items-center gap-1.5 rounded-lg bg-danger-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-danger-700 focus:outline-none focus:ring-4 focus:ring-danger-100">
                             <x-admin.icon name="trash" :size="14" />
                             <span>Hapus terpilih (<span x-text="selected.length"></span>)</span>
@@ -117,6 +116,26 @@
                             <input type="hidden" name="files[]" :value="name">
                         </template>
                     </form>
+
+                    {{-- Modal konfirmasi hapus massal --}}
+                    <x-admin.modal name="bulk-delete-backup" title="Hapus Backup Terpilih" variant="danger">
+                        <p class="text-sm leading-relaxed text-ink-700 dark:text-slate-200">
+                            <span class="font-bold" x-text="selected.length"></span> file backup terpilih akan dihapus permanen. Aksi ini tidak bisa dibatalkan.
+                        </p>
+                        <x-slot:footer>
+                            <button type="button" data-modal-autofocus
+                                x-on:click="$dispatch('close-modal', 'bulk-delete-backup')"
+                                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition-[background-color,border-color,color] duration-150 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60 dark:border-white/[.1] dark:bg-white/[.04] dark:text-slate-200 dark:hover:bg-white/[.08]">
+                                Batal
+                            </button>
+                            <button type="button"
+                                x-on:click="$dispatch('close-modal', 'bulk-delete-backup'); $refs.bulkDelete.submit()"
+                                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(225,29,72,0.6)] transition-[background-color,box-shadow] duration-150 hover:bg-danger-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-400">
+                                <x-admin.icon name="trash" :size="16" aria-hidden="true" />
+                                Ya, Hapus
+                            </button>
+                        </x-slot:footer>
+                    </x-admin.modal>
 
                 @if($totalBackups > 0)
                     <div class="divide-y divide-slate-100">
@@ -290,7 +309,7 @@
                         <h3 class="text-xs font-bold text-ink-900">Tips Keamanan Data</h3>
                         <ul class="mt-1.5 space-y-1 text-[11px] leading-relaxed text-slate-500">
                             <li class="flex gap-1.5"><x-admin.icon name="check" :size="12" class="mt-px shrink-0 text-emerald-500" />Backup & restore mencakup database + semua file storage (foto, dokumen, .shp).</li>
-                            <li class="flex gap-1.5"><x-admin.icon name="check" :size="12" class="mt-px shrink-0 text-emerald-500" />File backup disimpan aman di Backblaze B2, bukan di server.</li>
+                            <li class="flex gap-1.5"><x-admin.icon name="check" :size="12" class="mt-px shrink-0 text-emerald-500" />File backup disimpan aman di penyimpanan awan, bukan di server.</li>
                             <li class="flex gap-1.5"><x-admin.icon name="check" :size="12" class="mt-px shrink-0 text-emerald-500" />Pre-restore otomatis dibuat sebelum setiap restore.</li>
                             <li class="flex gap-1.5"><x-admin.icon name="check" :size="12" class="mt-px shrink-0 text-emerald-500" />Membuat backup baru akan menghapus semua backup lama — hanya backup terbaru yang tersimpan.</li>
                         </ul>

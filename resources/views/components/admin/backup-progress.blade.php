@@ -55,7 +55,7 @@
             Menunggu antrian — pastikan queue worker berjalan.
         </p>
         <p class="text-[11px] text-slate-400" x-show="!stalePending">
-            Proses berjalan di latar belakang.
+            Progres diperbarui otomatis.
         </p>
 
         <button

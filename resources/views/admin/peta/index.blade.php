@@ -524,7 +524,7 @@
                                                     <x-admin.icon name="edit" :size="12" />
                                                 </button>
                                                 <!-- Delete -->
-                                                <button @click="deleteFeature(layer, item)" class="action-icon danger" title="Hapus" aria-label="Hapus marker">
+                                                <button @click="requestDeleteFeature(layer, item)" class="action-icon danger" title="Hapus" aria-label="Hapus marker">
                                                     <x-admin.icon name="trash" :size="12" />
                                                 </button>
                                             </div>
@@ -1025,6 +1025,60 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Hapus Marker -->
+    <div x-show="markerConfirm.show" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display:none;">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="markerConfirm.show = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 shrink-0 rounded-full bg-red-50 flex items-center justify-center">
+                    <x-admin.icon name="alert-triangle" :size="24" class="text-red-500" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Hapus Marker?</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed" x-text="markerConfirm.message"></p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" @click="markerConfirm.show = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
+                <button type="button" @click="confirmDeleteFeature()"
+                    class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Layer Massal -->
+    <div x-show="bulkConfirmModal.show" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display:none;">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="bulkConfirmModal.show = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 shrink-0 rounded-full bg-red-50 flex items-center justify-center">
+                    <x-admin.icon name="alert-triangle" :size="24" class="text-red-500" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Hapus Layer Terpilih?</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">
+                        <span class="font-semibold text-slate-700" x-text="selectedLayers.length"></span> layer terpilih akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" @click="bulkConfirmModal.show = false" class="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
+                <button type="button" @click="confirmBulkDeleteLayers()"
+                    class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div x-show="toast.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4"
         x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
@@ -1123,6 +1177,8 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 
             // Konfirmasi hapus layer (pengganti window.confirm).
             deleteModal: { show: false, layer: null, deleting: false },
+            markerConfirm: { show: false, message: '', layer: null, item: null },
+            bulkConfirmModal: { show: false },
 
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             init() {
@@ -1960,8 +2016,23 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             },
 
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DELETE FEATURE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            requestDeleteFeature(layer, item) {
+                this.markerConfirm = {
+                    show: true,
+                    message: 'Marker "' + this.getMarkerName(item, layer) + '" akan dihapus permanen.',
+                    layer: layer,
+                    item: item,
+                };
+            },
+
+            async confirmDeleteFeature() {
+                const layer = this.markerConfirm.layer;
+                const item = this.markerConfirm.item;
+                this.markerConfirm.show = false;
+                await this.deleteFeatureNow(layer, item);
+            },
+
             async deleteFeature(layer, item) {
-                if (!confirm('Hapus marker "' + this.getMarkerName(item, layer) + '"?')) return;
                 try {
                     const res = await fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}/feature`, {
                         method: 'DELETE',
@@ -2372,9 +2443,14 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 }
             },
 
-            async bulkDeleteLayers() {
+            bulkDeleteLayers() {
                 if (this.selectedLayers.length === 0) return;
-                if (!confirm(`Hapus ${this.selectedLayers.length} layer terpilih?`)) return;
+                this.bulkConfirmModal.show = true;
+            },
+
+            async confirmBulkDeleteLayers() {
+                this.bulkConfirmModal.show = false;
+                if (this.selectedLayers.length === 0) return;
 
                 try {
                     const res = await fetch('{{ $petaApiBase }}/peta/layers/bulk-delete', {

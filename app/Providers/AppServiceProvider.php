@@ -136,7 +136,11 @@ class AppServiceProvider extends ServiceProvider
             $auditable::observe(ActivityLogObserver::class);
         }
 
-        // Audit log — login/logout.
+        // Audit log — login/logout. Listener juga didaftarkan manual di sini,
+        // jadi event discovery HARUS mati — kalau tidak, framework memindai
+        // app/Listeners dan mendaftarkan listener yang sama sekali lagi
+        // (login tercatat dobel di activity log).
+        \Illuminate\Foundation\Support\Providers\EventServiceProvider::disableEventDiscovery();
         Event::listen(Login::class, LogSuccessfulLogin::class);
         Event::listen(Logout::class, LogSuccessfulLogout::class);
 

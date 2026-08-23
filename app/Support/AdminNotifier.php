@@ -37,6 +37,13 @@ class AdminNotifier
         try {
             $roleNames = static::groupToRoleNames($group);
 
+            // Super admin (role 'admin') memantau semua bidang — feed notifnya
+            // sudah mengizinkan semua modul, jadi dia harus ikut jadi penerima
+            // setiap grup, bukan hanya 'konten'.
+            if (! in_array('admin', $roleNames, true)) {
+                $roleNames[] = 'admin';
+            }
+
             // Slug menu yang termasuk grup ini, untuk mencocokkan additional_access
             // yang kini menyimpan slug menu spesifik (bukan key grup).
             $groupSlugs = collect(AdminRegistry::all()[$group]['items'] ?? [])
