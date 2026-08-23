@@ -506,7 +506,11 @@ html.js .public-main[data-public-page] {
        (kembali ke state awal) saat elemen meninggalkan viewport.
        State tersembunyi hanya aktif bila JS tersedia (html.js) — tanpa JS konten
        tetap tampil normal, tidak pernah terkunci invisible. */
-    html.js .reveal {
+    html.js .reveal,
+    html.js .reveal-left,
+    html.js .reveal-right,
+    html.js .reveal-scale,
+    html.js .reveal-zoom {
         opacity: 0;
         transform: translateY(30px);
         transition:
@@ -522,7 +526,11 @@ html.js .public-main[data-public-page] {
     html.js .reveal-scale { transform: translateY(24px) scale(0.94); }
     html.js .reveal-zoom  { transform: scale(0.9); }
 
-    html.js .reveal.is-revealed {
+    html.js .reveal.is-revealed,
+    html.js .reveal-left.is-revealed,
+    html.js .reveal-right.is-revealed,
+    html.js .reveal-scale.is-revealed,
+    html.js .reveal-zoom.is-revealed {
         opacity: 1;
         transform: none;
     }

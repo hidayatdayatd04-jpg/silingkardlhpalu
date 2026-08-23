@@ -174,6 +174,8 @@
 
 
     <header x-data="{ mobileMenuOpen: false }"
+        x-effect="document.documentElement.style.overflow = mobileMenuOpen ? 'hidden' : ''"
+        @keydown.escape.window="mobileMenuOpen = false"
         class="public-site-header sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_0_0_rgba(15,23,42,0.02),0_8px_24px_-16px_rgba(15,23,42,0.15)]">
         <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-bay-500 to-brand-500"></div>
         <div class="max-w-[88rem] mx-auto px-4 sm:px-5 lg:px-6 h-16 flex items-center justify-between gap-3">
@@ -491,7 +493,8 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="lg:hidden absolute top-[100%] inset-x-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg" style="display: none;">
+             class="lg:hidden absolute top-[100%] inset-x-0 overflow-y-auto overscroll-contain bg-white dark:bg-slate-900"
+             style="display: none; height: calc(100vh - 100%); height: calc(100dvh - 100%);">
             <div class="flex flex-col px-4 pt-2 pb-6 space-y-1.5">
                 <!-- Beranda Link (Mobile) -->
                 <a href="/" class="block px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('/') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }}">{{ __('Beranda') }}</a>

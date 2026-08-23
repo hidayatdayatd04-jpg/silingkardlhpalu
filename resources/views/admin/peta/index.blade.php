@@ -47,7 +47,7 @@
         .map-sidebar {
             position: absolute; top: 0; right: 0; height: 100%; width: 400px; z-index: 10;
             display: flex; flex-direction: column;
-            overflow-y: auto; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+            overflow: hidden; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
             background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(249,250,251,0.97) 100%);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-left: 1px solid rgba(0,0,0,0.06);
@@ -57,6 +57,13 @@
         .map-sidebar::-webkit-scrollbar-track { background: transparent; }
         .map-sidebar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
         .map-sidebar.collapsed { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        /* List layer = satu-satunya scroll container di sidebar agar gesture
+           touch di perangkat mobile tidak tertelan nested scroller. */
+        .layers-scroll {
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
         @media (max-width: 640px) {
             .map-sidebar { width: 100%; }
         }
@@ -372,7 +379,7 @@
             </div>
 
             <!-- â•â•â• Layer List (REDESIGNED) â•â•â• -->
-            <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
+            <div class="layers-scroll flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
 <template x-for="(layer, idx) in visibleLayers()" :key="layer.id">
 <div class="layer-card" :class="{ 'expanded': isExpanded(layer), 'opacity-50': !layer.is_visible && !isSelectionMode }" :style="'margin-left:' + (depth(layer) * 16) + 'px'">
                         <!-- Layer Header -->

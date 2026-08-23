@@ -298,7 +298,7 @@
             var section = document.getElementById('tentang-kami');
             if (!section) return;
 
-            var elements = section.querySelectorAll('.reveal');
+            var elements = section.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-zoom');
             var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             if (reduced || !('IntersectionObserver' in window)) {
