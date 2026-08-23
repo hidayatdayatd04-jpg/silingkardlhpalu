@@ -22,6 +22,13 @@ class OgImageProxyController extends Controller
     {
         $path = (string) $request->query('path', '');
 
+        try {
+            $exists = Storage::disk('public')->exists($path);
+        } catch (\Throwable $e) {
+            report($e);
+            $exists = false;
+        }
+
         // Validasi path: tolak kosong, traversal (..), path absolut,
         // drive letter Windows, null byte, dan backslash.
         abort_unless(
@@ -32,14 +39,19 @@ class OgImageProxyController extends Controller
             && ! str_contains($path, ':')
             && ! str_contains($path, "\0")
             && ! str_contains($path, '\\')
-            && Storage::disk('public')->exists($path),
+            && $exists,
             404
         );
 
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         abort_unless(in_array($ext, self::ALLOWED_EXT, true), 403);
 
-        $contents = Storage::disk('public')->get($path);
+        try {
+            $contents = Storage::disk('public')->get($path);
+        } catch (\Throwable $e) {
+            report($e);
+            abort(404);
+        }
 
         return response($contents, 200, [
             'Content-Type' => self::MIME[$ext],

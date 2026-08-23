@@ -29,8 +29,16 @@ class PengaduanTataPenataanFoto extends Model
 
     public function fullUrl(): ?string
     {
-        return $this->path_foto
-            ? Storage::disk('public')->temporaryUrl($this->path_foto, now()->addHours(24))
-            : null;
+        if (! $this->path_foto) {
+            return null;
+        }
+
+        try {
+            return Storage::disk('public')->temporaryUrl($this->path_foto, now()->addHours(24));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
     }
 }

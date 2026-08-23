@@ -72,7 +72,13 @@ class User extends Authenticatable
         $disk = \Illuminate\Support\Facades\Storage::disk('public');
 
         // Bucket B2 bersifat private -> gunakan signed URL yang berlaku 24 jam.
-        return $disk->temporaryUrl($this->photo_path, now()->addHours(24));
+        try {
+            return $disk->temporaryUrl($this->photo_path, now()->addHours(24));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
     }
 
     /**

@@ -29,7 +29,12 @@ class UploadController extends Controller
             ], 500);
         }
 
-        $url = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
+        try {
+            $url = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
+        } catch (\Throwable $e) {
+            report($e);
+            $url = Storage::url($path);
+        }
 
         return response()->json([
             'success' => true,

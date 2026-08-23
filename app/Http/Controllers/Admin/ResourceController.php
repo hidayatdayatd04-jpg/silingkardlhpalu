@@ -315,7 +315,16 @@ class ResourceController extends Controller
             'Akses file ditolak.'
         );
 
-        abort_unless(Storage::disk('public')->exists($path), 404, 'File tidak ditemukan.');
+        try {
+            $exists = Storage::disk('public')->exists($path);
+        } catch (\Throwable $e) {
+            // Penyimpanan sedang tidak dapat diakses — catat di log dan
+            // tampilkan halaman ramah, bukan error teknis.
+            report($e);
+            abort(404, 'File tidak dapat diakses saat ini. Silakan coba beberapa saat lagi.');
+        }
+
+        abort_unless($exists, 404, 'File tidak ditemukan.');
 
         // Nama unduhan: gunakan nama yang dikirim (lebih mudah dibaca), lalu
         // pastikan ekstensi sesuai dengan file asli di storage agar format
@@ -336,7 +345,12 @@ class ResourceController extends Controller
             }
         }
 
-        return Storage::disk('public')->download($path, $downloadName);
+        try {
+            return Storage::disk('public')->download($path, $downloadName);
+        } catch (\Throwable $e) {
+            report($e);
+            abort(404, 'File tidak dapat diakses saat ini. Silakan coba beberapa saat lagi.');
+        }
     }
 
     /**
@@ -377,32 +391,46 @@ class ResourceController extends Controller
         $basename = basename($file);
         $candidate = null;
 
-        $prefixes = [$slug.'/', 'admin/'.$slug.'/'];
-        foreach (AdminRegistry::relationUploads($slug) as $upload) {
-            $prefixes[] = $upload['directory'].'/';
-        }
+        $candidate = null;
 
-        foreach ($prefixes as $prefix) {
-            if (Storage::disk('public')->exists($prefix.$basename)) {
-                $candidate = $prefix.$basename;
-                break;
+        try {
+            $prefixes = [$slug.'/', 'admin/'.$slug.'/'];
+            foreach (AdminRegistry::relationUploads($slug) as $upload) {
+                $prefixes[] = $upload['directory'].'/';
             }
-        }
 
-        if ($candidate === null) {
-            foreach ([$slug, 'admin/'.$slug] as $dir) {
-                foreach (Storage::disk('public')->allFiles($dir) as $key) {
-                    if (basename($key) === $basename) {
-                        $candidate = $key;
-                        break 2;
+            foreach ($prefixes as $prefix) {
+                if (Storage::disk('public')->exists($prefix.$basename)) {
+                    $candidate = $prefix.$basename;
+                    break;
+                }
+            }
+
+            if ($candidate === null) {
+                foreach ([$slug, 'admin/'.$slug] as $dir) {
+                    foreach (Storage::disk('public')->allFiles($dir) as $key) {
+                        if (basename($key) === $basename) {
+                            $candidate = $key;
+                            break 2;
+                        }
                     }
                 }
             }
+        } catch (\Throwable $e) {
+            // Penyimpanan sedang tidak dapat diakses — jangan bocorkan error
+            // teknis ke pengguna; catat di log dan tampilkan halaman ramah.
+            report($e);
+            abort(404, 'File tidak dapat diakses saat ini. Silakan coba beberapa saat lagi.');
         }
 
         abort_unless($candidate !== null, 404, 'File tidak ditemukan.');
 
-        return Storage::disk('public')->response($candidate, basename($candidate));
+        try {
+            return Storage::disk('public')->response($candidate, basename($candidate));
+        } catch (\Throwable $e) {
+            report($e);
+            abort(404, 'File tidak dapat diakses saat ini. Silakan coba beberapa saat lagi.');
+        }
     }
 
     public function destroy(string $resource, int|string $record)

@@ -350,19 +350,11 @@
                                                         $label = $item->{$field['name_field'] ?? 'nama'} ?? basename((string) $path);
                                                         $itemExt = $path ? strtolower(pathinfo((string) $path, PATHINFO_EXTENSION)) : '';
                                                         $itemIsImage = in_array($itemExt, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'bmp'], true);
-                                                        $itemSrc = null;
-                                                        if ($path && $itemIsImage) {
-                                                            try {
-                                                                $itemSrc = Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
-                                                            } catch (\Throwable $e) {
-                                                                $itemSrc = Storage::url($path);
-                                                            }
-                                                        }
                                                     @endphp
                                                     @if($path)
                                                         <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition hover:bg-slate-50">
                                                             @if($itemIsImage)
-                                                                <img src="{{ $itemSrc }}" alt="{{ $label }}" loading="lazy"
+                                                                <img src="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" alt="{{ $label }}" loading="lazy"
                                                                     class="size-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
                                                             @else
                                                                 <span class="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
@@ -403,13 +395,12 @@
                                                 @php
                                                     $fotoPath = $foto->path_foto ?? null;
                                                     $fotoName = $fotoPath ? basename((string) $fotoPath) : ('Foto '.$loop->iteration);
-                                                    $fotoSrc = $foto->fullUrl();
                                                 @endphp
                                                 @if($fotoPath)
                                                     <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
                                                         <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
                                                             class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                                                            <img src="{{ $fotoSrc }}" alt="Foto {{ $loop->iteration }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
+                                                            <img src="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" alt="Foto {{ $loop->iteration }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
                                                         </a>
                                                         <div class="flex items-center gap-2">
                                                             <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"

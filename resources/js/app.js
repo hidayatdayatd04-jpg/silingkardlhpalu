@@ -225,3 +225,28 @@ window.dlhMapDrawMarkers = function (vd, fv) {
 window.addEventListener('guest-map-vehicles-updated', function (e) {
     window.dlhMapDrawMarkers(e.detail.vehicles, e.detail.fitBounds);
 });
+
+/* ============================================================
+ * Fallback gambar gagal muat — global (public + admin).
+ * Bila foto/dokumen tidak dapat dimuat (mis. penyimpanan sedang
+ * bermasalah), tampilkan kotak pemberitahuan yang rapi alih-alih
+ * ikon gambar pecah. Capture phase agar menangkap error <img>
+ * yang tidak me-render bubble.
+ * ============================================================ */
+window.addEventListener('error', function (e) {
+    var img = e.target;
+    if (!(img instanceof HTMLImageElement) || img.dataset.dlhImgFallback) return;
+    img.dataset.dlhImgFallback = '1';
+    var w = img.clientWidth || img.width || 0;
+    var small = w > 0 && w < 80;
+    var box = document.createElement('div');
+    box.setAttribute('role', 'img');
+    box.setAttribute('aria-label', 'Foto tidak dapat dimuat');
+    box.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;min-height:' + (small ? '40px' : '120px') + ';padding:8px;box-sizing:border-box;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font:600 11px/1.4 system-ui,-apple-system,sans-serif;text-align:center;';
+    box.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>'
+        + (small ? '' : '<span>Foto tidak dapat dimuat</span>');
+    if (img.parentNode) {
+        img.style.display = 'none';
+        img.parentNode.insertBefore(box, img);
+    }
+}, true);

@@ -306,8 +306,13 @@ new class extends Component
                             <span class="lc-info-label">{{ __('Foto Lampiran Pengaduan') }}</span>
                             <div class="grid grid-cols-3 gap-2">
                                 @foreach ($pengaduan->fotos as $foto)
+                                    @php $fotoUrl = $foto->fullUrl(); @endphp
                                     <div class="lc-photo-thumb">
-                                        <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto lampiran pengaduan') }}" class="w-full h-full object-cover" />
+                                        @if ($fotoUrl)
+                                            <img src="{{ $fotoUrl }}" alt="{{ __('Foto lampiran pengaduan') }}" class="w-full h-full object-cover" />
+                                        @else
+                                            <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:90px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font:600 11px/1.4 system-ui,sans-serif;text-align:center;padding:8px;box-sizing:border-box;">{{ __('Foto tidak dapat dimuat') }}</div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -404,8 +409,13 @@ new class extends Component
                             <span class="lc-info-label">{{ __('Foto Bukti Pengaduan') }}</span>
                             <div class="grid grid-cols-3 gap-2">
                                 @foreach ($pengaduanTataPenataan->fotos as $foto)
+                                    @php $fotoUrl = $foto->fullUrl(); @endphp
                                     <div class="lc-photo-thumb">
-                                        <img src="{{ $foto->fullUrl() }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                        @if ($fotoUrl)
+                                            <img src="{{ $fotoUrl }}" alt="{{ __('Foto bukti pengaduan') }}" class="w-full h-full object-cover" />
+                                        @else
+                                            <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:90px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font:600 11px/1.4 system-ui,sans-serif;text-align:center;padding:8px;box-sizing:border-box;">{{ __('Foto tidak dapat dimuat') }}</div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

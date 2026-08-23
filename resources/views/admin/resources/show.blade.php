@@ -552,23 +552,13 @@
                                             @php
                                                 $path = $pathFor($item, $config);
                                                 $label = $nameFor($item, $path, $config);
-                                                $imgSrc = null;
-                                                if ($path) {
-                                                    try {
-                                                        $imgSrc = method_exists($item, 'fullUrl')
-                                                            ? $item->fullUrl()
-                                                            : Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
-                                                    } catch (\Throwable $e) {
-                                                        $imgSrc = Storage::url($path);
-                                                    }
-                                                }
                                                 $fotoName = $path ? basename((string) $path) : $label;
                                             @endphp
                                             @if($path)
                                                 <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
                                                     <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" target="_blank"
                                                         class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                                                        <img src="{{ $imgSrc }}" alt="{{ $label }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
+                                                        <img src="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" alt="{{ $label }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
                                                     </a>
                                                     <div class="flex items-center gap-2">
                                                         <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" target="_blank"
