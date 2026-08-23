@@ -67,6 +67,9 @@
         @media (max-width: 640px) {
             .map-sidebar { width: 100%; }
         }
+        @media (min-width: 641px) and (max-width: 1023px) {
+            .map-sidebar { width: min(400px, 48vw); }
+        }
 
         .sidebar-toggle-btn {
             position: absolute;

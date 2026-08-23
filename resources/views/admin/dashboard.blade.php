@@ -159,8 +159,8 @@
 
                     {{-- 2 Core Status Cards --}}
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2">
-                        <div class="flex items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 dark:border-amber-400/20 dark:bg-amber-400/5">
-                            <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 dark:border-amber-400/20 dark:bg-amber-400/5">
+                            <div class="flex min-w-0 items-center gap-3">
                                 <span class="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-400/20 dark:text-amber-300">
                                     <x-admin.icon name="clock" :size="20" />
                                 </span>
@@ -169,11 +169,11 @@
                                     <p class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($statusStats['belum'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
-                            <span class="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">Menunggu</span>
+                            <span class="shrink-0 whitespace-nowrap rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">Menunggu</span>
                         </div>
 
-                        <div class="flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 dark:border-emerald-400/20 dark:bg-emerald-400/5">
-                            <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+                            <div class="flex min-w-0 items-center gap-3">
                                 <span class="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/20 dark:text-emerald-300">
                                     <x-admin.icon name="check-circle" :size="20" />
                                 </span>
@@ -182,7 +182,7 @@
                                     <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($statusStats['selesai'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
-                            <span class="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">Selesai</span>
+                            <span class="shrink-0 whitespace-nowrap rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">Selesai</span>
                         </div>
                     </div>
                 </div>

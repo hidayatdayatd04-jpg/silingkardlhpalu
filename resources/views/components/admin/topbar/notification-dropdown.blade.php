@@ -94,7 +94,7 @@
         x-transition:leave="transition-[opacity,transform] ease-in duration-150"
         x-transition:leave-start="translate-y-0 scale-100 opacity-100"
         x-transition:leave-end="-translate-y-1 scale-95 opacity-0"
-        class="glass-dropdown absolute right-0 top-full z-[60] mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl"
+        class="glass-dropdown absolute right-0 top-full z-[60] mt-2 w-[min(24rem,calc(100vw-2rem))] max-sm:fixed max-sm:inset-x-3 max-sm:top-[4.5rem] max-sm:w-auto overflow-hidden rounded-xl"
         aria-label="Daftar notifikasi"
     >
         <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-white/[.06]">

@@ -131,9 +131,9 @@
     input:checked + .dlh-switch { background: var(--switch-color, #10b981); }
     input:checked + .dlh-switch::after { transform: translateX(16px); }
     @media (max-width: 639px) {
-        .dlh-switch { width: 32px; height: 18px; }
-        .dlh-switch::after { top: 2px; left: 2px; width: 13px; height: 13px; }
-        input:checked + .dlh-switch::after { transform: translateX(13px); }
+        .dlh-switch { width: 28px; height: 16px; }
+        .dlh-switch::after { top: 2px; left: 2px; width: 11px; height: 11px; }
+        input:checked + .dlh-switch::after { transform: translateX(12px); }
     }
 
     /* Kartu filter tipe kendaraan — premium */
@@ -403,16 +403,16 @@
                         </div>
                     </div>
 
-                    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center justify-between gap-3">
+                    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center justify-between gap-2">
                         <button type="button" id="filter-reset"
-                            class="inline-flex h-12 items-center gap-2 px-3 sm:px-4 rounded-xl bg-brand-50 dark:bg-brand-900/25 border border-brand-200 dark:border-brand-800/60 text-[13px] sm:text-sm font-bold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:border-brand-300 dark:hover:border-brand-700/70 hover:ring-2 hover:ring-brand-500/30 focus:outline-none transition whitespace-nowrap">
+                            class="inline-flex h-10 sm:h-12 items-center gap-2 px-2.5 sm:px-4 rounded-xl bg-brand-50 dark:bg-brand-900/25 border border-brand-200 dark:border-brand-800/60 text-[11px] sm:text-sm font-bold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:border-brand-300 dark:hover:border-brand-700/70 hover:ring-2 hover:ring-brand-500/30 focus:outline-none transition whitespace-nowrap">
                             <x-icons.ui name="refresh" class="h-4 w-4" />
                             {{ __('Reset Filter') }}
                         </button>
-                        <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                            <x-icons.sampah class="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-slate-500 dark:text-slate-400" />
-                            <span id="armada-toggle-label" class="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap"><span class="sm:hidden">{{ __('Armada') }}</span><span class="hidden sm:inline">{{ __('Sembunyikan Armada') }}</span></span>
-                            <label class="ml-1 cursor-pointer flex-shrink-0">
+                        <div class="flex h-10 sm:h-auto sm:py-2 items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                            <x-icons.sampah class="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0 text-slate-500 dark:text-slate-400" />
+                            <span id="armada-toggle-label" class="text-[9.5px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{{ __('Sembunyikan Armada') }}</span>
+                            <label class="ml-0.5 sm:ml-1 cursor-pointer flex-shrink-0">
                                 <input type="checkbox" id="armada-toggle" class="sr-only" checked aria-label="{{ __('Sembunyikan Armada') }}">
                                 <span class="dlh-switch" style="--switch-color:#10b981"></span>
                             </label>
@@ -583,9 +583,9 @@
                 }
                 var label = document.getElementById('armada-toggle-label');
                 if (label) {
-                    label.innerHTML = this.checked
-                        ? '<span class="sm:hidden">{{ __('Armada') }}</span><span class="hidden sm:inline">{{ __('Sembunyikan Armada') }}</span>'
-                        : '<span class="sm:hidden">{{ __('Armada') }}</span><span class="hidden sm:inline">{{ __('Tampilkan Armada') }}</span>';
+                    label.textContent = this.checked
+                        ? '{{ __('Sembunyikan Armada') }}'
+                        : '{{ __('Munculkan Armada') }}';
                 }
             });
         }

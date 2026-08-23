@@ -508,6 +508,7 @@ window.DlhZoomControl = class {
 // Premium Weather Control (Open-Meteo) — floating current-weather card
 // ════════════════════════════════════════════════════════════════════════════
 window.DlhWeatherControl = class {
+    popsOut = true;
     constructor(options) {
         options = options || {};
         this._map = null;
@@ -831,7 +832,7 @@ window.DlhToolsControl = class {
                     el.style.clear = 'none';
                     el.style.width = '36px';
                     el.style.height = '36px';
-                    el.style.overflow = 'hidden';
+                    el.style.overflow = (tool && tool.popsOut) ? 'visible' : 'hidden';
                     el.style.boxSizing = 'border-box';
                     self._panel.appendChild(el);
                 }
