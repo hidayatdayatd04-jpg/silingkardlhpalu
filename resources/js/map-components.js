@@ -332,6 +332,7 @@ window.DlhFullscreenControl = class {
 
     onAdd(map) {
         this._map = map;
+        window.DlhMapScale.watch(map);
 
         // Style premium & kontras tinggi agar ikon tetap terlihat di basemap gelap/satelit.
         if (!document.getElementById('dlh-fullscreen-style')) {
@@ -339,7 +340,7 @@ window.DlhFullscreenControl = class {
             fsStyle.id = 'dlh-fullscreen-style';
             fsStyle.textContent = ''
                 + '.maplibregl-ctrl.dlh-fullscreen-ctrl{background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.12);border:1px solid rgba(15,23,42,.08)}'
-                + '.maplibregl-ctrl.dlh-fullscreen-ctrl button{width:36px;height:36px;line-height:0;background:#ffffff;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0;transition:background .15s,color .15s}'
+                + '.maplibregl-ctrl.dlh-fullscreen-ctrl button{width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);line-height:0;background:#ffffff;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0;transition:background .15s,color .15s}'
                 + '.maplibregl-ctrl.dlh-fullscreen-ctrl button:hover{background:#f1f5f9;color:#0f172a}'
                 + '.maplibregl-ctrl.dlh-fullscreen-ctrl button:focus-visible{outline:2px solid #10b981;outline-offset:-2px}'
                 + '.maplibregl-ctrl.dlh-fullscreen-ctrl button svg{display:block;margin:auto;flex:0 0 auto}'
@@ -446,6 +447,44 @@ window.DlhFullscreenControl = class {
 
 
 // ════════════════════════════════════════════════════════════════════════════
+// Map Scale — skala kontrol & popup mengikuti ukuran container peta.
+// Peta kecil (map-picker/embed/peta mobile) mendapat class `dlh-map-compact`
+// sehingga tombol dan popup (mis. cuaca) ikut mengecil secara proporsional.
+// ════════════════════════════════════════════════════════════════════════════
+window.DlhMapScale = {
+    _seen: new WeakSet(),
+    watch(map) {
+        var c = map.getContainer();
+        if (!c || this._seen.has(c)) return;
+        this._seen.add(c);
+        if (!document.getElementById('dlh-map-scale-style')) {
+            var st = document.createElement('style');
+            st.id = 'dlh-map-scale-style';
+            st.textContent = ''
+                + '.maplibregl-map{--dlh-tool:36px;--dlh-tool-icon:18px;--dlh-wx-w:250px;--dlh-wx-temp:28px;--dlh-wx-deg:14px;--dlh-wx-lbl:12px;--dlh-wx-ico:48px;--dlh-wx-btn:28px;--dlh-wx-sp:7px 9px;--dlh-wx-sv:12px;--dlh-wx-mt:12px;--dlh-wx-gap:8px;--dlh-wx-hp:12px 14px 6px;--dlh-wx-bpx:14px;--dlh-wx-bpb:14px;--dlh-wx-lmt:10px}'
+                + '.dlh-map-compact{--dlh-tool:28px;--dlh-tool-icon:15px;--dlh-wx-w:200px;--dlh-wx-temp:20px;--dlh-wx-deg:12px;--dlh-wx-lbl:11px;--dlh-wx-ico:34px;--dlh-wx-btn:24px;--dlh-wx-sp:5px 7px;--dlh-wx-sv:11px;--dlh-wx-mt:8px;--dlh-wx-gap:6px;--dlh-wx-hp:8px 11px 4px;--dlh-wx-bpx:11px;--dlh-wx-bpb:11px;--dlh-wx-lmt:7px}'
+                + '.dlh-map-compact .maplibregl-ctrl-group button{width:var(--dlh-tool)!important;height:var(--dlh-tool)!important}'
+                + '.dlh-map-compact .maplibregl-ctrl>button svg{width:var(--dlh-tool-icon);height:var(--dlh-tool-icon)}'
+                + '.dlh-map-compact .dlh-tools-ctrl button svg{width:var(--dlh-tool-icon);height:var(--dlh-tool-icon)}'
+                + '.dlh-map-compact .dlh-wx-ico svg{width:100%;height:100%}'
+                + '.dlh-map-compact [data-wx-locwrap]{display:none}'
+                + '.dlh-map-compact .maplibregl-ctrl-top-right,.dlh-map-compact .maplibregl-ctrl-top-left,.dlh-map-compact .maplibregl-ctrl-bottom-right,.dlh-map-compact .maplibregl-ctrl-bottom-left{margin:6px}'
+                + '.dlh-map-compact .dlh-tools-ctrl__panel{gap:6px;margin-top:6px}';
+            document.head.appendChild(st);
+        }
+        var apply = function () {
+            var small = c.clientHeight < 380 || c.clientWidth < 360;
+            c.classList.toggle('dlh-map-compact', small);
+        };
+        apply();
+        if (window.ResizeObserver) {
+            var ro = new ResizeObserver(apply);
+            ro.observe(c);
+        }
+    }
+};
+
+// ════════════════════════════════════════════════════════════════════════════
 // Premium Zoom Control (custom, replaces maplibregl.NavigationControl zoom)
 // ════════════════════════════════════════════════════════════════════════════
 window.DlhZoomControl = class {
@@ -458,6 +497,7 @@ window.DlhZoomControl = class {
     }
     onAdd(map) {
         this._map = map;
+        window.DlhMapScale.watch(map);
         var self = this;
         this._container = document.createElement('div');
         this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
@@ -468,7 +508,7 @@ window.DlhZoomControl = class {
             b.type = 'button';
             b.title = title;
             b.innerHTML = svg;
-            b.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#334155;transition:background .15s,color .15s;';
+            b.style.cssText = 'width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#334155;transition:background .15s,color .15s;';
             b.onmouseenter = function () { b.style.background = '#f1f5f9'; b.style.color = '#0f172a'; };
             b.onmouseleave = function () { b.style.background = 'transparent'; b.style.color = '#334155'; };
             b.onclick = fn;
@@ -521,6 +561,7 @@ window.DlhWeatherControl = class {
     }
     onAdd(map) {
         this._map = map;
+        window.DlhMapScale.watch(map);
         var self = this;
         this._container = document.createElement('div');
         this._container.className = 'maplibregl-ctrl';
@@ -530,7 +571,7 @@ window.DlhWeatherControl = class {
         btn.type = 'button';
         btn.title = 'Cuaca (Open-Meteo)';
         btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 0-9 5.5 5.5 0 0 0-10.7 1.6A3.5 3.5 0 0 0 6.5 19Z"/><path d="M9 13h1.5M12 11v2M14 13h1"/></svg>';
-        btn.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#334155;transition:background .15s,color .15s;';
+        btn.style.cssText = 'width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#334155;transition:background .15s,color .15s;';
         btn.onmouseenter = function () { btn.style.background = '#f1f5f9'; btn.style.color = '#0f172a'; };
         btn.onmouseleave = function () { btn.style.background = 'transparent'; btn.style.color = '#334155'; };
         btn.onclick = function () { self._toggle(); };
@@ -554,8 +595,8 @@ window.DlhWeatherControl = class {
         var bottom = this._pos.indexOf('bottom') > -1;
         var x = right ? 'right:0;' : 'left:0;';
         var y = bottom ? 'bottom:calc(100% + 10px);' : 'top:calc(100% + 10px);';
-        this._card.style.cssText = 'position:absolute;' + x + y + 'z-index:5;width:250px;background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,0.18),0 0 0 1px rgba(15,23,42,0.05);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#0f172a;overflow:hidden;display:none;opacity:0;transform:translateY(' + (bottom ? '6px' : '-6px') + ');transition:opacity .2s,transform .2s;';
-        this._card.innerHTML = '<div id="dlh-wx-head" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px;"></div><div id="dlh-wx-body" style="padding:0 14px 14px;"></div>';
+        this._card.style.cssText = 'position:absolute;' + x + y + 'z-index:5;width:var(--dlh-wx-w,250px);background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,0.18),0 0 0 1px rgba(15,23,42,0.05);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#0f172a;overflow:hidden;display:none;opacity:0;transform:translateY(' + (bottom ? '6px' : '-6px') + ');transition:opacity .2s,transform .2s;';
+        this._card.innerHTML = '<div id="dlh-wx-head" style="display:flex;align-items:center;justify-content:space-between;padding:var(--dlh-wx-hp,12px 14px 6px);"></div><div id="dlh-wx-body" style="padding:0 var(--dlh-wx-bpx,14px) var(--dlh-wx-bpb,14px);"></div>';
         this._container.appendChild(this._card);
     }
     _toggle() {
@@ -579,20 +620,20 @@ window.DlhWeatherControl = class {
         head.innerHTML = '<div style="display:flex;flex-direction:column;"><span id="dlh-wx-place" style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">Cuaca &middot; ' + self._esc(self._placeName()) + '</span>'
         + '<span style="font-size:10px;color:#94a3b8;margin-top:1px;">' + s.lat.toFixed(4) + ', ' + s.lng.toFixed(4) + '</span></div>'
             + '<div style="display:flex;gap:6px;align-items:center;">'
-            + '<button type="button" id="dlh-wx-refresh" title="Muat ulang" style="width:28px;height:28px;border:none;background:rgba(15,23,42,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;transition:background .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>'
-            + '<button type="button" id="dlh-wx-close" title="Tutup" style="width:28px;height:28px;border:none;background:rgba(15,23,42,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:background .15s,color .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+            + '<button type="button" id="dlh-wx-refresh" title="Muat ulang" style="width:var(--dlh-wx-btn,28px);height:var(--dlh-wx-btn,28px);border:none;background:rgba(15,23,42,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;transition:background .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>'
+            + '<button type="button" id="dlh-wx-close" title="Tutup" style="width:var(--dlh-wx-btn,28px);height:var(--dlh-wx-btn,28px);border:none;background:rgba(15,23,42,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:background .15s,color .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
             + '</div>';
         body.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">'
-            + '<div style="width:48px;height:48px;flex:none;display:flex;align-items:center;justify-content:center;color:' + m.color + ';">' + m.svg + '</div>'
-            + '<div><div style="font-size:28px;font-weight:800;line-height:1;color:#0f172a;">' + Math.round(s.temp) + '<span style="font-size:14px;font-weight:600;color:#94a3b8;">°C</span></div>'
-            + '<div style="font-size:12px;font-weight:700;color:' + m.color + ';margin-top:2px;">' + m.label + '</div></div></div>'
-            + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">'
+            + '<div class="dlh-wx-ico" style="width:var(--dlh-wx-ico,48px);height:var(--dlh-wx-ico,48px);flex:none;display:flex;align-items:center;justify-content:center;color:' + m.color + ';">' + m.svg + '</div>'
+            + '<div><div style="font-size:var(--dlh-wx-temp,28px);font-weight:800;line-height:1;color:#0f172a;">' + Math.round(s.temp) + '<span style="font-size:var(--dlh-wx-deg,14px);font-weight:600;color:#94a3b8;">°C</span></div>'
+            + '<div style="font-size:var(--dlh-wx-lbl,12px);font-weight:700;color:' + m.color + ';margin-top:2px;">' + m.label + '</div></div></div>'
+            + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--dlh-wx-gap,8px);margin-top:var(--dlh-wx-mt,12px);">'
             + DlhWeatherControl._stat('Terasa', Math.round(s.feels) + '°')
             + DlhWeatherControl._stat('Lembap', Math.round(s.hum) + '%')
             + DlhWeatherControl._stat('Angin', Math.round(s.wind) + ' km/j')
             + DlhWeatherControl._stat('Awan', Math.round(s.cloud) + '%')
             + '</div>'
-            + '<div style="margin-top:10px;padding-top:9px;border-top:1px solid rgba(15,23,42,.06);">'
+            + '<div data-wx-locwrap style="margin-top:var(--dlh-wx-lmt,10px);padding-top:9px;border-top:1px solid rgba(15,23,42,.06);">'
             + '<div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:5px;">Lokasi</div>'
             + '<div id="dlh-wx-loc" style="display:flex;flex-direction:column;gap:3px;font-size:11px;">' + self._locHtml() + '</div>'
             + '</div>';
@@ -742,7 +783,7 @@ window.DlhWeatherControl = class {
         this._map = undefined;
     }
     static _stat(label, val) {
-        return '<div style="background:rgba(15,23,42,0.035);border-radius:9px;padding:7px 9px;"><div style="font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#94a3b8;">' + label + '</div><div style="font-size:12px;font-weight:700;color:#334155;margin-top:1px;">' + val + '</div></div>';
+        return '<div style="background:rgba(15,23,42,0.035);border-radius:9px;padding:var(--dlh-wx-sp,7px 9px);"><div style="font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#94a3b8;">' + label + '</div><div style="font-size:var(--dlh-wx-sv,12px);font-weight:700;color:#334155;margin-top:1px;">' + val + '</div></div>';
     }
     static _meta(code) {
         code = Number(code);
@@ -783,19 +824,20 @@ window.DlhToolsControl = class {
 
     onAdd(map) {
         this._map = map;
+        window.DlhMapScale.watch(map);
         if (!document.getElementById('dlh-tools-style')) {
             var style = document.createElement('style');
             style.id = 'dlh-tools-style';
             style.textContent = ''
                 + '.maplibregl-ctrl.dlh-tools-ctrl{background:transparent;border:none;box-shadow:none;margin:0;float:none;clear:left}'
-                + '.dlh-tools-ctrl__toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0}'
+                + '.dlh-tools-ctrl__toggle{width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0}'
                 + '.dlh-tools-ctrl__toggle:hover{background:#f1f5f9;color:#0f172a}'
                 + '.dlh-tools-ctrl__toggle:focus-visible{outline:2px solid #10b981;outline-offset:-2px}'
                 + '.dlh-tools-ctrl__toggle.is-open{background:#ecfdf5;color:#059669}'
                 + '.dlh-tools-ctrl__panel{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px}'
                 + '.dlh-tools-ctrl__panel[hidden]{display:none}'
                 + '.dlh-tools-ctrl__panel .maplibregl-ctrl{margin:0 !important;float:none !important;clear:none !important}'
-                + '.dlh-tools-ctrl__panel .dlh-tools-ctrl__item{width:36px;height:36px;flex:0 0 auto;overflow:hidden;box-sizing:border-box}';
+                + '.dlh-tools-ctrl__panel .dlh-tools-ctrl__item{width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);flex:0 0 auto;overflow:hidden;box-sizing:border-box}';
             document.head.appendChild(style);
         }
 
@@ -830,8 +872,8 @@ window.DlhToolsControl = class {
                     el.style.margin = '0';
                     el.style.float = 'none';
                     el.style.clear = 'none';
-                    el.style.width = '36px';
-                    el.style.height = '36px';
+                    el.style.width = 'var(--dlh-tool,36px)';
+                    el.style.height = 'var(--dlh-tool,36px)';
                     el.style.overflow = (tool && tool.popsOut) ? 'visible' : 'hidden';
                     el.style.boxSizing = 'border-box';
                     self._panel.appendChild(el);
@@ -842,7 +884,7 @@ window.DlhToolsControl = class {
                 btn.title = tool.title;
                 btn.setAttribute('aria-label', tool.title);
                 btn.innerHTML = tool.icon || '';
-                btn.style.cssText = 'width:36px;height:36px;margin:0;float:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0';
+                btn.style.cssText = 'width:var(--dlh-tool,36px);height:var(--dlh-tool,36px);margin:0;float:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0';
                 btn.onmouseenter = function () { btn.style.background = '#f1f5f9'; btn.style.color = '#0f172a'; };
                 btn.onmouseleave = function () { btn.style.background = '#ffffff'; btn.style.color = '#334155'; };
                 btn.onclick = function (e) { e.stopPropagation(); tool.action(map, btn); };
