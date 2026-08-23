@@ -186,9 +186,8 @@
                         <img src="{{ asset('assets/images/logo_kota_palu.webp') }}" alt="Logo Kota Palu" width="320" height="423" class="relative h-11 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
                     </span>
                     <div class="border-l border-slate-200 dark:border-slate-700 pl-2.5 sm:pl-3">
-                        <span class="block text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white uppercase leading-none whitespace-nowrap">
-                            <span class="hidden xl:inline">Dinas Lingkungan Hidup</span>
-                            <span class="xl:hidden">DLH</span>
+                        <span class="block text-[12px] sm:text-base font-bold tracking-tight text-slate-900 dark:text-white uppercase leading-none whitespace-nowrap">
+                            Dinas Lingkungan Hidup
                         </span>
                         <span class="mt-1 block text-[10px] sm:text-[11px] font-semibold tracking-[0.14em] text-brand-700 dark:text-brand-400 uppercase leading-none whitespace-nowrap">
                             Kota Palu
@@ -197,7 +196,7 @@
                 </a>
             </div>
 
-            <nav class="hidden lg:flex items-center gap-0.5 xl:gap-1 shrink-0">
+            <nav class="hidden xl:flex items-center gap-0.5 xl:gap-1 shrink-0">
                 <!-- Beranda Link -->
                 <a href="/"
                     class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('/') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none whitespace-nowrap">
@@ -479,7 +478,7 @@
 
             <div class="flex items-center gap-2 shrink-0">
                 <x-public.dark-mode-toggle />
-                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" aria-label="Buka menu navigasi" class="lg:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-colors duration-200 dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" aria-label="Buka menu navigasi" class="xl:hidden h-10 w-10 inline-flex justify-center items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand-300 transition-colors duration-200 dark:bg-slate-800/60 dark:border-slate-700 dark:text-white dark:hover:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                     <x-icons.ui name="menu" class="flex-shrink-0 size-5" x-show="!mobileMenuOpen" />
                     <x-icons.ui name="close" class="flex-shrink-0 size-5" x-show="mobileMenuOpen" style="display: none;" />
                 </button>
@@ -493,7 +492,7 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="lg:hidden absolute top-[100%] inset-x-0 overflow-y-auto overscroll-contain bg-white dark:bg-slate-900"
+             class="xl:hidden absolute top-[100%] inset-x-0 overflow-y-auto overscroll-contain bg-white dark:bg-slate-900"
              style="display: none; height: calc(100vh - 100%); height: calc(100dvh - 100%);">
             <div class="flex flex-col px-4 pt-2 pb-6 space-y-1.5">
                 <!-- Beranda Link (Mobile) -->
