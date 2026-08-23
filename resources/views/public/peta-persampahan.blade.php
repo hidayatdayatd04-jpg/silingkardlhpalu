@@ -85,7 +85,7 @@
         overflow: hidden;
         box-shadow: 0 10px 24px -12px rgba(10, 48, 30, .35) !important;
     }
-    .peta-persampahan-page .map-container .maplibregl-ctrl {
+    .peta-persampahan-page .map-container .maplibregl-ctrl:not(.dlh-tools-ctrl):not(.dlh-tools-ctrl__item) {
         margin: 12px !important;
     }
     .peta-persampahan-page .map-container .maplibregl-ctrl-top-left {

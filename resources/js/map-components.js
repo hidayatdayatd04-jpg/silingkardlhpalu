@@ -786,32 +786,39 @@ window.DlhToolsControl = class {
             var style = document.createElement('style');
             style.id = 'dlh-tools-style';
             style.textContent = ''
-                + '.maplibregl-ctrl.dlh-tools-ctrl{background:transparent;border:none;box-shadow:none}'
+                + '.maplibregl-ctrl.dlh-tools-ctrl{background:transparent;border:none;box-shadow:none;margin:0;float:none;clear:left}'
                 + '.dlh-tools-ctrl__toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0}'
                 + '.dlh-tools-ctrl__toggle:hover{background:#f1f5f9;color:#0f172a}'
                 + '.dlh-tools-ctrl__toggle:focus-visible{outline:2px solid #10b981;outline-offset:-2px}'
                 + '.dlh-tools-ctrl__toggle.is-open{background:#ecfdf5;color:#059669}'
                 + '.dlh-tools-ctrl__panel{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px}'
                 + '.dlh-tools-ctrl__panel[hidden]{display:none}'
-                + '.dlh-tools-ctrl__panel .maplibregl-ctrl{margin:0}';
+                + '.dlh-tools-ctrl__panel .maplibregl-ctrl{margin:0 !important;float:none !important;clear:none !important}'
+                + '.dlh-tools-ctrl__panel .dlh-tools-ctrl__item{width:36px;height:36px;flex:0 0 auto;overflow:hidden;box-sizing:border-box}';
             document.head.appendChild(style);
         }
 
         var self = this;
         this._container = document.createElement('div');
         this._container.className = 'maplibregl-ctrl dlh-tools-ctrl';
+        // Margin default MapLibre dinolkan agar toggle sejajar dengan kontrol
+        // lain (mis. zoom) di tepi kiri peta.
+        this._container.style.margin = '0';
 
         this._toggleBtn = document.createElement('button');
         this._toggleBtn.type = 'button';
+        this._toggleBtn.className = 'dlh-tools-ctrl__toggle';
         this._toggleBtn.title = 'Alat Peta';
         this._toggleBtn.setAttribute('aria-label', 'Alat Peta');
         this._toggleBtn.setAttribute('aria-expanded', 'false');
         this._toggleBtn.innerHTML = DlhToolsControl._icon();
         this._toggleBtn.onclick = function (e) { e.stopPropagation(); self.toggle(); };
 
+        // Layout panel dipasang inline supaya item selalu tersusun rata
+        // vertikal 36px, tak terpengaruh float/margin bawaan MapLibre.
         this._panel = document.createElement('div');
         this._panel.className = 'dlh-tools-ctrl__panel';
-        this._panel.hidden = true;
+        this._panel.style.cssText = 'display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px';
 
         this._tools.forEach(function (tool) {
             if (tool && typeof tool.onAdd === 'function') {
@@ -819,6 +826,13 @@ window.DlhToolsControl = class {
                 var el = tool.onAdd(map);
                 if (el) {
                     el.classList.add('dlh-tools-ctrl__item');
+                    el.style.margin = '0';
+                    el.style.float = 'none';
+                    el.style.clear = 'none';
+                    el.style.width = '36px';
+                    el.style.height = '36px';
+                    el.style.overflow = 'hidden';
+                    el.style.boxSizing = 'border-box';
                     self._panel.appendChild(el);
                 }
             } else if (tool && tool.title && typeof tool.action === 'function') {
@@ -827,7 +841,7 @@ window.DlhToolsControl = class {
                 btn.title = tool.title;
                 btn.setAttribute('aria-label', tool.title);
                 btn.innerHTML = tool.icon || '';
-                btn.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0';
+                btn.style.cssText = 'width:36px;height:36px;margin:0;float:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#334155;border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;transition:background .15s,color .15s;padding:0';
                 btn.onmouseenter = function () { btn.style.background = '#f1f5f9'; btn.style.color = '#0f172a'; };
                 btn.onmouseleave = function () { btn.style.background = '#ffffff'; btn.style.color = '#334155'; };
                 btn.onclick = function (e) { e.stopPropagation(); tool.action(map, btn); };
@@ -850,14 +864,14 @@ window.DlhToolsControl = class {
 
     open() {
         this._open = true;
-        this._panel.hidden = false;
+        this._panel.style.display = 'flex';
         this._toggleBtn.classList.add('is-open');
         this._toggleBtn.setAttribute('aria-expanded', 'true');
     }
 
     close() {
         this._open = false;
-        this._panel.hidden = true;
+        this._panel.style.display = 'none';
         this._toggleBtn.classList.remove('is-open');
         this._toggleBtn.setAttribute('aria-expanded', 'false');
     }
