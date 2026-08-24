@@ -252,11 +252,21 @@
         padding: 0.125rem;
     }
 
+    .admin-notifications .notification-actions > form {
+        display: flex;
+    }
+
     .dark .admin-notifications .notification-actions {
         background: rgb(255 255 255 / 0.04);
     }
 
     .admin-notifications .admin-icon-button {
+        display: inline-flex;
+        width: 2.5rem;
+        height: 2.5rem;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
         border-radius: 0.625rem;
         transition: background-color 160ms ease, color 160ms ease;
     }

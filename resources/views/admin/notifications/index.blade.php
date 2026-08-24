@@ -62,7 +62,7 @@
                             <span class="sr-only">{{ $isUnread ? 'Belum dibaca' : 'Sudah dibaca' }}</span>
                         </p>
                     </div>
-                    <div class="notification-actions col-start-2 flex shrink-0 items-center gap-1 sm:col-start-auto sm:self-start sm:mt-0.5">
+                    <div class="notification-actions col-start-2 flex shrink-0 items-center gap-1 sm:col-start-auto sm:self-start sm:-mt-1">
                         @if(!empty($data['href']))
                             <a href="{{ $data['href'] }}" class="admin-icon-button text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-sky-950/40 dark:hover:text-sky-300" aria-label="Buka notifikasi: {{ $data['title'] ?? 'Notifikasi' }}" title="Buka detail">
                                 <x-admin.icon name="eye" :size="16" />
