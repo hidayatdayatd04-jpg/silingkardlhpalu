@@ -1,0 +1,19 @@
+[package]
+name = "dlh-admin-desktop"
+version = "1.0.0"
+description = "SILINGKAR DLH ADMIN — Aplikasi Desktop (Tauri 2)"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+
+# Profil sengaja ringan: codegen-units/lto default agar rustc stabil di mesin
+# Windows RAM terbatas (codegen-units=1 + LTO pernah memicu crash 0xc0000409).
+[profile.release]
+strip = true

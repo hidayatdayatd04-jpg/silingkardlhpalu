@@ -1,0 +1,13 @@
+{
+  "name": "dlh-admin-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SILINGKAR DLH ADMIN — Aplikasi Windows panel admin SILINGKAR DLH Kota Palu (Tauri 2, WebView ke situs produksi)",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

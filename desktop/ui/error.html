@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Tidak ada koneksi · SILINGKAR DLH ADMIN</title>
+<style>
+  :root { color-scheme: light; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #f4f1f1;
+    height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    color: #3d2626;
+  }
+  .card {
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #e6dddd;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(60, 30, 30, .07);
+    padding: 40px 48px;
+    max-width: 420px;
+  }
+  h1 { font-size: 17px; font-weight: 600; margin-top: 18px; }
+  p  { font-size: 13px; color: #7a6a6a; margin-top: 8px; line-height: 1.6; }
+  button {
+    margin-top: 22px;
+    background: #1e7a46; color: #fff;
+    border: none; border-radius: 8px;
+    padding: 10px 26px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #176037; }
+  button:disabled { opacity: .6; cursor: default; }
+</style>
+</head>
+<body>
+<div class="card">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c0392b"
+       stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9"></circle>
+    <line x1="5.6" y1="18.4" x2="18.4" y2="5.6"></line>
+  </svg>
+  <h1>Tidak dapat terhubung ke server</h1>
+  <p>Periksa koneksi internet Anda, atau server sedang tidak tersedia.<br>Sesi login Anda tetap aman.</p>
+  <button id="retry">Coba Lagi</button>
+</div>
+<script>
+  var busy = false;
+  document.getElementById('retry').addEventListener('click', function () {
+    if (busy) return;
+    busy = true;
+    var b = this;
+    b.disabled = true;
+    b.textContent = 'Menyambung ulang…';
+    var t = window.__TAURI__;
+    function reset() {
+      busy = false;
+      b.disabled = false;
+      b.textContent = 'Coba Lagi';
+    }
+    if (t && t.core && t.core.invoke) {
+      t.core.invoke('check_connection').then(function (status) {
+        if (status !== 'online') { reset(); return; }
+        // Navigasi lewat WebView sendiri (bukan perintah navigasi Rust).
+        t.core.invoke('admin_target').then(function (target) {
+          location.href = target;
+        }).catch(reset);
+      }).catch(reset);
+    } else {
+      reset();
+    }
+  });
+</script>
+</body>
+</html>

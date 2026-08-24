@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Halaman lokal (loading/error) boleh memakai IPC dasar. Halaman remote (situs produksi) tidak diberi akses IPC apa pun — semua logika berjalan di sisi Rust.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
