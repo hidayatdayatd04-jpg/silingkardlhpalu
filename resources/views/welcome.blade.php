@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Dinas Lingkungan Hidup Kota Palu | SILP')
-@section('description', 'Selamat datang di Portal SILP Dinas Lingkungan Hidup Kota Palu. Akses layanan multi-bidang: pengaduan lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan.')
+@section('title', 'SILINGKAR DLH Kota Palu | Dinas Lingkungan Hidup Kota Palu')
+@section('description', 'Selamat datang di Portal SILINGKAR DLH Kota Palu — Sistem Informasi Lingkungan dan Kebersihan Dinas Lingkungan Hidup Kota Palu. Akses layanan multi-bidang: pengaduan lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan.')
 @section('full_width', '')
 
 @push('styles')
@@ -15,8 +15,8 @@
 @endpush
 
 @section('content')
-{{-- Preloader penyambutan — HANYA di beranda, tampil ~3 detik setiap refresh. --}}
-<x-public.preloader />
+{{-- Splash sudah dirender layouts.app — jangan disertakan lagi di sini
+     agar tidak ada dua #silingkar-splash dalam satu halaman. --}}
 <div class="overflow-x-clip">
 
     {{-- ============================================================= --}}

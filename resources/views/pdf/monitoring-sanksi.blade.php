@@ -37,6 +37,6 @@
             @endforeach
         </tbody>
     </table>
-    <div class="footer">Portal Operasional DLH Kota Palu</div>
+    <div class="footer">SILINGKAR DLH Kota Palu</div>
 </body>
 </html>

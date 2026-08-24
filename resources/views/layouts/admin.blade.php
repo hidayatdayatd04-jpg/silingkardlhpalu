@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- Prefix panel admin untuk skrip klien (mis. cek halaman backup di alpine.js). --}}
     <script>window.ADMIN_BASE_URL = @js('/'.trim((string) config('app.admin_path'), '/'));</script>
-    <title>@yield('title', 'Admin DLH Kota Palu')</title>
+    <title>@yield('title', 'SILINGKAR DLH ADMIN')</title>
     <meta name="description" content="Panel administrasi Dinas Lingkungan Hidup Kota Palu — kelola permohonan, pengaduan, sampah, RTH, tata penataan, konten, dan pengguna.">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     @include('partials.web-fonts')
@@ -26,6 +26,8 @@
 </head>
 
 <body class="admin-shell min-h-screen text-ink-900 antialiased" x-data data-alpine-bootstrap>
+    {{-- Splash loading — tampil tiap halaman admin dibuka / dipindah. --}}
+    <x-splash />
     @php
         $user = auth()->user();
         $adminGroups = \App\Support\Admin\AdminRegistry::forUser($user);

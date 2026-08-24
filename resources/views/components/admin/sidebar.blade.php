@@ -36,9 +36,9 @@
     }
 @endphp
 
-{{-- Sidebar mobile --}}
+{{-- Sidebar mobile (di bawah md / tablet) --}}
 <div
-    class="admin-sidebar-mobile lg:hidden"
+    class="admin-sidebar-mobile md:hidden"
     x-data="{
         open: false,
         touchStartX: 0,
@@ -199,9 +199,9 @@
     </aside>
 </div>
 
-{{-- Sidebar desktop --}}
+{{-- Sidebar desktop (md ke atas; di bawahnya memakai drawer mobile) --}}
 <aside
-    class="admin-sidebar relative hidden min-h-screen flex-col border-r border-white/[0.08] text-white transition-[width] duration-200 lg:flex"
+    class="admin-sidebar relative hidden min-h-screen flex-col border-r border-white/[0.08] text-white transition-[width] duration-200 md:flex"
     style="background: linear-gradient(180deg, #0B3A2A 0%, #06291F 40%, #041B14 100%);"
     x-data="{ openSections: {} }"
     x-bind:class="$store.sidebar.collapsed ? 'w-[80px]' : 'w-[300px]'"

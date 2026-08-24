@@ -1118,40 +1118,44 @@ html.js .public-main[data-public-page] {
 }
 .dark .topbar-noise::before { opacity: 0.6; }
 
-.topbar-btn {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    color: #475569;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    transition: all 0.2s ease;
-}
-.topbar-btn:hover {
-    background: #f0fdf4;
-    color: #059669;
-    border-color: rgba(16, 185, 129, 0.25);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
-    transform: translateY(-1px);
-}
-.topbar-btn:active {
-    transform: scale(0.95);
-}
-.dark .topbar-btn {
-    color: #94a3b8;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-.dark .topbar-btn:hover {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-    border-color: rgba(52, 211, 153, 0.3);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+/* Tombol topbar — WAJIB di layer components: kalau unlayered, display: grid
+   akan menimpa utility Tailwind seperti md:hidden/lg:hidden (cascade layers). */
+@layer components {
+    .topbar-btn {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        color: #475569;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+    }
+    .topbar-btn:hover {
+        background: #f0fdf4;
+        color: #059669;
+        border-color: rgba(16, 185, 129, 0.25);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+        transform: translateY(-1px);
+    }
+    .topbar-btn:active {
+        transform: scale(0.95);
+    }
+    .dark .topbar-btn {
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    .dark .topbar-btn:hover {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border-color: rgba(52, 211, 153, 0.3);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
 }
 
 .cmd-overlay {

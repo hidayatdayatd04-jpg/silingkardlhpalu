@@ -12,7 +12,7 @@
             <button
                 type="button"
                 x-on:click="$dispatch('open-sidebar', { trigger: $el })"
-                class="topbar-btn lg:hidden"
+                class="topbar-btn md:hidden"
                 aria-label="Buka navigasi"
                 aria-controls="admin-mobile-sidebar"
             >

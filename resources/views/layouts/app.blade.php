@@ -28,16 +28,16 @@
             $canonicalUrl = $canonicalPath === '/' ? $canonicalBase.'/' : $canonicalBase . $canonicalPath;
         }
     @endphp
-    <title>@yield('title', 'Portal Operasional DLH Kota Palu')</title>
+    <title>@yield('title', 'SILINGKAR DLH Kota Palu')</title>
 
-    <meta name="description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
+    <meta name="description" content="@yield('description', 'Portal SILINGKAR Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Dinas Lingkungan Hidup Kota Palu">
+    <meta property="og:site_name" content="SILINGKAR DLH Kota Palu">
     <meta property="og:url" content="{{ $canonicalUrl }}">
-    <meta property="og:title" content="@yield('title', 'Portal Operasional DLH Kota Palu')">
-    <meta property="og:description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
+    <meta property="og:title" content="@yield('title', 'SILINGKAR DLH Kota Palu')">
+    <meta property="og:description" content="@yield('description', 'Portal SILINGKAR Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
     <meta property="og:image" content="@yield('og_image', asset('assets/images/logo_kota_palu.png'))">
     <meta property="og:image:width" content="@yield('og_image_width', '1200')">
     <meta property="og:image:height" content="@yield('og_image_height', '630')">
@@ -45,8 +45,8 @@
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ $canonicalUrl }}">
-    <meta property="twitter:title" content="@yield('title', 'Portal Operasional DLH Kota Palu')">
-    <meta property="twitter:description" content="@yield('description', 'Portal Operasional SILP Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
+    <meta property="twitter:title" content="@yield('title', 'SILINGKAR DLH Kota Palu')">
+    <meta property="twitter:description" content="@yield('description', 'Portal SILINGKAR Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
     <meta property="twitter:image" content="@yield('og_image', asset('assets/images/logo_kota_palu.png'))">
 
     <link rel="canonical" href="{{ $canonicalUrl }}">
@@ -60,7 +60,7 @@
                 '@context'      => 'https://schema.org',
                 '@type'         => 'WebSite',
                 'name'          => 'Dinas Lingkungan Hidup Kota Palu',
-                'alternateName' => ['DLH Kota Palu', 'SILP DLH Kota Palu'],
+                'alternateName' => ['DLH Kota Palu', 'SILINGKAR DLH Kota Palu'],
                 'url'           => $canonicalUrl,
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         @endphp
@@ -153,6 +153,8 @@
 </head>
 
 <body class="public-site dlh-public-page bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased">
+    {{-- Splash loading — tampil tiap halaman publik dibuka / dipindah. --}}
+    <x-splash />
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-md focus:shadow-md">{{ __('Lewati ke konten utama') }}</a>
     @php
         $mtPreview = false;

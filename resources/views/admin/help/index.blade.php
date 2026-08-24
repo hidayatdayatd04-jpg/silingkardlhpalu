@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Bantuan - Admin DLH')
+@section('title', 'Bantuan - SILINGKAR DLH ADMIN')
 @section('heading', 'Bantuan')
 
 @php

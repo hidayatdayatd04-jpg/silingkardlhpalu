@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($record->judul ?? 'Artikel').' · Admin DLH')
+@section('title', ($record->judul ?? 'Artikel').' · SILINGKAR DLH ADMIN')
 @section('heading', $resource['label'])
 
     @php

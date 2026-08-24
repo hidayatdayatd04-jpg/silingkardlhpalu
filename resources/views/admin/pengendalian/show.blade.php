@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', \App\Support\Admin\AdminRegistry::titleFor($record, $resource).' — Detail — Admin DLH')
+@section('title', \App\Support\Admin\AdminRegistry::titleFor($record, $resource).' — Detail — SILINGKAR DLH ADMIN')
 @section('heading', $resource['label'])
 
 @section('content')

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Cadangan & Pemulihan Data - Admin DLH')
+@section('title', 'Cadangan & Pemulihan Data - SILINGKAR DLH ADMIN')
 @section('heading', 'Cadangan & Pemulihan Data')
 
 @php

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Masuk Admin DLH Kota Palu</title>
+    <title>Masuk SILINGKAR DLH ADMIN</title>
     <meta name="description" content="Masuk ke panel admin SILINGKAR — Sistem Informasi Lingkungan Hidup Dinas Lingkungan Hidup Kota Palu.">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     @include('partials.web-fonts')
@@ -13,6 +13,7 @@
 </head>
 
 <body class="admin-login min-h-screen text-ink-900 antialiased" data-alpine-bootstrap>
+    <x-splash />
     <main class="admin-login-shell grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
         {{-- â•â•â•â•â•â•â•â•â•â• Brand panel (kiri) â•â•â•â•â•â•â•â•â•â• --}}
         <section class="admin-login-brand relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
@@ -28,7 +29,7 @@
             <div class="relative flex items-center gap-3">
                 <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-20 w-auto">
                 <div>
-                    <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">DLH Kota Palu</p>
+                    <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">SILINGKAR DLH ADMIN</p>
                     <p class="text-xl font-bold">Panel Administrasi</p>
                 </div>
             </div>
@@ -53,7 +54,7 @@
                 <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
                     <img src="{{ asset('assets/images/logo-web.webp') }}" alt="Logo Kota Palu" width="320" height="337" class="h-16 w-auto">
                     <div>
-                        <p class="text-sm font-bold text-brand-700">DLH Kota Palu</p>
+                        <p class="text-sm font-bold text-brand-700">SILINGKAR DLH ADMIN</p>
                         <p class="text-xs text-slate-500">Panel Administrasi</p>
                     </div>
                 </div>

@@ -34,7 +34,7 @@
 
 @extends('layouts.admin')
 
-@section('title', 'Peta - Admin DLH')
+@section('title', 'Peta - SILINGKAR DLH ADMIN')
 @section('full_width', 'w-full')
 
     @push('styles')

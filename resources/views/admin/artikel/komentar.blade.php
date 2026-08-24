@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Komentar — '.$artikel->judul.' - Admin DLH')
+@section('title', 'Komentar — '.$artikel->judul.' - SILINGKAR DLH ADMIN')
 @section('heading', 'Komentar Artikel')
 
 @php

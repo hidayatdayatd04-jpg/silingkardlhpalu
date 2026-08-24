@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', $resource['label'].' - Admin DLH')
+@section('title', $resource['label'].' - SILINGKAR DLH ADMIN')
 @section('heading', $resource['label'])
 
 @php

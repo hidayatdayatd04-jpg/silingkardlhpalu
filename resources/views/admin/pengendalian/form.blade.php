@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($record->exists ? 'Edit ' : 'Tambah ').$resource['label'].' — Admin DLH')
+@section('title', ($record->exists ? 'Edit ' : 'Tambah ').$resource['label'].' — SILINGKAR DLH ADMIN')
 @section('heading', $resource['label'])
 
 @section('content')

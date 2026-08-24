@@ -1,6 +1,6 @@
-# SILINGKAR — Sistem Informasi Layanan Lingkungan Hidup Kota Palu
+# SILINGKAR DLH Kota Palu
 
-SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan publik (pengaduan, permohonan, pelacakan tiket), informasi dinas, dan panel administrasi internal berbasis peran untuk empat bidang: Pengendalian, Sampah & LB3, Tata Penataan, dan RTH.
+**SILINGKAR DLH Kota Palu (Sistem Informasi Lingkungan dan Kebersihan Dinas Lingkungan Hidup Kota Palu)** — portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan publik (pengaduan, permohonan, pelacakan tiket), informasi dinas, dan panel administrasi internal **SILINGKAR DLH ADMIN** berbasis peran untuk empat bidang: Pengendalian, Sampah & LB3, Tata Penataan, dan RTH. Seluruh antarmuka (portal publik, panel admin, dan aplikasi desktop) memakai splash loading SILINGKAR yang tampil saat aplikasi dibuka dan setiap perpindahan halaman.
 
 ## Fitur utama
 
@@ -14,12 +14,18 @@ SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan 
 - Chatbot AI streaming dengan provider OpenAI-compatible (failover otomatis antar provider) yang dikelola dari Pengaturan Admin; kunci provider disimpan terenkripsi di database.
 - Mode pemeliharaan yang bisa diaktifkan dari Pengaturan Admin (halaman publik diblokir 503, panel admin tetap bisa diakses, pratinjau via `?preview=1`).
 
-**Panel admin (`/admin`)**
+**Panel admin — SILINGKAR DLH ADMIN (`/admin`)**
 
 - Dashboard per peran: KPI per bidang, grafik tren (Chart.js), tugas tertunda, aktivitas terbaru, dan peta sebaran laporan.
 - CRUD berbasis registry (`AdminRegistry` + `ResourceController`) dengan filter, pencarian, bulk action, ekspor CSV/XLSX (sinkron atau antrean via `QUEUE_EXPORTS`), dan detail record.
 - Modul GIS: layer peta, impor Shapefile, digitasi fitur, bulk visibility/delete, soft delete + restore.
 - Audit log, notifikasi internal (polling), ulasan masyarakat, backup/restore database, monitoring kuota Neon/B2, dan manajemen pengguna.
+
+**Aplikasi desktop Windows (Tauri 2)**
+
+- Shell Windows terpisah di folder `desktop/` yang menampilkan panel admin produksi (`https://www.silingkardlhpalu.web.id`) lewat WebView2 — tanpa menduplikasi UI maupun backend.
+- Splash loading saat aplikasi dibuka dan pada setiap perpindahan halaman; halaman error + tombol "Coba Lagi" bila server tidak terjangkau.
+- Single instance, judul window terkunci "SILINGKAR DLH ADMIN", link/popup eksternal otomatis dibuka di browser default Windows, drag & drop upload berperilaku seperti browser.
 
 **Keamanan bawaan**
 
@@ -34,6 +40,7 @@ SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan 
 | UI             | Blade, Livewire 4 (single-file components), Alpine.js, Tailwind CSS 4 |
 | Frontend libs  | MapLibre GL, Chart.js, Flatpickr, Jodit editor, @resvg/resvg-js  |
 | Build          | Vite 7, TypeScript                                               |
+| Desktop        | Tauri 2 + WebView2 (shell Windows untuk panel admin produksi)    |
 | Database       | PostgreSQL; Neon untuk produksi atau PostgreSQL 16 di Docker     |
 | Storage/backup | Local storage dan Backblaze B2 (S3-compatible)                   |
 | Paket utama    | spatie/laravel-permission, DomPDF, Intervention Image, HTMLPurifier, Flysystem S3 |
@@ -44,6 +51,8 @@ SILINGKAR adalah portal layanan DLH Kota Palu. Aplikasi ini menyediakan layanan 
 Portal publik memakai route Blade + komponen Livewire single-file di `resources/views/components/public/` (form pengaduan, lacak, cek status, armada). Panel admin memakai Blade + Livewire; sebagian besar CRUD ditangani `ResourceController` yang membaca definisi resource dari `app/Support/Admin/AdminRegistry.php`. Model, policy, observer, dan service memisahkan aturan bisnis, otorisasi, nomor tiket, notifikasi, unggahan, GIS, GPS, AI, statistik, serta backup.
 
 Nomor tiket dibuat oleh `TicketGenerator` dengan prefix per bidang: `PDL` (Pengendalian), `SMP` (Sampah & LB3), `RTH`, `TTP` (Tata Penataan), `PJM` (pinjam taman), format `PREFIX-XXXX-XXXX`. Status pengaduan dinormalisasi menjadi dua nilai: **Belum Ditindaklanjuti** dan **Ditindaklanjuti**.
+
+Splash loading bersama dipakai lewat komponen Blade `resources/views/components/splash.blade.php` (`<x-splash />`) di layout publik, layout admin, dan halaman login; aplikasi desktop menyuntikkan splash setara dari shell Tauri untuk halaman yang tidak punya splash sendiri.
 
 Direktori penting:
 
@@ -66,6 +75,7 @@ resources/views/
   pdf/                    # template PDF (bukti, sertifikat, laporan, surat sanksi)
 routes/web.php            # rute HTTP
 routes/console.php        # scheduler
+desktop/                  # aplikasi Windows Tauri 2 (terpisah dari Laravel)
 ```
 
 ### Peran dan akses admin
@@ -88,6 +98,7 @@ Selain role, kolom `additional_access` pada user memberikan akses per menu (slug
 - Composer, Node.js, dan npm.
 - PostgreSQL atau akun Neon.
 - Opsional: Docker Desktop/Compose, Backblaze B2, Google Drive API, akun GPS.id, dan kunci reCAPTCHA.
+- Untuk aplikasi desktop: Rust (toolchain `x86_64-pc-windows-msvc`), Node.js, dan WebView2 Runtime (sudah bawaan Windows 10/11).
 
 ## Setup lokal
 
@@ -124,6 +135,33 @@ composer run dev
 
 Perintah tersebut menjalankan web server, queue listener, Pail, dan Vite. Alternatifnya, jalankan `php artisan serve`, `php artisan queue:work`, dan `npm run dev` secara terpisah; `php artisan queue:restart` untuk me-restart queue listener.
 
+## Aplikasi desktop Windows (Tauri 2)
+
+Folder `desktop/` berisi shell Windows yang terpisah dari project Laravel. Aplikasi ini hanya "jendela" WebView2 yang membuka panel admin produksi di `https://www.silingkardlhpalu.web.id` (prefix `ADMIN_PATH`), sehingga login/logout, session/cookie, CSRF, seluruh CRUD, upload, unduh PDF/Excel/CSV, peta GIS, notifikasi polling, dan semua fitur admin berjalan persis seperti di browser.
+
+```bash
+cd desktop
+npm install
+npm run dev     # mode pengembangan
+npm run build   # build release + installer NSIS
+```
+
+Hasil build release: `desktop/src-tauri/target/release/bundle/nsis/SILINGKAR DLH ADMIN_1.0.0_x64-setup.exe`.
+
+Perilaku shell:
+
+- **Splash loading** tampil saat aplikasi dibuka (halaman `ui/index.html`) dan disuntikkan otomatis pada setiap perpindahan halaman yang belum punya splash sendiri.
+- **Probe koneksi**: sebelum masuk panel, aplikasi mengecek server (`GET {origin}/up`). Online → panel dimuat; offline → halaman `ui/error.html` dengan tombol **Coba Lagi**. Selagi sesi berjalan, server dipantau tiap 15 detik; gangguan ≥45 detik berturut-turut memindahkan sesi ke halaman error (pemulihan selalu manual agar form pengguna tidak ter-reload tiba-tiba).
+- **Link eksternal**: hanya domain produksi dan halaman internal yang boleh dimuat di webview; URL lain, `mailto:`, dan `tel:` dibuka di browser default Windows.
+- **Single instance**: instans kedua otomatis difokuskan ke window yang sudah terbuka.
+
+Konfigurasi khusus desktop (variabel environment, untuk dev/uji):
+
+- `DLH_ADMIN_URL` — mengganti target panel, mis. `DLH_ADMIN_URL=http://127.0.0.1:8000/admin` untuk uji terhadap server lokal.
+- `DLH_WEBVIEW_ARGS` — argumen tambahan WebView2, mis. `DLH_WEBVIEW_ARGS="--remote-debugging-port=9223"` untuk debugging.
+
+Domain produksi dan daftar host yang diizinkan dikode di `desktop/src-tauri/src/main.rs` (`ADMIN_BASE_URL`, `ALLOWED_HOSTS`) — ubah di sana bila domain berubah. Profil release sengaja memakai `strip = true` saja (tanpa LTO/`codegen-units=1`) agar `rustc` stabil di mesin Windows dengan RAM terbatas.
+
 ## Docker dan produksi
 
 `docker-compose.yml` menyediakan `app` (PHP-FPM multi-stage), `nginx` (port 80, gzip, `client_max_body_size 512M`), `db` (PostgreSQL 16), `queue` (`queue:work --tries=3 --timeout=1900`), dan `scheduler`. Kode aplikasi + vendor + aset build berasal dari image Docker, bukan bind-mount — deploy cukup `git pull && docker compose up -d --build`. Yang di-bind dari host hanya `.env`, `storage/`, dan `bootstrap/cache/`.
@@ -150,6 +188,7 @@ php artisan queue:restart
 Mulai dari `.env.example`; jangan commit `.env`. Bagian inti:
 
 ```dotenv
+APP_NAME="SILINGKAR DLH Kota Palu"
 APP_ENV=local
 APP_DEBUG=false
 APP_URL=http://localhost
@@ -273,6 +312,7 @@ Setelah reset tanpa seeder, tidak ada akun admin, role, konfigurasi provider AI,
 - Bila unggahan tidak bisa diakses lokal, jalankan kembali `php artisan storage:link` dan cek permission `storage/` serta `bootstrap/cache/`.
 - Bila job tertahan, periksa `jobs`/`failed_jobs`, jalankan worker, kemudian `php artisan queue:restart` setelah deploy.
 - Lihat log aplikasi dengan `php artisan pail` atau `storage/logs/laravel.log`.
+- Aplikasi desktop menampilkan halaman error bila server produksi tidak terjangkau — klik **Coba Lagi** setelah koneksi pulih; bila domain produksi berubah, sesuaikan `ADMIN_BASE_URL` dan `ALLOWED_HOSTS` di `desktop/src-tauri/src/main.rs`.
 
 ## Pengembangan
 
@@ -290,3 +330,4 @@ Panduan kontribusi internal:
 - Gunakan policy dan `AdminAccess` untuk resource baru, serta daftarkan modulnya di `AdminRegistry`.
 - Form publik baru sebaiknya memakai komponen Livewire SFC di `resources/views/components/public/` dengan trait `VerifiesGoogleRecaptcha` dan `ThrottlesPublic`.
 - Terjemahan validasi/auth/pagination bahasa Indonesia ada di `lang/id/`.
+- Halaman web baru sebaiknya menyertakan `<x-splash />` (komponen splash SILINGKAR) di layoutnya; aplikasi desktop otomatis menambahkan splash setara untuk halaman yang belum memilikinya.
