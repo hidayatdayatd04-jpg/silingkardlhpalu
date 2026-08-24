@@ -99,8 +99,11 @@ Hasil build:
 
 | File | Keterangan |
 |---|---|
-| `src-tauri/target/release/bundle/nsis/SILINGKAR DLH ADMIN_<versi>_x64-setup.exe` | **Installer** (wizard lengkap: pilih bahasa Indonesia/English, lokasi instalasi, untuk saya saja / semua user, shortcut Start Menu, uninstaller otomatis) |
-| `src-tauri/target/release/dlh-admin-desktop.exe` | Versi portable (langsung jalan tanpa install) |
+| `src-tauri/target/release/bundle/nsis/SILINGKAR DLH ADMIN_<versi>_x64-setup.exe` | **Installer** — INI file yang dibagikan & diklik pengguna. Wizard lengkap: pilih bahasa Indonesia/English, lokasi instalasi, untuk saya saja / semua user, shortcut Start Menu, uninstaller otomatis |
+| `src-tauri/target/release/dlh-admin-desktop.exe` | Binary **portable** untuk test cepat — langsung jalan tanpa install. Bukan installer; tidak perlu dibagikan |
+
+> **Penting:** yang memunculkan wizard installer adalah file `*-setup.exe`.
+> `dlh-admin-desktop.exe` akan selalu langsung membuka aplikasi (memang by design).
 
 Build pertama memakan waktu beberapa menit (kompilasi release); build berikutnya
 jauh lebih cepat karena cache.
@@ -116,6 +119,10 @@ jauh lebih cepat karena cache.
    uninstall lewat Settings → Apps (atau Control Panel → Uninstall a program)
 5. Upgrade: jalankan installer versi baru — versi lama otomatis ditimpa,
    data & login tidak hilang
+6. **Perbaikan (repair):** jalankan `*-setup.exe` lagi padahal aplikasi masih
+   terpasang dengan versi sama → wizard otomatis mendeteksinya dan menampilkan
+   halaman *Already Installed* dengan pilihan **Add or Reinstall**
+   (install ulang / perbaiki) atau **Uninstall**
 
 ## Troubleshooting
 
