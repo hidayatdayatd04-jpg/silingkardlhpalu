@@ -4,8 +4,8 @@
   "private": true,
   "description": "SILINGKAR DLH ADMIN — Aplikasi Windows panel admin SILINGKAR DLH Kota Palu (Tauri 2, WebView ke situs produksi)",
   "scripts": {
-    "dev": "tauri dev",
-    "build": "tauri build"
+    "dev": "node scripts/run.mjs dev",
+    "build": "node scripts/run.mjs build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"
