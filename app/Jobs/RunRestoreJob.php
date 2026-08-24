@@ -101,6 +101,7 @@ class RunRestoreJob implements ShouldQueue
                     'color' => 'emerald',
                     'href' => route('admin.backup.index'),
                     'module' => 'system',
+                    'backup_file' => $this->backupRelative,
                 ]);
             }
         } catch (BackupCancelledException $e) {

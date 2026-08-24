@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\DatabaseNotification;
 use App\Models\PengaduanSampah;
+use App\Models\User;
+use App\Notifications\AdminNotification;
 use App\Support\Admin\AdminNotificationCleaner;
 use App\Support\Admin\AdminNotificationFeed;
 use App\Support\AdminNotifier;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Str;
 use Tests\Concerns\InteractsWithAdminNotifications;
 use Tests\TestCase;
 
@@ -71,7 +74,19 @@ class NotificationDeletionTest extends TestCase
             'backup_file' => 'backups/backup-test.zip',
         ]);
 
-        $this->assertSame(1, $this->user->notifications()->count());
+        DatabaseNotification::query()->create([
+            'id' => (string) Str::uuid(),
+            'type' => AdminNotification::class,
+            'notifiable_type' => $this->user->getMorphClass(),
+            'notifiable_id' => $this->user->id,
+            'data' => [
+                'title' => 'Cadangan Berhasil',
+                'message' => 'Notifikasi cadangan versi lama.',
+                'module' => 'system',
+            ],
+        ]);
+
+        $this->assertSame(2, $this->user->notifications()->count());
 
         AdminNotificationCleaner::forBackup('backups/backup-test.zip');
 

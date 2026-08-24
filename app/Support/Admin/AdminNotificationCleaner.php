@@ -48,7 +48,15 @@ class AdminNotificationCleaner
 
             $notificationFile = $data['backup_file'] ?? null;
 
-            return is_string($notificationFile) && basename($notificationFile) === $backupName;
+            if (is_string($notificationFile)) {
+                return basename($notificationFile) === $backupName;
+            }
+
+            // Notifikasi lama belum menyimpan nama file cadangan. Pesannya
+            // bersifat generik, sehingga tidak aman lagi dipertahankan saat
+            // riwayat cadangan mulai dihapus.
+            return ! array_key_exists('backup_file', $data)
+                && in_array($data['title'] ?? null, ['Cadangan Berhasil', 'Pemulihan Berhasil'], true);
         });
     }
 
