@@ -68,13 +68,24 @@
                                 <x-admin.icon name="eye" :size="16" />
                             </a>
                         @endif
-                        <form method="POST" action="{{ route('admin.notifications.destroy', $n->id) }}" onsubmit="return confirm('Hapus notifikasi ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="admin-icon-button text-slate-500 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-950/40 dark:hover:text-rose-300" aria-label="Hapus notifikasi: {{ $data['title'] ?? 'Notifikasi' }}" title="Hapus notifikasi">
-                                <x-admin.icon name="trash" :size="16" />
-                            </button>
-                        </form>
+                        <button
+                            type="button"
+                            x-data
+                            x-on:click="$dispatch('open-modal', 'delete-notification-{{ $n->id }}')"
+                            class="admin-icon-button text-slate-500 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                            aria-label="Hapus notifikasi: {{ $data['title'] ?? 'Notifikasi' }}"
+                            title="Hapus notifikasi"
+                        >
+                            <x-admin.icon name="trash" :size="16" />
+                        </button>
+
+                        <x-admin.confirm-delete
+                            name="delete-notification-{{ $n->id }}"
+                            :action="route('admin.notifications.destroy', $n->id)"
+                            title="Hapus Notifikasi"
+                            message="Notifikasi ini akan dihapus permanen. Aksi ini tidak bisa dibatalkan."
+                            confirm-text="Hapus Notifikasi"
+                        />
                     </div>
                 </article>
             @empty
