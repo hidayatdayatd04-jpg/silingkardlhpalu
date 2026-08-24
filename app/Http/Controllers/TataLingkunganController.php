@@ -79,6 +79,17 @@ class TataLingkunganController extends Controller
         $folderId = (string) $request->input('folder_id', $rootId);
         $search = mb_substr(trim((string) $request->input('search', '')), 0, 120);
 
+        // Subfolder langsung dikirim ke panel konten. Panel kiri sengaja
+        // hanya menjadi navigasi tingkat utama agar semua baris sejajar.
+        $folders = $search === ''
+            ? array_values(array_filter(
+                $structure['folders'],
+                fn (array $folder) => ($folder['parent_id'] ?? null) === $folderId,
+            ))
+            : [];
+
+        usort($folders, fn (array $a, array $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+
         $list = array_values(array_filter($structure['files'], function (array $file) use ($folderId, $search): bool {
             if ($search === '') {
                 return ($file['folder_id'] ?? null) === $folderId;
@@ -118,6 +129,7 @@ class TataLingkunganController extends Controller
 
         return response()->json([
             'error' => null,
+            'folders' => $folders,
             'files' => array_values($paged),
             'total' => $total,
             'page' => $page,

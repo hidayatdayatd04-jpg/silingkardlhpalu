@@ -53,6 +53,7 @@ export interface FoldersResponse {
 export interface FilesResponse {
     error: string | null;
     message?: string;
+    folders: DriveFolder[];
     files: DriveFile[];
     total: number;
     page: number;
@@ -106,22 +107,18 @@ const CATEGORY_ICONS: Record<CustomIconCategory, IconSpec> = {
 
 const PREVIEWABLE = new Set<CategoryKey>(['pdf', 'word', 'excel', 'powerpoint', 'image', 'video', 'audio']);
 
-interface FolderRow {
-    folder: DriveFolder;
-    depth: number;
-}
-
 export function tataLingkunganExplorer() {
     return {
         /* ── State ── */
         root: { id: '', name: '' } as RootInfo,
         folders: [] as DriveFolder[],
-        expandedIds: {} as Record<string, boolean>,
         searchQuery: '',
+        treeWidth: 320,
 
         activeFolderId: '',
         activeFolderName: '',
 
+        childFolders: [] as DriveFolder[],
         files: [] as DriveFile[],
         total: 0,
         page: 1,
@@ -145,6 +142,11 @@ export function tataLingkunganExplorer() {
 
         /* ── Lifecycle ── */
         init() {
+            const savedTreeWidth = Number.parseInt(window.localStorage.getItem('tata-lingkungan:tree-width') ?? '', 10);
+            if (Number.isFinite(savedTreeWidth)) {
+                this.treeWidth = Math.min(560, Math.max(240, savedTreeWidth));
+            }
+
             this.observer = new IntersectionObserver((entries) => {
                 const entry = entries[0];
                 if (entry.isIntersecting && !this.loading && this.hasMore && !this.error) {
@@ -178,7 +180,6 @@ export function tataLingkunganExplorer() {
 
                 this.root = data.root;
                 this.folders = data.folders;
-                this.expandedIds = { [data.root.id]: true };
                 this.selectFolder(data.root.id);
             } catch (err) {
                 const status = (err as { response?: { status?: number } }).response?.status;
@@ -226,6 +227,7 @@ export function tataLingkunganExplorer() {
                     return;
                 }
 
+                this.childFolders = reset ? data.folders : this.childFolders;
                 this.files = reset ? data.files : [...this.files, ...data.files];
                 this.total = data.total;
                 this.hasMore = data.has_more;
@@ -320,10 +322,6 @@ export function tataLingkunganExplorer() {
                 .sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
         },
 
-        childrenCount(folderId: string): number {
-            return this.childrenOf(folderId).length;
-        },
-
         get searchTerm(): string {
             return this.searchQuery.trim();
         },
@@ -332,61 +330,60 @@ export function tataLingkunganExplorer() {
             return this.searchTerm !== '';
         },
 
-        folderMatchesSearch(folder: DriveFolder): boolean {
-            return this.searchTerm === '' || folder.name.toLocaleLowerCase('id-ID').includes(this.searchTerm.toLocaleLowerCase('id-ID'));
-        },
+        get sidebarFolders(): DriveFolder[] {
+            const source = this.isSearching
+                ? this.folders.filter((folder) => folder.name.toLocaleLowerCase('id-ID').includes(this.searchTerm.toLocaleLowerCase('id-ID')))
+                : this.childrenOf(this.root.id);
 
-        folderHasSearchMatch(folder: DriveFolder): boolean {
-            return this.childrenOf(folder.id).some((child) => this.folderMatchesSearch(child) || this.folderHasSearchMatch(child));
-        },
-
-        isFolderVisible(folder: DriveFolder): boolean {
-            return !this.isSearching || this.folderMatchesSearch(folder) || this.folderHasSearchMatch(folder);
-        },
-
-        visibleChildrenCount(folderId: string): number {
-            return this.childrenOf(folderId).filter((folder) => this.isFolderVisible(folder)).length;
-        },
-
-        orderedRows(): FolderRow[] {
-            const rows: FolderRow[] = [];
-            const walk = (parentId: string, depth: number) => {
-                for (const folder of this.childrenOf(parentId)) {
-                    if (!this.isFolderVisible(folder)) continue;
-                    rows.push({ folder, depth });
-                    if (this.isSearching || this.expandedIds[folder.id]) {
-                        walk(folder.id, depth + 1);
-                    }
-                }
-            };
-            walk(this.root.id, 1);
-            return rows;
-        },
-
-        toggleExpand(folderId: string) {
-            if (this.expandedIds[folderId]) {
-                delete this.expandedIds[folderId];
-            } else {
-                this.expandedIds[folderId] = true;
-            }
+            return [...source].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
         },
 
         selectFolder(folderId: string) {
             if (this.activeFolderId === folderId && this.files.length > 0 && !this.isSearching) return;
             this.searchQuery = '';
             this.activeFolderId = folderId;
-            this.expandedIds[folderId] = true;
 
             const folder = this.folders.find((f) => f.id === folderId);
             this.activeFolderName = folder ? folder.name : this.root.name;
 
             this.selectedFile = null;
             this.previewUrl = '';
+            this.childFolders = [];
             this.files = [];
             this.total = 0;
             this.page = 1;
             this.hasMore = false;
             this.fetchFiles(true);
+        },
+
+        setTreeWidth(width: number) {
+            const layout = this.$refs.layout as HTMLElement | undefined;
+            const maxWidth = layout
+                ? Math.max(240, Math.min(560, layout.getBoundingClientRect().width - 320))
+                : 560;
+
+            this.treeWidth = Math.round(Math.min(maxWidth, Math.max(240, width)));
+            window.localStorage.setItem('tata-lingkungan:tree-width', String(this.treeWidth));
+        },
+
+        beginTreeResize(event: PointerEvent) {
+            if (window.matchMedia('(max-width: 1023px)').matches) return;
+
+            const startX = event.clientX;
+            const startWidth = this.treeWidth;
+            const move = (moveEvent: PointerEvent) => this.setTreeWidth(startWidth + moveEvent.clientX - startX);
+            const stop = () => {
+                window.removeEventListener('pointermove', move);
+                window.removeEventListener('pointerup', stop);
+            };
+
+            event.preventDefault();
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', stop, { once: true });
+        },
+
+        resizeTreeBy(amount: number) {
+            this.setTreeWidth(this.treeWidth + amount);
         },
 
         get crumbs(): { id: string; name: string }[] {

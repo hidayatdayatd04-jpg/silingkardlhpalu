@@ -49,4 +49,26 @@ class TataLingkunganExplorerTest extends TestCase
         $this->assertSame('image', $drive->categorize('', 'webp'));
         $this->assertSame('other', $drive->categorize('', 'dwg'));
     }
+
+    public function test_folder_langsung_dikirim_ke_panel_konten_bukan_diperluas_di_navigasi(): void
+    {
+        $drive = Mockery::mock(GoogleDriveService::class);
+        $drive->shouldReceive('isConfigured')->once()->andReturnTrue();
+        $drive->shouldReceive('listStructure')->once()->with(false)->andReturn([
+            'root' => ['id' => 'root', 'name' => 'Dokumen Tata Lingkungan'],
+            'folders' => [
+                ['id' => 'induk', 'name' => 'Dokumen Induk', 'parent_id' => 'root', 'path' => 'Dokumen Induk'],
+                ['id' => 'anak', 'name' => 'Dokumen Anak', 'parent_id' => 'induk', 'path' => 'Dokumen Induk/Dokumen Anak'],
+                ['id' => 'cucu', 'name' => 'Dokumen Cucu', 'parent_id' => 'anak', 'path' => 'Dokumen Induk/Dokumen Anak/Dokumen Cucu'],
+            ],
+            'files' => [],
+            'fetched_at' => now()->toIso8601String(),
+        ]);
+        $this->app->instance(GoogleDriveService::class, $drive);
+
+        $this->getJson(route('tata-lingkungan.files', ['folder_id' => 'induk']))
+            ->assertOk()
+            ->assertJsonPath('folders.0.id', 'anak')
+            ->assertJsonCount(1, 'folders');
+    }
 }

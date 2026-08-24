@@ -80,7 +80,7 @@
                 </section>
 
                 {{-- ── Isi: pohon folder + daftar file ── --}}
-                <div class="tl-layout">
+                <div x-ref="layout" class="tl-layout" :style="{ gridTemplateColumns: `${treeWidth}px 10px minmax(0, 1fr)` }">
                     {{-- Pohon folder --}}
                     <aside class="tl-tree" aria-label="Daftar folder">
                         <div class="tl-tree-head">
@@ -103,32 +103,33 @@
                                     <span class="tl-tree-label" x-text="root.name || 'Tata Lingkungan'"></span>
                                 </button>
 
-                                <template x-for="row in orderedRows()" :key="row.folder.id">
-                                    <div class="tl-tree-item" :style="{ paddingLeft: (row.depth * 16) + 'px' }">
-                                        <button
-                                            @click="toggleExpand(row.folder.id)"
-                                            class="tl-caret"
-                                            :class="{ 'tl-caret--open': expandedIds[row.folder.id] }"
-                                            x-show="visibleChildrenCount(row.folder.id) > 0"
-                                            :aria-label="expandedIds[row.folder.id] ? 'Tutup subfolder' : 'Perluas subfolder'"
-                                            :aria-expanded="expandedIds[row.folder.id] ? 'true' : 'false'">
-                                            <x-icons.ui name="chevron-right" />
-                                        </button>
-                                        <button
-                                            @click="selectFolder(row.folder.id)"
-                                            class="tl-tree-row"
-                                            :class="{ 'tl-tree-row--active': activeFolderId === row.folder.id }">
-                                            <span class="tl-tree-folder-tile" aria-hidden="true" x-html="folderIconSvg()">
-                                            </span>
-                                            <span class="tl-tree-label" x-text="row.folder.name"></span>
-                                        </button>
-                                    </div>
+                                <template x-for="folder in sidebarFolders" :key="folder.id">
+                                    <button
+                                        @click="selectFolder(folder.id)"
+                                        class="tl-tree-row tl-tree-row--child"
+                                        :class="{ 'tl-tree-row--active': activeFolderId === folder.id }">
+                                        <span class="tl-tree-folder-tile" aria-hidden="true" x-html="folderIconSvg()"></span>
+                                        <span class="tl-tree-label" x-text="folder.name" :title="folder.name"></span>
+                                    </button>
                                 </template>
 
-                                <p x-show="orderedRows().length === 0" x-cloak class="tl-tree-empty" x-text="isSearching ? 'Folder tidak ditemukan.' : 'Tidak ada subfolder'"></p>
+                                <p x-show="sidebarFolders.length === 0" x-cloak class="tl-tree-empty" x-text="isSearching ? 'Folder tidak ditemukan.' : 'Tidak ada folder'"></p>
                             </div>
                         </template>
                     </aside>
+
+                    <div
+                        class="tl-pane-resizer"
+                        role="separator"
+                        aria-label="Atur lebar panel folder"
+                        aria-orientation="vertical"
+                        :aria-valuenow="treeWidth"
+                        aria-valuemin="240"
+                        aria-valuemax="560"
+                        tabindex="0"
+                        @pointerdown="beginTreeResize($event)"
+                        @keydown.arrow-left.prevent="resizeTreeBy(-16)"
+                        @keydown.arrow-right.prevent="resizeTreeBy(16)"></div>
 
                     {{-- Daftar file --}}
                     <section class="tl-files" aria-label="Daftar dokumen">
@@ -139,12 +140,23 @@
                             </template>
                         </div>
 
-                        <div x-show="!loadingFolders && !loading && files.length > 0" x-cloak class="tl-files-summary">
+                        <div x-show="!loadingFolders && !loading && (childFolders.length > 0 || files.length > 0)" x-cloak class="tl-files-summary">
                             <p>
                                 <span x-show="isSearching">Hasil untuk “<span x-text="searchTerm"></span>”</span>
                                 <span x-show="!isSearching" x-text="activeFolderName || root.name"></span>
                             </p>
-                            <span x-text="`${total.toLocaleString('id-ID')} dokumen`"></span>
+                            <span x-text="`${childFolders.length} folder · ${total.toLocaleString('id-ID')} dokumen`"></span>
+                        </div>
+
+                        <div x-show="!loadingFolders && !loading && !isSearching && childFolders.length > 0" x-cloak class="tl-directory-list">
+                            <p class="tl-directory-title">Folder di lokasi ini</p>
+                            <template x-for="folder in childFolders" :key="folder.id">
+                                <button @click="selectFolder(folder.id)" type="button" class="tl-directory-row">
+                                    <span class="tl-tree-folder-tile" aria-hidden="true" x-html="folderIconSvg()"></span>
+                                    <span class="tl-directory-name" x-text="folder.name" :title="folder.name"></span>
+                                    <span class="tl-directory-open">Buka</span>
+                                </button>
+                            </template>
                         </div>
 
                         {{-- Daftar --}}
@@ -172,7 +184,7 @@
                         </template>
 
                         {{-- Empty: folder tidak berisi file --}}
-                        <div x-show="!loadingFolders && !loading && files.length === 0" x-cloak class="tl-files-empty">
+                        <div x-show="!loadingFolders && !loading && childFolders.length === 0 && files.length === 0" x-cloak class="tl-files-empty">
                             <span class="tl-state-icon tl-state-icon--sm">
                                 <x-icons.ui name="document" />
                             </span>
@@ -376,14 +388,13 @@
         /* ── Layout: pohon + file ── */
         .tl-layout {
             display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
+            grid-template-columns: 320px 10px minmax(0, 1fr);
             min-height: 480px;
             max-height: 72vh;
         }
 
         /* ── Pohon folder ── */
         .tl-tree {
-            border-right: 1px solid #e8efe9;
             background: #f8faf9;
             overflow-y: auto;
             padding: 16px 12px 20px;
@@ -407,23 +418,8 @@
         .tl-tree-head-icon { width: 14px; height: 14px; color: #10b981; }
         .tl-tree-loading { display: flex; justify-content: center; padding: 36px 0; }
         .tl-tree-list { display: flex; flex-direction: column; gap: 2px; }
-        .tl-tree-item { display: flex; align-items: center; gap: 0; }
-        .tl-caret {
-            flex-shrink: 0;
-            width: 26px; height: 34px;
-            border: 0;
-            background: none;
-            color: #94a3b8;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: transform .18s ease, color .15s ease;
-        }
-        .tl-caret:hover { color: #146a44; background: #eef4f0; }
-        .tl-caret svg { width: 13px; height: 13px; }
-        .tl-caret--open { transform: rotate(90deg); }
         .tl-tree-row {
-            flex: 1;
+            width: 100%;
             min-width: 0;
             display: flex;
             align-items: center;
@@ -443,6 +439,7 @@
             box-shadow: none;
         }
         .tl-tree-row--root { font-weight: 700; margin-bottom: 8px; }
+        .tl-tree-row--child { width: calc(100% - 20px); margin-left: 20px; }
         .tl-tree-folder-tile {
             flex-shrink: 0;
             width: 30px; height: 30px;
@@ -466,6 +463,26 @@
         }
         .tl-tree-row--active .tl-tree-label { color: #fff; }
         .tl-tree-empty { font-size: 12.5px; color: #94a3b8; padding: 14px 10px; }
+        .tl-pane-resizer {
+            position: relative;
+            z-index: 1;
+            cursor: col-resize;
+            touch-action: none;
+            background: #f8faf9;
+            outline: 0;
+        }
+        .tl-pane-resizer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 4px;
+            width: 1px;
+            background: #d9e5de;
+            transition: background .15s ease, width .15s ease, left .15s ease;
+        }
+        .tl-pane-resizer:hover::after,
+        .tl-pane-resizer:focus-visible::after { left: 3px; width: 3px; background: #178a53; }
 
         /* ── Daftar file ── */
         .tl-files {
@@ -480,6 +497,27 @@
         .tl-files-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 10px 12px; color: #63756b; font-size: 12px; font-weight: 600; }
         .tl-files-summary p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #31463a; }
         .tl-files-summary > span { flex: 0 0 auto; color: #63756b; }
+        .tl-directory-list { margin: 0 2px 12px; border-top: 1px solid #e3ebe6; }
+        .tl-directory-title { padding: 12px 12px 7px; color: #63756b; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+        .tl-directory-row {
+            display: flex;
+            width: 100%;
+            min-width: 0;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 0;
+            border-bottom: 1px solid #edf2ef;
+            background: transparent;
+            color: #1f2d26;
+            cursor: pointer;
+            text-align: left;
+            transition: background .15s ease, color .15s ease;
+        }
+        .tl-directory-row:hover { background: #f2f7f4; color: #146a44; }
+        .tl-directory-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 650; }
+        .tl-directory-open { flex: 0 0 auto; color: #63756b; font-size: 12px; font-weight: 700; }
+        .tl-directory-row:hover .tl-directory-open { color: #146a44; }
         .tl-file-row {
             width: 100%;
             display: flex;
@@ -737,8 +775,11 @@
         .dark .tl-tree-folder-tile { background: rgba(245,158,11,0.14); }
         .dark .tl-tree-folder-tile svg { color: #fbbf24; }
         .dark .tl-tree-label { color: #e2e8f0; }
-        .dark .tl-caret:hover { color: #6ee7b7; background: rgba(148,163,184,0.12); }
         .dark .tl-tree-empty { color: #64748b; }
+        .dark .tl-pane-resizer { background: #0f172a; }
+        .dark .tl-pane-resizer::after { background: #334155; }
+        .dark .tl-pane-resizer:hover::after,
+        .dark .tl-pane-resizer:focus-visible::after { background: #34d399; }
         .dark .tl-files { scrollbar-color: #334155 transparent; }
         .dark .tl-files::-webkit-scrollbar-thumb { background: #334155; }
         .dark .tl-file-row:hover { background: rgba(148,163,184,0.12); box-shadow: inset 0 0 0 1px #334155; }
@@ -753,6 +794,12 @@
         .dark .tl-file-kind--word { background: rgba(96,165,250,.14); color: #93c5fd; }
         .dark .tl-file-kind--excel { background: rgba(52,211,153,.14); color: #6ee7b7; }
         .dark .tl-file-kind--image { background: rgba(167,139,250,.14); color: #c4b5fd; }
+        .dark .tl-directory-list { border-top-color: #334155; }
+        .dark .tl-directory-title,
+        .dark .tl-directory-open { color: #94a3b8; }
+        .dark .tl-directory-row { border-bottom-color: #263449; color: #e2e8f0; }
+        .dark .tl-directory-row:hover { background: rgba(148,163,184,0.12); color: #6ee7b7; }
+        .dark .tl-directory-row:hover .tl-directory-open { color: #6ee7b7; }
         .dark .tl-file-eye { color: #64748b; }
         .dark .tl-file-row--active .tl-file-eye { color: #6ee7b7; background: rgba(30,165,103,0.2); }
         .dark .tl-file-skeleton { background: #263449; }
@@ -774,12 +821,13 @@
 
         /* ── Responsive ── */
         @media (max-width: 1023px) {
-            .tl-layout { grid-template-columns: 1fr; max-height: none; }
+            .tl-layout { grid-template-columns: 1fr !important; max-height: none; }
             .tl-tree {
                 border-right: 0;
                 border-bottom: 1px solid #e8efe9;
                 max-height: 264px;
             }
+            .tl-pane-resizer { display: none; }
             .dark .tl-tree { border-bottom-color: #334155; }
             .tl-files { max-height: 60vh; }
         }
