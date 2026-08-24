@@ -14,7 +14,7 @@
             @if($unreadCount > 0)
                 <form method="POST" action="{{ route('admin.notifications.read-all') }}">
                     @csrf
-                    <x-admin.button variant="secondary" size="sm" icon="check" type="submit">
+                    <x-admin.button variant="secondary" size="sm" type="submit">
                         Tandai semua dibaca ({{ $unreadCount }})
                     </x-admin.button>
                 </form>
@@ -43,14 +43,13 @@
                                 <x-admin.icon name="eye" :size="16" />
                             </a>
                         @endif
-                        @if(!$n->read_at)
-                            <form method="POST" action="{{ route('admin.notifications.read', $n->id) }}">
-                                @csrf
-                                <button type="submit" class="admin-icon-button text-slate-500 hover:bg-brand-50 hover:text-brand-600" aria-label="Tandai notifikasi sebagai dibaca" title="Tandai dibaca">
-                                    <x-admin.icon name="check" :size="16" />
-                                </button>
-                            </form>
-                        @endif
+                        <form method="POST" action="{{ route('admin.notifications.destroy', $n->id) }}" onsubmit="return confirm('Hapus notifikasi ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="admin-icon-button text-slate-500 hover:bg-danger-50 hover:text-danger-600" aria-label="Hapus notifikasi: {{ $data['title'] ?? 'Notifikasi' }}" title="Hapus notifikasi">
+                                <x-admin.icon name="trash" :size="16" />
+                            </button>
+                        </form>
                     </div>
                 </div>
             @empty

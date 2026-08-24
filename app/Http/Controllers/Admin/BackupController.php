@@ -7,6 +7,7 @@ use App\Jobs\RunBackupJob;
 use App\Jobs\RunRestoreJob;
 use App\Services\FileUploadService;
 use App\Support\ActivityLogger;
+use App\Support\Admin\AdminNotificationCleaner;
 use App\Support\BackupProgress;
 use App\Support\DatabaseBackup;
 use Illuminate\Http\Request;
@@ -185,6 +186,7 @@ class BackupController extends Controller
 
         // Hapus lewat service terpusat agar versi lama objek ikut ter-purge.
         app(FileUploadService::class)->deletePath($relative, DatabaseBackup::diskName());
+        AdminNotificationCleaner::forBackup($relative);
 
         ActivityLogger::log('deleted', 'Hapus cadangan: '.basename($file), 'system');
 
@@ -254,6 +256,7 @@ class BackupController extends Controller
 
             try {
                 app(FileUploadService::class)->deletePath($relative, DatabaseBackup::diskName());
+                AdminNotificationCleaner::forBackup($relative);
                 $deleted++;
             } catch (\Throwable $e) {
                 $failed[] = $file;

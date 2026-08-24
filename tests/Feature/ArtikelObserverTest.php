@@ -112,4 +112,21 @@ class ArtikelObserverTest extends TestCase
 
         $this->assertSame(1, $messages->count(), 'Pesan harus "Artikel ... telah ditayangkan."');
     }
+
+    public function test_notifikasi_artikel_dihapus_bersama_artikelnya(): void
+    {
+        $admin = $this->admin();
+        $artikel = $this->makeArtikel('published');
+
+        $notification = $admin->notifications()->firstOrFail();
+        $this->assertSame($artikel->id, $notification->data['resource_id']);
+
+        $artikel->delete();
+
+        $this->assertSame(
+            0,
+            $admin->fresh()->notifications()->count(),
+            'Notifikasi yang menaut ke artikel terhapus tidak boleh tersisa.'
+        );
+    }
 }

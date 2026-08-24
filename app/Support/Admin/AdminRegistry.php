@@ -56,7 +56,6 @@ class AdminRegistry
                 'icon' => 'building',
                 'items' => [
                     array_merge(self::resource('pengaduan-tata-penataan', 'Pengaduan Tata Penataan', PengaduanTataPenataan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
-                    self::resource('objek-pengawasan', 'Objek Pengawasan', ObjekPengawasan::class, ['nama_perusahaan', 'nama_penanggung_jawab', 'jenis_usaha', 'alamat']),
                     self::resource('pelanggaran', 'Pelanggaran', Pelanggaran::class, ['jenis_pelanggaran', 'keterangan', 'jenis_sanksi_text', 'status_sanksi_text', 'created_at']),
                     self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
                 ],

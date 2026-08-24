@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Support\Admin\AdminNotificationCleaner;
 use App\Services\FileUploadService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -420,6 +421,7 @@ class DatabaseBackup
                 }
 
                 self::deleteFromDisk($disk, $file);
+                AdminNotificationCleaner::forBackup($file);
             }
         } catch (\Throwable $e) {
             // Pembersihan bersifat best-effort; jangan gagalkan backup utama.

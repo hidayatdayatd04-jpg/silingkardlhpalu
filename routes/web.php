@@ -114,6 +114,7 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix(config('app.admi
     Route::get('/notifications/poll', [NotificationController::class, 'poll'])->name('notifications.poll');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // C. Profil / Pengaturan / Bantuan
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

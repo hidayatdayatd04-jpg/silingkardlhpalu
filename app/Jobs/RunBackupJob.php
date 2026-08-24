@@ -66,6 +66,7 @@ class RunBackupJob implements ShouldQueue
                     'color' => 'emerald',
                     'href' => route('admin.backup.index'),
                     'module' => 'system',
+                    'backup_file' => $path,
                 ]);
             }
         } catch (BackupCancelledException $e) {

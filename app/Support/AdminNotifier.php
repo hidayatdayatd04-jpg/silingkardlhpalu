@@ -16,7 +16,7 @@ class AdminNotifier
 {
     /**
      * @param  string  $group   key grup (pengendalian|sampah-lb3|rth|tata-penataan|konten)
-     * @param  array{title:string,message:string,icon?:string,color?:string,href?:string,module?:string}  $payload
+     * @param  array{title:string,message:string,icon?:string,color?:string,href?:string,module?:string,resource_id?:int|string,backup_file?:string}  $payload
      */
     /**
      * Map group keys to actual Spatie role names.

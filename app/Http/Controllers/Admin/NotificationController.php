@@ -85,4 +85,22 @@ class NotificationController extends Controller
 
         return back()->with('success', 'Semua notifikasi ditandai telah dibaca.');
     }
+
+    /**
+     * Hapus satu notifikasi milik akun yang sedang login.
+     */
+    public function destroy(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $notification = $user->notifications()->whereKey($id)->firstOrFail();
+        $notification->delete();
+
+        AdminNotificationFeed::forget($user);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'unread' => $user->unreadNotifications()->count()]);
+        }
+
+        return back()->with('success', 'Notifikasi berhasil dihapus.');
+    }
 }

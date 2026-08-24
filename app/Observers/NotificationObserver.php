@@ -14,6 +14,7 @@ use App\Models\PermohonanPinjamTaman;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\Sosialisasi;
+use App\Support\Admin\AdminNotificationCleaner;
 use App\Support\AdminNotifier;
 use Illuminate\Database\Eloquent\Model;
 
@@ -88,6 +89,34 @@ class NotificationObserver
     }
 
     /**
+     * Jangan tampilkan pemberitahuan yang tautannya mengarah ke data yang
+     * sudah dihapus. Berlaku untuk seluruh resource yang memang mengirim
+     * notifikasi lewat observer ini.
+     */
+    public function deleted(Model $model): void
+    {
+        $resource = match (true) {
+            $model instanceof PengaduanPengendalian => 'pengaduan-pengendalian',
+            $model instanceof PengaduanSampah => 'pengaduan-sampah',
+            $model instanceof PengaduanRth => 'pengaduan-rth',
+            $model instanceof PermohonanRekomendasi => 'permohonan-rekomendasi',
+            $model instanceof PengajuanRintekPertek => 'pengajuan-rintek-pertek',
+            $model instanceof RegistrasiUsahaLb3 => 'registrasi-usaha-lb3',
+            $model instanceof PermohonanPinjamTaman => 'pinjam-taman',
+            $model instanceof PengaduanTataPenataan => 'pengaduan-tata-penataan',
+            $model instanceof Pelanggaran => 'pelanggaran',
+            $model instanceof Sosialisasi => 'sosialisasi',
+            $model instanceof Artikel => 'artikel',
+            $model instanceof DataTanamPohon => 'data-tanam-pohon',
+            default => null,
+        };
+
+        if ($resource !== null) {
+            AdminNotificationCleaner::forResource($resource, $model->getKey());
+        }
+    }
+
+    /**
      * Label status yang mudah dibaca (memakai label() milik enum bila ada).
      */
     protected function statusLabel(mixed $status): string
@@ -120,6 +149,7 @@ class NotificationObserver
             'color' => $color,
             'href' => route('admin.resources.show', [$slug, $id]),
             'module' => $slug,
+            'resource_id' => $id,
         ]);
     }
 }
