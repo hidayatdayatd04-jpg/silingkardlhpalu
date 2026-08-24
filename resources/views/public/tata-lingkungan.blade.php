@@ -55,6 +55,20 @@
                     </div>
 
                     <div class="tl-head-right">
+                        <label class="tl-search" :class="{ 'tl-search--active': isSearching }">
+                            <x-icons.ui name="search" class="tl-search-icon" />
+                            <input
+                                x-model="searchQuery"
+                                @input.debounce.300ms="searchDocuments($event.target.value)"
+                                type="search"
+                                class="tl-search-input"
+                                placeholder="Cari folder atau dokumen"
+                                aria-label="Cari folder atau dokumen Google Drive"
+                                autocomplete="off">
+                            <button x-show="searchQuery !== ''" x-cloak @click="clearSearch()" type="button" class="tl-search-clear" aria-label="Hapus pencarian">
+                                <x-icons.ui name="close" />
+                            </button>
+                        </label>
                         <span class="tl-count" x-show="!loadingFolders" x-cloak>
                             <x-icons.ui name="document" />
                             <span x-text="total.toLocaleString('id-ID')"></span>
@@ -70,7 +84,7 @@
                     {{-- Pohon folder --}}
                     <aside class="tl-tree" aria-label="Daftar folder">
                         <div class="tl-tree-head">
-                            <x-icons.ui name="folder" class="tl-tree-head-icon" />
+                            <span class="tl-tree-head-icon" aria-hidden="true" x-html="folderIconSvg()"></span>
                             <span>{{ __('Folder') }}</span>
                         </div>
 
@@ -84,8 +98,7 @@
                                     @click="selectFolder(root.id)"
                                     class="tl-tree-row tl-tree-row--root"
                                     :class="{ 'tl-tree-row--active': activeFolderId === root.id }">
-                                    <span class="tl-tree-folder-tile">
-                                        <x-icons.ui name="folder" class="tl-folder-icon" />
+                                    <span class="tl-tree-folder-tile" aria-hidden="true" x-html="folderIconSvg()">
                                     </span>
                                     <span class="tl-tree-label" x-text="root.name || 'Tata Lingkungan'"></span>
                                 </button>
@@ -96,23 +109,23 @@
                                             @click="toggleExpand(row.folder.id)"
                                             class="tl-caret"
                                             :class="{ 'tl-caret--open': expandedIds[row.folder.id] }"
-                                            x-show="childrenCount(row.folder.id) > 0"
-                                            aria-label="Perluas folder">
+                                            x-show="visibleChildrenCount(row.folder.id) > 0"
+                                            :aria-label="expandedIds[row.folder.id] ? 'Tutup subfolder' : 'Perluas subfolder'"
+                                            :aria-expanded="expandedIds[row.folder.id] ? 'true' : 'false'">
                                             <x-icons.ui name="chevron-right" />
                                         </button>
                                         <button
                                             @click="selectFolder(row.folder.id)"
                                             class="tl-tree-row"
                                             :class="{ 'tl-tree-row--active': activeFolderId === row.folder.id }">
-                                            <span class="tl-tree-folder-tile">
-                                                <x-icons.ui name="folder" class="tl-folder-icon" />
+                                            <span class="tl-tree-folder-tile" aria-hidden="true" x-html="folderIconSvg()">
                                             </span>
                                             <span class="tl-tree-label" x-text="row.folder.name"></span>
                                         </button>
                                     </div>
                                 </template>
 
-                                <p x-show="orderedRows().length === 0" x-cloak class="tl-tree-empty">{{ __('Tidak ada subfolder') }}</p>
+                                <p x-show="orderedRows().length === 0" x-cloak class="tl-tree-empty" x-text="isSearching ? 'Folder tidak ditemukan.' : 'Tidak ada subfolder'"></p>
                             </div>
                         </template>
                     </aside>
@@ -126,6 +139,14 @@
                             </template>
                         </div>
 
+                        <div x-show="!loadingFolders && !loading && files.length > 0" x-cloak class="tl-files-summary">
+                            <p>
+                                <span x-show="isSearching">Hasil untuk “<span x-text="searchTerm"></span>”</span>
+                                <span x-show="!isSearching" x-text="activeFolderName || root.name"></span>
+                            </p>
+                            <span x-text="`${total.toLocaleString('id-ID')} dokumen`"></span>
+                        </div>
+
                         {{-- Daftar --}}
                         <template x-if="!loadingFolders && files.length > 0">
                             <div>
@@ -134,8 +155,14 @@
                                         @click="openPreview(file)"
                                         class="tl-file-row"
                                         :class="{ 'tl-file-row--active': selectedFile && selectedFile.id === file.id }">
-                                        <span class="tl-file-icon" :class="iconClass(file.category)" x-html="iconSvg(file.category)"></span>
-                                        <span class="tl-file-name" x-text="file.name" :title="file.name"></span>
+                                        <span class="tl-file-icon" aria-hidden="true" :class="iconClass(file.category)" x-html="iconSvg(file.category)"></span>
+                                        <span class="tl-file-copy">
+                                            <span class="tl-file-name" x-text="file.name" :title="file.name"></span>
+                                            <span class="tl-file-meta">
+                                                <span class="tl-file-kind" :class="`tl-file-kind--${file.category}`" x-text="categoryLabel(file.category)"></span>
+                                                <span class="tl-file-path" x-show="isSearching" x-cloak x-text="filePath(file)"></span>
+                                            </span>
+                                        </span>
                                         <span class="tl-file-eye">
                                             <x-icons.ui name="eye" />
                                         </span>
@@ -149,7 +176,7 @@
                             <span class="tl-state-icon tl-state-icon--sm">
                                 <x-icons.ui name="document" />
                             </span>
-                            <p class="tl-files-empty-text">{{ __('Folder ini belum memiliki dokumen.') }}</p>
+                            <p class="tl-files-empty-text" x-text="isSearching ? 'Dokumen yang dicari tidak ditemukan.' : 'Folder ini belum memiliki dokumen.'"></p>
                         </div>
 
                         {{-- Sentinel infinite scroll --}}
@@ -235,27 +262,15 @@
         .tl-explorer {
             position: relative;
             isolation: isolate;
-            background: linear-gradient(145deg, #ffffff 0%, #fbfefc 100%);
+            background: #ffffff;
             border: 1px solid rgba(22, 137, 83, .13);
-            border-radius: 28px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(13,43,29,0.04), 0 28px 54px -32px rgba(13,43,29,0.26);
-        }
-        .tl-explorer::before {
-            content: '';
-            position: absolute;
-            z-index: -1;
-            right: -7rem;
-            top: -9rem;
-            width: 20rem;
-            height: 20rem;
-            border-radius: 999px;
-            background: radial-gradient(circle, rgba(34, 183, 138, .11), transparent 66%);
-            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(13,43,29,0.06);
         }
         .tl-accent {
             height: 3px;
-            background: linear-gradient(90deg, #10b981, #0dabce, #178a53);
+            background: #178a53;
         }
 
         /* ── Header ── */
@@ -267,17 +282,17 @@
             flex-wrap: wrap;
             padding: 18px 22px;
             border-bottom: 1px solid #e8efe9;
-            background: linear-gradient(180deg, #fbfdfc 0%, #f7faf8 100%);
+            background: #fbfdfc;
         }
         .tl-head-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
         .tl-head-logo {
             flex-shrink: 0;
             width: 46px; height: 46px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #178a53, #146a44);
+            background: #146a44;
             color: #fff;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 18px -4px rgba(20,106,68,0.4);
+            box-shadow: 0 3px 8px rgba(20,106,68,0.22);
         }
         .tl-head-logo svg { width: 22px; height: 22px; }
         .tl-head-title {
@@ -308,6 +323,27 @@
         .tl-crumb--current { color: #12201a; font-weight: 700; }
         .tl-crumb-sep { width: 12px; height: 12px; color: #b6c2bb; flex-shrink: 0; }
         .tl-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .tl-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: min(20rem, 32vw);
+            min-height: 42px;
+            padding: 0 8px 0 12px;
+            border: 1px solid #d9e5de;
+            border-radius: 12px;
+            background: #fff;
+            color: #63756b;
+            transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+        }
+        .tl-search:focus-within,
+        .tl-search--active { border-color: #178a53; box-shadow: 0 0 0 3px rgba(23,138,83,.12); }
+        .tl-search-icon { width: 16px; height: 16px; flex: 0 0 auto; }
+        .tl-search-input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #17251e; font: inherit; font-size: 13px; font-weight: 500; }
+        .tl-search-input::placeholder { color: #718279; opacity: 1; }
+        .tl-search-clear { display: grid; width: 28px; height: 28px; place-items: center; flex: 0 0 auto; border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; }
+        .tl-search-clear:hover { background: #edf4ef; color: #146a44; }
+        .tl-search-clear svg { width: 15px; height: 15px; }
         .tl-count {
             display: inline-flex;
             align-items: center;
@@ -322,7 +358,7 @@
         }
         .tl-count svg { width: 14px; height: 14px; }
         .tl-refresh {
-            width: 36px; height: 36px;
+            width: 42px; height: 42px;
             border-radius: 12px;
             border: 1px solid #e2e8f0;
             background: #fff;
@@ -402,9 +438,9 @@
         }
         .tl-tree-row:hover { background: #edf4ef; transform: translateX(2px); }
         .tl-tree-row--active {
-            background: linear-gradient(135deg, #178a53, #146a44);
+            background: #146a44;
             color: #fff;
-            box-shadow: 0 6px 14px -4px rgba(20,106,68,0.45);
+            box-shadow: none;
         }
         .tl-tree-row--root { font-weight: 700; margin-bottom: 8px; }
         .tl-tree-folder-tile {
@@ -415,9 +451,11 @@
             display: flex; align-items: center; justify-content: center;
             transition: background .15s ease;
         }
-        .tl-folder-icon { width: 15px; height: 15px; color: #f59e0b; }
+        .tl-tree-head-icon { display: inline-flex; width: 14px; height: 14px; color: #10b981; }
+        .tl-tree-head-icon svg { width: 14px; height: 14px; }
+        .tl-tree-folder-tile svg { width: 17px; height: 17px; color: #f59e0b; }
         .tl-tree-row--active .tl-tree-folder-tile { background: rgba(255,255,255,0.18); }
-        .tl-tree-row--active .tl-folder-icon { color: #fde68a; }
+        .tl-tree-row--active .tl-tree-folder-tile svg { color: #fde68a; }
         .tl-tree-label {
             font-size: 13px;
             font-weight: 600;
@@ -439,6 +477,9 @@
         .tl-files::-webkit-scrollbar { width: 6px; }
         .tl-files::-webkit-scrollbar-thumb { background: #c8d6cd; border-radius: 9999px; }
         .tl-files::-webkit-scrollbar-track { background: transparent; }
+        .tl-files-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 10px 12px; color: #63756b; font-size: 12px; font-weight: 600; }
+        .tl-files-summary p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #31463a; }
+        .tl-files-summary > span { flex: 0 0 auto; color: #63756b; }
         .tl-file-row {
             width: 100%;
             display: flex;
@@ -462,6 +503,7 @@
             box-shadow: inset 0 0 0 1px rgba(15,23,42,0.04);
         }
         .tl-file-icon svg { width: 20px; height: 20px; }
+        .tl-file-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
         .tl-file-name {
             flex: 1;
             min-width: 0;
@@ -475,6 +517,13 @@
             overflow: hidden;
             word-break: break-word;
         }
+        .tl-file-meta { display: flex; min-width: 0; align-items: center; gap: 7px; color: #63756b; font-size: 11px; line-height: 1.2; }
+        .tl-file-kind { border-radius: 999px; background: #eef2f0; color: #53645b; padding: 3px 6px; font-size: 10px; font-weight: 700; line-height: 1; }
+        .tl-file-kind--pdf { background: #fef2f2; color: #b91c1c; }
+        .tl-file-kind--word { background: #eff6ff; color: #1d4ed8; }
+        .tl-file-kind--excel { background: #ecfdf5; color: #047857; }
+        .tl-file-kind--image { background: #f5f3ff; color: #6d28d9; }
+        .tl-file-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .tl-file-eye {
             flex-shrink: 0;
             width: 28px; height: 28px;
@@ -534,13 +583,13 @@
             width: 60px; height: 60px;
             border-radius: 20px;
             display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #178a53, #146a44);
+            background: #146a44;
             color: #fff;
-            box-shadow: 0 12px 26px -8px rgba(20,106,68,0.45);
+            box-shadow: 0 4px 8px rgba(20,106,68,0.2);
             margin-bottom: 8px;
         }
         .tl-state-icon svg { width: 28px; height: 28px; }
-        .tl-state-icon--error { background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 12px 26px -8px rgba(185,28,28,0.45); }
+        .tl-state-icon--error { background: #b91c1c; box-shadow: 0 4px 8px rgba(185,28,28,0.2); }
         .tl-state-title { font-size: 17px; font-weight: 700; color: #12201a; }
         .tl-state-desc { font-size: 13px; color: #5b6b63; max-width: 440px; line-height: 1.6; }
 
@@ -559,7 +608,7 @@
         .tl-btn svg { width: 15px; height: 15px; }
         .tl-btn--sm { padding: 8px 14px; font-size: 12.5px; }
         .tl-btn--primary {
-            background: linear-gradient(135deg, #178a53, #146a44);
+            background: #146a44;
             color: #fff;
             box-shadow: 0 4px 10px -2px rgba(20,106,68,0.35);
         }
@@ -671,6 +720,13 @@
         .dark button.tl-crumb:hover { background: rgba(30,165,103,0.15); color: #6ee7b7; }
         .dark .tl-crumb--current { color: #e2e8f0; }
         .dark .tl-count { background: rgba(30,165,103,0.12); border-color: rgba(110,231,183,0.22); color: #6ee7b7; }
+        .dark .tl-search { background: #0f172a; border-color: #334155; color: #94a3b8; }
+        .dark .tl-search:focus-within,
+        .dark .tl-search--active { border-color: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,.15); }
+        .dark .tl-search-input { color: #e2e8f0; }
+        .dark .tl-search-input::placeholder { color: #94a3b8; }
+        .dark .tl-search-clear { color: #94a3b8; }
+        .dark .tl-search-clear:hover { background: rgba(148,163,184,0.12); color: #6ee7b7; }
         .dark .tl-refresh { background: #0f172a; border-color: #334155; color: #94a3b8; }
         .dark .tl-refresh:hover { border-color: #1ea567; color: #6ee7b7; background: rgba(30,165,103,0.08); }
         .dark .tl-tree { background: #0f172a; border-color: #334155; scrollbar-color: #334155 transparent; }
@@ -679,7 +735,7 @@
         .dark .tl-tree-head-icon { color: #34d399; }
         .dark .tl-tree-row:hover { background: rgba(148,163,184,0.12); }
         .dark .tl-tree-folder-tile { background: rgba(245,158,11,0.14); }
-        .dark .tl-folder-icon { color: #fbbf24; }
+        .dark .tl-tree-folder-tile svg { color: #fbbf24; }
         .dark .tl-tree-label { color: #e2e8f0; }
         .dark .tl-caret:hover { color: #6ee7b7; background: rgba(148,163,184,0.12); }
         .dark .tl-tree-empty { color: #64748b; }
@@ -688,6 +744,15 @@
         .dark .tl-file-row:hover { background: rgba(148,163,184,0.12); box-shadow: inset 0 0 0 1px #334155; }
         .dark .tl-file-row--active { background: rgba(30,165,103,0.15); box-shadow: inset 0 0 0 1.5px rgba(110,231,183,0.35); }
         .dark .tl-file-name { color: #e2e8f0; }
+        .dark .tl-files-summary p { color: #d8e5dd; }
+        .dark .tl-files-summary,
+        .dark .tl-files-summary > span,
+        .dark .tl-file-meta { color: #94a3b8; }
+        .dark .tl-file-kind { background: rgba(148,163,184,.14); color: #cbd5e1; }
+        .dark .tl-file-kind--pdf { background: rgba(248,113,113,.14); color: #fca5a5; }
+        .dark .tl-file-kind--word { background: rgba(96,165,250,.14); color: #93c5fd; }
+        .dark .tl-file-kind--excel { background: rgba(52,211,153,.14); color: #6ee7b7; }
+        .dark .tl-file-kind--image { background: rgba(167,139,250,.14); color: #c4b5fd; }
         .dark .tl-file-eye { color: #64748b; }
         .dark .tl-file-row--active .tl-file-eye { color: #6ee7b7; background: rgba(30,165,103,0.2); }
         .dark .tl-file-skeleton { background: #263449; }
@@ -721,6 +786,12 @@
         @media (max-width: 640px) {
             .tl-page-shell::before { left: -18rem; }
             .tl-head { padding: 14px 16px; }
+            .tl-head-left { flex-basis: 100%; }
+            .tl-head-right { width: 100%; }
+            .tl-search { width: auto; flex: 1; }
+            .tl-count { display: none !important; }
+            .tl-file-row { padding: 11px 10px; }
+            .tl-files-summary { padding-inline: 4px; }
             .tl-modal-panel { margin-top: 0; width: 100%; height: 100vh; border-radius: 0; }
         }
         @media (prefers-reduced-motion: reduce) {

@@ -17,6 +17,8 @@ export type CategoryKey =
     | 'archive'
     | 'other';
 
+type CustomIconCategory = 'pdf' | 'word' | 'excel' | 'image' | 'other';
+
 export interface DriveFolder {
     id: string;
     name: string;
@@ -56,6 +58,7 @@ export interface FilesResponse {
     page: number;
     per_page: number;
     has_more: boolean;
+    search?: string;
     cached_at: string | null;
 }
 
@@ -66,7 +69,9 @@ interface IconSpec {
     svg: string;
 }
 
-const CATEGORY_ICONS: Record<CategoryKey, IconSpec> = {
+const FOLDER_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 7.5A2.25 2.25 0 0 1 6 5.25h4.12l1.7 1.7H18A2.25 2.25 0 0 1 20.25 9.2v7.05A2.25 2.25 0 0 1 18 18.5H6a2.25 2.25 0 0 1-2.25-2.25V7.5Z"/><path d="M3.9 9.5h16.2"/></svg>';
+
+const CATEGORY_ICONS: Record<CustomIconCategory, IconSpec> = {
     pdf: {
         label: 'PDF',
         bg: 'bg-red-50 dark:bg-red-500/10',
@@ -85,38 +90,14 @@ const CATEGORY_ICONS: Record<CategoryKey, IconSpec> = {
         color: 'text-emerald-600 dark:text-emerald-400',
         svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 16 6-6M15 16 9 10"/></svg>',
     },
-    powerpoint: {
-        label: 'PowerPoint',
-        bg: 'bg-orange-50 dark:bg-orange-500/10',
-        color: 'text-orange-600 dark:text-orange-400',
-        svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h3a2 2 0 0 1 0 4H9v4"/></svg>',
-    },
     image: {
         label: 'Gambar',
         bg: 'bg-violet-50 dark:bg-violet-500/10',
         color: 'text-violet-600 dark:text-violet-400',
         svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
     },
-    video: {
-        label: 'Video',
-        bg: 'bg-rose-50 dark:bg-rose-500/10',
-        color: 'text-rose-600 dark:text-rose-400',
-        svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
-    },
-    audio: {
-        label: 'Audio',
-        bg: 'bg-amber-50 dark:bg-amber-500/10',
-        color: 'text-amber-600 dark:text-amber-400',
-        svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-    },
-    archive: {
-        label: 'Arsip',
-        bg: 'bg-slate-100 dark:bg-slate-700/40',
-        color: 'text-slate-600 dark:text-slate-300',
-        svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>',
-    },
     other: {
-        label: 'Dokumen',
+        label: 'File',
         bg: 'bg-teal-50 dark:bg-teal-500/10',
         color: 'text-teal-600 dark:text-teal-400',
         svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
@@ -136,6 +117,7 @@ export function tataLingkunganExplorer() {
         root: { id: '', name: '' } as RootInfo,
         folders: [] as DriveFolder[],
         expandedIds: {} as Record<string, boolean>,
+        searchQuery: '',
 
         activeFolderId: '',
         activeFolderName: '',
@@ -145,6 +127,7 @@ export function tataLingkunganExplorer() {
         page: 1,
         perPage: 60,
         hasMore: false,
+        fileRequestId: 0,
 
         loading: false,
         loadingFolders: true,
@@ -211,7 +194,9 @@ export function tataLingkunganExplorer() {
         },
 
         async fetchFiles(reset: boolean) {
-            if (this.loading || !this.activeFolderId) return;
+            if ((!reset && this.loading) || !this.activeFolderId) return;
+
+            const requestId = ++this.fileRequestId;
             this.loading = true;
             this.error = null;
 
@@ -226,9 +211,15 @@ export function tataLingkunganExplorer() {
                 per_page: String(this.perPage),
             });
 
+            if (this.searchTerm !== '') {
+                params.set('search', this.searchTerm);
+            }
+
             try {
                 const response = await window.axios.get<FilesResponse>('/api/tata-lingkungan/files', { params });
                 const data: FilesResponse = response.data;
+
+                if (requestId !== this.fileRequestId) return;
 
                 if (data.error) {
                     this.setError(data.error, data.message ?? 'Terjadi kesalahan.');
@@ -240,6 +231,7 @@ export function tataLingkunganExplorer() {
                 this.hasMore = data.has_more;
                 this.page = data.page + 1;
             } catch (err) {
+                if (requestId !== this.fileRequestId) return;
                 const status = (err as { response?: { status?: number } }).response?.status;
                 this.setError(
                     status === 503 ? 'not_configured' : 'drive_unavailable',
@@ -248,7 +240,9 @@ export function tataLingkunganExplorer() {
                         : 'Gagal memuat daftar file. Silakan coba lagi.',
                 );
             } finally {
-                this.loading = false;
+                if (requestId === this.fileRequestId) {
+                    this.loading = false;
+                }
             }
         },
 
@@ -260,6 +254,21 @@ export function tataLingkunganExplorer() {
         loadMore() {
             if (!this.hasMore || this.loading || this.error) return;
             this.fetchFiles(false);
+        },
+
+        searchDocuments(value: string) {
+            this.searchQuery = value;
+            this.selectedFile = null;
+            this.previewUrl = '';
+            this.fetchFiles(true);
+        },
+
+        clearSearch() {
+            if (this.searchQuery === '') return;
+            this.searchQuery = '';
+            this.selectedFile = null;
+            this.previewUrl = '';
+            this.fetchFiles(true);
         },
 
         async retry() {
@@ -275,7 +284,6 @@ export function tataLingkunganExplorer() {
             this.previewUrl = '';
             this.error = null;
             this.loadingFolders = true;
-            this.loading = true;
             try {
                 const response = await window.axios.get<FoldersResponse>('/api/tata-lingkungan/folders', {
                     params: { refresh: true },
@@ -289,6 +297,10 @@ export function tataLingkunganExplorer() {
 
                 this.root = data.root;
                 this.folders = data.folders;
+                if (!this.activeFolderId || ![data.root.id, ...data.folders.map((folder) => folder.id)].includes(this.activeFolderId)) {
+                    this.activeFolderId = data.root.id;
+                    this.activeFolderName = data.root.name;
+                }
                 await this.fetchFiles(true);
             } catch (err) {
                 const status = (err as { response?: { status?: number } }).response?.status;
@@ -298,7 +310,6 @@ export function tataLingkunganExplorer() {
                 );
             } finally {
                 this.loadingFolders = false;
-                this.loading = false;
             }
         },
 
@@ -313,12 +324,37 @@ export function tataLingkunganExplorer() {
             return this.childrenOf(folderId).length;
         },
 
+        get searchTerm(): string {
+            return this.searchQuery.trim();
+        },
+
+        get isSearching(): boolean {
+            return this.searchTerm !== '';
+        },
+
+        folderMatchesSearch(folder: DriveFolder): boolean {
+            return this.searchTerm === '' || folder.name.toLocaleLowerCase('id-ID').includes(this.searchTerm.toLocaleLowerCase('id-ID'));
+        },
+
+        folderHasSearchMatch(folder: DriveFolder): boolean {
+            return this.childrenOf(folder.id).some((child) => this.folderMatchesSearch(child) || this.folderHasSearchMatch(child));
+        },
+
+        isFolderVisible(folder: DriveFolder): boolean {
+            return !this.isSearching || this.folderMatchesSearch(folder) || this.folderHasSearchMatch(folder);
+        },
+
+        visibleChildrenCount(folderId: string): number {
+            return this.childrenOf(folderId).filter((folder) => this.isFolderVisible(folder)).length;
+        },
+
         orderedRows(): FolderRow[] {
             const rows: FolderRow[] = [];
             const walk = (parentId: string, depth: number) => {
                 for (const folder of this.childrenOf(parentId)) {
+                    if (!this.isFolderVisible(folder)) continue;
                     rows.push({ folder, depth });
-                    if (this.expandedIds[folder.id]) {
+                    if (this.isSearching || this.expandedIds[folder.id]) {
                         walk(folder.id, depth + 1);
                     }
                 }
@@ -336,7 +372,8 @@ export function tataLingkunganExplorer() {
         },
 
         selectFolder(folderId: string) {
-            if (this.activeFolderId === folderId && this.files.length > 0) return;
+            if (this.activeFolderId === folderId && this.files.length > 0 && !this.isSearching) return;
+            this.searchQuery = '';
             this.activeFolderId = folderId;
             this.expandedIds[folderId] = true;
 
@@ -407,8 +444,14 @@ export function tataLingkunganExplorer() {
         },
 
         /* ── Helpers ── */
+        iconCategory(category: CategoryKey): CustomIconCategory {
+            return ['pdf', 'word', 'excel', 'image'].includes(category)
+                ? category as CustomIconCategory
+                : 'other';
+        },
+
         iconSpec(category: CategoryKey): IconSpec {
-            return CATEGORY_ICONS[category] ?? CATEGORY_ICONS.other;
+            return CATEGORY_ICONS[this.iconCategory(category)];
         },
 
         iconSvg(category: CategoryKey): string {
@@ -418,6 +461,21 @@ export function tataLingkunganExplorer() {
         iconClass(category: CategoryKey): string {
             const spec = this.iconSpec(category);
             return `${spec.bg} ${spec.color}`;
+        },
+
+        categoryLabel(category: CategoryKey): string {
+            return this.iconSpec(category).label;
+        },
+
+        folderIconSvg(): string {
+            return FOLDER_ICON_SVG;
+        },
+
+        filePath(file: DriveFile): string {
+            const parts = file.path.split('/');
+            parts.pop();
+
+            return parts.join(' / ') || this.root.name;
         },
 
         /* ── Empty state flags ── */

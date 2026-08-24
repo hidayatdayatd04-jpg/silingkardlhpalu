@@ -20,7 +20,7 @@ class TataLingkunganController extends Controller
     /**
      * API publik: struktur folder Google Drive (untuk pohon folder).
      */
-    public function folders(): JsonResponse
+    public function folders(Request $request): JsonResponse
     {
         if (! $this->drive->isConfigured()) {
             return response()->json([
@@ -30,7 +30,7 @@ class TataLingkunganController extends Controller
         }
 
         try {
-            $structure = $this->drive->listStructure();
+            $structure = $this->drive->listStructure($request->boolean('refresh') && auth()->check());
         } catch (\Throwable $e) {
             report($e);
 
@@ -77,14 +77,38 @@ class TataLingkunganController extends Controller
 
         $rootId = $structure['root']['id'];
         $folderId = (string) $request->input('folder_id', $rootId);
+        $search = mb_substr(trim((string) $request->input('search', '')), 0, 120);
 
-        $list = array_values(array_filter(
-            $structure['files'],
-            fn ($f) => ($f['folder_id'] ?? null) === $folderId
-        ));
+        $list = array_values(array_filter($structure['files'], function (array $file) use ($folderId, $search): bool {
+            if ($search === '') {
+                return ($file['folder_id'] ?? null) === $folderId;
+            }
 
-        // Urutkan berdasarkan nama (case-insensitive)
-        usort($list, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+            $needle = mb_strtolower($search);
+            $haystack = mb_strtolower(implode(' ', [
+                $file['name'] ?? '',
+                $file['path'] ?? '',
+                $file['extension'] ?? '',
+            ]));
+
+            return str_contains($haystack, $needle);
+        }));
+
+        // Saat mencari, nama yang diawali kata kunci tampil lebih dahulu;
+        // setelah itu tetap diurutkan menurut nama agar mudah dipindai.
+        usort($list, function (array $a, array $b) use ($search): int {
+            if ($search !== '') {
+                $needle = mb_strtolower($search);
+                $aStartsWith = str_starts_with(mb_strtolower($a['name'] ?? ''), $needle);
+                $bStartsWith = str_starts_with(mb_strtolower($b['name'] ?? ''), $needle);
+
+                if ($aStartsWith !== $bStartsWith) {
+                    return $aStartsWith ? -1 : 1;
+                }
+            }
+
+            return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+        });
 
         $total = count($list);
         $perPage = min(max((int) $request->input('per_page', 60), 1), 200);
@@ -99,6 +123,7 @@ class TataLingkunganController extends Controller
             'page' => $page,
             'per_page' => $perPage,
             'has_more' => ($offset + count($paged)) < $total,
+            'search' => $search,
             'cached_at' => $structure['fetched_at'] ?? null,
         ]);
     }

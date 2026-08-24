@@ -226,7 +226,10 @@ class GoogleDriveService
                 'webViewLink' => $item['webViewLink'] ?? null,
                 'iconLink' => $item['iconLink'] ?? null,
                 'thumbnailLink' => $item['thumbnailLink'] ?? null,
-                'category' => $this->categorize($item['mimeType'] ?? ''),
+                'category' => $this->categorize(
+                    $item['mimeType'] ?? '',
+                    $item['fileExtension'] ?? null,
+                ),
             ];
         }
 
@@ -236,7 +239,7 @@ class GoogleDriveService
     /**
      * Kategorikan tipe file untuk ikon (kunci const CATEGORIES).
      */
-    public function categorize(string $mimeType): string
+    public function categorize(string $mimeType, ?string $extension = null): string
     {
         foreach (self::CATEGORIES as $key => $def) {
             if (isset($def['patterns']) && in_array($mimeType, $def['patterns'], true)) {
@@ -251,7 +254,20 @@ class GoogleDriveService
             }
         }
 
-        return 'other';
+        // Sebagian file unggahan Drive tidak mengirim MIME type yang spesifik.
+        // Ekstensi menjadi fallback agar ikon tetap sesuai tanpa aturan nama
+        // folder atau daftar file yang ditulis manual.
+        return match (strtolower((string) $extension)) {
+            'pdf' => 'pdf',
+            'doc', 'docx', 'odt', 'rtf' => 'word',
+            'xls', 'xlsx', 'ods', 'csv' => 'excel',
+            'ppt', 'pptx', 'odp' => 'powerpoint',
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tif', 'tiff', 'heic' => 'image',
+            'mp4', 'webm', 'mov', 'avi', 'mkv' => 'video',
+            'mp3', 'wav', 'm4a', 'ogg', 'aac', 'flac' => 'audio',
+            'zip', 'rar', '7z', 'gz', 'tar' => 'archive',
+            default => 'other',
+        };
     }
 
     /**
