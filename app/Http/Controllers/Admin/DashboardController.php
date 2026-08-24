@@ -34,7 +34,9 @@ class DashboardController extends Controller
             $allowedGroups,
         ));
 
-        $cacheKey = 'dashboard:' . $user->id . ':' . md5(implode(',', $allowedGroups));
+        // Versi baru membuat dashboard langsung mengambil angka kunjungan yang
+        // sudah di-reset, tanpa menunggu cache dashboard versi lama kedaluwarsa.
+        $cacheKey = 'dashboard:v2:' . $user->id . ':' . md5(implode(',', $allowedGroups));
         $cached = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $bidangValues) {
             $agg = $this->aggregateLaporan($bidangValues);
 
@@ -417,4 +419,3 @@ class DashboardController extends Controller
         return $sum;
     }
 }
-

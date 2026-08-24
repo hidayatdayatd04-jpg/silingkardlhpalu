@@ -18,6 +18,12 @@ use Illuminate\Support\Facades\Schema;
 
 class StatistikService
 {
+    /**
+     * Versi key dinaikkan saat data kunjungan di-reset agar cache deployment
+     * sebelumnya tidak menampilkan angka lama sampai masa cache berakhir.
+     */
+    public const SUMMARY_CACHE_KEY = 'statistik:summary:v2';
+
     private static array $tableCache = [];
 
     private function hasTableCached(string $table): bool
@@ -103,7 +109,7 @@ class StatistikService
     public function summary(): array
     {
         // Ringkasan bersifat statistik — cache 15 menit agar tidak query tiap request.
-        return Cache::remember('statistik:summary', now()->addMinutes(15), function () {
+        return Cache::remember(self::SUMMARY_CACHE_KEY, now()->addMinutes(15), function () {
             return [
                 'pengunjung_hari_ini' => $this->pengunjungHariIni(),
                 'total_pengunjung' => $this->totalPengunjung(),

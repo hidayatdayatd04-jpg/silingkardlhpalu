@@ -50,7 +50,9 @@ class TrackWebsiteVisit
 
         // DB berada di host remote — hindari query firstOrCreate pada setiap
         // request. Cukup catat sekali per sesi per hari (cache 1 jam).
-        $throttleKey = 'visit:tracked:' . $sessionId . ':' . today()->toDateString();
+        // Versi baru memastikan cache throttle sebelum reset tidak menghalangi
+        // pencatatan kunjungan baru setelah data statistik dikosongkan.
+        $throttleKey = 'visit:tracked:v2:' . $sessionId . ':' . today()->toDateString();
 
         if (! Cache::has($throttleKey)) {
             WebsiteVisit::query()->firstOrCreate([
