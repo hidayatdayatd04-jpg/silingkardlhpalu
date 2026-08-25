@@ -43,7 +43,14 @@ class KomentarNotifikasiTest extends TestCase
         $response->assertCreated();
         $this->assertSame(1, $this->countNotifications($admin, 'Komentar Artikel Baru'));
 
-        $notif = $admin->notifications()->first();
+        // Fixture artikel published ikut memicu notifikasi observer
+        // ("Artikel ... telah ditayangkan"), jadi ambil notifikasi komentar
+        // berdasarkan judulnya — bukan sekadar notifikasi terbaru.
+        $notif = $admin->notifications()
+            ->where('data->title', 'Komentar Artikel Baru')
+            ->latest()
+            ->first();
+        $this->assertNotNull($notif);
         $this->assertStringContainsString('Budi', (string) $notif->data['message']);
         $this->assertStringContainsString($artikel->judul, (string) $notif->data['message']);
     }

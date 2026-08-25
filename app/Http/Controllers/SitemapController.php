@@ -77,6 +77,13 @@ class SitemapController extends Controller
      */
     public static function regenerateStaticFile(): void
     {
+        // Jangan pernah menulis file fisik saat pengujian — DB tes berisi
+        // fixture, tanpa guard ini public/sitemap.xml di repo ikut tertimpa
+        // URL artikel uji setiap suite berjalan.
+        if (app()->environment('testing')) {
+            return;
+        }
+
         try {
             $xml = self::buildXml();
             $path = public_path('sitemap.xml');
