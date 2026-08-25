@@ -3,16 +3,17 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Schema;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
     /**
-     * Skema hanya perlu dimigrasi sekali per proses tes. Dengan DB tes
-     * sqlite :memory: (phpunit.xml), migrasi ini membuat seluruh tabel
-     * sehingga suite tidak lagi bergantung pada database .env yang bisa
-     * jadi database remote/produksi.
+     * Bootstrap skema hanya untuk database yang benar-benar kosong (belum
+     * ada tabel migrasi) — mis. database khusus pengujian. Database dari
+     * .env yang sudah ter-migrasi (termasuk produksi Neon) tidak pernah
+     * disentuh migrasi/seeder dari suite tes.
      */
     protected static bool $schemaMigrated = false;
 
@@ -21,10 +22,15 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         if (! static::$schemaMigrated) {
-            $this->artisan('migrate', ['--force' => true])->run();
-            // Role Spatie ('admin', 'bidang-*', dst.) dibutuhkan hampir semua
-            // tes fitur — seed terkontrol, tanpa data dummy lainnya.
-            $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class, '--force' => true])->run();
+            $migrationsTable = (string) config('database.migrations.table', 'migrations');
+
+            if (! Schema::hasTable($migrationsTable)) {
+                $this->artisan('migrate', ['--force' => true])->run();
+                // Role Spatie ('admin', 'bidang-*', dst.) dibutuhkan hampir
+                // semua tes fitur.
+                $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class, '--force' => true])->run();
+            }
+
             static::$schemaMigrated = true;
         }
     }
