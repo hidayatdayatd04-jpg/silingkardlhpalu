@@ -34,7 +34,7 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="SILINGKAR DLH Kota Palu">
+    <meta property="og:site_name" content="SILINGKAR | Dinas Lingkungan Hidup Kota Palu">
     <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:title" content="@yield('title', 'SILINGKAR DLH Kota Palu')">
     <meta property="og:description" content="@yield('description', 'Portal SILINGKAR Dinas Lingkungan Hidup Kota Palu - layanan multi-bidang: pengendalian lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan masyarakat.')">
@@ -59,7 +59,7 @@
             $websiteJsonLd = json_encode([
                 '@context'      => 'https://schema.org',
                 '@type'         => 'WebSite',
-                'name'          => 'Dinas Lingkungan Hidup Kota Palu',
+                'name'          => 'SILINGKAR | Dinas Lingkungan Hidup Kota Palu',
                 'alternateName' => ['DLH Kota Palu', 'SILINGKAR DLH Kota Palu'],
                 'url'           => $canonicalUrl,
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

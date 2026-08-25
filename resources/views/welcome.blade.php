@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'SILINGKAR DLH Kota Palu | Dinas Lingkungan Hidup Kota Palu')
+@section('title', 'Beranda - Dinas Lingkungan Hidup Kota Palu')
 @section('description', 'Selamat datang di Portal SILINGKAR DLH Kota Palu — Sistem Informasi Lingkungan dan Kebersihan Dinas Lingkungan Hidup Kota Palu. Akses layanan multi-bidang: pengaduan lingkungan, pengelolaan sampah & LB3, ruang terbuka hijau, pelacakan armada, dan survei kepuasan.')
 @section('full_width', '')
 
