@@ -13,6 +13,10 @@ namespace App\Support\Admin;
  * 2. Host berubah — mis. baris lama tersimpan dengan host non-www
  *    (https://domain.tld/...) sementara situs live diakses lewat www
  *    (https://www.domain.tld/...), sehingga klik tidak membawa sesi login.
+ * 3. Host rusak — baris lama tersimpan saat APP_URL masih salah konfigurasi,
+ *    mis. host tanpa TLD (https://domain/admin/...). Host seperti ini tak
+ *    akan pernah cocok dengan APP_URL mana pun; segmen legacy '/admin'
+ *    menjadi penanda bahwa href tersebut buatan panel ini sendiri.
  *
  * Helper ini menulis ulang href saat DIRENDER — bukan saat disimpan:
  * segmen legacy ditulis ulang ke prefix aktif, dan URL milik aplikasi
@@ -32,6 +36,8 @@ class AdminUrl
      * - '#' / kosong / skema non-http(s) / tautan domain lain: apa adanya.
      * - URL internal absolut: diringkas jadi path relatif-root, lalu segmen
      *   legacy '/admin' ditulis ulang ke ADMIN_PATH aktif (bila berbeda).
+     * - Host luar yang kebetulan membawa segmen legacy '/admin' tetap
+     *   dinormalisasi: segmen itu hanya pernah dipakai panel ini.
      */
     public static function normalizeLegacyHref(?string $href): string
     {
@@ -51,13 +57,21 @@ class AdminUrl
             return $href;
         }
 
-        if (is_string($host) && ! self::isInternalHost(strtolower($host))) {
-            return $href;
-        }
-
         $path = parse_url($href, PHP_URL_PATH);
 
         if (! is_string($path) || $path === '') {
+            return $href;
+        }
+
+        $segments = explode('/', ltrim($path, '/'));
+        $isLegacy = ($segments[0] ?? '') === self::LEGACY_SEGMENT;
+
+        // Host di luar aplikasi dibiarkan apa adanya — KECUALI membawa
+        // segmen legacy '/admin', yang hanya pernah dipakai panel ini dan
+        // pasti berasal dari baris tersimpan saat APP_URL belum benar.
+        if (is_string($host)
+            && ! $isLegacy
+            && ! self::isInternalHost(strtolower($host))) {
             return $href;
         }
 
@@ -70,10 +84,8 @@ class AdminUrl
             }
         }
 
-        $segments = explode('/', ltrim($path, '/'));
-
         $current = trim((string) config('app.admin_path'), '/');
-        if (($segments[0] ?? '') === self::LEGACY_SEGMENT && $current !== self::LEGACY_SEGMENT) {
+        if ($isLegacy && $current !== self::LEGACY_SEGMENT) {
             $segments[0] = $current;
         }
 
@@ -84,8 +96,9 @@ class AdminUrl
 
     /**
      * Cek apakah host termasuk milik aplikasi ini — dibandingkan dengan host
-     * APP_URL dan host request aktif, mengabaikan prefiks 'www.' agar varian
-     * www dan non-www sama-sama dianggap internal.
+     * APP_URL dan host request aktif. Varian www / non-www dan host satu
+     * keluarga domain (mis. 'domain' vs 'domain.tld', jejak APP_URL lama
+     * yang tidak lengkap) sama-sama dianggap internal.
      */
     protected static function isInternalHost(string $host): bool
     {
@@ -105,12 +118,26 @@ class AdminUrl
         }
 
         foreach ($candidates as $candidate) {
-            if (self::withoutWww($host) === self::withoutWww($candidate)) {
+            if (self::hostsRelated(self::withoutWww($host), self::withoutWww($candidate))) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Dua host dianggap sekeluarga bila identik atau salah satunya merupakan
+     * prefix domain yang lain — menangkap varian 'domain.tld' vs
+     * 'www.domain.tld' maupun 'domain' vs 'domain.tld'.
+     */
+    protected static function hostsRelated(string $one, string $two): bool
+    {
+        if ($one === $two) {
+            return true;
+        }
+
+        return str_starts_with($one, $two.'.') || str_starts_with($two, $one.'.');
     }
 
     /**

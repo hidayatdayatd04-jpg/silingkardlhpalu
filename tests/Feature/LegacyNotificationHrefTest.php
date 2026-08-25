@@ -106,6 +106,23 @@ class LegacyNotificationHrefTest extends TestCase
         $this->assertSame('/'.$this->currentAdminSegment().'/backup', $feed['notifications'][0]['href']);
     }
 
+    public function test_href_host_lama_tanpa_tld_dengan_segmen_legacy_ikut_diperbaiki(): void
+    {
+        // Baris lama tersimpan saat APP_URL belum memuat TLD. Host seperti
+        // ini tak akan cocok dengan APP_URL mana pun, tapi segmen '/admin'
+        // menandai href sebagai milik panel ini sehingga tetap dinormalisasi.
+        config(['app.url' => 'https://www.silingkardlhpalu.web.id']);
+
+        $this->seedLegacy('https://silingkardlhpalu/admin/artikel/1');
+
+        $feed = AdminNotificationFeed::forUser($this->user);
+
+        $this->assertSame(
+            '/'.$this->currentAdminSegment().'/artikel/1',
+            $feed['notifications'][0]['href']
+        );
+    }
+
     public function test_domain_eksternal_tetap_absolut(): void
     {
         config(['app.url' => 'https://silingkardlhpalu.web.id']);
