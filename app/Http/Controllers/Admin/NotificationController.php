@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\Admin\AdminNotificationFeed;
 use App\Support\Admin\AdminRegistry;
+use App\Support\Admin\AdminUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,10 +25,17 @@ class NotificationController extends Controller
         // yang diizinkan memuat key grup + slug item dalam grup tersebut.
         $allowedModules = AdminRegistry::allowedNotificationModules($user->accessibleGroups());
 
-        $filteredNotifications = $notifications->filter(function ($n) use ($allowedModules) {
-            $module = $n->data['module'] ?? 'system';
-            return in_array($module, $allowedModules);
-        });
+        $filteredNotifications = $notifications
+            ->filter(function ($n) use ($allowedModules) {
+                $module = $n->data['module'] ?? 'system';
+                return in_array($module, $allowedModules);
+            })
+            // Baris DB lama bisa memuat href '/admin/...' — tulis ulang ke prefix aktif.
+            ->each(function ($n) {
+                $data = $n->data;
+                $data['href'] = AdminUrl::normalizeLegacyHref($data['href'] ?? null);
+                $n->data = $data;
+            });
 
         $notifications->setCollection($filteredNotifications);
 

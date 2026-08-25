@@ -15,6 +15,13 @@ class AdminNotificationFeed
     public const CACHE_MINUTES = 5;
 
     /**
+     * Versi format isi cache. Naikkan bila struktur item feed berubah
+     * (mis. normalisasi href legacy) agar entri lama otomatis tak terpakai
+     * tanpa flush manual saat deploy.
+     */
+    protected const CACHE_VERSION = 'v2';
+
+    /**
      * Ambil feed notifikasi topbar untuk user (dari cache).
      *
      * @return array{notifications: \Illuminate\Support\Collection, count: int}
@@ -32,7 +39,7 @@ class AdminNotificationFeed
     {
         $id = $user instanceof User ? $user->id : $user;
 
-        return 'admin:notifications:' . $id;
+        return 'admin:notifications:'.self::CACHE_VERSION.':'.$id;
     }
 
     /**
@@ -84,7 +91,8 @@ class AdminNotificationFeed
                 'title' => $data['title'] ?? 'Notifikasi',
                 'message' => $data['message'] ?? '',
                 'time' => $n->created_at?->diffForHumans() ?? 'Baru',
-                'href' => $data['href'] ?? '#',
+                // Baris DB lama bisa memuat '/admin/...' — tulis ulang ke prefix aktif.
+                'href' => AdminUrl::normalizeLegacyHref($data['href'] ?? null),
                 'read' => $n->read_at !== null,
             ];
         })->filter()->values();

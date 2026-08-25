@@ -151,7 +151,7 @@ function registerAlpineExtensions(Alpine) {
             const msg = task.message || (task.status === 'done' ? 'Proses selesai.' : 'Proses berakhir.');
             if (window.showToast) window.showToast(msg, type);
 
-            if (task.status === 'done' && window.location.pathname.includes((window.ADMIN_BASE_URL || '/admin') + '/backup')) {
+            if (task.status === 'done' && window.location.pathname.includes((window.ADMIN_BASE_URL || '') + '/backup')) {
                 setTimeout(() => window.location.reload(), 1200);
             }
         },
