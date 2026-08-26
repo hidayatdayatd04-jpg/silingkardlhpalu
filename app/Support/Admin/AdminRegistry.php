@@ -1145,6 +1145,12 @@ class AdminRegistry
                         ->prepend('-- Tidak Terkait --', '')
                         ->all(),
                     'wide' => true,
+                    'has_lainnya' => true,
+                    'manual_field' => 'sidak_manual',
+                    'manual_label' => 'Sidak Terkait (Manual)',
+                    'manual_placeholder' => 'Tulis tanggal, lokasi, atau keterangan Sidak...',
+                    'hint' => 'Pilih Sidak yang sudah terdaftar, atau pilih “Lainnya...” untuk menulis keterangan Sidak secara manual.',
+                    'compact' => true,
                 ],
                 [
                     'name' => 'jenis_pelanggaran',

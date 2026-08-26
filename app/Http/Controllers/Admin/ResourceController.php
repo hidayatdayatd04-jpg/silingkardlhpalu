@@ -909,6 +909,29 @@ class ResourceController extends Controller
                 continue;
             }
 
+            // Beberapa relasi opsional (mis. Sidak pada Pelanggaran) boleh
+            // ditulis manual melalui opsi “Lainnya”. Nilai sentinel tidak
+            // pernah disimpan ke foreign key; relasi dikosongkan dan teks
+            // manual disimpan di kolom yang dinyatakan oleh resource.
+            if ($type === 'select' && filled($field['manual_field'] ?? null) && $request->exists($name)) {
+                $manualField = (string) $field['manual_field'];
+                $selected = $request->input($name);
+
+                if ($selected === '__lainnya__') {
+                    $payload[$name] = null;
+                    $payload[$manualField] = filled($request->input($manualField))
+                        ? trim((string) $request->input($manualField))
+                        : null;
+
+                    continue;
+                }
+
+                $payload[$name] = $selected === '' ? null : $selected;
+                $payload[$manualField] = null;
+
+                continue;
+            }
+
             if ($request->exists($name)) {
                 $payload[$name] = $request->input($name) === '' ? null : $request->input($name);
             }
@@ -1149,8 +1172,19 @@ class ResourceController extends Controller
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'date';
             } elseif ($type === 'select' && Str::endsWith($name, '_id')) {
-                $rule[] = $required ? 'required' : 'nullable';
-                $rule[] = 'integer';
+                $isManualSelection = filled($field['manual_field'] ?? null)
+                    && $request->input($name) === '__lainnya__';
+
+                $rule[] = $isManualSelection ? 'nullable' : ($required ? 'required' : 'nullable');
+                if (! $isManualSelection) {
+                    $rule[] = 'integer';
+                }
+
+                if ($isManualSelection) {
+                    $manualField = (string) $field['manual_field'];
+                    $rules[$manualField] = ['required', 'string', 'max:1000'];
+                    $attributes[$manualField] = $field['manual_label'] ?? $field['label'].' (Manual)';
+                }
             } else {
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'string';

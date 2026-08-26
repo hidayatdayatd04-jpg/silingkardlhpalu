@@ -440,7 +440,12 @@
                         <x-admin.section-card title="Informasi Utama" icon="file-text">
                             <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
                                 @foreach($mainFields as $field)
-                                    @php $value = $record->{$field['name']} ?? null; @endphp
+                                    @php
+                                        $value = $record->{$field['name']} ?? null;
+                                        if ($resource['slug'] === 'pelanggaran' && $field['name'] === 'sidak_id') {
+                                            $value = $record->sidak_terkait_text;
+                                        }
+                                    @endphp
                                     <x-admin.detail-field :label="$field['label']" :icon="$iconFor($field['name'])">
                                         @if(($field['type'] ?? null) === 'checkbox')
                                             {{ $value ? 'Ya' : 'Tidak' }}

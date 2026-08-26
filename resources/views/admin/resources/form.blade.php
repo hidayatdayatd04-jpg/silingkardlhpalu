@@ -8,6 +8,7 @@
     $readOnly = (bool) ($readOnly ?? false);
     $visibleFields = collect($fields)
         ->reject(fn ($field) => ($field['hide_on_create'] ?? false) && ! $record->exists)
+        ->reject(fn ($field) => filled($field['manual_for'] ?? null))
         ->values()
         ->all();
 
@@ -276,24 +277,31 @@
                                 @php
                                     $isDisabled = ($name === 'role' && $resource['slug'] === 'user' && $record->exists && $record->isSuperadmin());
                                     $hasLainnya = $field['has_lainnya'] ?? false;
-                                    $lainnyaName = $name . '_lainnya';
+                                    $lainnyaName = $field['manual_field'] ?? ($name . '_lainnya');
+                                    $manualLabel = $field['manual_label'] ?? ($field['label'].' (Lainnya)');
+                                    $manualPlaceholder = $field['manual_placeholder'] ?? ('Tulis '.strtolower($field['label']).' secara manual...');
                                     $lainnyaValue = old($lainnyaName, $record->{$lainnyaName} ?? null);
                                     $selectOptions = $field['options'] ?? [];
                                     if ($hasLainnya) {
                                         $selectOptions['__lainnya__'] = 'Lainnya...';
                                     }
-                                    $showLainnyaOnLoad = $hasLainnya && $record->exists && filled($lainnyaName) && blank($value);
+                                    $selectValue = old($name, $value);
+                                    if ($hasLainnya && filled($lainnyaValue) && blank($selectValue)) {
+                                        $selectValue = '__lainnya__';
+                                    }
+                                    $showLainnyaOnLoad = $hasLainnya && $selectValue === '__lainnya__';
                                 @endphp
                                 <div class="{{ $fullClass }}" {!! $xShowAttr !!}>
                                     <x-admin.select :label="$field['label']" name="{{ $name }}" :error="$error" :options="$selectOptions"
-                                        :selected="$value" placeholder="Pilih {{ $field['label'] }}" :disabled="$isDisabled || $isReadonly"
-                                        :required="$isRequired" :searchable="count($field['options'] ?? []) > 8" />
+                                        :selected="$selectValue" placeholder="Pilih {{ $field['label'] }}" :disabled="$isDisabled || $isReadonly"
+                                        :required="$isRequired" :searchable="count($field['options'] ?? []) > 8" :hint="$field['hint'] ?? null"
+                                        :compact="$field['compact'] ?? false" />
                                     @if($isDisabled)<input type="hidden" name="{{ $name }}" value="{{ $value }}">@endif
                                     @if($hasLainnya)
-                                        <div id="lainnya_{{ $name }}" class="mt-2" style="display: {{ $showLainnyaOnLoad ? 'block' : 'none' }};">
+                                        <div id="lainnya_{{ $name }}" class="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/5" style="display: {{ $showLainnyaOnLoad ? 'block' : 'none' }};">
                                             <x-admin.form-input id="field-{{ $lainnyaName }}" type="text" name="{{ $lainnyaName }}"
-                                                label="" :value="$lainnyaValue" :error="$errors->first($lainnyaName)"
-                                                placeholder="Tulis {{ strtolower($field['label']) }} secara manual..." />
+                                                :label="$manualLabel" :value="$lainnyaValue" :error="$errors->first($lainnyaName)"
+                                                :placeholder="$manualPlaceholder" />
                                         </div>
                                     @endif
                                 </div>

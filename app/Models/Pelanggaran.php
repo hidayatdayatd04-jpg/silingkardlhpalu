@@ -11,6 +11,7 @@ class Pelanggaran extends Model
 {
     protected $fillable = [
         'sidak_id',
+        'sidak_manual',
         'jenis_pelanggaran',
         'pasal_dilanggar',
         'keterangan',
@@ -39,5 +40,26 @@ class Pelanggaran extends Model
     public function getStatusSanksiTextAttribute(): ?string
     {
         return $this->sanksi?->status_sanksi?->label();
+    }
+
+    /**
+     * Ringkasan Sidak untuk detail Pelanggaran. Nilai manual diprioritaskan
+     * ketika Pelanggaran belum dapat dihubungkan ke record Sidak di sistem.
+     */
+    public function getSidakTerkaitTextAttribute(): ?string
+    {
+        if (filled($this->sidak_manual)) {
+            return $this->sidak_manual;
+        }
+
+        $sidak = $this->sidak;
+        if (! $sidak) {
+            return null;
+        }
+
+        $tanggal = $sidak->tanggal_sidak?->format('d M Y');
+        $hasil = $sidak->hasil_label ?? $sidak->hasil;
+
+        return collect([$tanggal, $hasil])->filter()->implode(' — ') ?: 'Sidak #'.$sidak->getKey();
     }
 }

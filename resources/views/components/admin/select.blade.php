@@ -9,6 +9,7 @@
     'error' => null,
     'hint' => null,
     'searchable' => false,
+    'compact' => false,
 ])
 
 @php
@@ -23,7 +24,7 @@
 <div
     {{ $attributes->whereStartsWith(['wire:model', 'x-model']) }}
     x-modelable="selected"
-    class="fi-field"
+    class="fi-field {{ $compact ? 'fi-field--compact' : '' }}"
     x-data="{
         open: false,
         search: '',
@@ -203,6 +204,9 @@
         .fi-error { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: #e0533d; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
         .fi-error svg { width: 13px; height: 13px; flex-shrink: 0; }
         .fi-hint-sub { margin-top: 6px; font-size: 12px; color: #5b6b63; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
+        .fi-field--compact .fi-select-panel { top: calc(100% + 5px); padding: 6px; border-radius: 14px; }
+        .fi-field--compact .fi-select-option { padding: 8px 12px; border-radius: 9px; font-size: 13px; }
+        .fi-field--compact .fi-select-options-scroll { max-height: 224px; }
         .dark .fi-label { color: #e2e8f0; }
         .dark .fi-select-trigger { background: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .fi-select-trigger:hover:not(.fi-select-trigger--error) { border-color: #475569; }
