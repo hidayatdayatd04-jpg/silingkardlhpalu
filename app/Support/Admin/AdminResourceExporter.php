@@ -246,7 +246,10 @@ class AdminResourceExporter
                 ? $this->fileUrl((string) $rawValue, $slug)
                 : DataIO::displayValue($record->getAttribute($key));
 
-            $parts[] = AdminRegistry::labelForField($key).': '.$value;
+            // Label relasi tidak boleh bergantung pada helper Registry yang
+            // bersifat internal/protected. Ini juga menjaga export tetap
+            // berfungsi untuk atribut model relasi baru di masa depan.
+            $parts[] = Str::headline($key).': '.$value;
         }
 
         return $parts === [] ? '-' : implode('; ', $parts);

@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\PengaduanPengendalian;
+use App\Models\PengaduanPengendalianFoto;
+use App\Support\Admin\AdminResourceExporter;
 use App\Support\DataIO;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -36,5 +39,37 @@ class ExportPresentationTest extends TestCase
                 unlink($path);
             }
         }
+    }
+
+    public function test_exporter_includes_pengaduan_photo_as_a_safe_link_without_error(): void
+    {
+        $record = new PengaduanPengendalian(['nomor_tiket' => 'PDL-TEST-001']);
+        $record->id = 1;
+        $record->setRelation('fotos', collect([
+            new PengaduanPengendalianFoto([
+                'path_foto' => 'pengaduan-pengendalian/bukti-uji.webp',
+                'status' => 'selesai',
+            ]),
+        ]));
+
+        $row = app(AdminResourceExporter::class)->row($record, [
+            'slug' => 'pengaduan-pengendalian',
+        ], [
+            'columns' => [
+                'nomor_tiket' => 'Nomor Tiket',
+                '__relation_fotos' => 'Foto Bukti (Data & Tautan aman)',
+            ],
+            'direct_file_columns' => [],
+            'relation_columns' => [
+                '__relation_fotos' => [
+                    'relation' => 'fotos',
+                    'path_field' => 'path_foto',
+                ],
+            ],
+        ]);
+
+        $this->assertSame('PDL-TEST-001', $row[0]);
+        $this->assertStringContainsString('Path Foto:', $row[1]);
+        $this->assertStringContainsString('pengaduan-pengendalian', $row[1]);
     }
 }
