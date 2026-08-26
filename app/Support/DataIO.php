@@ -141,10 +141,15 @@ class DataIO
 
         $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            // Urutan elemen wajib mengikuti CT_Worksheet OOXML. Excel
+            // menganggap `<cols>` sebelum `<sheetViews>` sebagai worksheet
+            // rusak walau XML-nya sendiri well-formed, lalu membuang seluruh
+            // sheet saat proses repair.
+            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+            . '<sheetFormatPr defaultRowHeight="15"/>'
             . '<cols>'
             . collect($headings)->map(fn ($heading, $i) => '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.self::xlsxColumnWidth((string) $heading).'" customWidth="true"/>')->implode('')
             . '</cols>'
-            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
             . '<sheetData>'
             . self::xlsxHeaderRow($headings)
             . $rowsXml
@@ -188,10 +193,11 @@ class DataIO
 
         $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+            . '<sheetFormatPr defaultRowHeight="15"/>'
             . '<cols>'
             . collect($headings)->map(fn ($heading, $i) => '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="'.self::xlsxColumnWidth((string) $heading).'" customWidth="true"/>')->implode('')
             . '</cols>'
-            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
             . '<sheetData>' . $headRow . $rowsXml . '</sheetData>'
             . '<autoFilter ref="A1:'.self::colLetter(max(1, count($headings))).max(1, $rowIndex).'"/>'
             . '</worksheet>';

@@ -27,13 +27,22 @@ class ExportPresentationTest extends TestCase
             $zip = new \ZipArchive();
             $this->assertTrue($zip->open($path) === true);
             $sheet = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+            $styles = (string) $zip->getFromName('xl/styles.xml');
             $zip->close();
+
+            $this->assertXmlIsWellFormed($sheet, 'sheet1.xml harus berupa XML valid agar Excel tidak mengosongkan data.');
+            $this->assertXmlIsWellFormed($styles, 'styles.xml harus berupa XML valid agar Excel dapat membaca format workbook.');
 
             $this->assertStringContainsString('state="frozen"', $sheet);
             $this->assertStringContainsString('<autoFilter ref="A1:C2"/>', $sheet);
             $this->assertStringContainsString('r="A2" t="inlineStr"', $sheet);
             $this->assertStringContainsString('081234567890', $sheet);
             $this->assertStringContainsString('s="3"', $sheet);
+            $this->assertLessThan(
+                strpos($sheet, '<cols>'),
+                strpos($sheet, '<sheetViews>'),
+                'OOXML mewajibkan sheetViews berada sebelum cols agar Excel tidak membuang worksheet.',
+            );
         } finally {
             if (is_file($path)) {
                 unlink($path);
@@ -71,5 +80,11 @@ class ExportPresentationTest extends TestCase
         $this->assertSame('PDL-TEST-001', $row[0]);
         $this->assertStringContainsString('Path Foto:', $row[1]);
         $this->assertStringContainsString('pengaduan-pengendalian', $row[1]);
+    }
+
+    private function assertXmlIsWellFormed(string $xml, string $message): void
+    {
+        $document = new \DOMDocument();
+        $this->assertTrue($document->loadXML($xml, LIBXML_NONET), $message);
     }
 }
