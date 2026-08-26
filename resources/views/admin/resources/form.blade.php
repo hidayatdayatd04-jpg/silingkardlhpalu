@@ -5,6 +5,7 @@
 
 @section('content')
 @php
+    $readOnly = (bool) ($readOnly ?? false);
     $visibleFields = collect($fields)
         ->reject(fn ($field) => ($field['hide_on_create'] ?? false) && ! $record->exists)
         ->values()
@@ -184,6 +185,16 @@
         </div>
     @endif
 
+    @if($readOnly)
+        <div class="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+            <x-admin.icon name="lock" :size="19" class="mt-0.5 shrink-0" />
+            <div>
+                <p class="font-bold">Mode baca-saja</p>
+                <p class="mt-0.5 leading-6">Administrator Utama dapat melihat data ini, tetapi pengubahan record operasional dilakukan oleh admin bidang terkait.</p>
+            </div>
+        </div>
+    @endif
+
     <form method="POST" action="{{ $action }}" enctype="multipart/form-data" id="admin-resource-form"
           x-data="{ submitting: false, selectedStatus: '{{ $currentStatus }}', selectedKegiatan: '{{ $currentKegiatan }}' }" x-on:submit="submitting = true"
           x-on:change="if ($event.target.name === 'status') selectedStatus = $event.target.value; if ($event.target.name === 'jenis_kegiatan') selectedKegiatan = $event.target.value" class="space-y-6">
@@ -192,13 +203,15 @@
             @method($method)
         @endif
 
+        @if($readOnly)<fieldset disabled aria-label="Form data hanya dapat dibaca">@endif
+
         @foreach ($sections as $si => $section)
             @php
                 $isCoordSection = $hasLatLng && collect($section['fields'])->pluck('name')->intersect(['latitude', 'longitude'])->count() >= 2;
                 // Peta readonly jika salah satu field lat/lng punya readonly_on_edit dan record sudah ada.
-                $isCoordReadonly = $isCoordSection && $record->exists && collect($section['fields'])
+                $isCoordReadonly = $readOnly || ($isCoordSection && $record->exists && collect($section['fields'])
                     ->filter(fn ($f) => in_array($f['name'] ?? '', ['latitude', 'longitude']))
-                    ->contains(fn ($f) => ($f['readonly_on_edit'] ?? false) || ($f['readonly'] ?? false));
+                    ->contains(fn ($f) => ($f['readonly_on_edit'] ?? false) || ($f['readonly'] ?? false)));
                 $isUserForm = $resource['slug'] === 'user';
                 $sectionMeta = match ($section['label']) {
                     'Informasi Akun' => ['icon' => 'user', 'subtitle' => 'Data login & identitas pengguna'],
@@ -239,7 +252,7 @@
                                 $name = $field['name'];
                                 $type = $field['type'] ?? 'text';
                                 $value = $fieldValue($field);
-                                $isReadonly = $field['readonly'] ?? false;
+                                $isReadonly = $readOnly || ($field['readonly'] ?? false);
                                 if (! $isReadonly && ($field['readonly_on_edit'] ?? false) && $record->exists) {
                                     $isReadonly = true;
                                 }
@@ -569,7 +582,9 @@
                 </x-admin.section-card>
             </div>
         @endforeach
+        @if($readOnly)</fieldset>@endif
 
+        @if(! $readOnly)
             <button type="submit" :disabled="submitting"
                 class="group fixed bottom-6 right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:brightness-110 hover:shadow-xl hover:shadow-emerald-600/40 focus:outline-none focus:ring-4 focus:ring-emerald-100 disabled:opacity-60"
                 title="{{ $record->exists ? 'Perbarui Data' : 'Simpan Data' }}">
@@ -577,6 +592,11 @@
                 <x-admin.icon x-show="!submitting" name="check" :size="18" />
                 <span x-text="submitting ? 'Menyimpan...' : '{{ $record->exists ? 'Perbarui Data' : 'Simpan Data' }}'"></span>
             </button>
+        @else
+            <div class="flex justify-end">
+                <x-admin.button variant="secondary" icon="chevron-left" :href="route('admin.resources.show', [$resource['slug'], $record])">Kembali ke Detail</x-admin.button>
+            </div>
+        @endif
     </form>
 </div>
 @endsection

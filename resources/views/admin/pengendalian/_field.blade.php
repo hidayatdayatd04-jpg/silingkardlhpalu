@@ -14,7 +14,7 @@
     }
     if ($value instanceof BackedEnum) $value = $value->value;
     if ($value instanceof DateTimeInterface) $value = $value->format('Y-m-d');
-    $isReadonly = $field['readonly'] ?? false;
+    $isReadonly = ($readOnly ?? false) || ($field['readonly'] ?? false);
     if (! $isReadonly && ($field['readonly_on_edit'] ?? false) && $record->exists) {
         $isReadonly = true;
     }

@@ -37,7 +37,8 @@ Folder ini **terpisah dari project Laravel** dan tidak pernah menyentuh backend.
 | Popup `_blank` | Tautan internal tetap dimuat di aplikasi (session ikut), tautan eksternal ke browser |
 | Single instance | Membuka aplikasi dua kali cukup memfokuskan window yang sudah ada |
 | Upload & download | Drag & drop file dan semua download berjalan seperti di browser |
-| Judul window | Terkunci "SILINGKAR DLH ADMIN" (tidak ikut judul halaman web) |
+| Top bar desktop | Judul terkunci "SILINGKAR DLH ADMIN", area drag, tombol minimize, maximize/pulihkan, dan tutup tanpa title bar Windows bawaan |
+| Zoom halaman | Tombol **−**, indikator/reset **100%**, dan **+** memperkecil/memperbesar halaman WebView dari 75% sampai 125% per 5%; nilai bertahan selama aplikasi terbuka dan saat berpindah halaman |
 
 ## Struktur folder
 

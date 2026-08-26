@@ -43,7 +43,7 @@ class SosialisasiDaftarHadirTest extends TestCase
         ]);
     }
 
-    public function test_sosialisasi_index_hides_the_edit_action(): void
+    public function test_sosialisasi_index_shows_the_edit_action(): void
     {
         $sosialisasi = $this->makeSosialisasi();
 
@@ -51,17 +51,18 @@ class SosialisasiDaftarHadirTest extends TestCase
             ->get(route('admin.resources.index', 'sosialisasi'))
             ->assertOk()
             ->assertSee($sosialisasi->judul)
-            ->assertDontSee(route('admin.resources.edit', ['sosialisasi', $sosialisasi]));
+            ->assertSee(route('admin.resources.edit', ['sosialisasi', $sosialisasi]));
     }
 
-    public function test_sosialisasi_cannot_be_edited_through_direct_routes(): void
+    public function test_administrator_utama_gets_read_only_sosialisasi_form_and_cannot_update(): void
     {
         $sosialisasi = $this->makeSosialisasi();
         $user = $this->makeUser('admin');
 
         $this->actingAs($user)
             ->get(route('admin.resources.edit', ['sosialisasi', $sosialisasi]))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertSee('Mode baca-saja');
 
         $this->actingAs($user)
             ->put(route('admin.resources.update', ['sosialisasi', $sosialisasi]), [
@@ -70,6 +71,23 @@ class SosialisasiDaftarHadirTest extends TestCase
             ->assertForbidden();
 
         $this->assertSame('Monitoring dan Evaluasi Pengujian', $sosialisasi->fresh()->judul);
+    }
+
+    public function test_bidang_tata_penataan_can_update_sosialisasi(): void
+    {
+        $sosialisasi = $this->makeSosialisasi();
+
+        $this->actingAs($this->makeUser('bidang-tata-penataan'))
+            ->put(route('admin.resources.update', ['sosialisasi', $sosialisasi]), [
+                'judul' => 'Monitoring yang Diperbarui Bidang',
+                'jenis_kegiatan' => 'monitoring-evaluasi',
+                'periode_tw' => 'TW III',
+                'tahun' => '2026',
+                'tanggal' => '2026-08-01',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('Monitoring yang Diperbarui Bidang', $sosialisasi->fresh()->judul);
     }
 
     private function makeSosialisasi(): Sosialisasi

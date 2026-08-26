@@ -4,7 +4,6 @@ namespace App\Support\Admin;
 
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
-use App\Models\ObjekPengawasan;
 use App\Models\Pelanggaran;
 use App\Models\PengaduanPengendalian;
 use App\Models\PengaduanRth;
@@ -57,10 +56,7 @@ class AdminRegistry
                 'items' => [
                     array_merge(self::resource('pengaduan-tata-penataan', 'Pengaduan Tata Penataan', PengaduanTataPenataan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('pelanggaran', 'Pelanggaran', Pelanggaran::class, ['jenis_pelanggaran', 'keterangan', 'jenis_sanksi_text', 'status_sanksi_text', 'created_at']),
-                    array_merge(
-                        self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
-                        ['can_edit' => false],
-                    ),
+                    self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
                 ],
             ],
             'rth' => [
@@ -1140,17 +1136,6 @@ class AdminRegistry
                     'options' => [],
                 ],
                 [
-                    'name' => 'objek_pengawasan_id',
-                    'label' => 'Objek Pengawasan',
-                    'type' => 'select',
-                    'options' => ObjekPengawasan::orderBy('nama_perusahaan')
-                        ->get(['id', 'nama_perusahaan'])
-                        ->mapWithKeys(fn ($o) => [$o->id => $o->nama_perusahaan])
-                        ->all(),
-                    'required' => true,
-                    'wide' => true,
-                ],
-                [
                     'name' => 'sidak_id',
                     'label' => 'Sidak Terkait',
                     'type' => 'select',
@@ -1558,6 +1543,52 @@ class AdminRegistry
         ]);
     }
 
+    /**
+     * Direktori file yang secara eksplisit menjadi milik sebuah resource.
+     *
+     * Dipakai oleh proxy unduhan/preview dan exporter. Dengan satu daftar ini,
+     * tautan ekspor tidak pernah menunjuk ke file resource lain meskipun isi
+     * kolom path di database tidak valid atau telah dimanipulasi.
+     *
+     * @return array<int,string>
+     */
+    public static function fileDirectories(string $slug): array
+    {
+        $directories = [$slug, 'admin/'.$slug];
+
+        foreach (self::relationUploads($slug) as $upload) {
+            if (filled($upload['directory'] ?? null)) {
+                $directories[] = trim((string) $upload['directory'], '/');
+            }
+        }
+
+        // Foto profil tidak menggunakan pola admin/{slug}.
+        if ($slug === 'user') {
+            $directories[] = 'avatars';
+        }
+
+        return array_values(array_unique(array_filter($directories)));
+    }
+
+    /**
+     * Pastikan path relatif benar-benar berada dalam direktori resource.
+     */
+    public static function isAllowedFilePath(string $path, string $slug): bool
+    {
+        if ($path === ''
+            || str_contains($path, '..')
+            || str_starts_with($path, '/')
+            || str_starts_with($path, '\\')
+            || str_contains($path, ':')
+            || str_contains($path, "\0")
+            || str_contains($path, '\\')) {
+            return false;
+        }
+
+        return collect(self::fileDirectories($slug))
+            ->contains(fn (string $directory) => str_starts_with($path, $directory.'/'));
+    }
+
     protected static function decorateFields(array $resource, array $fields): array
     {
         $decorated = collect($fields)
@@ -1725,7 +1756,7 @@ class AdminRegistry
             'remember_token', 'email_verified_at',
             'two_factor_secret', 'two_factor_recovery_codes',
             'additional_access', 'preferences', 'photo_path',
-            'deleted_at', 'updated_at',
+            'deleted_at',
         ];
 
         $map = [];

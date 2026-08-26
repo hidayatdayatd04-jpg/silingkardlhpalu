@@ -1,0 +1,13 @@
+{
+  "identifier": "desktop-controls-remote",
+  "description": "Domain panel admin produksi hanya dapat mengatur jendela desktop lewat aksi kontrol yang divalidasi native.",
+  "windows": ["main"],
+  "local": false,
+  "remote": {
+    "urls": [
+      "https://www.silingkardlhpalu.web.id/*",
+      "https://silingkardlhpalu.web.id/*"
+    ]
+  },
+  "permissions": ["allow-desktop-window-control"]
+}

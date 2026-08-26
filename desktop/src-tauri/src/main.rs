@@ -17,8 +17,7 @@ use tauri_plugin_opener::OpenerExt;
 
 /// URL dasar panel admin produksi (prefix ADMIN_PATH milik Laravel di server).
 /// Ganti di sini bila prefix produksi berubah.
-const ADMIN_BASE_URL: &str =
-    "https://www.silingkardlhpalu.web.id/ruang-kendali-x7k8p2r6h8j0";
+const ADMIN_BASE_URL: &str = "https://www.silingkardlhpalu.web.id/ruang-kendali-x7k8p2r6h8j0";
 
 /// Host yang boleh dimuat di dalam aplikasi; selain ini dibuka di browser
 /// eksternal Windows. Halaman internal Tauri memakai subdomain `.localhost`.
@@ -282,6 +281,85 @@ const INIT_SCRIPT: &str = r#"(function () {
     if (window.__skxShow && skxInternal(u)) window.__skxShow();
     window.location.href = u.href;
   }, true);
+
+  // Title bar desktop kustom. Dijalankan di setiap dokumen WebView, termasuk
+  // halaman admin yang dinavigasi, sehingga kontrol zoom tetap ada sepanjang
+  // sesi tanpa mengubah kode Laravel di server produksi.
+  var skxDesktopBar = function () {
+    if (document.getElementById('dlh-desktop-titlebar')) return;
+    var mount = function () {
+      if (document.getElementById('dlh-desktop-titlebar')) return;
+      var root = document.documentElement;
+      if (!root) return;
+      var style = document.createElement('style');
+      style.id = 'dlh-desktop-titlebar-style';
+      style.textContent = ''
+        + ':root{box-sizing:border-box!important;padding-top:40px!important}'
+        + '#dlh-desktop-titlebar{position:fixed!important;inset:0 0 auto 0!important;height:40px!important;z-index:2147483647!important;'
+        + 'display:flex!important;align-items:center!important;background:linear-gradient(90deg,#063f3b,#075a52)!important;'
+        + 'color:#ecfdf5!important;font:600 12px/1 "Segoe UI",Arial,sans-serif!important;box-shadow:0 1px 0 rgba(255,255,255,.12)!important;user-select:none!important}'
+        + '#dlh-desktop-titlebar .dlh-title{height:40px!important;display:flex!important;align-items:center!important;gap:9px!important;padding:0 14px!important;flex:1!important;min-width:90px!important;letter-spacing:.04em!important;cursor:move!important}'
+        + '#dlh-desktop-titlebar .dlh-title::before{content:""!important;width:8px!important;height:8px!important;border-radius:999px!important;background:#6ee7b7!important;box-shadow:0 0 0 3px rgba(110,231,183,.15)!important}'
+        + '#dlh-desktop-titlebar .dlh-controls{height:100%!important;display:flex!important;align-items:center!important;margin-left:auto!important}'
+        + '#dlh-desktop-titlebar button{appearance:none!important;border:0!important;background:transparent!important;color:inherit!important;height:40px!important;min-width:40px!important;padding:0 10px!important;cursor:pointer!important;font:600 15px/1 "Segoe UI Symbol","Segoe UI",sans-serif!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}'
+        + '#dlh-desktop-titlebar button:hover{background:rgba(255,255,255,.14)!important}#dlh-desktop-titlebar button:focus-visible{outline:2px solid #a7f3d0!important;outline-offset:-3px!important}'
+        + '#dlh-desktop-titlebar .dlh-zoom-value{min-width:49px!important;font:700 11px/1 "Segoe UI",Arial,sans-serif!important;letter-spacing:.02em!important}'
+        + '#dlh-desktop-titlebar .dlh-separator{width:1px!important;height:22px!important;background:rgba(255,255,255,.22)!important;margin:0 3px!important}'
+        + '#dlh-desktop-titlebar .dlh-close:hover{background:#dc2626!important;color:#fff!important}'
+        + '@media (max-width:620px){#dlh-desktop-titlebar .dlh-title{padding-left:10px!important;font-size:10px!important}#dlh-desktop-titlebar button{min-width:34px!important;padding:0 7px!important}}';
+      (document.head || root).appendChild(style);
+
+      var bar = document.createElement('div');
+      bar.id = 'dlh-desktop-titlebar';
+      bar.setAttribute('role', 'toolbar');
+      bar.setAttribute('aria-label', 'Kontrol jendela aplikasi desktop');
+      bar.innerHTML = ''
+        + '<div class="dlh-title" data-dlh-drag="1" title="Geser untuk memindahkan jendela">SILINGKAR DLH ADMIN</div>'
+        + '<div class="dlh-controls">'
+        + '<button type="button" data-dlh-action="zoom_out" aria-label="Perkecil tampilan web" title="Perkecil tampilan web">−</button>'
+        + '<button type="button" class="dlh-zoom-value" data-dlh-action="zoom_reset" aria-label="Kembalikan ukuran tampilan ke 100 persen" title="Reset ukuran tampilan">100%</button>'
+        + '<button type="button" data-dlh-action="zoom_in" aria-label="Perbesar tampilan web" title="Perbesar tampilan web">+</button>'
+        + '<span class="dlh-separator" aria-hidden="true"></span>'
+        + '<button type="button" data-dlh-action="minimize" aria-label="Minimalkan jendela" title="Minimalkan">—</button>'
+        + '<button type="button" data-dlh-action="toggle_maximize" aria-label="Maksimalkan atau pulihkan jendela" title="Maksimalkan / Pulihkan">□</button>'
+        + '<button type="button" class="dlh-close" data-dlh-action="close" aria-label="Tutup aplikasi" title="Tutup">×</button>'
+        + '</div>';
+      (document.body || root).appendChild(bar);
+
+      var invoke = function (action) {
+        var api = window.__TAURI__ && window.__TAURI__.core;
+        if (!api || typeof api.invoke !== 'function') return Promise.reject(new Error('Tauri API tidak tersedia'));
+        return api.invoke('desktop_window_control', { action: action });
+      };
+      var zoomLabel = bar.querySelector('.dlh-zoom-value');
+      var setZoomLabel = function (zoom) {
+        if (zoomLabel && typeof zoom === 'number') zoomLabel.textContent = Math.round(zoom * 100) + '%';
+      };
+      bar.addEventListener('click', function (event) {
+        var button = event.target.closest('button[data-dlh-action]');
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        invoke(button.getAttribute('data-dlh-action')).then(setZoomLabel).catch(function (error) {
+          console.warn('[dlh] kontrol jendela gagal', error);
+        });
+      });
+      var drag = bar.querySelector('[data-dlh-drag]');
+      if (drag) {
+        drag.addEventListener('mousedown', function (event) {
+          if (event.button !== 0) return;
+          invoke('start_dragging').catch(function () {});
+        });
+        drag.addEventListener('dblclick', function (event) {
+          event.preventDefault();
+          invoke('toggle_maximize').catch(function () {});
+        });
+      }
+      invoke('zoom_state').then(setZoomLabel).catch(function () {});
+    };
+    if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount, { once: true });
+  };
+  skxDesktopBar();
 })();"#;
 
 #[derive(Clone, Copy, Default, PartialEq)]
@@ -293,12 +371,70 @@ enum Phase {
     Error,
 }
 
-#[derive(Default)]
 struct AppState {
     phase: Mutex<Phase>,
+    /// Zoom WebView berlaku untuk seluruh navigasi selama proses aplikasi hidup.
+    zoom: Mutex<f64>,
     /// Origin halaman lokal (http(s)://tauri.localhost atau serupa), ditentukan
     /// sekali setelah window dibuat agar navigasi ke error.html selalu tepat.
     local_origin: OnceLock<String>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            phase: Mutex::new(Phase::Idle),
+            zoom: Mutex::new(1.0),
+            local_origin: OnceLock::new(),
+        }
+    }
+}
+
+const MIN_ZOOM: f64 = 0.75;
+const MAX_ZOOM: f64 = 1.25;
+const ZOOM_STEP: f64 = 0.05;
+
+/// Semua aksi title bar divalidasi di native side. Halaman web tidak diberi
+/// akses IPC umum; ia hanya dapat meminta aksi jendela yang tercantum di sini.
+#[tauri::command]
+fn desktop_window_control(app: AppHandle, action: String) -> Result<f64, String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "Jendela utama tidak ditemukan.".to_string())?;
+    let state = app.state::<AppState>();
+
+    let mut zoom = state.zoom.lock().unwrap_or_else(|e| e.into_inner());
+
+    match action.as_str() {
+        "zoom_in" => {
+            *zoom = ((*zoom + ZOOM_STEP) * 100.0).round() / 100.0;
+            *zoom = zoom.clamp(MIN_ZOOM, MAX_ZOOM);
+            window.set_zoom(*zoom).map_err(|e| e.to_string())?;
+        }
+        "zoom_out" => {
+            *zoom = ((*zoom - ZOOM_STEP) * 100.0).round() / 100.0;
+            *zoom = zoom.clamp(MIN_ZOOM, MAX_ZOOM);
+            window.set_zoom(*zoom).map_err(|e| e.to_string())?;
+        }
+        "zoom_reset" => {
+            *zoom = 1.0;
+            window.set_zoom(*zoom).map_err(|e| e.to_string())?;
+        }
+        "minimize" => window.minimize().map_err(|e| e.to_string())?,
+        "toggle_maximize" => {
+            if window.is_maximized().map_err(|e| e.to_string())? {
+                window.unmaximize().map_err(|e| e.to_string())?;
+            } else {
+                window.maximize().map_err(|e| e.to_string())?;
+            }
+        }
+        "close" => window.close().map_err(|e| e.to_string())?,
+        "start_dragging" => window.start_dragging().map_err(|e| e.to_string())?,
+        "zoom_state" => {}
+        _ => return Err("Aksi jendela tidak diizinkan.".to_string()),
+    }
+
+    Ok(*zoom)
 }
 
 /// Target admin dapat dioverride untuk dev lokal / uji offline:
@@ -308,7 +444,9 @@ fn admin_target_url() -> String {
 }
 
 fn probe_origin(target: &str) -> Option<String> {
-    Url::parse(target).ok().map(|u| u.origin().ascii_serialization())
+    Url::parse(target)
+        .ok()
+        .map(|u| u.origin().ascii_serialization())
 }
 
 /// true = server terjangkau (status respons apa pun dianggap online — yang
@@ -368,18 +506,26 @@ async fn check_connection(app: AppHandle) -> String {
         let ok = match probe_origin(&target) {
             Some(origin) => {
                 // Dua percobaan: blip DNS/jaringan sesaat saat boot sering terjadi.
-                server_reachable(&origin)
-                    || {
-                        thread::sleep(Duration::from_millis(1500));
-                        server_reachable(&origin)
-                    }
+                server_reachable(&origin) || {
+                    thread::sleep(Duration::from_millis(1500));
+                    server_reachable(&origin)
+                }
             }
             None => false,
         };
-        *app.state::<AppState>().phase.lock().unwrap_or_else(|e| e.into_inner()) =
-            if ok { Phase::Online } else { Phase::Error };
-        eprintln!("[dlh] probe {target}: {}", if ok { "online" } else { "offline" });
-        if ok { "online".into() } else { "offline".into() }
+        *app.state::<AppState>()
+            .phase
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = if ok { Phase::Online } else { Phase::Error };
+        eprintln!(
+            "[dlh] probe {target}: {}",
+            if ok { "online" } else { "offline" }
+        );
+        if ok {
+            "online".into()
+        } else {
+            "offline".into()
+        }
     })
     .await
     .unwrap_or_else(|_| "offline".into())
@@ -451,10 +597,15 @@ fn monitor_loop(app: AppHandle) {
         {
             continue;
         }
-        let Some(origin) = probe_origin(&admin_target_url()) else { continue };
+        let Some(origin) = probe_origin(&admin_target_url()) else {
+            continue;
+        };
         if outage_confirmed(&origin) {
             eprintln!("[dlh] koneksi ke server hilang saat sesi berjalan");
-            *app.state::<AppState>().phase.lock().unwrap_or_else(|e| e.into_inner()) = Phase::Error;
+            *app.state::<AppState>()
+                .phase
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = Phase::Error;
             go_to_error(&app);
         }
     }
@@ -472,7 +623,11 @@ fn main() {
         }))
         .plugin(tauri_plugin_opener::init())
         .manage(AppState::default())
-        .invoke_handler(tauri::generate_handler![check_connection, admin_target])
+        .invoke_handler(tauri::generate_handler![
+            check_connection,
+            admin_target,
+            desktop_window_control
+        ])
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -491,6 +646,9 @@ fn main() {
             .inner_size(1366.0, 900.0)
             .min_inner_size(960.0, 640.0)
             .center()
+            // Windows title bar bawaan diganti title bar kustom yang memuat
+            // kontrol zoom serta minimize/maximize/close.
+            .decorations(false)
             // Matikan penangan drag-drop bawaan wry agar drag&drop HTML5
             // (upload berkas di form admin) berperilaku seperti browser.
             .disable_drag_drop_handler()

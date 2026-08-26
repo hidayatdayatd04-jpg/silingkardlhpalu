@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\ObjekPengawasan;
 use App\Models\Pelanggaran;
 use App\Models\Sanksi;
+use App\Models\Sidak;
 use App\Models\User;
+use App\Notifications\SanksiJatuhTempoNotification;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -41,10 +43,16 @@ class SanksiJatuhTempoTest extends TestCase
             'alamat' => 'Jl. Testing No. 1, Palu',
         ]);
 
+        $sidak = Sidak::create([
+            'objek_pengawasan_id' => $objek->id,
+            'tanggal_sidak' => Carbon::today()->toDateString(),
+            'nama_petugas' => 'Petugas Uji',
+        ]);
+
         // Pelanggaran memicu observer "Pelanggaran Terdeteksi" — buat senyap agar
         // hitungan notifikasi bersih untuk skenario ini.
         $pelanggaran = $this->createWithoutEvents(Pelanggaran::class, [
-            'objek_pengawasan_id' => $objek->id,
+            'sidak_id' => $sidak->id,
             'jenis_pelanggaran' => 'Pelanggaran uji',
         ]);
 
@@ -109,5 +117,23 @@ class SanksiJatuhTempoTest extends TestCase
         $this->artisan('dlh:check-sanksi-due-date')->assertSuccessful();
 
         $this->assertSame(0, $this->countNotifications($this->superadmin, 'Sanksi Mendekati Jatuh Tempo'));
+    }
+
+    public function test_notifikasi_memakai_label_netral_bila_pelanggaran_tanpa_sidak(): void
+    {
+        $pelanggaran = $this->createWithoutEvents(Pelanggaran::class, [
+            'sidak_id' => null,
+            'jenis_pelanggaran' => 'Pelanggaran tanpa sidak',
+        ]);
+        $sanksi = Sanksi::create([
+            'pelanggaran_id' => $pelanggaran->id,
+            'jenis_sanksi' => 'teguran_1',
+            'batas_waktu_perbaikan' => Carbon::today()->addDays(2)->toDateString(),
+            'status_sanksi' => 'Belum Ditindaklanjuti',
+        ]);
+
+        $data = (new SanksiJatuhTempoNotification($sanksi))->toArray($this->superadmin);
+
+        $this->assertStringContainsString('Tidak diketahui', (string) $data['message']);
     }
 }

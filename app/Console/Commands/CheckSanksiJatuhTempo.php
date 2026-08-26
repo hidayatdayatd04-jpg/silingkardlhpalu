@@ -34,7 +34,7 @@ class CheckSanksiJatuhTempo extends Command
         $today = Carbon::today(config('app.timezone', 'Asia/Makassar'));
 
         $sanksis = Sanksi::query()
-            ->with(['pelanggaran.objekPengawasan'])
+            ->with(['pelanggaran.sidak.objekPengawasan'])
             ->whereNotNull('batas_waktu_perbaikan')
             ->where('status_sanksi', '!=', StatusPengaduan::DITINDAKLANJUTI)
             ->get();

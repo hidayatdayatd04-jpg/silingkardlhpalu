@@ -25,9 +25,9 @@
     <div class="title">SURAT SANKSI ADMINISTRATIF</div>
 
     <table>
-        <tr><td class="label">Perusahaan</td><td>{{ $sanksi->pelanggaran?->objekPengawasan?->nama_perusahaan }}</td></tr>
-        <tr><td class="label">Penanggung Jawab</td><td>{{ $sanksi->pelanggaran?->objekPengawasan?->nama_penanggung_jawab }}</td></tr>
-        <tr><td class="label">Alamat</td><td>{{ $sanksi->pelanggaran?->objekPengawasan?->alamat }}</td></tr>
+        <tr><td class="label">Perusahaan</td><td>{{ $sanksi->pelanggaran?->sidak?->objekPengawasan?->nama_perusahaan }}</td></tr>
+        <tr><td class="label">Penanggung Jawab</td><td>{{ $sanksi->pelanggaran?->sidak?->objekPengawasan?->nama_penanggung_jawab }}</td></tr>
+        <tr><td class="label">Alamat</td><td>{{ $sanksi->pelanggaran?->sidak?->objekPengawasan?->alamat }}</td></tr>
         <tr><td class="label">Jenis Pelanggaran</td><td>{{ $sanksi->pelanggaran?->jenis_pelanggaran }}</td></tr>
         @if ($sanksi->pelanggaran?->pasal_dilanggar)
             <tr><td class="label">Pasal Dilanggar</td><td>{{ $sanksi->pelanggaran->pasal_dilanggar }}</td></tr>

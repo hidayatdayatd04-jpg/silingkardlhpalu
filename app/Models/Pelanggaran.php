@@ -10,17 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Pelanggaran extends Model
 {
     protected $fillable = [
-        'objek_pengawasan_id',
         'sidak_id',
         'jenis_pelanggaran',
         'pasal_dilanggar',
         'keterangan',
     ];
-
-    public function objekPengawasan(): BelongsTo
-    {
-        return $this->belongsTo(ObjekPengawasan::class);
-    }
 
     public function sidak(): BelongsTo
     {

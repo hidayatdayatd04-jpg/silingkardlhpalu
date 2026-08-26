@@ -38,11 +38,6 @@ class ObjekPengawasan extends Model
         return $this->hasMany(Sidak::class);
     }
 
-    public function pelanggarans(): HasMany
-    {
-        return $this->hasMany(Pelanggaran::class);
-    }
-
     public function sosialisasiPesertas(): HasMany
     {
         return $this->hasMany(SosialisasiPeserta::class);

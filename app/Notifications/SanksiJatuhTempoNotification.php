@@ -23,7 +23,7 @@ class SanksiJatuhTempoNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $perusahaan = $this->sanksi->pelanggaran?->objekPengawasan?->nama_perusahaan ?? 'Tidak diketahui';
+        $perusahaan = $this->sanksi->pelanggaran?->sidak?->objekPengawasan?->nama_perusahaan ?? 'Tidak diketahui';
         $batasWaktuObj = $this->sanksi->batas_waktu_perbaikan ? \Illuminate\Support\Carbon::parse($this->sanksi->batas_waktu_perbaikan) : now();
         $batasWaktu = $batasWaktuObj->format('d M Y');
 

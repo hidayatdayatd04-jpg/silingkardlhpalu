@@ -16,8 +16,8 @@ use App\Models\User;
 use App\Services\FileUploadService;
 use App\Services\ImageCompressionService;
 use App\Support\ActivityLogger;
+use App\Support\Admin\AdminResourceExporter;
 use App\Support\Admin\AdminRegistry;
-use App\Support\DataIO;
 use App\Support\HtmlSanitizer;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -74,6 +74,33 @@ class ResourceController extends Controller
         );
     }
 
+    /**
+     * Administrator Utama tetap dapat meninjau, menambah, menghapus, dan
+     * mengekspor data operasional, tetapi tidak boleh mengubah record yang
+     * sudah ada. Konten & Sistem (Artikel serta Pengguna Admin) dikecualikan.
+     *
+     * Pemeriksaan ini sengaja berada di controller, bukan hanya Blade, agar
+     * request PUT langsung tidak dapat melewati mode baca-saja di antarmuka.
+     */
+    protected function isReadOnlyForCurrentUser(array $meta): bool
+    {
+        $user = auth()->user();
+
+        return $user?->isSuperadmin() === true
+            && ($meta['group'] ?? null) !== 'konten';
+    }
+
+    protected function ensureCanUpdate(array $meta): void
+    {
+        $this->ensureCanEdit($meta);
+
+        abort_if(
+            $this->isReadOnlyForCurrentUser($meta),
+            403,
+            'Administrator Utama hanya dapat melihat data ini. Pengubahan data operasional dilakukan oleh admin bidang terkait.'
+        );
+    }
+
     public function index(Request $request, string $resource)
     {
         $meta = AdminRegistry::find($resource);
@@ -114,6 +141,7 @@ class ResourceController extends Controller
             'fields' => AdminRegistry::formFields($meta),
             'method' => 'POST',
             'action' => route('admin.resources.store', $resource),
+            'readOnly' => false,
         ]);
     }
 
@@ -208,6 +236,7 @@ class ResourceController extends Controller
             'fields' => AdminRegistry::formFields($meta),
             'method' => 'PUT',
             'action' => route('admin.resources.update', [$resource, $model]),
+            'readOnly' => $this->isReadOnlyForCurrentUser($meta),
         ]);
     }
 
@@ -215,7 +244,7 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
-        $this->ensureCanEdit($meta);
+        $this->ensureCanUpdate($meta);
         $this->validateSpecialFields($request, $meta, true);
 
         $model = $meta['model']::findOrFail($record);
@@ -335,19 +364,7 @@ class ResourceController extends Controller
             'Akses file ditolak.'
         );
 
-        // Batasi path ke direktori penyimpanan milik resource ini saja:
-        // '{slug}/' (seluruh subdirektori upload resource, mis. surat/,
-        // dokumen/), 'admin/{slug}/' (field file langsung), serta direktori
-        // upload relasi (foto pengaduan, dokumen permohonan, dll).
-        $allowedPrefixes = [$meta['slug'].'/', 'admin/'.$meta['slug'].'/'];
-        foreach (AdminRegistry::relationUploads($meta['slug']) as $upload) {
-            $allowedPrefixes[] = $upload['directory'].'/';
-        }
-        abort_unless(
-            collect($allowedPrefixes)->contains(fn (string $prefix) => str_starts_with($path, $prefix)),
-            403,
-            'Akses file ditolak.'
-        );
+        abort_unless(AdminRegistry::isAllowedFilePath($path, $meta['slug']), 403, 'Akses file ditolak.');
 
         try {
             $exists = Storage::disk('public')->exists($path);
@@ -428,10 +445,7 @@ class ResourceController extends Controller
         $candidate = null;
 
         try {
-            $prefixes = [$slug.'/', 'admin/'.$slug.'/'];
-            foreach (AdminRegistry::relationUploads($slug) as $upload) {
-                $prefixes[] = $upload['directory'].'/';
-            }
+            $prefixes = array_map(fn (string $directory) => $directory.'/', AdminRegistry::fileDirectories($slug));
 
             foreach ($prefixes as $prefix) {
                 if (Storage::disk('public')->exists($prefix.$basename)) {
@@ -441,7 +455,7 @@ class ResourceController extends Controller
             }
 
             if ($candidate === null) {
-                foreach ([$slug, 'admin/'.$slug] as $dir) {
+                foreach (AdminRegistry::fileDirectories($slug) as $dir) {
                     foreach (Storage::disk('public')->allFiles($dir) as $key) {
                         if (basename($key) === $basename) {
                             $candidate = $key;
@@ -576,25 +590,18 @@ class ResourceController extends Controller
     protected function downloadData(array $meta, $query, string $format, string $scope)
     {
         $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
-        // Ekspor selalu berisi DATA LENGKAP tiap menu (semua kolom tabel),
-        // bukan sekadar subset $meta['columns'].
-        $exportMap = AdminRegistry::exportColumns($meta['slug'], $meta['model'])
-            ?? array_combine($meta['columns'], $meta['columns']);
-        $columns = array_keys($exportMap);
-        $headings = array_values($exportMap);
         $filename = $meta['slug'].'-'.$scope.'-'.now()->format('Ymd-His');
 
         ActivityLogger::log('exported', $meta['label'].' ('.strtoupper($format).', '.$scope.')', $meta['slug']);
 
-        $dataIO = app(DataIO::class);
+        $exporter = app(AdminResourceExporter::class);
 
         if ($format === 'csv') {
-            return $dataIO->csvDownload($query, $columns, $filename.'.csv', $headings);
+            return $exporter->csvDownload($query, $meta, $filename.'.csv');
         }
 
-        // XLSX via DataIO (ZipArchive-based, dependency-free).
         $tmpPath = storage_path('app/private/'.$filename.'.xlsx');
-        $dataIO->writeXlsx($query, $columns, $tmpPath, $headings);
+        $exporter->write($query, $meta, 'xlsx', $tmpPath);
 
         return response()->download($tmpPath, $filename.'.xlsx')->deleteFileAfterSend(true);
     }

@@ -6,8 +6,8 @@ use App\Http\Controllers\Admin\ResourceController;
 use App\Models\User;
 use App\Notifications\ExportReady;
 use App\Support\ActivityLogger;
+use App\Support\Admin\AdminResourceExporter;
 use App\Support\Admin\AdminRegistry;
-use App\Support\DataIO;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Request;
@@ -59,20 +59,12 @@ class GenerateExportJob implements ShouldQueue
         // Bangun ulang query yang sama seperti saat request ekspor sinkron.
         $query = $this->buildQuery($meta);
 
-        $exportMap = AdminRegistry::exportColumns($meta['slug'], $meta['model']);
-        $columns   = array_keys($exportMap);
-        $headings  = array_values($exportMap);
-
         // File di-disk pakai nama acak (token) — URL unduh tidak bisa ditebak.
         $dir   = storage_path('app/private/'.trim(config('exports.storage_dir', 'exports'), '/'));
         $token = Str::uuid().'.'.$format;
         $path  = $dir.'/'.$token;
 
-        if ($format === 'csv') {
-            DataIO::writeCsvFile($query, $columns, $path, $headings);
-        } else {
-            DataIO::writeXlsx($query, $columns, $path, $headings);
-        }
+        app(AdminResourceExporter::class)->write($query, $meta, $format, $path);
 
         ActivityLogger::log(
             'exported',

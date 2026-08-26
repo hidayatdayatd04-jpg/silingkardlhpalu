@@ -34,18 +34,6 @@ class Sanksi extends Model
         return $this->belongsTo(Pelanggaran::class);
     }
 
-    public function objekPengawasan()
-    {
-        return $this->hasOneThrough(
-            ObjekPengawasan::class,
-            Pelanggaran::class,
-            'id',        // Foreign key on pelanggarans table
-            'id',        // Foreign key on objek_pengawasan table
-            'pelanggaran_id', // Local key on sanksi table
-            'objek_pengawasan_id' // Local key on pelanggarans table
-        );
-    }
-
     public function isOverdue(): bool
     {
         if (! $this->batas_waktu_perbaikan) {
@@ -57,11 +45,11 @@ class Sanksi extends Model
     }
 
     /**
-     * Nama objek pengawasan (lewat relasi pelanggaran) — untuk export.
+     * Nama objek pengawasan diambil dari Sidak terkait bila tersedia.
      */
     public function getObjekPengawasanNamaAttribute(): ?string
     {
-        return $this->pelanggaran?->objekPengawasan?->nama_perusahaan;
+        return $this->pelanggaran?->sidak?->objekPengawasan?->nama_perusahaan;
     }
 
     /**

@@ -44,7 +44,9 @@ class NotificationObserver
             $model instanceof PengaduanTataPenataan => $this->notify('tata-penataan', 'building', 'purple', 'Pengaduan Tata Penataan Baru',
                 ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan tata penataan.', 'pengaduan-tata-penataan', $model->getKey()),
             $model instanceof Pelanggaran => $this->notify('tata-penataan', 'alert-triangle', 'rose', 'Pelanggaran Terdeteksi',
-                'Pelanggaran baru terdeteksi dari '.$model->objekPengawasan?->nama_perusahaan.'. ', 'pelanggaran', $model->getKey()),
+                ($model->sidak?->objekPengawasan?->nama_perusahaan
+                    ? 'Pelanggaran baru terdeteksi dari '.$model->sidak->objekPengawasan->nama_perusahaan.'.'
+                    : 'Pelanggaran baru terdeteksi.'), 'pelanggaran', $model->getKey()),
             $model instanceof Sosialisasi => $model->isMonitoringEvaluasi()
                 ? $this->notify('tata-penataan', 'presentation', 'sky', 'Kegiatan Monitoring & Evaluasi Baru',
                     'Kegiatan monitoring dan evaluasi baru: '.$model->judul, 'sosialisasi', $model->getKey())

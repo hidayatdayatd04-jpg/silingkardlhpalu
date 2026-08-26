@@ -1,6 +1,11 @@
 {
   "identifier": "default",
-  "description": "Halaman lokal (loading/error) boleh memakai IPC dasar. Halaman remote (situs produksi) tidak diberi akses IPC apa pun — semua logika berjalan di sisi Rust.",
+  "description": "Halaman lokal dapat memakai perintah probe koneksi dan kontrol jendela yang tervalidasi di sisi native.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "allow-check-connection",
+    "allow-admin-target",
+    "allow-desktop-window-control"
+  ]
 }
