@@ -13,6 +13,8 @@
     'min' => null,
     'max' => null,
     'step' => null,
+    // Render popover di layer halaman agar tidak terpotong parent overflow.
+    'teleport' => false,
 ])
 
 @php
@@ -40,7 +42,7 @@
      Date picker custom (Alpine) — kalender berbahasa Indonesia
      ═══════════════════════════════════════════════════════════ --}}
 <div class="df-field"
-     x-data="datePicker(@js($currentValue), @js($min), @js($max), {{ $hasError ? 'true' : 'false' }}, {{ ($disabled || $readonly) ? 'true' : 'false' }})"
+     x-data="datePicker(@js($currentValue), @js($min), @js($max), {{ $hasError ? 'true' : 'false' }}, {{ ($disabled || $readonly) ? 'true' : 'false' }}, false, {{ $teleport ? 'true' : 'false' }})"
      x-modelable="value"
      {{ $attributes->whereStartsWith(['x-model']) }}
      x-on:keydown.escape.window="open = false">
@@ -87,6 +89,9 @@
         </button>
 
         {{-- Popover kalender --}}
+        @if($teleport)
+            <template x-teleport="body">
+        @endif
         <div
             x-show="open"
             x-cloak
@@ -97,7 +102,10 @@
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 -translate-y-1"
             x-on:click.outside="open = false"
+            x-ref="popover"
             class="df-popover"
+            :class="{ 'df-popover--teleported': useTeleport }"
+            :style="popoverStyle"
             role="dialog"
             aria-label="Pilih tanggal"
         >
@@ -163,6 +171,9 @@
                 </button>
             </div>
         </div>
+        @if($teleport)
+            </template>
+        @endif
     </div>
 
     @if($hasError)
@@ -396,6 +407,7 @@
 
     /* ── Popover kalender ── */
     .df-popover { position: absolute; left: 0; top: calc(100% + 8px); z-index: var(--admin-z-dropdown, 1000); width: 320px; max-width: calc(100vw - 2rem); background: #fff; border: 1px solid #e3ede6; border-radius: 18px; box-shadow: 0 16px 40px -12px rgba(13, 43, 29, 0.22); padding: 14px; }
+    .df-popover--teleported { position: fixed; z-index: var(--admin-z-dropdown, 1000); }
     .df-pop-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
     .df-pop-title { font-size: 14px; font-weight: 700; color: #12201a; letter-spacing: 0.01em; }
     .df-nav-btn { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; border: none; background: transparent; color: #5b6b63; cursor: pointer; transition: background .15s ease, color .15s ease; }
@@ -455,7 +467,7 @@
          * Menyimpan nilai format Y-m-d pada hidden input & men-dispatch event
          * `input` + `change` (bubbles) agar validasi/clearError form tetap jalan.
          */
-        function datePicker(initialValue, minIso, maxIso, hasError, isDisabled, withTime) {
+        function datePicker(initialValue, minIso, maxIso, hasError, isDisabled, withTime, useTeleport) {
             var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
             var DAYS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
             var initialText = String(initialValue || '');
@@ -480,6 +492,9 @@
                 value: initialDate,
                 time: initialTime,
                 withTime: !!withTime,
+                useTeleport: !!useTeleport,
+                popoverStyle: '',
+                repositionPopover: null,
                 viewYear: new Date().getFullYear(),
                 viewMonth: new Date().getMonth(),
                 minDate: parse(minIso),
@@ -495,6 +510,19 @@
                         this.$refs.field.classList.add('field-shake');
                         setTimeout(() => this.$refs.field.classList.remove('field-shake'), 500);
                     }
+                    if (this.useTeleport) {
+                        this.repositionPopover = () => {
+                            if (this.open) this.positionPopover();
+                        };
+                        window.addEventListener('resize', this.repositionPopover);
+                        window.addEventListener('scroll', this.repositionPopover, true);
+                    }
+                },
+
+                destroy() {
+                    if (!this.repositionPopover) return;
+                    window.removeEventListener('resize', this.repositionPopover);
+                    window.removeEventListener('scroll', this.repositionPopover, true);
                 },
 
                 get selectedDate() { return parse(this.value); },
@@ -543,7 +571,29 @@
                         var d = parse(this.value) || new Date();
                         this.viewYear = d.getFullYear();
                         this.viewMonth = d.getMonth();
+                        this.$nextTick(() => this.positionPopover());
                     }
+                },
+
+                positionPopover() {
+                    if (!this.useTeleport || !this.$refs.field) return;
+
+                    var rect = this.$refs.field.getBoundingClientRect();
+                    var popover = this.$refs.popover;
+                    var width = popover && popover.offsetWidth ? popover.offsetWidth : 320;
+                    var height = popover && popover.offsetHeight ? popover.offsetHeight : 360;
+                    var padding = 16;
+                    var left = Math.min(
+                        Math.max(rect.left, padding),
+                        Math.max(padding, window.innerWidth - width - padding)
+                    );
+                    var top = rect.bottom + 8;
+
+                    if (top + height > window.innerHeight - padding && rect.top - height - 8 >= padding) {
+                        top = rect.top - height - 8;
+                    }
+
+                    this.popoverStyle = 'top:' + Math.round(top) + 'px;left:' + Math.round(left) + 'px;';
                 },
 
                 prevMonth() { if (this.viewMonth === 0) { this.viewMonth = 11; this.viewYear--; } else { this.viewMonth--; } },
