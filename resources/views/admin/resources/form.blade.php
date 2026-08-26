@@ -14,28 +14,58 @@
 
     $currentKegiatan = old('jenis_kegiatan', $record->jenis_kegiatan ?? 'sosialisasi');
 
+    $makeDaftarHadirRow = static function (array $row, int $index): array {
+        $id = filter_var($row['id'] ?? null, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
+        $id = $id === false ? null : $id;
+
+        return [
+            // ID disimpan agar edit dapat memperbarui peserta yang sama, bukan
+            // menghapus dan membuat ulang seluruh daftar hadir.
+            'id' => $id,
+            // Alpine memerlukan key yang tidak berubah saat sebuah baris dihapus.
+            'key' => $id ? 'peserta-'.$id : 'baris-'.$index,
+            'nama_perusahaan' => (string) ($row['nama_perusahaan'] ?? ''),
+            'jenis_usaha' => (string) ($row['jenis_usaha'] ?? ''),
+            'tanggal' => (string) ($row['tanggal'] ?? ''),
+            'lokasi' => (string) ($row['lokasi'] ?? ''),
+            'tim_survey' => (string) ($row['tim_survey'] ?? ''),
+        ];
+    };
+
+    $oldDaftarHadir = old('daftar_hadir');
     $daftarHadirRows = [];
-    if ($resource['slug'] === 'sosialisasi' && $record->exists && $record->isMonitoringEvaluasi()) {
+    if (is_array($oldDaftarHadir)) {
+        // Jangan hilangkan isian tabel ketika validasi field lain gagal.
+        $daftarHadirRows = collect($oldDaftarHadir)
+            ->filter(fn ($row) => is_array($row))
+            ->values()
+            ->map(fn (array $row, int $index) => $makeDaftarHadirRow($row, $index))
+            ->all();
+    } elseif ($resource['slug'] === 'sosialisasi' && $record->exists && $record->isMonitoringEvaluasi()) {
         $daftarHadirRows = $record->pesertas()
             ->orderBy('id')
             ->get()
-            ->map(fn ($p) => [
-                'nama_perusahaan' => $p->nama_perusahaan ?? '',
-                'jenis_usaha' => $p->jenis_usaha ?? '',
-                'tanggal' => $p->tanggal?->format('Y-m-d') ?? '',
-                'lokasi' => $p->lokasi ?? '',
-                'tim_survey' => $p->tim_survey ?? '',
-            ])
+            ->values()
+            ->map(fn ($p, int $index) => $makeDaftarHadirRow([
+                'id' => $p->getKey(),
+                'nama_perusahaan' => $p->nama_perusahaan,
+                'jenis_usaha' => $p->jenis_usaha,
+                'tanggal' => $p->tanggal?->format('Y-m-d'),
+                'lokasi' => $p->lokasi,
+                'tim_survey' => $p->tim_survey,
+            ], $index))
             ->all();
     }
     if (empty($daftarHadirRows)) {
-        $daftarHadirRows = [[
+        $daftarHadirRows = [$makeDaftarHadirRow([
             'nama_perusahaan' => '',
             'jenis_usaha' => '',
             'tanggal' => '',
             'lokasi' => '',
             'tim_survey' => '',
-        ]];
+        ], 0)];
     }
 
     $fieldValue = function (array $field) use ($record, $resource) {
@@ -431,12 +461,17 @@
                             @elseif($type === 'daftar_hadir')
                                 <div class="sm:col-span-2" x-data="{
                                     rows: {{ Js::from($daftarHadirRows) }},
+                                    nextRowKey: 0,
+                                    newRowKey() {
+                                        this.nextRowKey += 1;
+                                        return 'baru-' + Date.now().toString(36) + '-' + this.nextRowKey;
+                                    },
                                     addRow() {
-                                        this.rows.push({ nama_perusahaan: '', jenis_usaha: '', tanggal: '', lokasi: '', tim_survey: '' });
+                                        this.rows.push({ id: null, key: this.newRowKey(), nama_perusahaan: '', jenis_usaha: '', tanggal: '', lokasi: '', tim_survey: '' });
                                     },
                                     removeRow(index) {
                                         if (this.rows.length <= 1) {
-                                            this.rows = [{ nama_perusahaan: '', jenis_usaha: '', tanggal: '', lokasi: '', tim_survey: '' }];
+                                            this.rows = [{ id: null, key: this.newRowKey(), nama_perusahaan: '', jenis_usaha: '', tanggal: '', lokasi: '', tim_survey: '' }];
                                             return;
                                         }
                                         this.rows.splice(index, 1);
@@ -457,26 +492,28 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <template x-for="(row, i) in rows" :key="i">
+                                                    <template x-for="(row, i) in rows" :key="row.key">
                                                         <tr class="border-b border-slate-100 align-top last:border-0 dark:border-white/5">
                                                             <td class="px-3 py-2 text-center font-bold text-slate-400" x-text="i + 1"></td>
                                                             <td class="px-3 py-2">
-                                                                <input type="text" name="daftar_hadir[][nama_perusahaan]" x-model="row.nama_perusahaan" placeholder="Nama perusahaan"
+                                                                <input type="hidden" x-bind:name="'daftar_hadir[' + i + '][id]'" x-bind:value="row.id || ''">
+                                                                <input type="text" x-bind:name="'daftar_hadir[' + i + '][nama_perusahaan]'" x-model="row.nama_perusahaan" placeholder="Nama perusahaan"
                                                                     class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
                                                             </td>
                                                             <td class="px-3 py-2">
-                                                                <input type="text" name="daftar_hadir[][jenis_usaha]" x-model="row.jenis_usaha" placeholder="Jenis usaha"
+                                                                <input type="text" x-bind:name="'daftar_hadir[' + i + '][jenis_usaha]'" x-model="row.jenis_usaha" placeholder="Jenis usaha"
                                                                     class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
                                                             </td>
                                                             <td class="px-3 py-2">
-                                                                <x-admin.date-field name="daftar_hadir[][tanggal]" x-model="row.tanggal" :teleport="true" />
+                                                                <x-admin.date-field name="" x-model="row.tanggal"
+                                                                    x-bind:name="'daftar_hadir[' + i + '][tanggal]'" :teleport="true" />
                                                             </td>
                                                             <td class="px-3 py-2">
-                                                                <input type="text" name="daftar_hadir[][lokasi]" x-model="row.lokasi" placeholder="Lokasi kegiatan"
+                                                                <input type="text" x-bind:name="'daftar_hadir[' + i + '][lokasi]'" x-model="row.lokasi" placeholder="Lokasi kegiatan"
                                                                     class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
                                                             </td>
                                                             <td class="px-3 py-2">
-                                                                <input type="text" name="daftar_hadir[][tim_survey]" x-model="row.tim_survey" placeholder="Nama petugas, pisah koma"
+                                                                <input type="text" x-bind:name="'daftar_hadir[' + i + '][tim_survey]'" x-model="row.tim_survey" placeholder="Nama petugas, pisah koma"
                                                                     class="w-full rounded-lg border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5">
                                                             </td>
                                                             <td class="px-3 py-2 text-center">

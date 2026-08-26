@@ -23,12 +23,14 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class ResourceController extends Controller
@@ -110,10 +112,17 @@ class ResourceController extends Controller
         $this->validateFromFields($request, $meta, false, null);
 
         $record = new $meta['model'];
-        $record->fill($this->payload($request, $meta, $record));
-        $record->save();
+        if ($meta['slug'] === 'sosialisasi') {
+            DB::transaction(function () use ($request, $meta, $record): void {
+                $record->fill($this->payload($request, $meta, $record));
+                $record->save();
+                $this->storeDaftarHadir($request, $meta, $record);
+            });
+        } else {
+            $record->fill($this->payload($request, $meta, $record));
+            $record->save();
+        }
         $this->storeSpecialRelations($request, $meta, $record);
-        $this->storeDaftarHadir($request, $meta, $record);
         $this->storeSanksiIfPelanggaran($request, $record);
 
         // Handle role assignment untuk user — hanya superadmin yang boleh
@@ -193,10 +202,17 @@ class ResourceController extends Controller
 
         $model = $meta['model']::findOrFail($record);
         $this->validateFromFields($request, $meta, true, $model);
-        $model->fill($this->payload($request, $meta, $model));
-        $model->save();
+        if ($meta['slug'] === 'sosialisasi') {
+            DB::transaction(function () use ($request, $meta, $model): void {
+                $model->fill($this->payload($request, $meta, $model));
+                $model->save();
+                $this->storeDaftarHadir($request, $meta, $model);
+            });
+        } else {
+            $model->fill($this->payload($request, $meta, $model));
+            $model->save();
+        }
         $this->storeSpecialRelations($request, $meta, $model);
-        $this->storeDaftarHadir($request, $meta, $model);
         $this->storeSanksiIfPelanggaran($request, $model);
 
         // Handle role assignment untuk user — hanya superadmin yang boleh
@@ -971,6 +987,24 @@ class ResourceController extends Controller
             return;
         }
 
+        // Daftar hadir Monitoring & Evaluasi dikirim sebagai array per baris.
+        // Validasi struktur di sini agar ID peserta tidak dapat dipalsukan dan
+        // setiap nilai yang akan disimpan selalu sesuai tipe kolomnya.
+        if ($meta['slug'] === 'sosialisasi' && $request->input('jenis_kegiatan') === 'monitoring-evaluasi') {
+            $request->validate([
+                'daftar_hadir' => ['nullable', 'array'],
+                'daftar_hadir.*' => ['array'],
+                'daftar_hadir.*.id' => ['nullable', 'integer', 'min:1'],
+                'daftar_hadir.*.nama_perusahaan' => ['nullable', 'string', 'max:255'],
+                'daftar_hadir.*.jenis_usaha' => ['nullable', 'string', 'max:255'],
+                'daftar_hadir.*.tanggal' => ['nullable', 'date'],
+                'daftar_hadir.*.lokasi' => ['nullable', 'string', 'max:255'],
+                'daftar_hadir.*.tim_survey' => ['nullable', 'string', 'max:255'],
+            ]);
+
+            return;
+        }
+
         $pengaduanSlugs = ['pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth'];
 
         if (! in_array($meta['slug'], $pengaduanSlugs)) {
@@ -1236,7 +1270,8 @@ class ResourceController extends Controller
     /**
      * Simpan daftar hadir (baris kunjungan) untuk kegiatan Monitoring & Evaluasi
      * pada resource 'sosialisasi' (menu Monitoring, Evaluasi dan Sosialisasi).
-     * Baris lama dihapus lalu dibuat ulang agar selalu sinkron dengan form.
+     * Baris yang masih ada diperbarui berdasarkan ID-nya agar perubahan tidak
+     * berpindah ke baris lain dan data terkait peserta tetap terjaga.
      */
     protected function storeDaftarHadir(Request $request, array $meta, Model $record): void
     {
@@ -1249,21 +1284,74 @@ class ResourceController extends Controller
         }
 
         $rows = collect($request->input('daftar_hadir', []))
-            ->filter(fn ($row) => is_array($row) && (filled($row['nama_perusahaan'] ?? null) || filled($row['lokasi'] ?? null) || filled($row['tim_survey'] ?? null)))
-            ->map(fn ($row) => [
+            ->filter(fn ($row) => is_array($row))
+            ->map(fn (array $row) => [
+                'id' => filled($row['id'] ?? null) ? (int) $row['id'] : null,
                 'nama_perusahaan' => trim((string) ($row['nama_perusahaan'] ?? '')),
                 'jenis_usaha' => trim((string) ($row['jenis_usaha'] ?? '')),
                 'tanggal' => ($row['tanggal'] ?? null) ?: null,
                 'lokasi' => trim((string) ($row['lokasi'] ?? '')),
                 'tim_survey' => trim((string) ($row['tim_survey'] ?? '')),
             ])
+            // Pertahankan juga baris yang hanya memiliki jenis usaha atau tanggal;
+            // sebelumnya kedua nilai ini justru terbuang saat form disimpan.
+            ->filter(fn (array $row) => filled($row['nama_perusahaan'])
+                || filled($row['jenis_usaha'])
+                || filled($row['tanggal'])
+                || filled($row['lokasi'])
+                || filled($row['tim_survey']))
             ->values();
 
-        $record->pesertas()->delete();
+        $existingRows = $record->pesertas()
+            ->get()
+            ->keyBy(fn (Model $peserta) => (string) $peserta->getKey());
 
-        foreach ($rows as $row) {
-            $record->pesertas()->create($row);
+        $submittedIds = $rows
+            ->pluck('id')
+            ->filter(fn ($id) => $id !== null)
+            ->map(fn ($id) => (string) $id);
+
+        if ($submittedIds->count() !== $submittedIds->unique()->count()) {
+            throw ValidationException::withMessages([
+                'daftar_hadir' => 'Setiap baris daftar hadir hanya boleh dikirim satu kali.',
+            ]);
         }
+
+        $invalidId = $submittedIds->first(fn (string $id) => ! $existingRows->has($id));
+        if ($invalidId !== null) {
+            throw ValidationException::withMessages([
+                'daftar_hadir' => 'Salah satu baris daftar hadir tidak sesuai dengan kegiatan ini.',
+            ]);
+        }
+
+        DB::transaction(function () use ($record, $existingRows, $rows): void {
+            $savedIds = [];
+
+            foreach ($rows as $row) {
+                $id = $row['id'];
+                unset($row['id']);
+
+                if ($id !== null) {
+                    /** @var Model $peserta */
+                    $peserta = $existingRows->get((string) $id);
+                    $peserta->update($row);
+                    $savedIds[] = $peserta->getKey();
+
+                    continue;
+                }
+
+                $savedIds[] = $record->pesertas()->create($row)->getKey();
+            }
+
+            $recordsToDelete = $record->pesertas();
+            if ($savedIds === []) {
+                $recordsToDelete->delete();
+
+                return;
+            }
+
+            $recordsToDelete->whereNotIn('id', $savedIds)->delete();
+        });
     }
 
     protected function storeSanksiIfPelanggaran(Request $request, Model $record): void
