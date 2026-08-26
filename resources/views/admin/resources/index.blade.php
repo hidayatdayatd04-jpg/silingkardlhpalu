@@ -5,6 +5,7 @@
 
 @php
     $isUser = $resource['slug'] === 'user';
+    $canEdit = $resource['can_edit'] ?? true;
 @endphp
 
 @section('content')
@@ -357,10 +358,12 @@
                                    class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
                                      <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                 </a>
-                                <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
-                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
-                                     <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
-                                </a>
+                                @if($canEdit)
+                                    <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
+                                       class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">
+                                          <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
+                                    </a>
+                                @endif
                                 <button type="button"
                                     x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
                                     class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ \App\Support\Admin\AdminRegistry::titleFor($record, $resource) }}">

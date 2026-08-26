@@ -58,6 +58,22 @@ class ResourceController extends Controller
         }
     }
 
+    /**
+     * Pastikan resource memang mengizinkan pengubahan data.
+     *
+     * Beberapa menu merupakan arsip kegiatan yang hanya dapat ditambah dan
+     * dilihat. Pemeriksaan ini berada di controller agar URL edit maupun PUT
+     * langsung tetap ditolak, bukan hanya menyembunyikan tombol di antarmuka.
+     */
+    protected function ensureCanEdit(array $meta): void
+    {
+        abort_if(
+            ($meta['can_edit'] ?? true) === false,
+            403,
+            'Menu ini hanya mendukung penambahan dan lihat detail. Pengubahan data tidak diizinkan.'
+        );
+    }
+
     public function index(Request $request, string $resource)
     {
         $meta = AdminRegistry::find($resource);
@@ -177,6 +193,7 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
+        $this->ensureCanEdit($meta);
         $model = $meta['model']::findOrFail($record);
 
         $view = match ($meta['slug']) {
@@ -198,6 +215,7 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
+        $this->ensureCanEdit($meta);
         $this->validateSpecialFields($request, $meta, true);
 
         $model = $meta['model']::findOrFail($record);

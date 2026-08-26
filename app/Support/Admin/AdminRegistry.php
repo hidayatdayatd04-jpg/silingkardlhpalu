@@ -57,7 +57,10 @@ class AdminRegistry
                 'items' => [
                     array_merge(self::resource('pengaduan-tata-penataan', 'Pengaduan Tata Penataan', PengaduanTataPenataan::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('pelanggaran', 'Pelanggaran', Pelanggaran::class, ['jenis_pelanggaran', 'keterangan', 'jenis_sanksi_text', 'status_sanksi_text', 'created_at']),
-                    self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
+                    array_merge(
+                        self::resource('sosialisasi', 'Monitoring, Evaluasi dan Sosialisasi', Sosialisasi::class, ['judul', 'jenis_kegiatan', 'periode_tw', 'tahun', 'tanggal']),
+                        ['can_edit' => false],
+                    ),
                 ],
             ],
             'rth' => [
@@ -1684,6 +1687,7 @@ class AdminRegistry
             'columns' => $columns,
             'filters' => self::buildFilters($slug, $model, $columns),
             'can_create' => true,
+            'can_edit' => true,
         ];
     }
 

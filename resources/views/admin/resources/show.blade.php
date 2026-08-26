@@ -37,6 +37,7 @@
 
     $statusValue = $record->status ?? $record->status_sanksi ?? $record->status_tindak_lanjut ?? null;
     $statusText = $statusValue ? $format($statusValue) : null;
+    $canEdit = $resource['can_edit'] ?? true;
     $statusVariant = match (true) {
         !$statusText => 'neutral',
         in_array($statusText, ['Ditinjau', 'Ditindaklanjuti', 'Selesai', 'Aktif', 'approved', 'selesai', 'aktif'], true) => 'success',
@@ -426,7 +427,9 @@
                     <x-admin.status-pill :variant="$statusVariant" :label="$statusText" :pulse="$statusVariant === 'warning'" />
                 @endif
                 <x-admin.button variant="secondary" size="sm" icon="chevron-left" :href="route('admin.resources.index', $resource['slug'])">Kembali</x-admin.button>
-                <x-admin.button variant="primary" size="sm" icon="edit" :href="route('admin.resources.edit', [$resource['slug'], $record])">Edit</x-admin.button>
+                @if($canEdit)
+                    <x-admin.button variant="primary" size="sm" icon="edit" :href="route('admin.resources.edit', [$resource['slug'], $record])">Edit</x-admin.button>
+                @endif
             </x-slot:actions>
         </x-admin.page-header>
 

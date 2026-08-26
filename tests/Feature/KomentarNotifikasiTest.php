@@ -47,9 +47,9 @@ class KomentarNotifikasiTest extends TestCase
         // ("Artikel ... telah ditayangkan"), jadi ambil notifikasi komentar
         // berdasarkan judulnya — bukan sekadar notifikasi terbaru.
         $notif = $admin->notifications()
-            ->where('data->title', 'Komentar Artikel Baru')
             ->latest()
-            ->first();
+            ->get()
+            ->first(fn ($n) => ($n->data['title'] ?? null) === 'Komentar Artikel Baru');
         $this->assertNotNull($notif);
         $this->assertStringContainsString('Budi', (string) $notif->data['message']);
         $this->assertStringContainsString($artikel->judul, (string) $notif->data['message']);
