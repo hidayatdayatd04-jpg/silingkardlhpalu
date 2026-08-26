@@ -103,7 +103,7 @@ class DataIO
      *
      * @param  array<int,string>  $columns
      */
-    public static function writeXlsx(Builder $builder, array $columns, string $absolutePath, ?array $headings = null, ?callable $rowMapper = null): void
+    public static function writeXlsx(Builder $builder, array $columns, string $absolutePath, ?array $headings = null, ?callable $rowMapper = null, ?string $sheetName = 'Data'): void
     {
         $headings = $headings ?? self::headings($columns);
 
@@ -121,32 +121,66 @@ class DataIO
 
         $zip->addFromString('[Content_Types].xml', self::xlsxContentTypes());
         $zip->addFromString('_rels/.rels', self::xlsxRels());
-        $zip->addFromString('xl/workbook.xml', self::xlsxWorkbook());
+        $zip->addFromString('xl/workbook.xml', self::xlsxWorkbook($sheetName));
         $zip->addFromString('xl/_rels/workbook.xml.rels', self::xlsxWorkbookRels());
         $zip->addFromString('xl/styles.xml', self::xlsxStyles());
 
         // Kumpulkan baris ke string XML (chunk agar tak meledak memori).
         $rowsXml = '';
         $rowIndex = 2;
-        (clone $builder)->chunk(500, function ($rows) use ($columns, $headings, $rowMapper, &$rowsXml, &$rowIndex) {
+        $hyperlinks = [];
+        $linkCounter = 1;
+
+        (clone $builder)->chunk(500, function ($rows) use ($columns, $headings, $rowMapper, &$rowsXml, &$rowIndex, &$hyperlinks, &$linkCounter) {
             foreach ($rows as $row) {
-                $rowsXml .= self::xlsxDataRow(
-                    $rowIndex,
-                    self::exportRowValues($row, $columns, $rowMapper),
-                    $headings,
-                );
+                $values = self::exportRowValues($row, $columns, $rowMapper);
+                $cells = '';
+
+                foreach (array_values($values) as $columnIndex => $value) {
+                    $text = self::xlsxCell(self::displayValue($value));
+                    $style = self::xlsxBodyStyle((string) ($headings[$columnIndex] ?? ''), $text);
+                    $reference = self::colLetter($columnIndex + 1).$rowIndex;
+
+                    if (str_contains($text, 'http://') || str_contains($text, 'https://')) {
+                        if (preg_match('/https?:\/\/[^\s\)\"\']+/i', $text, $matches)) {
+                            $rId = 'rIdH'.$linkCounter++;
+                            $hyperlinks[] = [
+                                'ref' => $reference,
+                                'url' => $matches[0],
+                                'id' => $rId,
+                            ];
+                        }
+                    }
+
+                    $cells .= '<c r="'.$reference.'" t="inlineStr" s="'.$style.'"><is><t xml:space="preserve">'
+                        .htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+                        .'</t></is></c>';
+                }
+
+                $rowsXml .= '<row r="'.$rowIndex.'">'.$cells.'</row>';
                 $rowIndex++;
             }
         });
 
+        $hyperlinksXml = '';
+        if (! empty($hyperlinks)) {
+            $hyperlinksXml = '<hyperlinks>'
+                . collect($hyperlinks)->map(fn ($h) => '<hyperlink ref="'.$h['ref'].'" r:id="'.$h['id'].'"/>')->implode('')
+                . '</hyperlinks>';
+
+            $relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . collect($hyperlinks)->map(fn ($h) => '<Relationship Id="'.$h['id'].'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="'.htmlspecialchars($h['url'], ENT_XML1 | ENT_QUOTES, 'UTF-8').'" TargetMode="External"/>')->implode('')
+                . '</Relationships>';
+
+            $zip->addFromString('xl/worksheets/_rels/sheet1.xml.rels', $relsXml);
+        }
+
         $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            // Urutan elemen wajib mengikuti CT_Worksheet OOXML. Excel
-            // menganggap `<cols>` sebelum `<sheetViews>` sebagai worksheet
-            // rusak walau XML-nya sendiri well-formed, lalu membuang seluruh
-            // sheet saat proses repair.
-            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-            . '<sheetFormatPr defaultRowHeight="15"/>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            . '<dimension ref="A1:'.self::colLetter(max(1, count($headings))).max(1, $rowIndex - 1).'"/>'
+            . '<sheetViews><sheetView tabSelected="1" workbookViewId="0"><selection activeCell="A1" sqref="A1"/></sheetView></sheetViews>'
+            . '<sheetFormatPr defaultRowHeight="18" defaultColWidth="15"/>'
             . '<cols>'
             . collect($headings)->map(fn ($heading, $i) => '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.self::xlsxColumnWidth((string) $heading).'" customWidth="true"/>')->implode('')
             . '</cols>'
@@ -155,6 +189,8 @@ class DataIO
             . $rowsXml
             . '</sheetData>'
             . '<autoFilter ref="A1:'.self::colLetter(max(1, count($headings))).max(1, $rowIndex - 1).'"/>'
+            . $hyperlinksXml
+            . '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>'
             . '</worksheet>';
 
         $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
@@ -164,7 +200,7 @@ class DataIO
     /**
      * Tulis XLSX dari baris siap-pakai (headings + rows berupa string/angka).
      */
-    public static function writeXlsxRows(array $headings, array $rows, string $absolutePath): void
+    public static function writeXlsxRows(array $headings, array $rows, string $absolutePath, ?string $sheetName = 'Data'): void
     {
         $dir = dirname($absolutePath);
         if (! is_dir($dir)) {
@@ -178,28 +214,71 @@ class DataIO
 
         $zip->addFromString('[Content_Types].xml', self::xlsxContentTypes());
         $zip->addFromString('_rels/.rels', self::xlsxRels());
-        $zip->addFromString('xl/workbook.xml', self::xlsxWorkbook());
+        $zip->addFromString('xl/workbook.xml', self::xlsxWorkbook($sheetName));
         $zip->addFromString('xl/_rels/workbook.xml.rels', self::xlsxWorkbookRels());
         $zip->addFromString('xl/styles.xml', self::xlsxStyles());
 
         $rowsXml = '';
         $rowIndex = 1;
+        $hyperlinks = [];
+        $linkCounter = 1;
+
         foreach ($rows as $row) {
             $rowIndex++;
-            $rowsXml .= self::xlsxDataRow($rowIndex, $row, $headings);
+            $cells = '';
+
+            foreach (array_values($row) as $columnIndex => $value) {
+                $text = self::xlsxCell(self::displayValue($value));
+                $style = self::xlsxBodyStyle((string) ($headings[$columnIndex] ?? ''), $text);
+                $reference = self::colLetter($columnIndex + 1).$rowIndex;
+
+                if (str_contains($text, 'http://') || str_contains($text, 'https://')) {
+                    if (preg_match('/https?:\/\/[^\s\)\"\']+/i', $text, $matches)) {
+                        $rId = 'rIdH'.$linkCounter++;
+                        $hyperlinks[] = [
+                            'ref' => $reference,
+                            'url' => $matches[0],
+                            'id' => $rId,
+                        ];
+                    }
+                }
+
+                $cells .= '<c r="'.$reference.'" t="inlineStr" s="'.$style.'"><is><t xml:space="preserve">'
+                    .htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+                    .'</t></is></c>';
+            }
+
+            $rowsXml .= '<row r="'.$rowIndex.'">'.$cells.'</row>';
         }
 
         $headRow = self::xlsxHeaderRow($headings);
 
+        $hyperlinksXml = '';
+        if (! empty($hyperlinks)) {
+            $hyperlinksXml = '<hyperlinks>'
+                . collect($hyperlinks)->map(fn ($h) => '<hyperlink ref="'.$h['ref'].'" r:id="'.$h['id'].'"/>')->implode('')
+                . '</hyperlinks>';
+
+            $relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . collect($hyperlinks)->map(fn ($h) => '<Relationship Id="'.$h['id'].'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="'.htmlspecialchars($h['url'], ENT_XML1 | ENT_QUOTES, 'UTF-8').'" TargetMode="External"/>')->implode('')
+                . '</Relationships>';
+
+            $zip->addFromString('xl/worksheets/_rels/sheet1.xml.rels', $relsXml);
+        }
+
         $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-            . '<sheetFormatPr defaultRowHeight="15"/>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            . '<dimension ref="A1:'.self::colLetter(max(1, count($headings))).max(1, $rowIndex).'"/>'
+            . '<sheetViews><sheetView tabSelected="1" workbookViewId="0"><selection activeCell="A1" sqref="A1"/></sheetView></sheetViews>'
+            . '<sheetFormatPr defaultRowHeight="18" defaultColWidth="15"/>'
             . '<cols>'
             . collect($headings)->map(fn ($heading, $i) => '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="'.self::xlsxColumnWidth((string) $heading).'" customWidth="true"/>')->implode('')
             . '</cols>'
             . '<sheetData>' . $headRow . $rowsXml . '</sheetData>'
             . '<autoFilter ref="A1:'.self::colLetter(max(1, count($headings))).max(1, $rowIndex).'"/>'
+            . $hyperlinksXml
+            . '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>'
             . '</worksheet>';
 
         $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
@@ -313,6 +392,10 @@ class DataIO
 
     protected static function xlsxBodyStyle(string $heading, string $value): int
     {
+        if (str_contains($value, 'http://') || str_contains($value, 'https://')) {
+            return 6;
+        }
+
         if (! Str::contains(Str::lower($heading), 'status')) {
             return 2;
         }
@@ -342,7 +425,7 @@ class DataIO
      */
     public static function sanitizeCell(string $value): string
     {
-        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+        if ($value === '-' || $value === 'N/A' || preg_match('/^-?\d+(\.\d+)?$/', $value)) {
             return $value;
         }
 
@@ -505,11 +588,36 @@ class DataIO
             .'</Relationships>';
     }
 
-    protected static function xlsxWorkbook(): string
+    public static function sanitizeSheetName(string $name): string
     {
+        $name = preg_replace('/[\\\\\\/\?\*\[\]\:]/u', ' ', $name);
+        $name = trim(preg_replace('/\s+/', ' ', $name ?? ''));
+        if ($name === '') {
+            $name = 'Data';
+        }
+
+        return mb_substr($name, 0, 31);
+    }
+
+    /**
+     * Bersihkan string nama file dari karakter terlarang (\ / : * ? " < > |).
+     */
+    public static function sanitizeFilename(string $name): string
+    {
+        $clean = preg_replace('/[\\\\\\/\:\*\?\"\<\>\|]+/u', ' - ', $name);
+        $clean = preg_replace('/\s+/', ' ', (string) $clean);
+        $clean = trim((string) $clean, " .-_\t\n\r\0\x0B");
+
+        return $clean !== '' ? $clean : 'Export';
+    }
+
+    protected static function xlsxWorkbook(?string $sheetName = 'Data'): string
+    {
+        $name = self::sanitizeSheetName($sheetName ?? 'Data');
+
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             .'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            .'<sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets>'
+            .'<sheets><sheet name="'.htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8').'" sheetId="1" r:id="rId1"/></sheets>'
             .'</workbook>';
     }
 
@@ -526,9 +634,12 @@ class DataIO
     {
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             .'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            .'<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>'
+            .'<fonts count="4">'
+            .'<font><sz val="11"/><name val="Calibri"/></font>'
             .'<font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font>'
-            .'<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+            .'<font><b/><sz val="11"/><name val="Calibri"/></font>'
+            .'<font><u/><color rgb="FF0563C1"/><sz val="11"/><name val="Calibri"/></font>'
+            .'</fonts>'
             .'<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
             .'<fill><patternFill patternType="solid"><fgColor rgb="FF0F4C4A"/><bgColor indexed="64"/></patternFill></fill>'
             .'<fill><patternFill patternType="solid"><fgColor rgb="FFD1FAE5"/><bgColor indexed="64"/></patternFill></fill>'
@@ -536,13 +647,14 @@ class DataIO
             .'<fill><patternFill patternType="solid"><fgColor rgb="FFFEE2E2"/><bgColor indexed="64"/></patternFill></fill></fills>'
             .'<borders count="2"><border/><border><left style="thin"><color rgb="FFE2E8F0"/></left><right style="thin"><color rgb="FFE2E8F0"/></right><top style="thin"><color rgb="FFE2E8F0"/></top><bottom style="thin"><color rgb="FFE2E8F0"/></bottom></border></borders>'
             .'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-            .'<cellXfs count="6">'
+            .'<cellXfs count="7">'
             .'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
-            .'<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>'
+            .'<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>'
             .'<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
             .'<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
             .'<xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
             .'<xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+            .'<xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
             .'</cellXfs>'
             .'</styleSheet>';
     }

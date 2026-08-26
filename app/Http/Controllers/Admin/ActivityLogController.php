@@ -103,14 +103,14 @@ class ActivityLogController extends Controller
         $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
 
         $columns = ['created_at', 'user_name', 'event', 'module', 'subject_label', 'ip_address'];
-        $filename = 'activity-log-'.now()->format('Ymd-His');
+        $filename = 'Log Aktivitas - '.now()->format('Y-m-d - H.i.s');
 
         if ($format === 'csv') {
             return \App\Support\DataIO::csvDownload($query, $columns, $filename.'.csv');
         }
 
-        $tmpPath = storage_path('app/private/'.$filename.'.xlsx');
-        \App\Support\DataIO::writeXlsx($query, $columns, $tmpPath);
+        $tmpPath = storage_path('app/private/'.\Illuminate\Support\Str::uuid().'.xlsx');
+        \App\Support\DataIO::writeXlsx($query, $columns, $tmpPath, null, null, 'Log Aktivitas');
 
         return response()->download($tmpPath, $filename.'.xlsx')->deleteFileAfterSend(true);
     }

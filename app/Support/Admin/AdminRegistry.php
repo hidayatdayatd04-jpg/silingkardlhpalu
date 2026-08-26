@@ -1139,10 +1139,12 @@ class AdminRegistry
                     'name' => 'sidak_id',
                     'label' => 'Sidak Terkait',
                     'type' => 'select',
-                    'options' => \App\Models\Sidak::orderBy('created_at', 'desc')
-                        ->get(['id', 'tanggal_sidak', 'hasil'])
-                        ->mapWithKeys(fn ($s) => [$s->id => $s->tanggal_sidak->format('d M Y').' — '.$s->hasil])
-                        ->prepend('-- Tidak Terkait --', '')
+                    'options' => \App\Models\Sidak::with('objekPengawasan')
+                        ->orderBy('tanggal_sidak', 'desc')
+                        ->get()
+                        ->mapWithKeys(fn ($s) => [
+                            $s->id => ($s->objekPengawasan?->nama_perusahaan ? $s->objekPengawasan->nama_perusahaan.' — ' : '').($s->tanggal_sidak ? $s->tanggal_sidak->format('d M Y') : 'Sidak #'.$s->id).($s->hasil_label ? ' ('.$s->hasil_label.')' : '')
+                        ])
                         ->all(),
                     'wide' => true,
                     'has_lainnya' => true,
@@ -1150,7 +1152,6 @@ class AdminRegistry
                     'manual_label' => 'Sidak Terkait (Manual)',
                     'manual_placeholder' => 'Tulis tanggal, lokasi, atau keterangan Sidak...',
                     'hint' => 'Pilih Sidak yang sudah terdaftar, atau pilih “Lainnya...” untuk menulis keterangan Sidak secara manual.',
-                    'compact' => true,
                 ],
                 [
                     'name' => 'jenis_pelanggaran',
@@ -1759,6 +1760,7 @@ class AdminRegistry
 
         // Kolom yang tidak perlu / tidak aman diekspor.
         $deny = [
+            'id',
             'remember_token', 'email_verified_at',
             'two_factor_secret', 'two_factor_recovery_codes',
             'additional_access', 'preferences', 'photo_path',

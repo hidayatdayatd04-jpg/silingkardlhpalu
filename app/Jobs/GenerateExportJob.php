@@ -73,11 +73,12 @@ class GenerateExportJob implements ShouldQueue
         );
 
         try {
+            $label = \App\Support\DataIO::sanitizeFilename($meta['label'] ?? 'Data');
             $user->notify(new ExportReady(
                 title: 'Ekspor '.$meta['label'].' siap',
                 message: 'File '.strtoupper($format).' ('.$this->scope.') telah dibuat dan siap diunduh.',
                 href: route('admin.exports.download', $token),
-                downloadName: $meta['slug'].'-'.$this->scope.'-'.now()->format('Ymd-His').'.'.$format,
+                downloadName: $label.' - '.now()->format('Y-m-d - H.i.s').'.'.$format,
             ));
             \App\Support\Admin\AdminNotificationFeed::forget($user);
         } catch (\Throwable $e) {

@@ -590,7 +590,8 @@ class ResourceController extends Controller
     protected function downloadData(array $meta, $query, string $format, string $scope)
     {
         $format = in_array($format, ['xlsx', 'csv'], true) ? $format : 'xlsx';
-        $filename = $meta['slug'].'-'.$scope.'-'.now()->format('Ymd-His');
+        $label = \App\Support\DataIO::sanitizeFilename($meta['label'] ?? 'Data');
+        $filename = $label.' - '.now()->format('Y-m-d - H.i.s');
 
         ActivityLogger::log('exported', $meta['label'].' ('.strtoupper($format).', '.$scope.')', $meta['slug']);
 
@@ -600,7 +601,7 @@ class ResourceController extends Controller
             return $exporter->csvDownload($query, $meta, $filename.'.csv');
         }
 
-        $tmpPath = storage_path('app/private/'.$filename.'.xlsx');
+        $tmpPath = storage_path('app/private/'.\Illuminate\Support\Str::uuid().'.xlsx');
         $exporter->write($query, $meta, 'xlsx', $tmpPath);
 
         return response()->download($tmpPath, $filename.'.xlsx')->deleteFileAfterSend(true);
