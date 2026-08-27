@@ -157,7 +157,24 @@ new class extends Component
 
                 <div class="space-y-2.5">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti') }}</label>
+                    <div class="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/95 p-3.5 text-amber-900 shadow-sm dark:border-amber-600/40 dark:bg-amber-950/40 dark:text-amber-200">
+                        <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm mt-0.5">
+                            <x-icons.ui name="alert" class="size-4" />
+                        </div>
+                        <div class="space-y-0.5 text-xs sm:text-sm leading-relaxed">
+                            <p class="font-bold uppercase tracking-wider text-amber-950 dark:text-amber-100 flex items-center gap-1.5">
+                                <span>{{ __('PEMBERITAHUAN PENTING') }}</span>
+                            </p>
+                            <p class="font-semibold text-amber-900 dark:text-amber-200">
+                                {{ __('Khusus Pelapor di Bidang Sampah & LB3 Wajib Sertakan Bukti Pembayaran Retribusi Sampah.') }}
+                            </p>
+                        </div>
+                    </div>
                     <input wire:model="photos" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" aria-label="{{ __('Foto Bukti') }}" class="flex h-10 w-full rounded-md border border-slate-200 px-3 text-sm dark:border-slate-800" />
+                    <p class="text-xs font-medium text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                        <x-icons.ui name="info-circle" class="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <span>{{ __('Pastikan salah satu foto bukti yang diunggah memuat bukti/struk pembayaran retribusi sampah.') }}</span>
+                    </p>
                     @error('photos') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                     @error('photos.*') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                 </div>
