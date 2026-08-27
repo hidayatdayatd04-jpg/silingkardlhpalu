@@ -78,8 +78,15 @@ class ExternalArtikelFeatureTest extends TestCase
         $this->assertSame([], Storage::disk('public')->allFiles());
         $this->assertFalse(Cache::has('artikel:beranda'));
 
+        $thumbnailResponse = $this->get($artikel->thumbnailUrl());
+        $thumbnailResponse->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertSame($this->png, $thumbnailResponse->getContent());
+
         $this->get('/berita/'.$artikel->slug)->assertRedirect('https://example.com/news');
-        $this->get('/berita')->assertOk()->assertSee('href="https://example.com/news"', false)->assertSee('rel="noopener noreferrer"', false);
+        $this->get('/berita')->assertOk()
+            ->assertSee('href="https://example.com/news"', false)
+            ->assertSee('src="'.$artikel->thumbnailUrl().'"', false)
+            ->assertSee('rel="noopener noreferrer"', false);
         $this->get('/')->assertOk()->assertSee('href="https://example.com/news"', false);
         $this->get('/sitemap.xml')->assertOk()->assertDontSee('/berita/'.$artikel->slug, false);
         $this->postJson('/api/berita/'.$artikel->slug.'/komentar', ['body' => 'Tidak boleh'])->assertNotFound();
@@ -165,13 +172,20 @@ class ExternalArtikelFeatureTest extends TestCase
             ->assertRedirect(route('admin.login'));
 
         $this->fakeArticleSource('https://example.com/news', 'Preview News', '/preview.png');
-        $this->actingAs($this->makeUser('admin'))
+        $admin = $this->makeUser('admin');
+        $previewResponse = $this->actingAs($admin)
             ->postJson(route('admin.artikel.metadata.preview'), ['external_url' => 'https://example.com/news'])
             ->assertOk()
             ->assertJson([
                 'title' => 'Preview News',
                 'image_url' => 'https://example.com/preview.png',
             ]);
+
+        $previewImageUrl = $previewResponse->json('preview_image_url');
+        $this->assertIsString($previewImageUrl);
+        $imageResponse = $this->actingAs($admin)->get($previewImageUrl);
+        $imageResponse->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertSame($this->png, $imageResponse->getContent());
 
         $this->assertSame([], Storage::disk('public')->allFiles());
     }
@@ -194,8 +208,8 @@ class ExternalArtikelFeatureTest extends TestCase
     {
         $imageUrl = str_starts_with($image, 'http') ? $image : 'https://example.com'.$image;
         Http::fake([
-            $url => Http::response('<meta property="og:title" content="'.$title.'"><meta property="og:image" content="'.$image.'">', 200, ['Content-Type' => 'text/html']),
-            $imageUrl => Http::response($this->png, 200, ['Content-Type' => 'image/png']),
+            $url => fn () => Http::response('<meta property="og:title" content="'.$title.'"><meta property="og:image" content="'.$image.'">', 200, ['Content-Type' => 'text/html']),
+            $imageUrl => fn () => Http::response($this->png, 200, ['Content-Type' => 'image/png']),
         ]);
     }
 

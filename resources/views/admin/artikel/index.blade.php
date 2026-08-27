@@ -20,7 +20,7 @@
     // dengan fallback berjenjang bila file tidak ada / signing gagal.
     $thumbUrl = function ($record) {
         if ($record->isExternal()) {
-            return $record->external_thumbnail_url;
+            return $record->thumbnailUrl();
         }
 
         if (blank($record->thumbnail)) {

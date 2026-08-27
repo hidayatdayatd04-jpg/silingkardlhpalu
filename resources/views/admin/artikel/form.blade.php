@@ -11,7 +11,7 @@
     $initialType = $isEdit ? ($record->isExternal() ? 'external' : 'internal') : old('article_type', 'internal');
     $initialExternalUrl = old('external_url', $record->external_url);
     $initialPreviewTitle = $record->isExternal() ? $record->judul : null;
-    $initialPreviewImage = $record->isExternal() ? $record->external_thumbnail_url : null;
+    $initialPreviewImage = $record->isExternal() ? $record->thumbnailUrl() : null;
 @endphp
 
 @section('content')
@@ -123,7 +123,24 @@
 
                                 <div x-show="previewTitle && previewImage" x-cloak class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
                                     <div class="grid gap-5 p-4 sm:grid-cols-[12rem_1fr]">
-                                        <img :src="previewImage" :alt="previewTitle" class="aspect-video w-full rounded-xl bg-slate-200 object-cover sm:aspect-[4/3]" />
+                                        <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-200 sm:aspect-[4/3] dark:bg-slate-700">
+                                            <div x-show="!previewImageLoaded && !previewImageError"
+                                                class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-300"
+                                                role="status">
+                                                <span class="size-5 animate-spin rounded-full border-2 border-slate-300 border-t-sky-600" aria-hidden="true"></span>
+                                                <span>Memuat foto…</span>
+                                            </div>
+                                            <div x-show="previewImageError" x-cloak
+                                                class="absolute inset-0 flex items-center justify-center px-4 text-center text-xs font-semibold text-rose-600 dark:text-rose-300"
+                                                x-text="previewImageError"></div>
+                                            <template x-if="previewImage">
+                                                <img :src="previewImage" alt=""
+                                                    x-show="previewImageLoaded" x-cloak
+                                                    x-on:load="previewImageLoaded = true; previewImageError = ''"
+                                                    x-on:error="previewImageLoaded = false; previewImageError = 'Foto dari sumber sedang tidak dapat dimuat.'"
+                                                    class="absolute inset-0 size-full object-cover" />
+                                            </template>
+                                        </div>
                                         <div class="min-w-0 self-center">
                                             <p class="text-xs font-bold uppercase tracking-wide text-sky-600 dark:text-sky-400">Preview metadata</p>
                                             <h3 x-text="previewTitle" class="mt-2 text-lg font-extrabold leading-snug text-slate-900 dark:text-white"></h3>
@@ -194,6 +211,8 @@
             externalUrl: config.initialExternalUrl || '',
             previewTitle: config.initialPreviewTitle || '',
             previewImage: config.initialPreviewImage || '',
+            previewImageLoaded: false,
+            previewImageError: '',
             previewError: '', previewUrl: config.previewUrl,
             fetching: false, submitting: false, errors: {},
 
@@ -202,11 +221,15 @@
             },
             onExternalUrlInput() {
                 this.previewError = ''; this.errors.external_url = '';
-                if (!this.isEdit || this.externalUrl !== config.initialExternalUrl) { this.previewTitle = ''; this.previewImage = ''; }
+                if (!this.isEdit || this.externalUrl !== config.initialExternalUrl) {
+                    this.previewTitle = ''; this.previewImage = '';
+                    this.previewImageLoaded = false; this.previewImageError = '';
+                }
             },
             async fetchMetadata() {
                 if (this.fetching || !this.externalUrl.trim()) return;
                 this.fetching = true; this.previewError = ''; this.errors.external_url = '';
+                this.previewImageLoaded = false; this.previewImageError = '';
                 try {
                     const response = await fetch(this.previewUrl, {
                         method: 'POST', credentials: 'same-origin',
@@ -215,9 +238,10 @@
                     });
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'Data berita tidak dapat diambil.');
-                    this.previewTitle = data.title || ''; this.previewImage = data.image_url || '';
+                    this.previewTitle = data.title || ''; this.previewImage = data.preview_image_url || data.image_url || '';
                 } catch (error) {
-                    this.previewTitle = ''; this.previewImage = ''; this.previewError = error.message || 'Data berita tidak dapat diambil.';
+                    this.previewTitle = ''; this.previewImage = ''; this.previewImageLoaded = false;
+                    this.previewImageError = ''; this.previewError = error.message || 'Data berita tidak dapat diambil.';
                 } finally { this.fetching = false; }
             },
             syncKonten() {

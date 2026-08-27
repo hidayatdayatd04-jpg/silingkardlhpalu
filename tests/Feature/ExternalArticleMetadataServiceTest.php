@@ -37,6 +37,7 @@ class ExternalArticleMetadataServiceTest extends TestCase
 
         $this->assertSame('OG Title', $result['title']);
         $this->assertSame('https://example.com/images/cover.png', $result['image_url']);
+        $this->assertArrayNotHasKey('preview_image', $result);
         Http::assertSentCount(2);
     }
 

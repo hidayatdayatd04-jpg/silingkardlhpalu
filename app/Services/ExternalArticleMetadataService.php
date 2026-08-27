@@ -26,9 +26,19 @@ class ExternalArticleMetadataService
     public function preview(string $url): array
     {
         $metadata = $this->fetchMetadata($url);
-        $this->download($metadata['image_url'], self::IMAGE_LIMIT, true);
+        $this->fetchImage($metadata['image_url']);
 
         return $metadata;
+    }
+
+    /**
+     * Ambil gambar remote tervalidasi tanpa menyimpannya ke filesystem.
+     *
+     * @return array{body:string,content_type:string,url:string}
+     */
+    public function fetchImage(string $url): array
+    {
+        return $this->download($url, self::IMAGE_LIMIT, true);
     }
 
     /**

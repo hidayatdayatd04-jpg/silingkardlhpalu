@@ -6,12 +6,14 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExternalArticleMetadataController;
+use App\Http\Controllers\Admin\ExternalArticlePreviewImageController;
 use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\ExternalArticleThumbnailController;
 use App\Models\Artikel;
 use App\Models\GpsVehicleCache;
 use App\Models\PengajuanRintekPertek;
@@ -158,6 +160,10 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix(config('app.admi
     Route::post('/artikel/metadata/preview', ExternalArticleMetadataController::class)
         ->middleware('throttle:20,1')
         ->name('artikel.metadata.preview');
+    Route::get('/artikel/metadata/preview-image/{token}', ExternalArticlePreviewImageController::class)
+        ->whereAlphaNumeric('token')
+        ->middleware('throttle:60,1')
+        ->name('artikel.metadata.preview-image');
 
     // Unduh dokumen/lampiran dari storage publik (field file & relasi dokumen)
     // Didefinisikan sebelum wildcard /{resource} agar tidak bentrok dengan route tersebut.
@@ -245,6 +251,10 @@ Route::get('/berita', function () {
         'artikels' => Artikel::published()->latest('tanggal_publish')->paginate(9),
     ]);
 })->middleware('throttle:60,1');
+
+Route::get('/berita/thumbnail-external/{artikel}', ExternalArticleThumbnailController::class)
+    ->middleware('throttle:120,1')
+    ->name('berita.external-thumbnail');
 
 Route::get('/berita/{slug}', function (string $slug) {
     $artikel = Artikel::published()

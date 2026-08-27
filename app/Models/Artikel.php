@@ -135,7 +135,9 @@ class Artikel extends Model
     public function thumbnailUrl(): ?string
     {
         if ($this->isExternal()) {
-            return filled($this->external_thumbnail_url) ? $this->external_thumbnail_url : null;
+            return filled($this->external_thumbnail_url) && $this->exists
+                ? route('berita.external-thumbnail', $this, false)
+                : null;
         }
 
         if (blank($this->thumbnail)) {
