@@ -17,25 +17,10 @@
         $kontenBersih = trim($kontenBersih);
         $kontenKosong = trim(strip_tags($kontenBersih)) === '' && ! preg_match('/<(img|video|table|iframe)\b/i', $kontenBersih);
 
-        $thumbUrl = null;
-        if ($record->thumbnail) {
-            try {
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($record->thumbnail)) {
-                    $thumbUrl = Storage::disk('public')->temporaryUrl($record->thumbnail, now()->addHours(24));
-                } else {
-                    $thumbUrl = asset('storage/' . $record->thumbnail);
-                }
-            } catch (\Throwable $e) {
-                try {
-                    $thumbUrl = Storage::url($record->thumbnail);
-                } catch (\Throwable $e2) {
-                    $thumbUrl = null;
-                }
-            }
-        }
+        $thumbUrl = $record->thumbnailUrl();
 
-        $publicUrl = $record->status === ArtikelStatus::PUBLISHED && $record->slug
-            ? url('/berita/'.$record->slug)
+        $publicUrl = $record->status === ArtikelStatus::PUBLISHED
+            ? $record->publicUrl()
             : null;
     @endphp
 
@@ -59,7 +44,7 @@
                     Edit Artikel
                 </a>
                 @if ($publicUrl)
-                    <a href="{{ $publicUrl }}" target="_blank" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700">
+                    <a href="{{ $publicUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700">
                         <x-admin.icon name="globe" :size="16" />
                         Lihat di Situs
                     </a>
@@ -132,6 +117,22 @@
         <div class="grid grid-cols-1 gap-7 lg:grid-cols-3">
             {{-- Konten --}}
             <div class="min-w-0 space-y-7 lg:col-span-2">
+                @if($record->isExternal())
+                    <x-admin.section-card class="stagger-item" title="Sumber Berita Eksternal" icon="external-link" subtitle="Artikel ini mengarahkan pengunjung ke website sumber.">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">URL sumber</dt>
+                                <dd class="mt-1 break-all text-sm font-semibold text-sky-700">
+                                    <a href="{{ $record->external_url }}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ $record->external_url }}</a>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jenis artikel</dt>
+                                <dd class="mt-1 text-sm font-semibold text-slate-800">Insert Link</dd>
+                            </div>
+                        </dl>
+                    </x-admin.section-card>
+                @else
                 <x-admin.section-card class="stagger-item" title="Konten Artikel" icon="file-text" subtitle="Teks artikel yang ditampilkan di halaman publik.">
                     @if ($kontenKosong)
                         <div class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-10 text-center">
@@ -166,12 +167,16 @@
                         </article>
                     @endif
                 </x-admin.section-card>
+                @endif
             </div>
 
             {{-- Sidebar --}}
             <div class="space-y-7">
                 <x-admin.section-card class="stagger-item" title="Gambar Utama & File" icon="image" subtitle="Gambar utama artikel.">
-                    @if ($record->thumbnail)
+                    @if ($record->isExternal() && $thumbUrl)
+                        <img src="{{ $thumbUrl }}" alt="{{ $record->judul }}" class="w-full rounded-xl object-cover" />
+                        <p class="mt-2 text-xs text-slate-500">Thumbnail dimuat dari website sumber dan tidak disimpan di storage.</p>
+                    @elseif ($record->thumbnail)
                         <x-admin.file-preview :path="$record->thumbnail" :label="$record->judul" :resource="$resource['slug']" />
                     @else
                         <div class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center">

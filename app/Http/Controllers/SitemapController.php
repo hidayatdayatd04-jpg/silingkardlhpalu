@@ -60,6 +60,7 @@ class SitemapController extends Controller
         ];
 
         $artikels = Artikel::published()
+            ->internal()
             ->select(['slug', 'updated_at', 'tanggal_publish'])
             ->orderByDesc('tanggal_publish')
             ->get();

@@ -15,6 +15,9 @@ class Artikel extends Model
     protected $fillable = [
         'judul',
         'slug',
+        'article_type',
+        'external_url',
+        'external_thumbnail_url',
         'thumbnail',
         'konten',
         'tanggal_publish',
@@ -55,11 +58,13 @@ class Artikel extends Model
         // Invalidasi cache sitemap agar artikel baru/terupdate langsung masuk sitemap
         // + regenerate file fisik public/sitemap.xml agar fallback tetap auto-update (dinamis prioritas via nginx/.htaccess).
         static::saved(function (): void {
+            Cache::forget('artikel:beranda');
             Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
             \App\Http\Controllers\SitemapController::regenerateStaticFile();
         });
 
         static::deleted(function (): void {
+            Cache::forget('artikel:beranda');
             Cache::forget(\App\Http\Controllers\SitemapController::CACHE_KEY);
             \App\Http\Controllers\SitemapController::regenerateStaticFile();
         });
@@ -101,5 +106,51 @@ class Artikel extends Model
         return $query->where('status', ArtikelStatus::PUBLISHED->value)
             ->whereNotNull('tanggal_publish')
             ->whereDate('tanggal_publish', '<=', now());
+    }
+
+    public function scopeInternal($query)
+    {
+        return $query->where('article_type', 'internal');
+    }
+
+    public function isExternal(): bool
+    {
+        return $this->article_type === 'external';
+    }
+
+    public function isInternal(): bool
+    {
+        return ! $this->isExternal();
+    }
+
+    public function publicUrl(bool $fromHomepage = false): string
+    {
+        if ($this->isExternal()) {
+            return (string) $this->external_url;
+        }
+
+        return url('/berita/'.$this->slug).($fromHomepage ? '?dari=beranda' : '');
+    }
+
+    public function thumbnailUrl(): ?string
+    {
+        if ($this->isExternal()) {
+            return filled($this->external_thumbnail_url) ? $this->external_thumbnail_url : null;
+        }
+
+        if (blank($this->thumbnail)) {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Storage::disk('public')
+                ->temporaryUrl($this->thumbnail, now()->addHours(24));
+        } catch (\Throwable $e) {
+            try {
+                return \Illuminate\Support\Facades\Storage::disk('public')->url($this->thumbnail);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
     }
 }

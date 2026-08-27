@@ -8,10 +8,12 @@
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse ($artikels as $artikel)
-            <a href="/berita/{{ $artikel->slug }}" class="reveal group overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_3px_14px_-8px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-[0_24px_46px_-24px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-800">
+            <a href="{{ $artikel->publicUrl() }}"
+                @if($artikel->isExternal()) target="_blank" rel="noopener noreferrer" @endif
+                class="reveal group overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_3px_14px_-8px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-[0_24px_46px_-24px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-800">
                 <div class="relative h-52 overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-bay-600">
-                    @if ($artikel->thumbnail)
-                        <img src="{{ Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) }}" alt="{{ $artikel->judul }}" class="size-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    @if ($artikel->thumbnailUrl())
+                        <img src="{{ $artikel->thumbnailUrl() }}" alt="{{ $artikel->judul }}" class="size-full object-cover transition-transform duration-500 group-hover:scale-105">
                     @else
                         <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,.3),transparent_24%),linear-gradient(135deg,rgba(255,255,255,.08),transparent)]"></div>
                         <span class="absolute bottom-5 left-5 grid size-12 place-items-center rounded-2xl border border-white/20 bg-white/15 text-white backdrop-blur-sm">

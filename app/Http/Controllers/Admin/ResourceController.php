@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AdminRole;
 use App\Enums\ArtikelStatus;
+use App\Exceptions\ExternalArticleMetadataException;
 use App\Enums\JenisPengaduanPengendalian;
 use App\Enums\JenisPengaduanRth;
 use App\Enums\JenisPengaduanSampah;
@@ -11,9 +12,11 @@ use App\Enums\StatusPengaduan;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateExportJob;
 use App\Models\Pelanggaran;
+use App\Models\Artikel;
 use App\Models\Sanksi;
 use App\Models\User;
 use App\Services\FileUploadService;
+use App\Services\ExternalArticleMetadataService;
 use App\Services\ImageCompressionService;
 use App\Support\ActivityLogger;
 use App\Support\Admin\AdminResourceExporter;
@@ -155,6 +158,10 @@ class ResourceController extends Controller
         $this->validateSpecialFields($request, $meta, false);
         $this->validateFromFields($request, $meta, false, null);
 
+        if ($meta['slug'] === 'artikel' && $request->input('article_type', 'internal') === 'external') {
+            return $this->storeExternalArtikel($request, $meta);
+        }
+
         $record = new $meta['model'];
         if ($meta['slug'] === 'sosialisasi') {
             DB::transaction(function () use ($request, $meta, $record): void {
@@ -249,6 +256,11 @@ class ResourceController extends Controller
 
         $model = $meta['model']::findOrFail($record);
         $this->validateFromFields($request, $meta, true, $model);
+
+        if ($meta['slug'] === 'artikel' && $model instanceof Artikel && $model->isExternal()) {
+            return $this->updateExternalArtikel($request, $meta, $model);
+        }
+
         if ($meta['slug'] === 'sosialisasi') {
             DB::transaction(function () use ($request, $meta, $model): void {
                 $model->fill($this->payload($request, $meta, $model));
@@ -823,8 +835,9 @@ class ResourceController extends Controller
             // Kolom 'role' dan nama peran di index memakai $record->roles->first().
             $query->with('roles');
         } elseif ($meta['slug'] === 'artikel') {
-            // Kolom penulis di index artikel memakai relasi user.
-            $query->with('user');
+            // Kolom penulis dan badge komentar memakai eager load/agregat tunggal,
+            // bukan query tambahan dari Blade untuk setiap baris.
+            $query->with('user')->withCount('komentars');
         }
 
         // Search
@@ -853,12 +866,13 @@ class ResourceController extends Controller
 
         foreach (AdminRegistry::formFields($meta) as $field) {
             $name = $field['name'];
+            $type = $field['type'] ?? 'text';
 
-            if (in_array($field['type'], ['section', 'photos', 'relation_files', 'daftar_hadir'], true)) {
+            if (in_array($type, ['section', 'photos', 'relation_files', 'daftar_hadir'], true)) {
                 continue;
             }
 
-            if ($field['type'] === 'file') {
+            if ($type === 'file') {
                 if ($request->hasFile($name)) {
                     $file = $request->file($name);
                     if ($this->fileMatchesAccept($file, $field['accept'] ?? null)) {
@@ -887,7 +901,7 @@ class ResourceController extends Controller
                 continue;
             }
 
-            if ($field['type'] === 'checkbox') {
+            if ($type === 'checkbox') {
                 $payload[$name] = $request->boolean($name);
 
                 continue;
@@ -1242,6 +1256,29 @@ class ResourceController extends Controller
      */
     protected function validateArtikelFields(Request $request, bool $updating, ?Model $model): void
     {
+        $articleType = $updating && $model instanceof Artikel
+            ? ($model->isExternal() ? 'external' : 'internal')
+            : (string) $request->input('article_type', 'internal');
+
+        if ($articleType === 'external') {
+            $request->validate([
+                'article_type' => [$updating ? 'nullable' : 'required', Rule::in(['external'])],
+                'external_url' => ['required', 'string', 'max:4096'],
+                'tanggal_publish' => ['required', 'date'],
+                'status' => ['required', Rule::in(array_keys(ArtikelStatus::options()))],
+            ], [
+                'article_type.required' => 'Mode Insert Link wajib dipilih.',
+                'external_url.required' => 'Link berita wajib diisi.',
+                'external_url.max' => 'Link berita terlalu panjang.',
+                'tanggal_publish.required' => 'Tanggal tayang wajib diisi.',
+                'tanggal_publish.date' => 'Tanggal tayang tidak valid.',
+                'status.required' => 'Status wajib dipilih.',
+                'status.in' => 'Status tidak valid.',
+            ]);
+
+            return;
+        }
+
         $thumbnailRule = ($updating && filled($model?->thumbnail))
             ? ['nullable', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120']
             : ['required', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'];
@@ -1287,6 +1324,62 @@ class ResourceController extends Controller
             'tanggal_publish' => 'Tanggal Tayang',
             'status' => 'Status',
         ]);
+    }
+
+    protected function storeExternalArtikel(Request $request, array $meta)
+    {
+        try {
+            $metadata = app(ExternalArticleMetadataService::class)
+                ->preview(trim((string) $request->input('external_url')));
+        } catch (ExternalArticleMetadataException $e) {
+            throw ValidationException::withMessages(['external_url' => $e->getMessage()]);
+        }
+
+        /** @var Artikel $record */
+        $record = new $meta['model'];
+        $record->fill([
+            'article_type' => 'external',
+            'external_url' => trim((string) $request->input('external_url')),
+            'external_thumbnail_url' => $metadata['image_url'],
+            'judul' => $metadata['title'],
+            'thumbnail' => null,
+            'konten' => null,
+            'tanggal_publish' => $request->input('tanggal_publish'),
+            'status' => $request->input('status'),
+            'komentar_enabled' => false,
+        ]);
+        $record->save();
+
+        return redirect()->route('admin.resources.show', [$meta['slug'], $record])
+            ->with('success', $meta['label'].' berhasil ditambahkan.');
+    }
+
+    protected function updateExternalArtikel(Request $request, array $meta, Artikel $model)
+    {
+        $externalUrl = trim((string) $request->input('external_url'));
+        $urlChanged = $externalUrl !== trim((string) $model->external_url);
+
+        if ($urlChanged) {
+            try {
+                $metadata = app(ExternalArticleMetadataService::class)->preview($externalUrl);
+            } catch (ExternalArticleMetadataException $e) {
+                throw ValidationException::withMessages(['external_url' => $e->getMessage()]);
+            }
+
+            $model->judul = $metadata['title'];
+            $model->external_thumbnail_url = $metadata['image_url'];
+            $model->external_url = $externalUrl;
+        }
+
+        $model->article_type = 'external';
+        $model->konten = null;
+        $model->komentar_enabled = false;
+        $model->tanggal_publish = $request->input('tanggal_publish');
+        $model->status = $request->input('status');
+        $model->save();
+
+        return redirect()->route('admin.resources.show', [$meta['slug'], $model])
+            ->with('success', $meta['label'].' berhasil diperbarui.');
     }
 
     protected function storeSpecialRelations(Request $request, array $meta, Model $record): void

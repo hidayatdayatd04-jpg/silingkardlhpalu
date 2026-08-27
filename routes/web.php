@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExternalArticleMetadataController;
 use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -153,6 +154,11 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix(config('app.admi
 
     Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'uploadImage'])->name('upload-image');
 
+    // Harus sebelum wildcard /{resource}: preview hanya fetch dan tidak menyimpan data.
+    Route::post('/artikel/metadata/preview', ExternalArticleMetadataController::class)
+        ->middleware('throttle:20,1')
+        ->name('artikel.metadata.preview');
+
     // Unduh dokumen/lampiran dari storage publik (field file & relasi dokumen)
     // Didefinisikan sebelum wildcard /{resource} agar tidak bentrok dengan route tersebut.
     Route::get('/file/download', [ResourceController::class, 'downloadFile'])->name('file.download');
@@ -244,6 +250,10 @@ Route::get('/berita/{slug}', function (string $slug) {
     $artikel = Artikel::published()
         ->where('slug', $slug)
         ->firstOrFail();
+
+    if ($artikel->isExternal()) {
+        return redirect()->away($artikel->external_url);
+    }
 
     return view('public.berita.show', compact('artikel'));
 })->middleware('throttle:60,1');

@@ -18,7 +18,7 @@ class ArtikelKomentarAdminController extends Controller
 
     public function index(Request $request, string $artikelId)
     {
-        $artikel = Artikel::findOrFail($artikelId);
+        $artikel = $this->internalArtikel($artikelId);
 
         $sort = (string) $request->query('sort', 'terbaru');
         if (!in_array($sort, self::SORTS, true)) {
@@ -101,7 +101,7 @@ class ArtikelKomentarAdminController extends Controller
 
     public function store(Request $request, string $artikelId)
     {
-        $artikel = Artikel::findOrFail($artikelId);
+        $artikel = $this->internalArtikel($artikelId);
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'min:2', 'max:2000'],
@@ -167,6 +167,7 @@ class ArtikelKomentarAdminController extends Controller
      */
     public function toggleHide(string $artikelId, int $id)
     {
+        $this->internalArtikel($artikelId);
         $k = ArtikelKomentar::where('artikel_id', $artikelId)->findOrFail($id);
         $next = !$k->is_hidden;
 
@@ -190,6 +191,7 @@ class ArtikelKomentarAdminController extends Controller
     /** Semat hanya untuk komentar utama. */
     public function togglePin(string $artikelId, int $id)
     {
+        $this->internalArtikel($artikelId);
         $k = ArtikelKomentar::where('artikel_id', $artikelId)->findOrFail($id);
 
         if ($k->parent_id !== null) {
@@ -221,6 +223,7 @@ class ArtikelKomentarAdminController extends Controller
 
     public function bulkDestroy(Request $request, string $artikelId)
     {
+        $this->internalArtikel($artikelId);
         $request->validate(['ids' => ['required','array'], 'ids.*' => ['integer']]);
         $ids = $request->input('ids', []);
         $deleted = 0;
@@ -245,6 +248,7 @@ class ArtikelKomentarAdminController extends Controller
      */
     public function destroy(string $artikelId, int $id)
     {
+        $this->internalArtikel($artikelId);
         $k = ArtikelKomentar::where('artikel_id', $artikelId)->findOrFail($id);
 
         $replies = 0;
@@ -264,5 +268,10 @@ class ArtikelKomentarAdminController extends Controller
         return back()->with('success', $replies > 0
             ? "Komentar dihapus beserta {$replies} balasan."
             : 'Komentar dihapus.');
+    }
+
+    private function internalArtikel(string $artikelId): Artikel
+    {
+        return Artikel::query()->whereKey($artikelId)->where('article_type', 'internal')->firstOrFail();
     }
 }

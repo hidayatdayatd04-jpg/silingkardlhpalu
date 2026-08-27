@@ -315,10 +315,9 @@
                 ['value' => 180, 'suffix' => ' ton', 'label' => __('Sampah Terangkut / Hari'), 'grad' => 'from-amber-500 to-orange-500', 'soft' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'ton-sampah', 'accentVar' => 'var(--color-amber-500)'],
                 ['value' => 68, 'suffix' => ' Ha', 'label' => __('Ruang Terbuka Hijau Dikelola'), 'grad' => 'from-brand-500 to-emerald-500', 'soft' => 'bg-brand-50 dark:bg-brand-900/20', 'text' => 'text-brand-600 dark:text-brand-400', 'icon' => 'rth-ha', 'accentVar' => 'var(--color-brand-500)'],
                 ['value' => 45, 'suffix' => ' Titik', 'label' => __('TPS & Kontainer Aktif'), 'grad' => 'from-bay-500 to-bay-600', 'soft' => 'bg-bay-50 dark:bg-bay-900/20', 'text' => 'text-bay-600 dark:text-bay-400', 'icon' => 'titik-tps', 'accentVar' => 'var(--color-bay-500)'],
-                ['value' => 24, 'suffix' => ' Jam', 'label' => __('Respons Aduan Mendesak'), 'grad' => 'from-clay-500 to-clay-600', 'soft' => 'bg-clay-50 dark:bg-clay-900/20', 'text' => 'text-clay-600 dark:text-clay-400', 'icon' => 'jam-respons', 'accentVar' => 'var(--color-clay-500)'],
             ];
             @endphp
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid sm:grid-cols-3 gap-5">
                 @foreach ($capaian as $i => $c)
                 <div class="reveal group relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 text-center shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.25)]"
                      style="--reveal-delay: {{ $i * 90 }}ms; --icon-accent: {{ $c['accentVar'] }}">
@@ -353,19 +352,22 @@
             @if(isset($artikels) && $artikels->count())
                 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($artikels->take(6) as $i => $artikel)
-                        <a href="/berita/{{ $artikel->slug }}?dari=beranda"
+                        <a href="{{ $artikel->publicUrl(true) }}"
+                           @if($artikel->isExternal()) target="_blank" rel="noopener noreferrer" @endif
                            class="reveal group flex flex-col rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.25)] hover:border-brand-200 dark:hover:border-brand-800"
                            style="--reveal-delay: {{ ($i % 3) * 100 }}ms">
                             <div class="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                @if($artikel->thumbnail)
-                                    <img src="{{ $artikel->thumbnail ? Storage::disk('public')->temporaryUrl($artikel->thumbnail, now()->addHours(24)) : '' }}" alt="{{ $artikel->judul }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                                @if($artikel->thumbnailUrl())
+                                    <img src="{{ $artikel->thumbnailUrl() }}" alt="{{ $artikel->judul }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
                                 @else
                                     <div class="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-bay-400"></div>
                                 @endif
                             </div>
                             <div class="p-5 flex flex-col flex-1">
                                 <h3 class="font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ $artikel->judul }}</h3>
-                                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed flex-1">{{ Str::limit(strip_tags($artikel->konten), 120) }}</p>
+                                @if($artikel->isInternal())
+                                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed flex-1">{{ Str::limit(strip_tags($artikel->konten), 120) }}</p>
+                                @endif
                                 <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500">
                                     <span class="font-medium">{{ $artikel->tanggal_publish?->translatedFormat('d M Y') }}</span>
                                     @if($artikel->user)

@@ -17,6 +17,7 @@ class ArtikelKomentarController extends Controller
     public function index(Request $request, string $slug)
     {
         $artikel = Artikel::where('slug', $slug)->firstOrFail();
+        abort_if($artikel->isExternal(), 404);
         if(!($artikel->komentar_enabled ?? true)){
             return response()->json(['data'=>[],'current_page'=>1,'last_page'=>1,'total'=>0,'total_comments'=>0,'komentar_disabled'=>true]);
         }
@@ -65,6 +66,7 @@ class ArtikelKomentarController extends Controller
     public function count(string $slug)
     {
         $artikel = Artikel::where('slug', $slug)->firstOrFail();
+        abort_if($artikel->isExternal(), 404);
         if(!($artikel->komentar_enabled ?? true)){
             return response()->json(['total_comments'=>0,'komentar_disabled'=>true]);
         }
@@ -77,6 +79,7 @@ class ArtikelKomentarController extends Controller
     public function store(Request $request, string $slug)
     {
         $artikel = Artikel::where('slug', $slug)->firstOrFail();
+        abort_if($artikel->isExternal(), 404);
         if(!($artikel->komentar_enabled ?? true)){
             return response()->json(['message'=>'Komentar dinonaktifkan untuk artikel ini.'], 403);
         }
@@ -166,7 +169,8 @@ class ArtikelKomentarController extends Controller
 
     public function toggleReaction(Request $request, int $id)
     {
-        $komentar = ArtikelKomentar::where('is_hidden', false)->findOrFail($id);
+        $komentar = ArtikelKomentar::with('artikel')->where('is_hidden', false)->findOrFail($id);
+        abort_if($komentar->artikel?->isExternal(), 404);
 
         $validated = $request->validate([
             'type' => ['required', 'in:like,love'],
