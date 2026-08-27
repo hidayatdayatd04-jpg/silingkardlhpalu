@@ -365,9 +365,6 @@
                             </div>
                             <div class="p-5 flex flex-col flex-1">
                                 <h3 class="font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ $artikel->judul }}</h3>
-                                @if($artikel->isInternal())
-                                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed flex-1">{{ Str::limit(strip_tags($artikel->konten), 120) }}</p>
-                                @endif
                                 <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500">
                                     <span class="font-medium">{{ $artikel->tanggal_publish?->translatedFormat('d M Y') }}</span>
                                     @if($artikel->user)
