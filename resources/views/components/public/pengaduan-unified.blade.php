@@ -504,18 +504,14 @@ new class extends Component {
                 <div class="fi-field">
                     <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span></label>
                     @if ($bidang === 'sampah')
-                        <div class="mb-3 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/95 p-3.5 text-amber-900 shadow-sm dark:border-amber-600/40 dark:bg-amber-950/40 dark:text-amber-200">
-                            <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm mt-0.5">
+                        <div class="mb-3 flex items-center gap-3 rounded-xl bg-amber-500/10 px-4 py-3 text-amber-950 dark:bg-amber-400/10 dark:text-amber-100" style="border: none !important; box-shadow: none;">
+                            <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:bg-amber-400/25 dark:text-amber-300">
                                 <x-icons.ui name="alert" class="size-4" />
                             </div>
-                            <div class="space-y-0.5 text-xs sm:text-sm leading-relaxed">
-                                <p class="font-bold uppercase tracking-wider text-amber-950 dark:text-amber-100 flex items-center gap-1.5">
-                                    <span>{{ __('PEMBERITAHUAN PENTING') }}</span>
-                                </p>
-                                <p class="font-semibold text-amber-900 dark:text-amber-200">
-                                    {{ __('Khusus Pelapor di Bidang Sampah & LB3 Wajib Sertakan Bukti Pembayaran Retribusi Sampah.') }}
-                                </p>
-                            </div>
+                            <p class="text-xs sm:text-[13px] leading-relaxed">
+                                <span class="font-bold text-amber-900 dark:text-amber-300">{{ __('Penting:') }}</span>
+                                <span class="font-medium text-amber-950 dark:text-amber-100">{{ __('Khusus Pelapor di Bidang Sampah & LB3 Wajib Sertakan Bukti Pembayaran Retribusi Sampah.') }}</span>
+                            </p>
                         </div>
                     @endif
                     <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Foto Bukti', exts: ['jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5, maxCount: 5, countSelector: '[data-photo-item]' })">
@@ -525,12 +521,6 @@ new class extends Component {
                             style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;"
                         />
                     </div>
-                    @if ($bidang === 'sampah')
-                        <p class="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-800 dark:text-amber-300">
-                            <x-icons.ui name="info-circle" class="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                            <span>{{ __('Pastikan salah satu foto bukti yang diunggah memuat bukti/struk pembayaran retribusi sampah.') }}</span>
-                        </p>
-                    @endif
                     @error('photos') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
                     @error('photos.*') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
