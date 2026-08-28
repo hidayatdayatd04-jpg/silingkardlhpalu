@@ -332,12 +332,10 @@
                                 <h3 class="font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ $artikel->judul }}</h3>
                                 <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500">
                                     <span class="font-medium">{{ $artikel->tanggal_publish?->translatedFormat('d M Y') }}</span>
-                                    @if($artikel->user)
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="size-1.5 rounded-full bg-brand-400"></span>
-                                            {{ $artikel->user->name }}
-                                        </span>
-                                    @endif
+                                    <span class="inline-flex items-center gap-1.5 font-medium">
+                                        <span class="size-1.5 rounded-full bg-brand-400"></span>
+                                        {{ __('Penulis') }}
+                                    </span>
                                 </div>
                             </div>
                         </a>

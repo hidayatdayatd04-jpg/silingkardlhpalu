@@ -23,10 +23,16 @@
                 </div>
                 <div class="space-y-3 p-6">
                     <h2 class="line-clamp-2 text-lg font-extrabold leading-7 tracking-[-0.02em] text-slate-900 dark:text-slate-100">{{ $artikel->judul }}</h2>
-                    <p class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                        <x-icons.ui name="calendar" class="size-4 text-brand-600 dark:text-brand-400" />
-                        {{ $artikel->tanggal_publish?->translatedFormat('d F Y') }}
-                    </p>
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span class="inline-flex items-center gap-1.5 font-semibold">
+                            <x-icons.ui name="calendar" class="size-4 text-brand-600 dark:text-brand-400" />
+                            {{ $artikel->tanggal_publish?->translatedFormat('d F Y') }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 font-medium">
+                            <span class="size-1.5 rounded-full bg-brand-400"></span>
+                            {{ __('Penulis') }}
+                        </span>
+                    </div>
                 </div>
             </a>
         @empty

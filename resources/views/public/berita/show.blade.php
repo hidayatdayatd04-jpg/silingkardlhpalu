@@ -42,7 +42,7 @@
             </span>
             <span class="inline-flex items-center gap-1.5">
                 <x-icons.ui name="user" class="size-4 text-brand-500" />
-                {{ $artikel->user?->name ?? 'Admin DLH' }}
+                {{ $artikel->user && strtolower($artikel->user->name) !== 'admin' ? $artikel->user->name : __('Penulis') }}
             </span>
         </div>
     </header>
