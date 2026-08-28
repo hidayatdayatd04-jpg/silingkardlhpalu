@@ -299,41 +299,6 @@
         </section>
 
         {{-- ========================================================= --}}
-        {{-- DAMPAK & CAPAIAN — angka animasi count-up (bukti nyata)     --}}
-        {{-- Catatan: nilai di bawah bersifat ilustratif; hubungkan ke  --}}
-        {{-- data nyata bila tersedia lewat controller.                 --}}
-        {{-- ========================================================= --}}
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                <span class="inline-block text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400 mb-3">{{ __('Dampak Nyata') }}</span>
-                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ __('Kerja Nyata untuk Lingkungan Palu') }}</h2>
-                <p class="mt-3 text-base text-slate-500 dark:text-slate-400">{{ __('Capaian layanan dan operasional DLH Kota Palu yang terus berjalan setiap hari.') }}</p>
-            </div>
-
-            @php
-            $capaian = [
-                ['value' => 180, 'suffix' => ' ton', 'label' => __('Sampah Terangkut / Hari'), 'grad' => 'from-amber-500 to-orange-500', 'soft' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'ton-sampah', 'accentVar' => 'var(--color-amber-500)'],
-                ['value' => 68, 'suffix' => ' Ha', 'label' => __('Ruang Terbuka Hijau Dikelola'), 'grad' => 'from-brand-500 to-emerald-500', 'soft' => 'bg-brand-50 dark:bg-brand-900/20', 'text' => 'text-brand-600 dark:text-brand-400', 'icon' => 'rth-ha', 'accentVar' => 'var(--color-brand-500)'],
-                ['value' => 45, 'suffix' => ' Titik', 'label' => __('TPS & Kontainer Aktif'), 'grad' => 'from-bay-500 to-bay-600', 'soft' => 'bg-bay-50 dark:bg-bay-900/20', 'text' => 'text-bay-600 dark:text-bay-400', 'icon' => 'titik-tps', 'accentVar' => 'var(--color-bay-500)'],
-            ];
-            @endphp
-            <div class="grid sm:grid-cols-3 gap-5">
-                @foreach ($capaian as $i => $c)
-                <div class="reveal group relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 text-center shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.25)]"
-                     style="--reveal-delay: {{ $i * 90 }}ms; --icon-accent: {{ $c['accentVar'] }}">
-                    <div class="absolute inset-x-0 -top-16 h-32 bg-gradient-to-b {{ $c['grad'] }} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-10" aria-hidden="true"></div>
-                    <div class="relative mx-auto mb-4 size-14 rounded-2xl {{ $c['soft'] }} {{ $c['text'] }} flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                        <x-dynamic-component :component="'icons.'.$c['icon']" class="size-7" />
-                    </div>
-                    <p class="relative text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-br {{ $c['grad'] }} bg-clip-text text-transparent"
-                       data-countup data-count="{{ $c['value'] }}" data-suffix="{{ $c['suffix'] }}">0{{ $c['suffix'] }}</p>
-                    <p class="relative mt-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-tight">{!! $c['label'] !!}</p>
-                </div>
-                @endforeach
-            </div>
-        </section>
-
-        {{-- ========================================================= --}}
         {{-- BERITA & ARTIKEL — grid diperbaiki, proporsi gambar rapi   --}}
         {{-- ========================================================= --}}
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -586,7 +551,7 @@
             els.forEach(function (el) { observer.observe(el); });
         }
 
-        /* ---- Count-up angka (statistik & capaian) ---- */
+        /* ---- Count-up angka statistik ---- */
         var counters = document.querySelectorAll('[data-countup]');
         var fmt = function (n) { return new Intl.NumberFormat('id-ID').format(Math.round(n)); };
 
