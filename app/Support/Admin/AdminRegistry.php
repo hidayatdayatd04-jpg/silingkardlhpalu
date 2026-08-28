@@ -1420,6 +1420,39 @@ class AdminRegistry
             ]);
         }
 
+        // Statistik sampah adalah sumber grafik publik. Field dibuat eksplisit
+        // agar validasinya tidak hanya mengandalkan tebakan nama kolom generik.
+        if ($resource['slug'] === 'statistik-sampah') {
+            return self::decorateFields($resource, [
+                [
+                    'name' => 'tanggal',
+                    'label' => 'Tanggal Pencatatan',
+                    'type' => 'date',
+                    'options' => [],
+                    'required' => true,
+                ],
+                [
+                    'name' => 'volume_ton',
+                    'label' => 'Volume Sampah (Ton)',
+                    'type' => 'number',
+                    'options' => [],
+                    'required' => true,
+                    'step' => '0.01',
+                    'min' => 0,
+                    'max' => 99999999.99,
+                    'hint' => 'Gunakan angka dalam ton, maksimal dua angka di belakang koma.',
+                ],
+                [
+                    'name' => 'periode',
+                    'label' => 'Periode Data',
+                    'type' => 'select',
+                    'options' => \App\Enums\StatistikSampahPeriode::options(),
+                    'required' => true,
+                    'hint' => 'Pilih satu periode yang sesuai. Data publik ditampilkan terpisah per periode.',
+                ],
+            ]);
+        }
+
         return self::decorateFields($resource, collect($model->getFillable())
             ->reject(fn (string $field) => in_array($field, ['id', 'created_at', 'updated_at', 'email_verified_at', 'remember_token', 'additional_access'], true))
             ->map(fn (string $field) => [

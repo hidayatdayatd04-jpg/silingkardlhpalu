@@ -571,6 +571,9 @@
                                     <x-admin.form-input id="field-{{ $name }}" type="{{ $inputType }}" name="{{ $name }}"
                                         :label="$field['label']" :value="$value" :error="$error" :required="$isRequired"
                                         :readonly="$isReadonly" :step="$inputType === 'number' ? $step : null"
+                                        :min="$inputType === 'number' ? ($field['min'] ?? null) : null"
+                                        :max="$inputType === 'number' ? ($field['max'] ?? null) : null"
+                                        :hint="$field['hint'] ?? null"
                                         :icon="$isLatLng ? 'map-pin' : null" />
                                 </div>
                             @endif

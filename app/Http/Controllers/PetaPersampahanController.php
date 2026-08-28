@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GisDataLayer;
 use App\Models\GpsVehicleCache;
 use App\Models\StatistikSampah;
+use App\Enums\StatistikSampahPeriode;
 
 class PetaPersampahanController extends Controller
 {
@@ -137,7 +138,40 @@ class PetaPersampahanController extends Controller
             $defaultType = array_key_first($vehicleTypes) ?? 'pickup';
         }
 
-        $stats = StatistikSampah::query()->orderBy('tanggal')->limit(12)->get();
+        // Semua catatan statistik dikirim ke publik dan dipisah per periode.
+        // Sebelumnya hanya 12 catatan paling lama yang terkirim, sehingga data
+        // terbaru atau data setelah entri ke-12 tidak pernah terlihat publik.
+        $stats = StatistikSampah::query()
+            ->select(['tanggal', 'volume_ton', 'periode'])
+            ->orderBy('tanggal')
+            ->orderBy('created_at')
+            ->get();
+
+        $chartSeries = collect(StatistikSampahPeriode::cases())
+            ->mapWithKeys(function (StatistikSampahPeriode $periode) use ($stats): array {
+                $records = $stats
+                    ->filter(fn (StatistikSampah $stat) => $stat->periode === $periode)
+                    ->values()
+                    ->map(fn (StatistikSampah $stat): array => [
+                        'date' => $stat->tanggal->toDateString(),
+                        'label' => $stat->tanggal->translatedFormat('d M Y'),
+                        'value' => (float) $stat->volume_ton,
+                    ])
+                    ->all();
+
+                return [$periode->value => $records];
+            })
+            ->all();
+
+        $chartPeriodLabels = collect(StatistikSampahPeriode::cases())
+            ->mapWithKeys(fn (StatistikSampahPeriode $periode) => [$periode->value => $periode->label()])
+            ->all();
+
+        $chartDefaultPeriod = collect(StatistikSampahPeriode::cases())
+            ->map(fn (StatistikSampahPeriode $periode) => $periode->value)
+            ->first(fn (string $periode) => ! empty($chartSeries[$periode]))
+            ?? StatistikSampahPeriode::HARIAN->value;
+
         // Hanya kolom publik — 'raw_data' tidak boleh bocor ke pengunjung.
         $armada = GpsVehicleCache::select(GpsVehicleCache::PUBLIC_COLUMNS)->get();
 
@@ -146,8 +180,9 @@ class PetaPersampahanController extends Controller
             'vehicleTypes' => $vehicleTypes,
             'defaultType' => $defaultType,
             'armada' => $armada,
-            'chartLabels' => $stats->map(fn ($r) => $r->tanggal->format('d M Y'))->all(),
-            'chartValues' => $stats->pluck('volume_ton')->map(fn ($v) => (float) $v)->all(),
+            'chartSeries' => $chartSeries,
+            'chartPeriodLabels' => $chartPeriodLabels,
+            'chartDefaultPeriod' => $chartDefaultPeriod,
         ]);
     }
 

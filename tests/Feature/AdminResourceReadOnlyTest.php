@@ -48,6 +48,32 @@ class AdminResourceReadOnlyTest extends TestCase
         $this->assertSame(99.5, (float) $record->volume_ton);
     }
 
+    public function test_statistik_sampah_rejects_invalid_or_duplicate_period_data(): void
+    {
+        $this->makeStatistik();
+        $countBefore = StatistikSampah::count();
+
+        $this->actingAs($this->makeUser('bidang-sampah-lb3'))
+            ->post(route('admin.resources.store', 'statistik-sampah'), [
+                'tanggal' => '2026-08-20',
+                'volume_ton' => '-1.25',
+                'periode' => 'harian',
+            ])
+            ->assertSessionHasErrors(['tanggal', 'volume_ton']);
+
+        $this->assertSame($countBefore, StatistikSampah::count());
+
+        $this->actingAs($this->makeUser('bidang-sampah-lb3'))
+            ->post(route('admin.resources.store', 'statistik-sampah'), [
+                'tanggal' => '2026-08-21',
+                'volume_ton' => '1.234',
+                'periode' => 'bukan-periode',
+            ])
+            ->assertSessionHasErrors(['volume_ton', 'periode']);
+
+        $this->assertSame($countBefore, StatistikSampah::count());
+    }
+
     private function makeStatistik(): StatistikSampah
     {
         return StatistikSampah::create([

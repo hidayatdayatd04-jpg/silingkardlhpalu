@@ -1179,6 +1179,15 @@ class ResourceController extends Controller
             } elseif ($type === 'number') {
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'numeric';
+                if (array_key_exists('min', $field)) {
+                    $rule[] = 'min:'.$field['min'];
+                }
+                if (array_key_exists('max', $field)) {
+                    $rule[] = 'max:'.$field['max'];
+                }
+                if (isset($field['decimal'])) {
+                    $rule[] = 'decimal:'.$field['decimal'];
+                }
             } elseif ($type === 'email') {
                 $rule[] = $required ? 'required' : 'nullable';
                 $rule[] = 'email';
@@ -1218,6 +1227,25 @@ class ResourceController extends Controller
             $attributes['username'] = 'Username';
             $attributes['email'] = 'Email';
             $attributes['role'] = 'Role';
+        }
+
+        // Satu catatan untuk satu tanggal dan satu periode mencegah data
+        // rangkap pada grafik publik. Validasi juga menjaga nilai agar sesuai
+        // dengan kapasitas kolom decimal(10,2) di basis data.
+        if ($meta['slug'] === 'statistik-sampah') {
+            $ignoreId = $model?->getKey();
+            $rules['tanggal'] = [
+                'required',
+                'date',
+                Rule::unique('statistik_sampah', 'tanggal')
+                    ->where(fn ($query) => $query->where('periode', $request->input('periode')))
+                    ->ignore($ignoreId),
+            ];
+            $rules['volume_ton'] = ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'];
+            $rules['periode'] = ['required', Rule::in(array_keys(\App\Enums\StatistikSampahPeriode::options()))];
+            $attributes['tanggal'] = 'Tanggal Pencatatan';
+            $attributes['volume_ton'] = 'Volume Sampah';
+            $attributes['periode'] = 'Periode Data';
         }
 
         if (! empty($rules)) {
