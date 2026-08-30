@@ -90,6 +90,39 @@ class SosialisasiDaftarHadirTest extends TestCase
         $this->assertSame('Monitoring yang Diperbarui Bidang', $sosialisasi->fresh()->judul);
     }
 
+    public function test_bidang_tata_penataan_can_delete_attachment_file(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $sosialisasi = $this->makeSosialisasi();
+        $fakePath = 'sosialisasi-files/test_lampiran.pdf';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($fakePath, 'dummy content');
+
+        $file = \App\Models\SosialisasiFile::create([
+            'sosialisasi_id' => $sosialisasi->id,
+            'path' => $fakePath,
+            'nama' => 'test_lampiran.pdf',
+            'tipe' => 'materi',
+        ]);
+
+        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('public')->exists($fakePath));
+        $this->assertDatabaseHas('sosialisasi_file', ['id' => $file->id]);
+
+        // Superadmin is forbidden from deleting operational attachments
+        $this->actingAs($this->makeUser('admin'))
+            ->deleteJson(route('admin.resources.relation-file.destroy', ['sosialisasi', $sosialisasi, 'files', $file->id]))
+            ->assertForbidden();
+
+        // Bidang Tata Penataan can delete
+        $response = $this->actingAs($this->makeUser('bidang-tata-penataan'))
+            ->deleteJson(route('admin.resources.relation-file.destroy', ['sosialisasi', $sosialisasi, 'files', $file->id]));
+
+        $response->assertOk()->assertJson(['success' => true]);
+
+        $this->assertFalse(\Illuminate\Support\Facades\Storage::disk('public')->exists($fakePath));
+        $this->assertDatabaseMissing('sosialisasi_file', ['id' => $file->id]);
+    }
+
     private function makeSosialisasi(): Sosialisasi
     {
         return Sosialisasi::create([

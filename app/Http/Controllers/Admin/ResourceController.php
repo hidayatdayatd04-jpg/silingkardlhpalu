@@ -518,6 +518,49 @@ class ResourceController extends Controller
         return redirect()->route('admin.resources.index', $resource)->with('success', $meta['label'].' berhasil dihapus.');
     }
 
+    /**
+     * Hapus satu file lampiran/relasi (mis. SosialisasiFile) dari record.
+     * File fisik di storage dihapus dan baris relasi di database dibersihkan.
+     */
+    public function destroyRelationFile(Request $request, string $resource, int|string $record, string $relation, int|string $fileId)
+    {
+        $meta = AdminRegistry::find($resource);
+        $this->authorize($meta);
+        $this->ensureCanUpdate($meta);
+
+        $model = $meta['model']::findOrFail($record);
+
+        $uploadConfig = collect(AdminRegistry::relationUploads($meta['slug']))
+            ->first(fn ($u) => ($u['relation'] ?? null) === $relation || ($u['name'] ?? null) === $relation);
+
+        abort_unless($uploadConfig, 404, 'Konfigurasi relasi lampiran tidak ditemukan.');
+
+        $fileModelClass = $uploadConfig['model'];
+        $foreignKey = $uploadConfig['foreign_key'];
+        $pathField = $uploadConfig['path_field'] ?? 'path';
+
+        $fileItem = $fileModelClass::where($foreignKey, $model->getKey())
+            ->where('id', $fileId)
+            ->firstOrFail();
+
+        $filePath = $fileItem->{$pathField} ?? null;
+
+        if ($filePath && Storage::disk('public')->exists($filePath)) {
+            Storage::disk('public')->delete($filePath);
+        }
+
+        $fileItem->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lampiran berhasil dihapus.',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Lampiran berhasil dihapus.');
+    }
+
     public function export(Request $request, string $resource)
     {
         $meta = AdminRegistry::find($resource);

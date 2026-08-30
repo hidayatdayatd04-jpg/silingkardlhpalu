@@ -178,6 +178,9 @@ Route::middleware(['auth', 'admin.access', 'no-store'])->prefix(config('app.admi
     // Reset password pengguna (khusus superadmin) — agar tidak terkunci jika lupa password.
     Route::post('/user/{record}/reset-password', [ResourceController::class, 'resetPassword'])->name('user.reset-password');
 
+    // Hapus satu file lampiran/relasi
+    Route::delete('/{resource}/{record}/relation-file/{relation}/{fileId}', [ResourceController::class, 'destroyRelationFile'])->name('resources.relation-file.destroy');
+
     Route::get('/{resource}', [ResourceController::class, 'index'])->name('resources.index');
     Route::get('/{resource}/create', [ResourceController::class, 'create'])->name('resources.create');
     Route::post('/{resource}', [ResourceController::class, 'store'])->name('resources.store');

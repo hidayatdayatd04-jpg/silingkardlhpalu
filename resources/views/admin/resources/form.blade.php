@@ -403,7 +403,7 @@
                                                         $itemIsImage = in_array($itemExt, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'bmp'], true);
                                                     @endphp
                                                     @if($path)
-                                                        <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition hover:bg-slate-50">
+                                                        <div class="lampiran-item-row flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition hover:bg-slate-50">
                                                             @if($itemIsImage)
                                                                 <img src="{{ \App\Support\Admin\AdminRegistry::previewUrl($path, $resource['slug']) }}" alt="{{ $label }}" loading="lazy"
                                                                     class="size-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
@@ -422,6 +422,54 @@
                                                                     class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-slate-200 transition hover:bg-emerald-50">
                                                                     <x-admin.icon name="download" :size="14" /> Unduh
                                                                 </a>
+                                                                @if(!$isReadonly && !($field['readonly_on_edit'] ?? false))
+                                                                    <button type="button"
+                                                                        x-data="{ deleting: false }"
+                                                                        :disabled="deleting"
+                                                                        @click="
+                                                                            if (confirm('Apakah Anda yakin ingin menghapus lampiran {{ addslashes($label) }}?')) {
+                                                                                deleting = true;
+                                                                                fetch('{{ route('admin.resources.relation-file.destroy', [$resource['slug'], $record, $field['relation'], $item->getKey()]) }}', {
+                                                                                    method: 'DELETE',
+                                                                                    headers: {
+                                                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                                                        'Accept': 'application/json',
+                                                                                        'X-Requested-With': 'XMLHttpRequest'
+                                                                                    }
+                                                                                })
+                                                                                .then(res => res.json())
+                                                                                .then(data => {
+                                                                                    if (data.success) {
+                                                                                        if (window.showToast) {
+                                                                                            window.showToast(data.message || 'Lampiran berhasil dihapus', 'success');
+                                                                                        }
+                                                                                        $el.closest('.lampiran-item-row').remove();
+                                                                                    } else {
+                                                                                        if (window.showToast) {
+                                                                                            window.showToast(data.message || 'Gagal menghapus lampiran.', 'error');
+                                                                                        } else {
+                                                                                            alert(data.message || 'Gagal menghapus lampiran.');
+                                                                                        }
+                                                                                        deleting = false;
+                                                                                    }
+                                                                                })
+                                                                                .catch(err => {
+                                                                                    if (window.showToast) {
+                                                                                        window.showToast('Terjadi kesalahan saat menghapus lampiran.', 'error');
+                                                                                    } else {
+                                                                                        alert('Terjadi kesalahan saat menghapus lampiran.');
+                                                                                    }
+                                                                                    deleting = false;
+                                                                                });
+                                                                            }
+                                                                        "
+                                                                        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+                                                                        title="Hapus Lampiran"
+                                                                        aria-label="Hapus lampiran {{ $label }}">
+                                                                        <x-admin.icon name="trash" :size="14" />
+                                                                        <span x-text="deleting ? 'Menghapus...' : 'Hapus'">Hapus</span>
+                                                                    </button>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endif
@@ -448,7 +496,7 @@
                                                     $fotoName = $fotoPath ? basename((string) $fotoPath) : ('Foto '.$loop->iteration);
                                                 @endphp
                                                 @if($fotoPath)
-                                                    <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
+                                                    <div class="foto-item-card flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2">
                                                         <a href="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" target="_blank"
                                                             class="block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                                                             <img src="{{ \App\Support\Admin\AdminRegistry::previewUrl($fotoPath, $resource['slug']) }}" alt="Foto {{ $loop->iteration }}" loading="lazy" class="size-full object-cover transition hover:scale-105">
@@ -462,6 +510,53 @@
                                                                 class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-slate-200 transition hover:bg-emerald-50">
                                                                 <x-admin.icon name="download" :size="14" /> Unduh
                                                             </a>
+                                                            @if(!$isReadonly && !($field['readonly_on_edit'] ?? false))
+                                                                <button type="button"
+                                                                    x-data="{ deleting: false }"
+                                                                    :disabled="deleting"
+                                                                    @click="
+                                                                        if (confirm('Apakah Anda yakin ingin menghapus foto {{ addslashes($fotoName) }}?')) {
+                                                                            deleting = true;
+                                                                            fetch('{{ route('admin.resources.relation-file.destroy', [$resource['slug'], $record, 'fotos', $foto->getKey()]) }}', {
+                                                                                method: 'DELETE',
+                                                                                headers: {
+                                                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                                                    'Accept': 'application/json',
+                                                                                    'X-Requested-With': 'XMLHttpRequest'
+                                                                                }
+                                                                            })
+                                                                            .then(res => res.json())
+                                                                            .then(data => {
+                                                                                if (data.success) {
+                                                                                    if (window.showToast) {
+                                                                                        window.showToast(data.message || 'Foto berhasil dihapus', 'success');
+                                                                                    }
+                                                                                    $el.closest('.foto-item-card').remove();
+                                                                                } else {
+                                                                                    if (window.showToast) {
+                                                                                        window.showToast(data.message || 'Gagal menghapus foto.', 'error');
+                                                                                    } else {
+                                                                                        alert(data.message || 'Gagal menghapus foto.');
+                                                                                    }
+                                                                                    deleting = false;
+                                                                                }
+                                                                            })
+                                                                            .catch(err => {
+                                                                                if (window.showToast) {
+                                                                                    window.showToast('Terjadi kesalahan saat menghapus foto.', 'error');
+                                                                                } else {
+                                                                                    alert('Terjadi kesalahan saat menghapus foto.');
+                                                                                }
+                                                                                deleting = false;
+                                                                            });
+                                                                        }
+                                                                    "
+                                                                    class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+                                                                    title="Hapus Foto">
+                                                                    <x-admin.icon name="trash" :size="14" />
+                                                                    <span x-text="deleting ? '...' : 'Hapus'">Hapus</span>
+                                                                </button>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 @endif
