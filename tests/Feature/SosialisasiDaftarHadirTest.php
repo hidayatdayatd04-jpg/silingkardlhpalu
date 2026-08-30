@@ -62,7 +62,7 @@ class SosialisasiDaftarHadirTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.resources.edit', ['sosialisasi', $sosialisasi]))
             ->assertOk()
-            ->assertSee('Mode baca-saja');
+            ->assertSee('Mode Baca');
 
         $this->actingAs($user)
             ->put(route('admin.resources.update', ['sosialisasi', $sosialisasi]), [

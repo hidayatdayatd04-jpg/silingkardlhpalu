@@ -190,7 +190,7 @@
         <div class="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200" role="status">
             <x-admin.icon name="lock" :size="19" class="mt-0.5 shrink-0" />
             <div>
-                <p class="font-bold">Mode baca-saja</p>
+                <p class="font-bold">Mode Baca</p>
                 <p class="mt-0.5 leading-6">Administrator Utama dapat melihat data ini, tetapi pengubahan record operasional dilakukan oleh admin bidang terkait.</p>
             </div>
         </div>

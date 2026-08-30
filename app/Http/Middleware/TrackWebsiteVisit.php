@@ -52,7 +52,7 @@ class TrackWebsiteVisit
         // request. Cukup catat sekali per sesi per hari (cache 1 jam). Versi
         // baru memastikan throttle sebelum reset tidak menghalangi pencatatan
         // kunjungan baru setelah tabel statistik dikosongkan.
-        $throttleKey = 'visit:tracked:v3:' . $sessionId . ':' . today()->toDateString();
+        $throttleKey = 'visit:tracked:v4:' . $sessionId . ':' . today()->toDateString();
 
         if (! Cache::has($throttleKey)) {
             WebsiteVisit::query()->firstOrCreate([

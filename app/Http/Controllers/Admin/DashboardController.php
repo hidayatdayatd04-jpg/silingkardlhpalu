@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         // Versi baru membuat dashboard langsung mengambil angka kunjungan yang
         // sudah di-reset, tanpa menunggu cache dashboard versi lama kedaluwarsa.
-        $cacheKey = 'dashboard:v3:' . $user->id . ':' . md5(implode(',', $allowedGroups));
+        $cacheKey = 'dashboard:v4:' . $user->id . ':' . md5(implode(',', $allowedGroups));
         $cached = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user, $allowedGroups, $isSuperadmin, $statistik, $bidangValues) {
             $agg = $this->aggregateLaporan($bidangValues);
 

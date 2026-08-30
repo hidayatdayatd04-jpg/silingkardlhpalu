@@ -22,7 +22,7 @@ class StatistikService
      * Versi key dinaikkan setelah data kunjungan di-reset agar cache lama
      * tidak menampilkan angka sebelumnya sampai masa cache berakhir.
      */
-    public const SUMMARY_CACHE_KEY = 'statistik:summary:v3';
+    public const SUMMARY_CACHE_KEY = 'statistik:summary:v4';
 
     private static array $tableCache = [];
 

@@ -19,7 +19,7 @@ class AdminResourceReadOnlyTest extends TestCase
         $this->actingAs($this->makeUser('admin'))
             ->get(route('admin.resources.edit', ['statistik-sampah', $record]))
             ->assertOk()
-            ->assertSee('Mode baca-saja')
+            ->assertSee('Mode Baca')
             ->assertDontSee('Perbarui Data');
 
         $this->put(route('admin.resources.update', ['statistik-sampah', $record]), [

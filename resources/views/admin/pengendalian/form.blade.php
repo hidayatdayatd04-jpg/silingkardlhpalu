@@ -45,7 +45,7 @@
     {{-- Page header --}}
     <x-admin.page-header
         :title="$readOnly ? 'Detail Data Pengaduan' : ($record->exists ? 'Edit Data Pengaduan' : 'Tambah Pengaduan Baru')"
-        :subtitle="$readOnly ? 'Data ditampilkan dalam mode baca-saja.' : 'Kolom bertanda * wajib diisi'"
+        :subtitle="$readOnly ? 'Data ditampilkan dalam Mode Baca.' : 'Kolom bertanda * wajib diisi'"
         :icon="$readOnly ? 'eye' : ($record->exists ? 'edit' : 'plus')"
         :breadcrumbs="[
             ['label' => $resource['label'], 'url' => route('admin.resources.index', $resource['slug'])],
@@ -57,7 +57,7 @@
     @if($readOnly)
         <div class="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200" role="status">
             <x-admin.icon name="lock" :size="19" class="mt-0.5 shrink-0" />
-            <div><p class="font-bold">Mode baca-saja</p><p class="mt-0.5 leading-6">Administrator Utama tidak dapat mengubah data operasional yang sudah masuk.</p></div>
+            <div><p class="font-bold">Mode Baca</p><p class="mt-0.5 leading-6">Administrator Utama tidak dapat mengubah data operasional yang sudah masuk.</p></div>
         </div>
     @endif
 
