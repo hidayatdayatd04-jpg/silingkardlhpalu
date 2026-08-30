@@ -125,7 +125,7 @@ $collections = $layers->map(fn ($layer) => [
         if ($isAppend) {
             // Import per-layer: tambahkan (append) fitur ke layer yang dipilih.
             $layer = GisDataLayer::findOrFail($layerId);
-            $this->authorizeBidang($layer->bidang);
+            $this->authorizeWriteBidang($layer->bidang);
             $bidang = $layer->bidang;
             $request->validate([
                 'file' => 'required|file|max:50000', // 50MB max
@@ -139,7 +139,7 @@ $collections = $layers->map(fn ($layer) => [
                 'color' => 'nullable|string|max:7',
             ]);
             $bidang = $request->input('bidang');
-            $this->authorizeBidang($bidang);
+            $this->authorizeWriteBidang($bidang);
         }
 
         $file = $request->file('file');
@@ -424,10 +424,10 @@ $collections = $layers->map(fn ($layer) => [
         $parent = null;
         if (! empty($validated['parent_id'])) {
             $parent = GisDataLayer::findOrFail($validated['parent_id']);
-            $this->authorizeBidang($parent->bidang);
+            $this->authorizeWriteBidang($parent->bidang);
             $validated['bidang'] = $parent->bidang;
         } else {
-            $this->authorizeBidang($validated['bidang']);
+            $this->authorizeWriteBidang($validated['bidang']);
         }
 
         $color = $request->input('color')
@@ -476,7 +476,7 @@ $collections = $layers->map(fn ($layer) => [
      */
     public function updateLayer(Request $request, GisDataLayer $layer)
     {
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $validated = $request->validate([
             'nama_layer' => 'sometimes|string|max:255',
@@ -509,7 +509,7 @@ $collections = $layers->map(fn ($layer) => [
      */
     public function destroyLayer(GisDataLayer $layer)
     {
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $layerId = $layer->id;
         $this->purgeLayerAndFiles($layer);
@@ -537,7 +537,7 @@ $collections = $layers->map(fn ($layer) => [
         foreach ($ids as $id) {
             $layer = GisDataLayer::findOrFail($id);
             try {
-                $this->authorizeBidang($layer->bidang);
+                $this->authorizeWriteBidang($layer->bidang);
                 $this->purgeLayerAndFiles($layer);
                 $deletedIds[] = $id;
             } catch (\Exception $e) {
@@ -598,10 +598,13 @@ $collections = $layers->map(fn ($layer) => [
         }
 
         $isSuperadmin = $adminRole->isSuperadmin();
+        if ($isSuperadmin) {
+            abort(403, 'Administrator Utama hanya dapat melihat data peta. Pengubahan data peta dilakukan oleh admin bidang terkait.');
+        }
         $allowedGroups = $adminRole->allowedGroups();
 
         $accessibleBidang = [];
-        if ($isSuperadmin || in_array('sampah-lb3', $allowedGroups)) {
+        if (in_array('sampah-lb3', $allowedGroups)) {
             $accessibleBidang[] = 'sampah-lb3';
         }
 
@@ -620,7 +623,7 @@ $collections = $layers->map(fn ($layer) => [
     public function restoreLayer(int $layerId)
     {
         $layer = GisDataLayer::onlyTrashed()->findOrFail($layerId);
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $layer->restore();
 
@@ -653,7 +656,7 @@ $collections = $layers->map(fn ($layer) => [
         ]);
 
         $layer = GisDataLayer::findOrFail($request->input('layer_id'));
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $featuresInput = $request->input('features');
         $swapped = $this->shpParser->validateAndSwapCoordinates($featuresInput);
@@ -686,7 +689,7 @@ $collections = $layers->map(fn ($layer) => [
      */
     public function deleteFeature(Request $request, GisDataLayer $layer)
     {
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $request->validate([
             'feature_index' => 'required|integer|min:0',
@@ -720,7 +723,7 @@ $collections = $layers->map(fn ($layer) => [
      */
     public function updateFeature(Request $request, GisDataLayer $layer, int $featureIndex)
     {
-        $this->authorizeBidang($layer->bidang);
+        $this->authorizeWriteBidang($layer->bidang);
 
         $request->validate([
             'properties' => 'sometimes|array',
@@ -996,7 +999,7 @@ foreach ($shpGroups as $dir => $shpPath) {
             abort(403, 'Unauthorized');
         }
 
-        // Superadmin akses semua
+        // Superadmin akses semua untuk melihat
         if ($adminRole->isSuperadmin()) return;
 
         // Cek apakah role boleh akses bidang ini
@@ -1014,6 +1017,37 @@ foreach ($shpGroups as $dir => $shpPath) {
         }
 
         abort(403, 'Anda tidak memiliki akses ke bidang ini');
+    }
+
+    private function authorizeWriteBidang(string $bidang): void
+    {
+        $user = auth()->user();
+        $adminRole = $user?->adminRole();
+
+        if (! $adminRole) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Superadmin / Administrator Utama mode baca saja (read-only) untuk peta operasional
+        if ($adminRole->isSuperadmin()) {
+            abort(403, 'Administrator Utama hanya dapat melihat data peta. Pengubahan data peta dilakukan oleh admin bidang terkait.');
+        }
+
+        // Cek apakah role boleh akses bidang ini
+        $allowedGroups = $adminRole->allowedGroups();
+        $bidangToGroup = [
+            'pengendalian' => 'pengendalian',
+            'sampah-lb3' => 'sampah-lb3',
+            'rth' => 'rth',
+            'tata-penataan' => 'tata-penataan',
+        ];
+
+        $requiredGroup = $bidangToGroup[$bidang] ?? null;
+        if ($requiredGroup && in_array($requiredGroup, $allowedGroups)) {
+            return;
+        }
+
+        abort(403, 'Anda tidak memiliki akses untuk mengubah data pada bidang ini');
     }
 
     private function findFileRecursive(string $dir, string $extension): ?string

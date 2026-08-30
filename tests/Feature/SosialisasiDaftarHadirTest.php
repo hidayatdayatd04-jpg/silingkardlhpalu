@@ -16,7 +16,7 @@ class SosialisasiDaftarHadirTest extends TestCase
     {
         $judul = 'Monitoring dan Evaluasi Baru';
 
-        $this->actingAs($this->makeUser('admin'))
+        $this->actingAs($this->makeUser('bidang-tata-penataan'))
             ->post(route('admin.resources.store', 'sosialisasi'), [
                 'judul' => $judul,
                 'jenis_kegiatan' => 'monitoring-evaluasi',

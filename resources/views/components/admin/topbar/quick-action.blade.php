@@ -33,6 +33,12 @@
                 return false;
             }
 
+            // Administrator Utama hanya dapat membuat data konten (artikel & user).
+            // Data operasional bidang diinput oleh admin bidang terkait.
+            if ($isSuperadmin && ($meta['group'] ?? null) !== 'konten') {
+                return false;
+            }
+
             return $isSuperadmin || $user?->canAccessResource($meta);
         })
         ->map(function (array $meta) use ($iconMap, $toneMap, $groups) {

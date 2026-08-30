@@ -6,6 +6,7 @@
 @php
     $isUser = $resource['slug'] === 'user';
     $canEdit = $resource['can_edit'] ?? true;
+    $canCreate = ($resource['can_create'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
 @endphp
 
 @section('content')
@@ -109,7 +110,7 @@
                     </div>
                 </div>
             @endif
-            @if(($resource['can_create'] ?? true))
+            @if($canCreate)
                 <x-admin.button variant="primary" icon="plus" size="sm" :href="route('admin.resources.create', $resource['slug'])">
                     Tambah
                 </x-admin.button>
@@ -386,8 +387,8 @@
                                 icon="folder"
                                 title="Belum ada data"
                                 description="Data akan muncul di sini. Ubah kata kunci pencarian jika diperlukan."
-                                :actionText="($resource['can_create'] ?? true) ? 'Tambah Data Pertama' : null"
-                                :actionUrl="($resource['can_create'] ?? true) ? route('admin.resources.create', $resource['slug']) : null"
+                                :actionText="$canCreate ? 'Tambah Data Pertama' : null"
+                                :actionUrl="$canCreate ? route('admin.resources.create', $resource['slug']) : null"
                             />
                         </td>
                     </tr>

@@ -274,7 +274,7 @@
         <div id="peta-map"></div>
 
         <!-- Draw Toolbar (Titik saja) -->
-        <div x-show="showDrawToolbar" x-transition class="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl shadow-lg border border-slate-200 p-1.5 flex gap-1">
+        <div x-show="!isSuperadmin && showDrawToolbar" x-transition class="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl shadow-lg border border-slate-200 p-1.5 flex gap-1">
             <button @click="drawMode === 'point' ? cancelDraw() : startPointDraw()" :class="drawMode === 'point' ? 'active' : ''" class="draw-btn" title="Tambah Titik" aria-label="Tambah titik di peta">
                 <x-admin.icon name="map-pin" :size="16" />
             </button>
@@ -287,12 +287,12 @@
             </button>
         </div>
         <!-- Draw mode hint -->
-        <div x-show="drawMode === 'point' && !tempMarker" x-transition
+        <div x-show="!isSuperadmin && drawMode === 'point' && !tempMarker" x-transition
             class="absolute top-16 left-1/2 -translate-x-1/2 z-10 bg-slate-800/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none"
             style="display:none;">
             Klik peta untuk meletakkan titik baru
         </div>
-        <div x-show="drawMode === 'point' && tempMarker" x-transition
+        <div x-show="!isSuperadmin && drawMode === 'point' && tempMarker" x-transition
             class="absolute top-16 left-1/2 -translate-x-1/2 z-10 bg-emerald-700/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none"
             style="display:none;">
             Titik siap - klik untuk simpan
@@ -339,47 +339,62 @@
                 </div>
             </div>
 
-            <!-- Action Bar -->
-            <div class="px-5 py-3 border-b border-slate-100 shrink-0">
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <!-- Buat Layer -->
-                    <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong" aria-label="Buat layer kosong"
-                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                        <x-admin.icon name="layers" :size="20" class="text-emerald-600" />
-                        <span class="text-[10.5px] font-semibold text-slate-700 leading-none">Buat Layer</span>
-                    </button>
-                    <!-- Titik -->
-                    <button @click="showDrawToolbar = !showDrawToolbar; if(!showDrawToolbar) cancelDraw()" type="button"
-                        :class="showDrawToolbar ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:border-slate-300'"
-                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Tambah Titik" aria-label="Buka alat tambah titik">
-                        <x-admin.icon name="map-pin" :size="20" x-bind:class="showDrawToolbar ? 'text-emerald-600' : 'text-slate-500 group-hover:text-slate-700'" />
-                        <span class="text-[10.5px] font-semibold leading-none" :class="showDrawToolbar ? 'text-emerald-700' : 'text-slate-700'">Titik</span>
-                    </button>
-                    <!-- Hapus Massal -->
-                    <button @click="isSelectionMode = !isSelectionMode; selectedLayers = []" type="button"
-                        :class="isSelectionMode ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'"
-                        class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Pilih Layer untuk Hapus Massal" aria-label="Pilih layer untuk dihapus massal">
-                        <x-admin.icon name="trash" :size="20" x-bind:class="isSelectionMode ? 'text-red-600' : 'text-slate-500 group-hover:text-slate-700'" />
-                        <span class="text-[10.5px] font-semibold leading-none" :class="isSelectionMode ? 'text-red-700' : 'text-slate-700'">Hapus Massal</span>
-                    </button>
+            <!-- Action Bar / Read Only Status -->
+            <template x-if="isSuperadmin">
+                <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/70 shrink-0">
+                    <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
+                        <x-admin.icon name="lock" :size="16" class="shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[11.5px] font-bold leading-tight text-amber-900 dark:text-amber-200">Panel Terkunci (Hanya Lihat)</p>
+                            <p class="text-[10.5px] font-normal leading-snug text-amber-700/90 dark:text-amber-300/80 mt-0.5">Admin Utama hanya dapat melihat data peta. Pengubahan data dilakukan oleh Admin Bidang Sampah &amp; LB3.</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <!-- Bulk Action Panel (Visible in Selection Mode) -->
-            <div x-show="isSelectionMode" x-transition class="px-5 py-2.5 bg-slate-50 border-b border-slate-200/60 flex items-center justify-between shrink-0" style="display: none;">
-                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                    <input type="checkbox" @change="toggleSelectAll($event.target.checked)" :checked="selectedLayers.length === layers.length && layers.length > 0"
-                        class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer" />
-                    Pilih Semua
-                </label>
-                <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-slate-500 font-semibold"><span x-text="selectedLayers.length"></span> terpilih</span>
-                    <button @click="bulkDeleteLayers()" :disabled="selectedLayers.length === 0"
-                        class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm">
-                        <x-admin.icon name="trash" :size="12" />
-                        Hapus
-                    </button>
+            </template>
+            <template x-if="!isSuperadmin">
+                <div>
+                    <div class="px-5 py-3 border-b border-slate-100 shrink-0">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <!-- Buat Layer -->
+                            <button @click="createForm.color = defaultColorFor(createForm.bidang); showCreateLayer = true" type="button" title="Buat Layer Kosong" aria-label="Buat layer kosong"
+                                class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                                <x-admin.icon name="layers" :size="20" class="text-emerald-600" />
+                                <span class="text-[10.5px] font-semibold text-slate-700 leading-none">Buat Layer</span>
+                            </button>
+                            <!-- Titik -->
+                            <button @click="showDrawToolbar = !showDrawToolbar; if(!showDrawToolbar) cancelDraw()" type="button"
+                                :class="showDrawToolbar ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:border-slate-300'"
+                                class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Tambah Titik" aria-label="Buka alat tambah titik">
+                                <x-admin.icon name="map-pin" :size="20" x-bind:class="showDrawToolbar ? 'text-emerald-600' : 'text-slate-500 group-hover:text-slate-700'" />
+                                <span class="text-[10.5px] font-semibold leading-none" :class="showDrawToolbar ? 'text-emerald-700' : 'text-slate-700'">Titik</span>
+                            </button>
+                            <!-- Hapus Massal -->
+                            <button @click="isSelectionMode = !isSelectionMode; selectedLayers = []" type="button"
+                                :class="isSelectionMode ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'"
+                                class="group flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" title="Pilih Layer untuk Hapus Massal" aria-label="Pilih layer untuk dihapus massal">
+                                <x-admin.icon name="trash" :size="20" x-bind:class="isSelectionMode ? 'text-red-600' : 'text-slate-500 group-hover:text-slate-700'" />
+                                <span class="text-[10.5px] font-semibold leading-none" :class="isSelectionMode ? 'text-red-700' : 'text-slate-700'">Hapus Massal</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Bulk Action Panel (Visible in Selection Mode) -->
+                    <div x-show="isSelectionMode" x-transition class="px-5 py-2.5 bg-slate-50 border-b border-slate-200/60 flex items-center justify-between shrink-0" style="display: none;">
+                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                            <input type="checkbox" @change="toggleSelectAll($event.target.checked)" :checked="selectedLayers.length === layers.length && layers.length > 0"
+                                class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer" />
+                            Pilih Semua
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-slate-500 font-semibold"><span x-text="selectedLayers.length"></span> terpilih</span>
+                            <button @click="bulkDeleteLayers()" :disabled="selectedLayers.length === 0"
+                                class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm">
+                                <x-admin.icon name="trash" :size="12" />
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </template>
 
             <!-- â•â•â• Layer List (REDESIGNED) â•â•â• -->
             <div class="layers-scroll flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
@@ -414,28 +429,45 @@
 
                                     <!-- Public visibility + page badge row -->
                                     <div class="flex items-center flex-wrap gap-1.5 mt-2" @click.stop>
-                                        <!-- Toggle Public -->
-                                        <button @click.stop="toggleLayerPublic(layer)"
-                                            :class="layer.is_public ? 'public-toggle is-public' : 'public-toggle is-hidden'"
-                                            :title="layer.is_public ? 'Klik untuk sembunyikan dari publik' : 'Klik untuk tampilkan ke publik'">
-                                            <!-- Eye icon when public -->
-                                            <template x-if="layer.is_public">
-                                                <x-admin.icon name="eye" :size="12" />
-                                            </template>
-                                            <!-- Eye-off icon when hidden -->
-                                            <template x-if="!layer.is_public">
-                                                <x-admin.icon name="eye-off" :size="12" />
-                                            </template>
-                                            <span x-text="layer.is_public ? 'Publik' : 'Disembunyikan'"></span>
-                                        </button>
+                                        <template x-if="isSuperadmin">
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <span :class="layer.is_public ? 'public-toggle is-public !cursor-default hover:!bg-[rgba(34,197,94,0.08)] hover:!text-[#16a34a] hover:!border-[rgba(34,197,94,0.25)]' : 'public-toggle is-hidden !cursor-default hover:!bg-[rgba(239,68,68,0.07)] hover:!text-[#dc2626] hover:!border-[rgba(239,68,68,0.2)]'" :title="layer.is_public ? 'Status: Publik' : 'Status: Disembunyikan'">
+                                                    <template x-if="layer.is_public"><x-admin.icon name="eye" :size="12" /></template>
+                                                    <template x-if="!layer.is_public"><x-admin.icon name="eye-off" :size="12" /></template>
+                                                    <span x-text="layer.is_public ? 'Publik' : 'Disembunyikan'"></span>
+                                                </span>
+                                                <span :class="layer.show_in_filter ? 'filter-toggle in-filter !cursor-default hover:!bg-[rgba(59,130,246,0.08)] hover:!text-[#2563eb] hover:!border-[rgba(59,130,246,0.25)]' : 'filter-toggle out-filter !cursor-default hover:!bg-[rgba(100,116,139,0.08)] hover:!text-[#64748b] hover:!border-[rgba(100,116,139,0.22)]'" :title="layer.show_in_filter ? 'Status: Di Filter Publik' : 'Status: Tanpa Filter'">
+                                                    <x-admin.icon name="filter" :size="12" />
+                                                    <span x-text="layer.show_in_filter ? 'Di Filter' : 'Tanpa Filter'"></span>
+                                                </span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!isSuperadmin">
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <!-- Toggle Public -->
+                                                <button @click.stop="toggleLayerPublic(layer)"
+                                                    :class="layer.is_public ? 'public-toggle is-public' : 'public-toggle is-hidden'"
+                                                    :title="layer.is_public ? 'Klik untuk sembunyikan dari publik' : 'Klik untuk tampilkan ke publik'">
+                                                    <!-- Eye icon when public -->
+                                                    <template x-if="layer.is_public">
+                                                        <x-admin.icon name="eye" :size="12" />
+                                                    </template>
+                                                    <!-- Eye-off icon when hidden -->
+                                                    <template x-if="!layer.is_public">
+                                                        <x-admin.icon name="eye-off" :size="12" />
+                                                    </template>
+                                                    <span x-text="layer.is_public ? 'Publik' : 'Disembunyikan'"></span>
+                                                </button>
 
-                                        <!-- Toggle Tampilkan di Filter (filter publik peta persampahan) -->
-                                        <button @click.stop="toggleLayerFilter(layer)"
-                                            :class="layer.show_in_filter ? 'filter-toggle in-filter' : 'filter-toggle out-filter'"
-                                            :title="layer.show_in_filter ? 'Klik untuk sembunyikan dari filter publik' : 'Klik untuk tampilkan di filter publik'">
-                                            <x-admin.icon name="filter" :size="12" />
-                                            <span x-text="layer.show_in_filter ? 'Di Filter' : 'Tanpa Filter'"></span>
-                                        </button>
+                                                <!-- Toggle Tampilkan di Filter (filter publik peta persampahan) -->
+                                                <button @click.stop="toggleLayerFilter(layer)"
+                                                    :class="layer.show_in_filter ? 'filter-toggle in-filter' : 'filter-toggle out-filter'"
+                                                    :title="layer.show_in_filter ? 'Klik untuk sembunyikan dari filter publik' : 'Klik untuk tampilkan di filter publik'">
+                                                    <x-admin.icon name="filter" :size="12" />
+                                                    <span x-text="layer.show_in_filter ? 'Di Filter' : 'Tanpa Filter'"></span>
+                                                </button>
+                                            </div>
+                                        </template>
 
                                         <!-- Public page badge (only if layer has a public page) -->
                                         <template x-if="layer.public_page">
@@ -457,17 +489,21 @@
                                 </div>
                                 <div class="flex items-center gap-0.5" x-show="!isSelectionMode">
                                     <!-- Expand/Collapse -->
-<button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker" aria-label="Tampilkan marker layer">
-<x-admin.icon name="chevron-down" :size="14" class="transition-transform duration-200" x-bind:class="isExpanded(layer) ? 'rotate-180' : ''" />
-</button>
-                                    <!-- Edit Layer -->
-                                    <button @click="editLayer(layer)" class="action-icon edit" title="Edit layer" aria-label="Edit layer">
-                                        <x-admin.icon name="edit" :size="14" />
+                                    <button @click="toggleExpand(layer.id)" class="action-icon" title="Lihat marker" aria-label="Tampilkan marker layer">
+                                        <x-admin.icon name="chevron-down" :size="14" class="transition-transform duration-200" x-bind:class="isExpanded(layer) ? 'rotate-180' : ''" />
                                     </button>
-                                    <!-- Delete Layer -->
-                                    <button @click="deleteLayer(layer)" class="action-icon danger" title="Hapus layer" aria-label="Hapus layer">
-                                        <x-admin.icon name="trash" :size="14" />
-                                    </button>
+                                    <template x-if="!isSuperadmin">
+                                        <div class="flex items-center gap-0.5">
+                                            <!-- Edit Layer -->
+                                            <button @click="editLayer(layer)" class="action-icon edit" title="Edit layer" aria-label="Edit layer">
+                                                <x-admin.icon name="edit" :size="14" />
+                                            </button>
+                                            <!-- Delete Layer -->
+                                            <button @click="deleteLayer(layer)" class="action-icon danger" title="Hapus layer" aria-label="Hapus layer">
+                                                <x-admin.icon name="trash" :size="14" />
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -487,16 +523,20 @@
                                         <x-admin.icon name="table" :size="14" class="shrink-0" />
                                         CSV
                                     </button>
-                                    <button @click="importToLayer(layer)" type="button" title="Import data ke layer ini"
-                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold transition-colors hover:from-emerald-600 hover:to-teal-600">
-                                        <x-admin.icon name="upload" :size="14" class="shrink-0" />
-                                        Import
-                                    </button>
-                                    <button @click="createSubLayer(layer)" type="button" title="Buat sub-layer di dalam layer ini"
-                                        class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-white border border-emerald-300 text-emerald-700 text-[9px] font-bold transition-colors hover:bg-emerald-50">
-                                        <x-admin.icon name="folder-plus" :size="14" class="shrink-0" />
-                                        Sub-Layer
-                                    </button>
+                                    <template x-if="!isSuperadmin">
+                                        <button @click="importToLayer(layer)" type="button" title="Import data ke layer ini"
+                                            class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold transition-colors hover:from-emerald-600 hover:to-teal-600">
+                                            <x-admin.icon name="upload" :size="14" class="shrink-0" />
+                                            Import
+                                        </button>
+                                    </template>
+                                    <template x-if="!isSuperadmin">
+                                        <button @click="createSubLayer(layer)" type="button" title="Buat sub-layer di dalam layer ini"
+                                            class="flex-1 h-9 inline-flex items-center justify-center gap-0.5 px-0.5 whitespace-nowrap overflow-hidden rounded-lg bg-white border border-emerald-300 text-emerald-700 text-[9px] font-bold transition-colors hover:bg-emerald-50">
+                                            <x-admin.icon name="folder-plus" :size="14" class="shrink-0" />
+                                            Sub-Layer
+                                        </button>
+                                    </template>
                                 </div>
 
 <!-- Marker list hanya untuk layer daun (tanpa sub-layer) -->
@@ -530,18 +570,22 @@
                                                 <button @click="showMarkerDetail(layer, item)" class="action-icon" title="Detail" aria-label="Lihat detail marker">
                                                     <x-admin.icon name="info-circle" :size="12" />
                                                 </button>
-                                                <!-- Ubah Ikon -->
-                                                <button @click="showMarkerIconEdit(layer, item)" class="action-icon edit" title="Ubah Ikon Marker" aria-label="Ubah ikon marker">
-                                                    <x-admin.icon name="settings" :size="12" />
-                                                </button>
-                                                <!-- Edit -->
-                                                <button @click="showMarkerEdit(layer, item)" class="action-icon edit" title="Edit" aria-label="Edit marker">
-                                                    <x-admin.icon name="edit" :size="12" />
-                                                </button>
-                                                <!-- Delete -->
-                                                <button @click="requestDeleteFeature(layer, item)" class="action-icon danger" title="Hapus" aria-label="Hapus marker">
-                                                    <x-admin.icon name="trash" :size="12" />
-                                                </button>
+                                                <template x-if="!isSuperadmin">
+                                                    <div class="flex items-center gap-0.5">
+                                                        <!-- Ubah Ikon -->
+                                                        <button @click="showMarkerIconEdit(layer, item)" class="action-icon edit" title="Ubah Ikon Marker" aria-label="Ubah ikon marker">
+                                                            <x-admin.icon name="settings" :size="12" />
+                                                        </button>
+                                                        <!-- Edit -->
+                                                        <button @click="showMarkerEdit(layer, item)" class="action-icon edit" title="Edit" aria-label="Edit marker">
+                                                            <x-admin.icon name="edit" :size="12" />
+                                                        </button>
+                                                        <!-- Delete -->
+                                                        <button @click="requestDeleteFeature(layer, item)" class="action-icon danger" title="Hapus" aria-label="Hapus marker">
+                                                            <x-admin.icon name="trash" :size="12" />
+                                                        </button>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                     </template>
@@ -646,11 +690,13 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 </div>
                 <!-- Footer -->
                 <div class="px-6 py-4 border-t border-slate-100 flex gap-2">
-                    <button @click="detailModal.show = false; showMarkerEdit(detailModal.layerRef, detailModal.itemRef)" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
+                    <template x-if="!isSuperadmin">
+                        <button @click="detailModal.show = false; showMarkerEdit(detailModal.layerRef, detailModal.itemRef)" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
                             <x-admin.icon name="edit" :size="16" />
-                        Edit Marker
-                    </button>
-                    <button @click="detailModal.show = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">Tutup</button>
+                            Edit Marker
+                        </button>
+                    </template>
+                    <button @click="detailModal.show = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all flex-1">Tutup</button>
                 </div>
             </div>
         </div>
@@ -1134,6 +1180,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
 
     function petaAdmin() {
         return {
+            isSuperadmin: {{ $isSuperadmin ? 'true' : 'false' }},
             get sidebarOpen() { return Alpine.store('petaSidebar').open; },
             set sidebarOpen(val) { Alpine.store('petaSidebar').open = val; },
             get _sidebarStoreReady() { return true; },
@@ -1579,8 +1626,8 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                 nama: props.NAMA || layer.nama_layer,
                                 kategori: layer.nama_layer,
                                 type: featureMarkerType,
-                                layerId: layer.id,
-                                featureIndex: featureIndex,
+                                layerId: this.isSuperadmin ? undefined : layer.id,
+                                featureIndex: this.isSuperadmin ? undefined : featureIndex,
                                 status: props.STATUS ? { text: props.STATUS, color: props.STATUS === 'Aktif' ? '#22c55e' : props.STATUS === 'Rusak' || props.STATUS === 'Rusak Ringan' ? '#ef4444' : '#f59e0b' } : null,
                                 details: detailRows,
                             });
@@ -1707,26 +1754,31 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             toggleLayerVisibility(layer) {
                 if (layer.is_visible) { this.showLayer(layer.id); }
                 else { this.hideLayer(layer.id); }
-                fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ is_visible: layer.is_visible }),
-                });
+                if (!this.isSuperadmin) {
+                    fetch(`{{ $petaApiBase }}/peta/layer/${layer.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ is_visible: layer.is_visible }),
+                    });
+                }
                 // Cascade: visibilitas layer utama diwariskan ke seluruh
                 // sublayer-nya (ikut tampil / ikut disembunyikan).
                 this.descendantsOf(layer).forEach(child => {
                     child.is_visible = layer.is_visible;
                     if (child.is_visible) { this.showLayer(child.id); }
                     else { this.hideLayer(child.id); }
-                    fetch(`{{ $petaApiBase }}/peta/layer/${child.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ is_visible: child.is_visible }),
-                    });
+                    if (!this.isSuperadmin) {
+                        fetch(`{{ $petaApiBase }}/peta/layer/${child.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ is_visible: child.is_visible }),
+                        });
+                    }
                 });
             },
 
             toggleLayerPublic(layer) {
+                if (this.isSuperadmin) return;
                 layer.is_public = !layer.is_public;
                 // Cascade: status publik layer utama diwariskan ke seluruh sublayer.
                 const children = this.descendantsOf(layer);
@@ -1759,6 +1811,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             },
 
             toggleLayerFilter(layer) {
+                if (this.isSuperadmin) return;
                 layer.show_in_filter = !layer.show_in_filter;
                 // Cascade: status filter layer utama diwariskan ke seluruh sublayer.
                 const children = this.descendantsOf(layer);
@@ -1882,11 +1935,13 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     if (targetVisible) { this.showLayer(layer.id); }
                     else { this.hideLayer(layer.id); }
                 });
-                fetch('{{ $petaApiBase }}/peta/layers/bulk-visibility', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ visible: targetVisible }),
-                });
+                if (!this.isSuperadmin) {
+                    fetch('{{ $petaApiBase }}/peta/layers/bulk-visibility', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ visible: targetVisible }),
+                    });
+                }
             },
 
         getFeatureCount(layer) {

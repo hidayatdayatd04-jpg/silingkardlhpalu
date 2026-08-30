@@ -104,6 +104,21 @@ class ResourceController extends Controller
         );
     }
 
+    protected function ensureCanCreate(array $meta): void
+    {
+        abort_if(
+            ($meta['can_create'] ?? true) === false,
+            403,
+            'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.'
+        );
+
+        abort_if(
+            $this->isReadOnlyForCurrentUser($meta),
+            403,
+            'Administrator Utama hanya dapat melihat data ini. Penambahan data operasional dilakukan oleh admin bidang terkait.'
+        );
+    }
+
     public function index(Request $request, string $resource)
     {
         $meta = AdminRegistry::find($resource);
@@ -128,9 +143,7 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
-
-        abort_if(($meta['can_create'] ?? true) === false, 403,
-            'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.');
+        $this->ensureCanCreate($meta);
 
         $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
@@ -152,9 +165,7 @@ class ResourceController extends Controller
     {
         $meta = AdminRegistry::find($resource);
         $this->authorize($meta);
-
-        abort_if(($meta['can_create'] ?? true) === false, 403,
-            'Menu ini hanya mendukung lihat detail dan edit. Penambahan data tidak diizinkan.');
+        $this->ensureCanCreate($meta);
         $this->validateSpecialFields($request, $meta, false);
         $this->validateFromFields($request, $meta, false, null);
 

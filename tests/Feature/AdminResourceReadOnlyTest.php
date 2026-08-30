@@ -74,6 +74,98 @@ class AdminResourceReadOnlyTest extends TestCase
         $this->assertSame($countBefore, StatistikSampah::count());
     }
 
+    public function test_administrator_utama_cannot_see_tambah_button_or_create_operational_resources(): void
+    {
+        $admin = $this->makeUser('admin');
+        $operationalSlugs = ['statistik-sampah', 'sosialisasi', 'data-tanam-pohon', 'pelanggaran'];
+
+        foreach ($operationalSlugs as $slug) {
+            $this->actingAs($admin)
+                ->get(route('admin.resources.index', $slug))
+                ->assertOk()
+                ->assertDontSee(route('admin.resources.create', $slug));
+
+            $this->actingAs($admin)
+                ->get(route('admin.resources.create', $slug))
+                ->assertForbidden();
+
+            $this->actingAs($admin)
+                ->post(route('admin.resources.store', $slug), [])
+                ->assertForbidden();
+        }
+    }
+
+    public function test_bidang_admin_can_see_tambah_button_and_access_create(): void
+    {
+        $bidangSampah = $this->makeUser('bidang-sampah-lb3');
+        $this->actingAs($bidangSampah)
+            ->get(route('admin.resources.index', 'statistik-sampah'))
+            ->assertOk()
+            ->assertSee(route('admin.resources.create', 'statistik-sampah'));
+
+        $this->actingAs($bidangSampah)
+            ->get(route('admin.resources.create', 'statistik-sampah'))
+            ->assertOk();
+
+        $bidangTata = $this->makeUser('bidang-tata-penataan');
+        $this->actingAs($bidangTata)
+            ->get(route('admin.resources.index', 'sosialisasi'))
+            ->assertOk()
+            ->assertSee(route('admin.resources.create', 'sosialisasi'));
+
+        $this->actingAs($bidangTata)
+            ->get(route('admin.resources.create', 'sosialisasi'))
+            ->assertOk();
+
+        $this->actingAs($bidangTata)
+            ->get(route('admin.resources.index', 'pelanggaran'))
+            ->assertOk()
+            ->assertSee(route('admin.resources.create', 'pelanggaran'));
+
+        $this->actingAs($bidangTata)
+            ->get(route('admin.resources.create', 'pelanggaran'))
+            ->assertOk();
+
+        $bidangRth = $this->makeUser('bidang-rth');
+        $this->actingAs($bidangRth)
+            ->get(route('admin.resources.index', 'data-tanam-pohon'))
+            ->assertOk()
+            ->assertSee(route('admin.resources.create', 'data-tanam-pohon'));
+
+        $this->actingAs($bidangRth)
+            ->get(route('admin.resources.create', 'data-tanam-pohon'))
+            ->assertOk();
+    }
+
+    public function test_administrator_utama_peta_is_read_only_and_write_is_forbidden(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        // Admin Utama can view peta page and layers
+        $this->actingAs($admin)
+            ->get(route('admin.peta.index'))
+            ->assertOk()
+            ->assertSee('Panel Terkunci (Hanya Lihat)');
+
+        $this->actingAs($admin)
+            ->get(route('admin.peta.layers'))
+            ->assertOk();
+
+        // Mutating operations are forbidden for Admin Utama
+        $this->actingAs($admin)
+            ->post(route('admin.peta.layers.store'), [
+                'bidang' => 'sampah-lb3',
+                'nama_layer' => 'Layer Uji',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('admin.peta.layers.bulk-visibility'), [
+                'visible' => true,
+            ])
+            ->assertForbidden();
+    }
+
     private function makeStatistik(): StatistikSampah
     {
         return StatistikSampah::create([
