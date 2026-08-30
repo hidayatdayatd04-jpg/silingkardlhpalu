@@ -145,7 +145,7 @@ class AdminResourceReadOnlyTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.peta.index'))
             ->assertOk()
-            ->assertSee('Panel Terkunci (Hanya Lihat)');
+            ->assertSee('Panel Terkunci (Mode Baca)');
 
         $this->actingAs($admin)
             ->get(route('admin.peta.layers'))

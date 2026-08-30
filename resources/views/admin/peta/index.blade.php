@@ -345,7 +345,7 @@
                     <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
                         <x-admin.icon name="lock" :size="16" class="shrink-0 text-amber-600 dark:text-amber-400" />
                         <div class="min-w-0 flex-1">
-                            <p class="text-[11.5px] font-bold leading-tight text-amber-900 dark:text-amber-200">Panel Terkunci (Hanya Lihat)</p>
+                            <p class="text-[11.5px] font-bold leading-tight text-amber-900 dark:text-amber-200">Panel Terkunci (Mode Baca)</p>
                             <p class="text-[10.5px] font-normal leading-snug text-amber-700/90 dark:text-amber-300/80 mt-0.5">Admin Utama hanya dapat melihat data peta. Pengubahan data dilakukan oleh Admin Bidang Sampah &amp; LB3.</p>
                         </div>
                     </div>
