@@ -57,7 +57,7 @@
 
                 <p class="hero-enter mt-6 text-base sm:text-lg text-brand-50/90 max-w-2xl leading-relaxed"
                    style="--hero-delay:180ms">
-                    {{ __('Akses informasi dan layanan DLH Kota Palu—mulai dari pengaduan, pengelolaan sampah & LB3, ruang terbuka hijau, hingga pelacakan armada—dalam satu portal yang mudah digunakan.') }}
+                    {{ __('Akses informasi dan layanan DLH Kota Palu Mulai Dari Pengaduan, pengelolaan sampah & LB3, ruang terbuka hijau, hingga pelacakan armada dalam satu portal yang mudah digunakan.') }}
                 </p>
 
                 <div class="hero-enter mt-9 flex flex-col sm:flex-row gap-3" style="--hero-delay:270ms">
