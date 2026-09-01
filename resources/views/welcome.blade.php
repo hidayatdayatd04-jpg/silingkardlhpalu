@@ -140,6 +140,7 @@
                     'icon' => 'sampah',
                     'links' => [
                         [__('Peta Sampah'), '/peta-persampahan'],
+                        [__('Data Armada Persampahan'), '/data-armada-persampahan'],
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Registrasi LB3'), '/registrasi-usaha-lb3'],
                         [__('Cek Registrasi LB3'), '/cek-registrasi-lb3'],

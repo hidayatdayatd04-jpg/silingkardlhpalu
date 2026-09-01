@@ -240,6 +240,7 @@ Route::get('/registrasi-usaha-lb3', fn () => view('public.registrasi-usaha-lb3')
 Route::get('/cek-registrasi-lb3', fn () => view('public.cek-registrasi-lb3'))->middleware('throttle:30,1');
 Route::get('/pengajuan-rintek-pertek', fn () => view('public.pengajuan-rintek-pertek'));
 Route::get('/cek-rintek-pertek', fn () => view('public.cek-rintek-pertek'))->middleware('throttle:30,1');
+Route::get('/data-armada-persampahan', fn () => view('public.coming-soon', ['title' => 'Data Armada Persampahan']));
 Route::get('/pengajuan-rintek-pertek/{nomor_pengajuan}/bukti-pdf', function (string $nomor_pengajuan) {
     $pengajuan = PengajuanRintekPertek::where('nomor_pengajuan', $nomor_pengajuan)->firstOrFail();
 

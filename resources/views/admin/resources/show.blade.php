@@ -37,7 +37,7 @@
 
     $statusValue = $record->status ?? $record->status_sanksi ?? $record->status_tindak_lanjut ?? null;
     $statusText = $statusValue ? $format($statusValue) : null;
-    $canEdit = $resource['can_edit'] ?? true;
+    $canEdit = ($resource['can_edit'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
     $statusVariant = match (true) {
         !$statusText => 'neutral',
         in_array($statusText, ['Ditinjau', 'Ditindaklanjuti', 'Selesai', 'Aktif', 'approved', 'selesai', 'aktif'], true) => 'success',

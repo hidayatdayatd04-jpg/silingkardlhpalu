@@ -473,7 +473,7 @@ new class extends Component {
                         <span class="detect-label">Deteksi Lokasi Saya</span>
                     </button>
 
-                    <div class="detect-hint flex items-center justify-center gap-1.5 pt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <div class="detect-hint flex items-center justify-start gap-1.5 pt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
                         <x-icons.ui name="map-pin" class="size-3.5 text-brand-600 dark:text-brand-400 shrink-0 opacity-70" />
                         <span>{{ __('Aktifkan GPS/Lokasi Terlebih Dahulu') }}</span>
                     </div>

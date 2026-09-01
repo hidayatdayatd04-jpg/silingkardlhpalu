@@ -125,6 +125,39 @@ class ResourceController extends Controller
         $this->authorize($meta);
         $query = $this->query($meta, $request);
 
+        if ($meta['slug'] === 'data-armada-persampahan') {
+            $modelClass = $meta['model'];
+            $categories = [
+                'Kendaraan Roda 2',
+                'Kendaraan Roda 4',
+                'Kendaraan Roda 6',
+                'Alat Berat',
+            ];
+
+            $categoryUnits = [];
+            $categoryRecords = [];
+            foreach ($categories as $cat) {
+                $categoryUnits[$cat] = (int) $modelClass::where('kategori', $cat)->sum('jumlah');
+                $categoryRecords[$cat] = (int) $modelClass::where('kategori', $cat)->count();
+            }
+            $totalKeseluruhanUnits = (int) $modelClass::sum('jumlah');
+            $totalKeseluruhanRecords = (int) $modelClass::count();
+
+            return view('admin.data-armada-persampahan.index', [
+                'resource' => $meta,
+                'records' => $query->paginate(15)->withQueryString(),
+                'search' => $request->string('q')->toString(),
+                'sortColumn' => $request->string('sort')->toString(),
+                'sortDirection' => $request->string('direction', 'asc')->toString(),
+                'categories' => $categories,
+                'categoryUnits' => $categoryUnits,
+                'categoryRecords' => $categoryRecords,
+                'totalKeseluruhanUnits' => $totalKeseluruhanUnits,
+                'totalKeseluruhanRecords' => $totalKeseluruhanRecords,
+                'activeCategory' => $request->query('kategori', ''),
+            ]);
+        }
+
         $view = match ($meta['slug']) {
             'artikel' => 'admin.artikel.index',
             default => 'admin.resources.index',

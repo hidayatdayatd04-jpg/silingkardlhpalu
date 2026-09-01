@@ -12,6 +12,7 @@
         'pengajuan-rintek-pertek' => 'factory',
         'registrasi-usaha-lb3' => 'clipboard-list',
         'statistik-sampah' => 'chart-bar',
+        'data-armada-persampahan' => 'truck',
         'pinjam-taman' => 'park-bench',
         'data-tanam-pohon' => 'seedling',
         'pengaduan-tata-penataan' => 'building',
