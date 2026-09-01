@@ -356,6 +356,20 @@ new class extends Component {
             </label>
             @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
+            {{-- Informasi Kontak Tambahan --}}
+            <div class="pt-1 pb-1 space-y-1.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400">
+                <p class="font-medium text-slate-700 dark:text-slate-300">
+                    {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
+                </p>
+                <div>
+                    <a href="https://wa.me/6285256744102" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                        <x-icons.social.whatsapp class="size-4 flex-shrink-0" />
+                        <span>085256744102</span>
+                    </a>
+                </div>
+            </div>
+
             @error('form')
                 <div class="dlh-limit-alert" role="alert">
                     <x-icons.ui name="alert" />
