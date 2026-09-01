@@ -23,7 +23,7 @@
             'accent' => 'amber',
         ],
         'Alat Berat' => [
-            'icon' => 'tool',
+            'icon' => 'excavator',
             'accent' => 'rose',
         ],
     ];

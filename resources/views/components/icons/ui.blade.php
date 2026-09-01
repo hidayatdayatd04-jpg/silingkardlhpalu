@@ -17,6 +17,7 @@
 
     $aliases = [
         'address' => 'map-pin',
+        'alat-berat' => 'excavator',
         'archive-file' => 'archive',
         'arrow' => 'arrow-right',
         'briefcase' => 'building',
@@ -28,6 +29,7 @@
         'close' => 'close',
         'dots' => 'dots-vertical',
         'envelope' => 'mail',
+        'exsavator' => 'excavator',
         'file' => 'document',
         'file-text' => 'document',
         'info' => 'info-circle',
@@ -54,7 +56,7 @@
         'bell', 'berhasil', 'book-open', 'building', 'calendar', 'chart', 'chart-bar', 'check', 'check-circle',
         'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons', 'circle-check',
         'clipboard-check', 'clipboard-list', 'clock', 'close', 'command', 'copy', 'dashboard', 'database',
-        'device-floppy', 'document', 'dots-vertical', 'download', 'edit', 'external-link', 'eye', 'eye-off',
+        'device-floppy', 'document', 'dots-vertical', 'download', 'edit', 'excavator', 'external-link', 'eye', 'eye-off',
         'factory', 'file-plus', 'filter', 'folder', 'folder-plus', 'forest', 'globe', 'grid', 'home', 'id-card', 'image',
         'info-circle', 'isi-formulir', 'jam-kerja', 'jam-respons', 'layers', 'leaf', 'link', 'list', 'loader', 'lock',
         'logout', 'mail', 'map-pin', 'megaphone', 'menu', 'message', 'message-plus', 'misi', 'moon', 'news', 'package',
@@ -297,6 +299,13 @@
         @case('tool')
             <path class="icon-accent" d="m14.6 6.1 3.4-3.4a4.4 4.4 0 0 1-5.3 5.6l-7.8 7.8a2.7 2.7 0 1 0 3.8 3.8l7.8-7.8A4.4 4.4 0 0 1 22 6.8l-3.4 3.4Z"/>
             <path d="m14.6 6.1 3.4-3.4a4.4 4.4 0 0 1-5.3 5.6l-7.8 7.8a2.7 2.7 0 1 0 3.8 3.8l7.8-7.8A4.4 4.4 0 0 1 22 6.8l-3.4 3.4Z"/>
+            @break
+
+        @case('excavator')
+            <rect class="icon-accent" x="2.5" y="16.5" width="11" height="4" rx="2"/>
+            <rect x="2.5" y="16.5" width="11" height="4" rx="2"/>
+            <path d="M4.5 16.5V11a1 1 0 0 1 1-1h4.5a1 1 0 0 1 1 1v5.5M6.5 12h2v2h-2zM4.5 18.5h.01M8 18.5h.01M11.5 18.5h.01"/>
+            <path d="m10 13.5 4.5-8.5 4 4.5 2.5 2.5-1.5 2-2.5-.5z"/>
             @break
 
         @case('trash')
