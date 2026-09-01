@@ -357,12 +357,12 @@ new class extends Component {
             @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
             {{-- Box Bantuan & Informasi Kontak --}}
-            <div class="rounded-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100/80 dark:border-emerald-900/30 p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div class="rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 border-0" style="border: none !important;">
                 <p class="text-xs sm:text-[13.5px] font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
                     {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
                 </p>
                 <a href="https://wa.me/6285256744102" target="_blank" rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-5 py-2.5 shadow-sm hover:shadow hover:-translate-y-0.5 transition-all shrink-0">
+                    class="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-5 py-2.5 shadow-sm hover:shadow hover:-translate-y-0.5 transition-all shrink-0 border-0" style="border: none !important;">
                     <x-icons.social.whatsapp class="size-4.5" />
                     <span>{{ __('Hubungi Kami') }}</span>
                 </a>
