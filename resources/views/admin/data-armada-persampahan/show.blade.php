@@ -58,8 +58,8 @@
             </div>
 
             <div class="space-y-1">
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Unit Terdaftar</span>
-                <p class="text-lg font-extrabold text-slate-900 dark:text-white">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total {{ $catVal }}</span>
+                <p class="text-lg font-extrabold text-teal-700 dark:text-teal-400">
                     {{ number_format($totalUnit) }} Unit
                 </p>
             </div>
@@ -69,15 +69,16 @@
     {{-- Section 2: Daftar Armada Persampahan --}}
     <x-admin.card>
         <div class="mb-5 border-b border-slate-100 pb-4 dark:border-white/10">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-2.5">
                     <span class="inline-flex size-7 items-center justify-center rounded-lg bg-teal-600 text-xs font-bold text-white shadow-xs">
                         2
                     </span>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Daftar Armada Persampahan</h2>
                 </div>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    {{ count($armadaList) }} data
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-800 dark:bg-teal-950/40 dark:text-teal-300">
+                    <x-admin.icon name="truck" :size="13" />
+                    Total {{ $catVal }}: {{ number_format($totalUnit) }} Unit
                 </span>
             </div>
         </div>
@@ -115,6 +116,17 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Footer Summary --}}
+            <div class="flex items-center justify-between border-t border-slate-200/80 bg-slate-50/90 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Total {{ $catVal }}:</span>
+                    <span class="text-sm font-extrabold text-teal-700 dark:text-teal-400">{{ number_format($totalUnit) }} Unit</span>
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">
+                    {{ count($armadaList) }} data terdaftar
+                </div>
             </div>
         </div>
     </x-admin.card>

@@ -37,7 +37,33 @@
     }
 @endphp
 
-<div class="space-y-6">
+<div
+    x-data="{
+        kategori: '{{ $kategoriValue }}',
+        rows: {{ Js::from($armadaRows) }},
+        readOnly: {{ $readOnly ? 'true' : 'false' }},
+        get totalUnit() {
+            return this.rows.filter(r => r.merk_type && r.merk_type.trim() !== '').length;
+        },
+        addRow() {
+            if (this.readOnly) return;
+            this.rows.push({
+                key: 'armada-new-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                merk_type: '',
+                tahun_perolehan: ''
+            });
+        },
+        removeRow(index) {
+            if (this.readOnly) return;
+            this.rows.splice(index, 1);
+        },
+        clearRows() {
+            if (this.readOnly) return;
+            this.rows = [];
+        }
+    }"
+    class="space-y-6"
+>
     <x-admin.page-header
         :title="($record->exists ? 'Edit ' : 'Tambah ').$resource['label']"
         :subtitle="$record->exists ? 'Perbarui daftar inventaris armada pada kategori '.$kategoriValue : 'Tambah data armada persampahan.'"
@@ -85,7 +111,7 @@
                         </div>
                         <input type="hidden" name="kategori" value="{{ $kategoriValue }}">
                     @else
-                        <select name="kategori" required {{ $readOnly ? 'disabled' : '' }}
+                        <select name="kategori" x-model="kategori" required {{ $readOnly ? 'disabled' : '' }}
                             class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 dark:border-white/10 dark:bg-slate-900 dark:text-white">
                             @foreach(\App\Enums\KategoriArmadaPersampahan::options() as $val => $label)
                                 <option value="{{ $val }}" {{ $kategoriValue === $val ? 'selected' : '' }}>{{ $label }}</option>
@@ -102,38 +128,27 @@
         {{-- Section 2: Daftar Hadir / Dynamic Table for Armada --}}
         <x-admin.card>
             <div class="mb-5 border-b border-slate-100 pb-4 dark:border-white/10">
-                <div class="flex items-center gap-2.5">
-                    <span class="inline-flex size-7 items-center justify-center rounded-lg bg-teal-600 text-xs font-bold text-white shadow-xs">
-                        2
-                    </span>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Daftar Armada Persampahan</h2>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="inline-flex size-7 items-center justify-center rounded-lg bg-teal-600 text-xs font-bold text-white shadow-xs">
+                                2
+                            </span>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">Daftar Armada Persampahan</h2>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Rincian inventaris kendaraan / alat berat yang terdaftar pada kategori ini.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-800 dark:bg-teal-950/40 dark:text-teal-300">
+                            <x-admin.icon name="truck" :size="14" />
+                            Total <span x-text="kategori || 'Kendaraan'"></span>: <span x-text="totalUnit + ' Unit'"></span>
+                        </span>
+                    </div>
                 </div>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Rincian inventaris kendaraan / alat berat yang terdaftar pada kategori ini.</p>
             </div>
 
-            <div
-                x-data="{
-                    rows: {{ Js::from($armadaRows) }},
-                    readOnly: {{ $readOnly ? 'true' : 'false' }},
-                    addRow() {
-                        if (this.readOnly) return;
-                        this.rows.push({
-                            key: 'armada-new-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-                            merk_type: '',
-                            tahun_perolehan: ''
-                        });
-                    },
-                    removeRow(index) {
-                        if (this.readOnly) return;
-                        this.rows.splice(index, 1);
-                    },
-                    clearRows() {
-                        if (this.readOnly) return;
-                        this.rows = [];
-                    }
-                }"
-                class="space-y-4"
-            >
+            <div class="space-y-4">
                 <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[600px] text-left text-sm">
@@ -194,11 +209,16 @@
                         </table>
                     </div>
 
-                    @if(!$readOnly)
-                        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                            <p class="text-xs text-slate-500 dark:text-slate-400">
-                                Isi merek/type dan tahun perolehan untuk setiap unit armada.
-                            </p>
+                    {{-- Footer with Total and Actions --}}
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/90 px-4 py-3.5 dark:border-white/10 dark:bg-white/5 sm:px-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                Total <span x-text="kategori || 'Kendaraan'"></span>:
+                            </span>
+                            <span class="text-sm font-extrabold text-teal-700 dark:text-teal-300" x-text="totalUnit + ' Unit'"></span>
+                        </div>
+
+                        @if(!$readOnly)
                             <div class="flex items-center gap-2">
                                 <button
                                     type="button"
@@ -217,8 +237,8 @@
                                     <x-admin.icon name="plus" :size="14" /> Tambah Baris
                                 </button>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
         </x-admin.card>
