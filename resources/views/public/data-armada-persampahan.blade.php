@@ -11,6 +11,7 @@
             'bg' => 'bg-sky-50 dark:bg-sky-950/40',
             'text' => 'text-sky-700 dark:text-sky-300',
             'border' => 'border-sky-200 dark:border-sky-800/60',
+            'badge' => 'bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300',
             'desc' => 'Armada roda dua untuk pengangkutan sampah lorong dan penjangkauan jalan lingkungan sempit.',
         ],
         'Kendaraan Roda 4' => [
@@ -19,6 +20,7 @@
             'bg' => 'bg-emerald-50 dark:bg-emerald-950/40',
             'text' => 'text-emerald-700 dark:text-emerald-300',
             'border' => 'border-emerald-200 dark:border-emerald-800/60',
+            'badge' => 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300',
             'desc' => 'Armada pick-up dan kendaraan operasional pengumpulan sampah pada rute pemukiman perkotaan.',
         ],
         'Kendaraan Roda 6' => [
@@ -27,6 +29,7 @@
             'bg' => 'bg-amber-50 dark:bg-amber-950/40',
             'text' => 'text-amber-700 dark:text-amber-300',
             'border' => 'border-amber-200 dark:border-amber-800/60',
+            'badge' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
             'desc' => 'Dump truck dan truk arm-roll untuk pengangkutan sampah volume besar menuju TPA Kawatuna.',
         ],
         'Alat Berat' => [
@@ -35,6 +38,7 @@
             'bg' => 'bg-rose-50 dark:bg-rose-950/40',
             'text' => 'text-rose-700 dark:text-rose-300',
             'border' => 'border-rose-200 dark:border-rose-800/60',
+            'badge' => 'bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300',
             'desc' => 'Ekskavator dan loader pendukung perataan, pemadatan, serta pengelolaan sampah di TPA.',
         ],
     ];
@@ -87,14 +91,14 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto space-y-4">
                 {{-- Badge --}}
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-xs font-bold tracking-wide">
-                    <x-icons.ui name="recycle" class="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold tracking-wide">
+                    <x-icons.ui name="recycle" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>Bidang Pengelolaan Sampah & LB3</span>
                 </div>
 
                 {{-- Heading --}}
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                    Data Armada Persampahan <span class="text-teal-600 dark:text-teal-400">Kota Palu</span>
+                    Data Armada Persampahan <span class="text-emerald-700 dark:text-emerald-400">Kota Palu</span>
                 </h1>
 
                 {{-- Subtitle --}}
@@ -107,13 +111,13 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-10 md:mt-12">
                 @foreach($categories as $catName => $catData)
                     @php
-                        $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'color' => 'teal'];
+                        $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'bg' => 'bg-emerald-100', 'text' => 'text-emerald-700'];
                     @endphp
                     <button
                         type="button"
                         @click="activeCategory = '{{ $catName }}'"
-                        class="p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 shadow-xs text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-teal-500/50 cursor-pointer focus:outline-none"
-                        :class="activeCategory === '{{ $catName }}' ? 'ring-2 ring-teal-500 border-teal-500 bg-teal-50/40 dark:bg-teal-950/30' : ''"
+                        class="p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 shadow-xs text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-emerald-500/50 cursor-pointer focus:outline-none"
+                        :class="activeCategory === '{{ $catName }}' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30' : ''"
                     >
                         <div class="w-11 h-11 mx-auto rounded-xl {{ $cfg['bg'] }} {{ $cfg['text'] }} flex items-center justify-center mb-2.5">
                             <x-icons.ui :name="$cfg['icon']" class="w-5 h-5" />
@@ -124,12 +128,16 @@
                 @endforeach
             </div>
 
-            {{-- Total Keseluruhan Banner --}}
+            {{-- Total Keseluruhan Banner (High Contrast) --}}
             <div class="mt-8 flex justify-center">
-                <div class="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-teal-600 text-white shadow-md">
-                    <x-icons.ui name="truck" class="w-5 h-5 text-white" />
-                    <span class="text-xs font-bold uppercase tracking-wider">Total Keseluruhan Armada:</span>
-                    <span class="text-base font-extrabold">{{ number_format($totalKeseluruhan) }} Unit</span>
+                <div class="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white shadow-lg border border-slate-800 dark:border-slate-700">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                        <x-icons.ui name="truck" class="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Total Keseluruhan Armada:</span>
+                        <span class="text-lg font-black text-emerald-400">{{ number_format($totalKeseluruhan) }} Unit</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,7 +150,7 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 {{-- Search Bar --}}
                 <div class="relative flex-1 w-full max-w-xl">
-                    <div class="relative flex items-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 hover:border-slate-300 dark:hover:border-slate-700">
+                    <div class="relative flex items-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 hover:border-slate-300 dark:hover:border-slate-700">
                         <div class="flex items-center justify-center pl-4 pr-2 text-slate-400 dark:text-slate-500 pointer-events-none">
                             <x-icons.ui name="search" class="w-5 h-5 text-slate-400 dark:text-slate-500" />
                         </div>
@@ -166,7 +174,7 @@
 
                 {{-- Quick Filter Scope Note --}}
                 <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <x-icons.ui name="info-circle" class="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <x-icons.ui name="info-circle" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>Menampilkan <strong class="text-slate-800 dark:text-slate-100" x-text="totalFilteredAll()"></strong> unit armada</span>
                 </div>
             </div>
@@ -178,13 +186,13 @@
                     @click="activeCategory = 'all'"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer focus:outline-none"
                     :class="activeCategory === 'all'
-                        ? 'bg-teal-600 text-white shadow-sm'
-                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-teal-500/50'"
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/50'"
                 >
                     <span>Semua Kategori</span>
                     <span
                         class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-                        :class="activeCategory === 'all' ? 'bg-teal-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
+                        :class="activeCategory === 'all' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
                     >
                         {{ $totalKeseluruhan }}
                     </span>
@@ -196,13 +204,13 @@
                         @click="activeCategory = '{{ $catName }}'"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer focus:outline-none"
                         :class="activeCategory === '{{ $catName }}'
-                            ? 'bg-teal-600 text-white shadow-sm'
-                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-teal-500/50'"
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/50'"
                     >
                         <span>{{ $catName }}</span>
                         <span
                             class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-                            :class="activeCategory === '{{ $catName }}' ? 'bg-teal-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
+                            :class="activeCategory === '{{ $catName }}' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
                         >
                             {{ $catData['count'] }}
                         </span>
@@ -215,7 +223,7 @@
         <div class="space-y-8">
             @foreach($categories as $catName => $catData)
                 @php
-                    $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'color' => 'teal', 'bg' => 'bg-teal-50', 'text' => 'text-teal-700', 'desc' => ''];
+                    $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'color' => 'emerald', 'bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'desc' => ''];
                     $items = $catData['items'];
                     $unitCount = $catData['count'];
                 @endphp
@@ -275,7 +283,7 @@
                                         </td>
                                         <td class="px-5 py-3.5">
                                             <div class="flex items-center gap-2.5">
-                                                <span class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                                                 <span class="font-bold text-slate-900 dark:text-slate-100">
                                                     {{ $item['merk_type'] ?? '-' }}
                                                 </span>
@@ -330,45 +338,44 @@
             <button
                 type="button"
                 @click="search = ''; activeCategory = 'all'"
-                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold shadow-xs hover:bg-teal-700 transition-colors"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs hover:bg-emerald-700 transition-colors"
             >
                 Reset Pencarian
             </button>
         </div>
 
-        {{-- Bottom Public CTA & Service Links --}}
-        <div class="rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 p-8 sm:p-10 text-white shadow-xl relative overflow-hidden">
+        {{-- Bottom Public CTA & Service Links (Solid High Contrast) --}}
+        <div class="p-6 sm:p-10 rounded-3xl bg-slate-900 text-white shadow-xl border border-slate-800 relative overflow-hidden space-y-4">
             <div class="relative z-10 max-w-2xl space-y-4">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-teal-200 text-xs font-bold backdrop-blur-md">
-                    <x-icons.ui name="truck" class="w-4 h-4 text-teal-300" />
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+                    <x-icons.ui name="truck" class="w-3.5 h-3.5" />
                     <span>Layanan Kebersihan Kota Palu</span>
                 </div>
-                <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                <h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
                     Wujudkan Kota Palu Bersih, Sehat, dan Berkelanjutan
                 </h3>
-                <p class="text-sm sm:text-base text-teal-100 leading-relaxed font-normal">
+                <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
                     Masyarakat dapat memantau sebaran titik TPS atau menyampaikan laporan dan pengaduan timbunan sampah liar melalui kanal resmi SILINGKAR DLH Kota Palu.
                 </p>
                 <div class="flex flex-wrap items-center gap-3 pt-2">
                     <a
                         href="/peta-persampahan"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-teal-900 font-bold text-xs shadow-md hover:bg-teal-50 transition-colors"
+                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors shadow-sm inline-flex items-center gap-2"
                     >
-                        <x-icons.ui name="map-pin" class="w-4 h-4 text-teal-700" />
-                        Peta Titik TPS
+                        <x-icons.ui name="map-pin" class="w-4 h-4 text-white" />
+                        <span>Peta Titik TPS</span>
                     </a>
                     <a
                         href="/pengaduan?bidang=sampah"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-700/80 hover:bg-teal-700 text-white font-bold text-xs border border-teal-500/30 transition-colors"
+                        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-colors inline-flex items-center gap-2"
                     >
-                        <x-icons.ui name="megaphone" class="w-4 h-4 text-teal-200" />
-                        Pengaduan Sampah
+                        <x-icons.ui name="megaphone" class="w-4 h-4 text-slate-300" />
+                        <span>Pengaduan Sampah</span>
                     </a>
                 </div>
             </div>
 
-            {{-- Background decorative icon --}}
-            <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+            <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-slate-600">
                 <x-icons.ui name="truck" class="w-72 h-72 text-white" />
             </div>
         </div>
