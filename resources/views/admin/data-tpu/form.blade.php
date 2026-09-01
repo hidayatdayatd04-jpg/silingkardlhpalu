@@ -95,7 +95,7 @@
     {{-- Header Form --}}
     <x-admin.page-header
         :title="($record->exists ? 'Edit ' : 'Tambah ').$resource['label']"
-        :subtitle="$record->exists ? 'Perbarui informasi data TPU '.$record->nama_tpu : 'Tambahkan inventaris data TPU baru beserta vegetasi, kapasitas blok, dan dokumentasi foto lapangan.'"
+        :subtitle="$record->exists ? 'Perbarui informasi data '.(preg_match('/^tpu\b/i', (string) $record->nama_tpu) ? $record->nama_tpu : 'TPU '.$record->nama_tpu) : 'Tambahkan inventaris data TPU baru beserta vegetasi, kapasitas blok, dan dokumentasi foto lapangan.'"
         icon="park"
         :breadcrumbs="[
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
