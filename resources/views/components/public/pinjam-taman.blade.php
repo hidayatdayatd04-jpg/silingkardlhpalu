@@ -357,28 +357,15 @@ new class extends Component {
             @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
             {{-- Informasi Kontak Tambahan --}}
-            <div class="rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 p-4 sm:p-5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-start gap-3">
-                        <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 mt-0.5 sm:mt-0">
-                            <x-icons.ui name="info" class="size-4.5" />
-                        </span>
-                        <div>
-                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                {{ __('Informasi & Layanan') }}
-                            </h4>
-                            <p class="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                                {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
-                            </p>
-                        </div>
-                    </div>
-                    <a href="https://wa.me/6285256744102" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-600 text-white font-bold text-sm shadow-sm hover:bg-emerald-700 hover:shadow-md hover:-translate-y-0.5 transition-all shrink-0">
-                        <x-icons.social.whatsapp class="size-4.5 flex-shrink-0" />
-                        <span class="tracking-wide">085256744102</span>
-                        <span class="text-[11px] font-medium text-emerald-100 bg-white/20 px-2 py-0.5 rounded-full">WhatsApp</span>
-                    </a>
-                </div>
+            <div class="rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/25 p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <p class="text-xs sm:text-[13.5px] font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
+                </p>
+                <a href="https://wa.me/6285256744102" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center gap-2.5 px-4.5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow hover:-translate-y-0.5 transition-all shrink-0">
+                    <x-icons.social.whatsapp class="size-4 flex-shrink-0" />
+                    <span class="tracking-wide">085256744102</span>
+                </a>
             </div>
 
             @error('form')
