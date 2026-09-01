@@ -60,7 +60,7 @@
                 return 'Terpilih (' + this.selected.length + ')';
             }
             const q = new URLSearchParams(window.location.search);
-            const tracked = ['q', 'kategori', 'kondisi', 'date_from', 'date_to'].concat(this.filterKeys || []);
+            const tracked = ['q', 'kategori', 'date_from', 'date_to'].concat(this.filterKeys || []);
             const hasFilter = tracked.some(k => {
                 const v = q.get(k);
                 return v !== null && v !== '';
@@ -112,9 +112,8 @@
             @foreach($categories as $cat)
                 @php
                     $isActive = $activeCategory === $cat;
-                    $cfg = $sheetConfig[$cat] ?? ['icon' => 'truck', 'desc' => '', 'accent' => 'teal'];
+                    $cfg = $sheetConfig[$cat] ?? ['icon' => 'truck', 'accent' => 'teal'];
                     $units = $categoryUnits[$cat] ?? 0;
-                    $recs = $categoryRecords[$cat] ?? 0;
                     $targetUrl = $isActive
                         ? route('admin.resources.index', $resource['slug'])
                         : request()->fullUrlWithQuery(['kategori' => $cat, 'page' => null]);
@@ -143,7 +142,7 @@
                         <span class="text-xs text-slate-500 dark:text-slate-400">Total Unit</span>
                         <div class="text-right">
                             <span class="text-lg font-extrabold {{ $isActive ? 'text-teal-700 dark:text-teal-300' : 'text-slate-900 dark:text-white' }}">{{ number_format($units) }}</span>
-                            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Unit ({{ $recs }} data)</span>
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Unit</span>
                         </div>
                     </div>
                 </a>
@@ -190,7 +189,7 @@
                 <div class="relative flex-1">
                     <label for="resource-search" class="sr-only">Cari {{ $resource['label'] }}</label>
                     <x-admin.icon name="search" :size="17" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-                    <input id="resource-search" name="q" value="{{ $search }}" placeholder="Cari jenis, merek, nomor plat..."
+                    <input id="resource-search" name="q" value="{{ $search }}" placeholder="Cari merek, tipe, atau tahun..."
                         class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-950 outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-brand-400 dark:focus:ring-brand-400/20">
                 </div>
             </form>
@@ -232,14 +231,11 @@
         </div>
 
         {{-- Active Filter Pills --}}
-        @if($activeCategory || $search || request('kondisi'))
+        @if($activeCategory || $search)
             <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-teal-50/40 px-4 py-2.5 dark:border-slate-800 dark:bg-teal-950/20 sm:px-6">
                 <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Filter Aktif:</span>
                 @if($activeCategory)
                     <x-admin.filter-badge :label="'Kategori: '.$activeCategory" :removeUrl="request()->fullUrlWithQuery(['kategori' => null])" />
-                @endif
-                @if(request('kondisi'))
-                    <x-admin.filter-badge :label="'Kondisi: '.request('kondisi')" :removeUrl="request()->fullUrlWithQuery(['kondisi' => null])" />
                 @endif
                 @if($search)
                     <x-admin.filter-badge :label="'Pencarian: '.$search" :removeUrl="request()->fullUrlWithQuery(['q' => null])" />
@@ -255,8 +251,8 @@
             <thead class="bg-slate-50 dark:bg-slate-900">
                 <tr>
                     <x-admin.table.checkbox-header />
-                    <x-admin.table.header sortable column="jenis_kendaraan" :direction="$sortColumn === 'jenis_kendaraan' ? $sortDirection : null">
-                        Jenis Kendaraan
+                    <x-admin.table.header sortable column="kategori" :direction="$sortColumn === 'kategori' ? $sortDirection : null">
+                        Kategori Kendaraan
                     </x-admin.table.header>
                     <x-admin.table.header sortable column="merk_type" :direction="$sortColumn === 'merk_type' ? $sortDirection : null">
                         Merek / Type
@@ -276,21 +272,9 @@
                                 <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300">
                                     <x-admin.icon name="truck" :size="15" />
                                 </span>
-                                <div class="flex flex-col min-w-0">
-                                    <span class="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                                        {{ $record->jenis_kendaraan }}
-                                    </span>
-                                    <div class="flex items-center gap-2 mt-0.5">
-                                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                            {{ $record->kategori instanceof \App\Enums\KategoriArmadaPersampahan ? $record->kategori->label() : ($record->kategori ?? '-') }}
-                                        </span>
-                                        @if(filled($record->nomor_polisi))
-                                            <span class="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                                {{ $record->nomor_polisi }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
+                                <span class="text-sm font-semibold text-slate-900 dark:text-white">
+                                    {{ $record->kategori instanceof \App\Enums\KategoriArmadaPersampahan ? $record->kategori->label() : ($record->kategori ?? '-') }}
+                                </span>
                             </div>
                         </x-admin.table.cell>
                         <x-admin.table.cell>
@@ -307,19 +291,19 @@
                         <x-admin.table.cell class="text-center">
                             <div class="flex items-center justify-center gap-1">
                                 <a href="{{ route('admin.resources.show', [$resource['slug'], $record]) }}"
-                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ $record->jenis_kendaraan }}">
+                                   class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-info-50 hover:text-info-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-info-500/30 dark:text-slate-500 dark:hover:bg-info-950/35 dark:hover:text-info-300" title="Detail" aria-label="Lihat detail {{ $record->merk_type }}">
                                      <x-admin.icon name="eye" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                 </a>
                                 @if($canEdit)
                                     <a href="{{ route('admin.resources.edit', [$resource['slug'], $record]) }}"
-                                       class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ $record->jenis_kendaraan }}">
+                                       class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-brand-50 hover:text-brand-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand-600/30 dark:text-slate-500 dark:hover:bg-brand-950/45 dark:hover:text-brand-300" title="Edit" aria-label="Edit {{ $record->merk_type }}">
                                           <x-admin.icon name="edit" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                     </a>
                                 @endif
                                 @if($canEdit)
                                     <button type="button"
                                         x-data="" x-on:click="$dispatch('open-modal', 'del-{{ $record->id }}')"
-                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ $record->jenis_kendaraan }}">
+                                        class="group grid size-9 place-items-center rounded-xl text-slate-400 outline-none transition-[background-color,color,box-shadow] duration-150 hover:bg-danger-50 hover:text-danger-700 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-danger-500/30 dark:text-slate-500 dark:hover:bg-danger-950/35 dark:hover:text-danger-300" title="Hapus" aria-label="Hapus {{ $record->merk_type }}">
                                          <x-admin.icon name="trash" :size="16" class="transition-transform duration-150 group-hover:scale-105" aria-hidden="true" />
                                     </button>
                                 @endif
@@ -364,7 +348,6 @@
                         <div class="text-sm text-slate-700 dark:text-slate-300">
                             <span>Total Keseluruhan {{ $activeCategory }}:</span>
                             <span class="font-extrabold text-slate-900 dark:text-white">{{ number_format($categoryUnits[$activeCategory] ?? 0) }} Unit</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400">({{ number_format($categoryRecords[$activeCategory] ?? 0) }} Data)</span>
                         </div>
                         <span class="hidden text-slate-300 dark:text-slate-700 sm:inline">|</span>
                         <div class="text-xs text-slate-500 dark:text-slate-400">
@@ -374,7 +357,6 @@
                         <div class="text-sm text-slate-700 dark:text-slate-300">
                             <span>Total Keseluruhan:</span>
                             <span class="font-extrabold text-teal-700 dark:text-teal-400 text-base">{{ number_format($totalKeseluruhanUnits) }} Unit</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400">({{ number_format($totalKeseluruhanRecords) }} Data Terdaftar)</span>
                         </div>
                     @endif
                 </div>

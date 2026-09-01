@@ -11,21 +11,14 @@ class DataArmadaPersampahan extends Model
 
     protected $fillable = [
         'kategori',
-        'jenis_kendaraan',
         'merk_type',
         'tahun_perolehan',
-        'nomor_polisi',
-        'jumlah',
-        'kondisi',
-        'keterangan',
-        'foto',
     ];
 
     protected function casts(): array
     {
         return [
             'kategori' => KategoriArmadaPersampahan::class,
-            'jumlah' => 'integer',
         ];
     }
 }

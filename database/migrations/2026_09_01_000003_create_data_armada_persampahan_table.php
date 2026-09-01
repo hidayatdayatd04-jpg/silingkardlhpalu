@@ -11,14 +11,8 @@ return new class extends Migration
         Schema::create('data_armada_persampahan', function (Blueprint $table) {
             $table->id();
             $table->string('kategori', 50)->index();
-            $table->string('jenis_kendaraan');
             $table->string('merk_type');
             $table->string('tahun_perolehan', 20);
-            $table->string('nomor_polisi', 50)->nullable();
-            $table->unsignedInteger('jumlah')->default(1);
-            $table->string('kondisi', 50)->nullable()->default('Baik');
-            $table->text('keterangan')->nullable();
-            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }

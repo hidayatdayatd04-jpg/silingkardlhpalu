@@ -48,7 +48,7 @@ class AdminRegistry
                     array_merge(self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('statistik-sampah', 'Statistik Sampah', StatistikSampah::class, ['tanggal', 'volume_ton', 'periode']),
                     array_merge(self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
-                    self::resource('data-armada-persampahan', 'Data Armada Persampahan', DataArmadaPersampahan::class, ['jenis_kendaraan', 'merk_type', 'tahun_perolehan', 'kategori']),
+                    self::resource('data-armada-persampahan', 'Data Armada Persampahan', DataArmadaPersampahan::class, ['merk_type', 'tahun_perolehan', 'kategori']),
                 ],
             ],
 
@@ -1467,26 +1467,12 @@ class AdminRegistry
         if ($resource['slug'] === 'data-armada-persampahan') {
             return self::decorateFields($resource, [
                 [
-                    'name' => '_section_armada',
-                    'label' => 'Informasi Kendaraan / Alat Berat',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
                     'name' => 'kategori',
                     'label' => 'Kategori Kendaraan',
                     'type' => 'select',
                     'options' => \App\Enums\KategoriArmadaPersampahan::options(),
                     'required' => true,
                     'wide' => true,
-                ],
-                [
-                    'name' => 'jenis_kendaraan',
-                    'label' => 'Jenis Kendaraan',
-                    'type' => 'text',
-                    'options' => [],
-                    'required' => true,
-                    'hint' => 'Contoh: Motor Roda Tiga, Truk Sampah, Dump Truck, Arm Roll Truck, Wheel Loader, Excavator, Bulldozer',
                 ],
                 [
                     'name' => 'merk_type',
@@ -1503,53 +1489,6 @@ class AdminRegistry
                     'options' => [],
                     'required' => true,
                     'hint' => 'Contoh: 2021, 2022, 2023',
-                ],
-                [
-                    'name' => 'nomor_polisi',
-                    'label' => 'Nomor Polisi / Plat',
-                    'type' => 'text',
-                    'options' => [],
-                    'hint' => 'Contoh: DN 8123 AZ (kosongkan jika kendaraan tidak memiliki plat)',
-                ],
-                [
-                    'name' => 'jumlah',
-                    'label' => 'Jumlah (Unit)',
-                    'type' => 'number',
-                    'options' => [],
-                    'required' => true,
-                    'min' => 1,
-                    'hint' => 'Jumlah unit kendaraan / armada (default: 1).',
-                ],
-                [
-                    'name' => '_section_kondisi',
-                    'label' => 'Kondisi & Keterangan',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'kondisi',
-                    'label' => 'Kondisi',
-                    'type' => 'select',
-                    'options' => [
-                        'Baik' => 'Baik',
-                        'Rusak Ringan' => 'Rusak Ringan',
-                        'Rusak Berat' => 'Rusak Berat',
-                    ],
-                ],
-                [
-                    'name' => 'keterangan',
-                    'label' => 'Keterangan',
-                    'type' => 'textarea',
-                    'options' => [],
-                    'wide' => true,
-                ],
-                [
-                    'name' => 'foto',
-                    'label' => 'Foto Armada',
-                    'type' => 'file',
-                    'options' => [],
-                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
-                    'hint' => 'Format JPG, PNG, atau WEBP. Maksimal 5MB.',
                 ],
             ]);
         }
@@ -2041,17 +1980,6 @@ class AdminRegistry
                     'type'    => 'select',
                     'column'  => 'kategori',
                     'options' => \App\Enums\KategoriArmadaPersampahan::options(),
-                ],
-                'kondisi' => [
-                    'key'     => 'kondisi',
-                    'label'   => 'Kondisi',
-                    'type'    => 'select',
-                    'column'  => 'kondisi',
-                    'options' => [
-                        'Baik' => 'Baik',
-                        'Rusak Ringan' => 'Rusak Ringan',
-                        'Rusak Berat' => 'Rusak Berat',
-                    ],
                 ],
             ],
         ];

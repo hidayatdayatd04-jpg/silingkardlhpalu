@@ -135,13 +135,10 @@ class ResourceController extends Controller
             ];
 
             $categoryUnits = [];
-            $categoryRecords = [];
             foreach ($categories as $cat) {
-                $categoryUnits[$cat] = (int) $modelClass::where('kategori', $cat)->sum('jumlah');
-                $categoryRecords[$cat] = (int) $modelClass::where('kategori', $cat)->count();
+                $categoryUnits[$cat] = (int) $modelClass::where('kategori', $cat)->count();
             }
-            $totalKeseluruhanUnits = (int) $modelClass::sum('jumlah');
-            $totalKeseluruhanRecords = (int) $modelClass::count();
+            $totalKeseluruhanUnits = (int) $modelClass::count();
 
             return view('admin.data-armada-persampahan.index', [
                 'resource' => $meta,
@@ -151,9 +148,7 @@ class ResourceController extends Controller
                 'sortDirection' => $request->string('direction', 'asc')->toString(),
                 'categories' => $categories,
                 'categoryUnits' => $categoryUnits,
-                'categoryRecords' => $categoryRecords,
                 'totalKeseluruhanUnits' => $totalKeseluruhanUnits,
-                'totalKeseluruhanRecords' => $totalKeseluruhanRecords,
                 'activeCategory' => $request->query('kategori', ''),
             ]);
         }
