@@ -10,18 +10,20 @@ use Tests\TestCase;
 
 class PengaduanTataPenataanOptionsTest extends TestCase
 {
-    public function test_jenis_pengaduan_tata_penataan_contains_bau_dan_pencemaran_air(): void
+    public function test_jenis_pengaduan_tata_penataan_options_structure(): void
     {
         $options = JenisPengaduanTataPenataan::options();
 
         $this->assertArrayHasKey('bau', $options);
         $this->assertSame('Bau', $options['bau']);
 
-        $this->assertArrayHasKey('pencemaran_air', $options);
-        $this->assertSame('Pencemaran Air', $options['pencemaran_air']);
+        $this->assertArrayHasKey('asap', $options);
+        $this->assertSame('Polusi Udara (Debu/Asap)', $options['asap']);
+
+        $this->assertArrayNotHasKey('pencemaran_air', $options);
     }
 
-    public function test_pengaduan_tata_penataan_can_be_created_with_bau_and_pencemaran_air(): void
+    public function test_pengaduan_tata_penataan_can_be_created_with_bau_and_asap(): void
     {
         $laporanBau = PengaduanTataPenataan::create([
             'nama_pelapor' => 'Ahmad',
@@ -35,23 +37,24 @@ class PengaduanTataPenataanOptionsTest extends TestCase
 
         $this->assertSame('bau', $laporanBau->jenis_pengaduan);
 
-        $laporanAir = PengaduanTataPenataan::create([
+        $laporanAsap = PengaduanTataPenataan::create([
             'nama_pelapor' => 'Siti',
             'nomor_hp' => '081234567891',
-            'jenis_pengaduan' => JenisPengaduanTataPenataan::PENCEMARAN_AIR->value,
-            'alamat' => 'Jl. Palu Barat No. 2, Palu',
-            'deskripsi' => 'Pencemaran air sungai dekat pemukiman.',
+            'jenis_pengaduan' => JenisPengaduanTataPenataan::ASAP->value,
+            'alamat' => 'Jl. Sam Ratulangi No. 2, Palu',
+            'deskripsi' => 'Polusi debu dan asap pabrik.',
             'latitude' => -0.89,
             'longitude' => 119.87,
         ]);
 
-        $this->assertSame('pencemaran_air', $laporanAir->jenis_pengaduan);
+        $this->assertSame('asap', $laporanAsap->jenis_pengaduan);
     }
 
-    public function test_pengaduan_unified_provides_new_tata_penataan_options(): void
+    public function test_pengaduan_unified_provides_updated_tata_penataan_options(): void
     {
         Livewire::test('public.pengaduan-unified', ['bidang' => 'tata-penataan'])
-            ->assertSeeHtml('Bau')
-            ->assertSeeHtml('Pencemaran Air');
+            ->assertSee('Bau')
+            ->assertSee('Polusi Udara')
+            ->assertDontSee('Pencemaran Air');
     }
 }

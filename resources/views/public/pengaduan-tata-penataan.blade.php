@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('title', 'Pengaduan Tata Penataan - DLH Kota Palu')
-@section('description', 'Formulir pengaduan masyarakat terkait limbah, asap, kebisingan, bau, dan pencemaran air di Kota Palu.')
+@section('description', 'Formulir pengaduan masyarakat terkait limbah, polusi udara (debu/asap), kebisingan, dan bau di Kota Palu.')
 
 @section('content')
 <div class="max-w-3xl mx-auto space-y-6">
     <x-public.page-hero
         badge="{{ __('Bidang Tata Penataan') }}"
         title="{{ __('Pengaduan Masyarakat') }}"
-        description="{{ __('Laporkan pencemaran limbah, asap, kebisingan, bau, atau pencemaran air dari aktivitas industri dan usaha di Kota Palu.') }}"
+        description="{{ __('Laporkan pencemaran limbah, polusi udara (debu/asap), kebisingan, atau bau dari aktivitas industri dan usaha di Kota Palu.') }}"
     />
 
     <livewire:public.pengaduan-tata-penataan />

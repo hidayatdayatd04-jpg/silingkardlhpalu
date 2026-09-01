@@ -8,16 +8,14 @@ enum JenisPengaduanTataPenataan: string
     case ASAP = 'asap';
     case KEBISINGAN = 'kebisingan';
     case BAU = 'bau';
-    case PENCEMARAN_AIR = 'pencemaran_air';
 
     public function label(): string
     {
         return match ($this) {
             self::LIMBAH => 'Limbah',
-            self::ASAP => 'Asap Pembakaran Sampah (Polusi Udara)',
+            self::ASAP => 'Polusi Udara (Debu/Asap)',
             self::KEBISINGAN => 'Kebisingan',
             self::BAU => 'Bau',
-            self::PENCEMARAN_AIR => 'Pencemaran Air',
         };
     }
 
@@ -28,7 +26,6 @@ enum JenisPengaduanTataPenataan: string
             self::ASAP => 'gray',
             self::KEBISINGAN => 'warning',
             self::BAU => 'amber',
-            self::PENCEMARAN_AIR => 'info',
         };
     }
 
