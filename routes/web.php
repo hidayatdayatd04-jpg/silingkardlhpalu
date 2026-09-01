@@ -251,7 +251,35 @@ Route::get('/registrasi-usaha-lb3', fn () => view('public.registrasi-usaha-lb3')
 Route::get('/cek-registrasi-lb3', fn () => view('public.cek-registrasi-lb3'))->middleware('throttle:30,1');
 Route::get('/pengajuan-rintek-pertek', fn () => view('public.pengajuan-rintek-pertek'));
 Route::get('/cek-rintek-pertek', fn () => view('public.cek-rintek-pertek'))->middleware('throttle:30,1');
-Route::get('/data-armada-persampahan', fn () => view('public.coming-soon', ['title' => 'Data Armada Persampahan']));
+Route::get('/data-armada-persampahan', function () {
+    \App\Models\DataArmadaPersampahan::ensureCategoriesExist();
+    $armadas = \App\Models\DataArmadaPersampahan::all();
+
+    $categoryOrder = [
+        'Kendaraan Roda 2',
+        'Kendaraan Roda 4',
+        'Kendaraan Roda 6',
+        'Alat Berat',
+    ];
+
+    $categories = [];
+    foreach ($categoryOrder as $catName) {
+        $record = $armadas->first(fn ($a) => ($a->kategori instanceof \BackedEnum ? $a->kategori->value : $a->kategori) === $catName);
+        $categories[$catName] = [
+            'record' => $record,
+            'items' => is_array($record?->daftar_armada) ? $record->daftar_armada : [],
+            'count' => $record ? $record->totalUnit() : 0,
+        ];
+    }
+
+    $totalKeseluruhan = $armadas->sum(fn ($a) => $a->totalUnit());
+
+    return view('public.data-armada-persampahan', [
+        'armadas' => $armadas,
+        'categories' => $categories,
+        'totalKeseluruhan' => $totalKeseluruhan,
+    ]);
+})->name('data-armada-persampahan')->middleware('throttle:60,1');
 Route::get('/pengajuan-rintek-pertek/{nomor_pengajuan}/bukti-pdf', function (string $nomor_pengajuan) {
     $pengajuan = PengajuanRintekPertek::where('nomor_pengajuan', $nomor_pengajuan)->firstOrFail();
 

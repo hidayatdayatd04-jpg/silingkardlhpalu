@@ -13,12 +13,26 @@ class DataArmadaPersampahanTest extends TestCase
     use DatabaseTransactions;
     use InteractsWithAdminNotifications;
 
-    public function test_public_nav_and_coming_soon_page_works(): void
+    public function test_public_page_displays_realtime_armada_data(): void
     {
+        DataArmadaPersampahan::ensureCategoriesExist();
+
+        $roda2 = DataArmadaPersampahan::where('kategori', 'Kendaraan Roda 2')->first();
+        $roda2->update([
+            'daftar_armada' => [
+                ['merk_type' => 'Honda Beat / D1B02N13L2 A/T', 'tahun_perolehan' => '2018'],
+            ],
+        ]);
+
         $this->get('/data-armada-persampahan')
             ->assertOk()
             ->assertSee('Data Armada Persampahan')
-            ->assertSee('Segera Hadir');
+            ->assertSee('Kendaraan Roda 2')
+            ->assertSee('Kendaraan Roda 4')
+            ->assertSee('Kendaraan Roda 6')
+            ->assertSee('Alat Berat')
+            ->assertSee('Honda Beat / D1B02N13L2 A/T')
+            ->assertSee('2018');
     }
 
     public function test_index_displays_the_four_categories_and_totals(): void
