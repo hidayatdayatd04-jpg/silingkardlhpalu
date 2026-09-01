@@ -776,6 +776,15 @@ class ResourceController extends Controller
                 }
             }
 
+            // 1b. Data TPU: foto_dokumentasi array
+            if ($meta['slug'] === 'data-tpu' && is_array($record->foto_dokumentasi)) {
+                foreach ($record->foto_dokumentasi as $p) {
+                    if (is_string($p) && filled($p)) {
+                        $paths[] = $p;
+                    }
+                }
+            }
+
             // 2. Foto profil user.
             if ($meta['slug'] === 'user' && filled($record->photo_path ?? null)) {
                 $paths[] = $record->photo_path;
@@ -1006,26 +1015,77 @@ class ResourceController extends Controller
             }
             $payload['kapasitas_blok'] = $kapasitasBlok;
 
-            for ($i = 1; $i <= 3; $i++) {
-                $photoField = 'foto_dokumentasi_' . $i;
-                $removeField = 'remove_foto_dokumentasi_' . $i;
+            // Handle Dynamic Foto Dokumentasi (0, 1, 2, atau lebih)
+            $existingPhotos = $request->input('existing_photos', []);
+            if (is_string($existingPhotos)) {
+                $existingPhotos = json_decode($existingPhotos, true) ?: [];
+            }
+            $existingPhotos = is_array($existingPhotos) ? array_values(array_filter($existingPhotos, fn ($p) => is_string($p) && filled($p))) : [];
 
-                if ($request->boolean($removeField)) {
-                    if ($record->exists && filled($record->{$photoField})) {
-                        app(FileUploadService::class)->deletePath($record->{$photoField});
+            // Hapus file foto lama yang dihapus oleh pengguna
+            if ($record->exists) {
+                $oldPhotos = is_array($record->foto_dokumentasi) ? $record->foto_dokumentasi : [];
+                for ($i = 1; $i <= 3; $i++) {
+                    if (filled($record->{'foto_dokumentasi_'.$i})) {
+                        $oldPhotos[] = $record->{'foto_dokumentasi_'.$i};
                     }
-                    $payload[$photoField] = null;
-                } elseif ($request->hasFile($photoField)) {
-                    $file = $request->file($photoField);
-                    $stored = app(FileUploadService::class)->store($file, 'admin/data-tpu', 'public');
-                    if ($stored !== false) {
-                        if ($record->exists && filled($record->{$photoField})) {
-                            app(FileUploadService::class)->deletePath($record->{$photoField});
-                        }
-                        $payload[$photoField] = $stored;
+                }
+                $oldPhotos = array_unique($oldPhotos);
+                foreach ($oldPhotos as $oldP) {
+                    if (! in_array($oldP, $existingPhotos, true)) {
+                        app(FileUploadService::class)->deletePath($oldP);
                     }
                 }
             }
+
+            $finalPhotos = $existingPhotos;
+
+            // Unggah foto baru dari new_photos[]
+            if ($request->hasFile('new_photos')) {
+                $newFiles = $request->file('new_photos');
+                if (! is_array($newFiles)) {
+                    $newFiles = [$newFiles];
+                }
+                foreach ($newFiles as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $stored = app(FileUploadService::class)->store($file, 'admin/data-tpu', 'public');
+                        if ($stored !== false) {
+                            $finalPhotos[] = $stored;
+                        }
+                    }
+                }
+            }
+
+            // Dukungan foto langsung foto_dokumentasi / legacy single upload
+            if ($request->hasFile('foto_dokumentasi')) {
+                $directFiles = $request->file('foto_dokumentasi');
+                if (! is_array($directFiles)) {
+                    $directFiles = [$directFiles];
+                }
+                foreach ($directFiles as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $stored = app(FileUploadService::class)->store($file, 'admin/data-tpu', 'public');
+                        if ($stored !== false) {
+                            $finalPhotos[] = $stored;
+                        }
+                    }
+                }
+            }
+
+            for ($i = 1; $i <= 3; $i++) {
+                $photoField = 'foto_dokumentasi_'.$i;
+                if ($request->hasFile($photoField)) {
+                    $file = $request->file($photoField);
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $stored = app(FileUploadService::class)->store($file, 'admin/data-tpu', 'public');
+                        if ($stored !== false) {
+                            $finalPhotos[] = $stored;
+                        }
+                    }
+                }
+            }
+
+            $payload['foto_dokumentasi'] = array_values(array_unique($finalPhotos));
 
             return $payload;
         }
@@ -1240,15 +1300,20 @@ class ResourceController extends Controller
                 'luas_area_makam' => ['required', 'string', 'max:100'],
                 'vegetasi' => ['nullable', 'array'],
                 'kapasitas_blok' => ['nullable', 'array'],
+                'existing_photos' => ['nullable', 'array'],
+                'new_photos' => ['nullable', 'array'],
+                'new_photos.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+                'foto_dokumentasi' => ['nullable'],
+                'foto_dokumentasi.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
                 'foto_dokumentasi_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
                 'foto_dokumentasi_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
                 'foto_dokumentasi_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
             ], [
                 'nama_tpu.required' => 'Nama TPU wajib diisi.',
                 'luas_area_makam.required' => 'Luas area makam wajib diisi.',
-                'foto_dokumentasi_1.image' => 'Dokumentasi 1 harus berupa file gambar.',
-                'foto_dokumentasi_2.image' => 'Dokumentasi 2 harus berupa file gambar.',
-                'foto_dokumentasi_3.image' => 'Dokumentasi 3 harus berupa file gambar.',
+                'new_photos.*.image' => 'File foto dokumentasi harus berupa gambar.',
+                'new_photos.*.max' => 'Ukuran foto maksimal 5MB.',
+                'foto_dokumentasi.*.image' => 'File foto dokumentasi harus berupa gambar.',
             ]);
 
             return;

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\DataTpu;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InteractsWithAdminNotifications;
 use Tests\TestCase;
 
@@ -62,6 +64,44 @@ class DataTpuTest extends TestCase
             ->assertSee('500 makam');
     }
 
+    public function test_bidang_rth_can_create_tpu_with_dynamic_photos_or_empty(): void
+    {
+        Storage::fake('public');
+        $user = $this->makeUser('bidang-rth');
+
+        // Test 1: Simpan TPU tanpa foto (0 foto / kosong)
+        $responseEmpty = $this->actingAs($user)
+            ->post(route('admin.resources.store', 'data-tpu'), [
+                'nama_tpu' => 'TPU Tanpa Foto',
+                'luas_area_makam' => '1 Ha',
+                'vegetasi' => [['jenis_pohon' => 'Kamboja', 'jumlah' => '10']],
+                'kapasitas_blok' => [['agama' => 'Islam', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '100 makam']],
+            ]);
+
+        $tpuEmpty = DataTpu::where('nama_tpu', 'TPU Tanpa Foto')->first();
+        $this->assertNotNull($tpuEmpty);
+        $this->assertEmpty($tpuEmpty->getDokumentasiList());
+
+        // Test 2: Simpan TPU dengan 4 foto dinamis
+        $responseMultiple = $this->actingAs($user)
+            ->post(route('admin.resources.store', 'data-tpu'), [
+                'nama_tpu' => 'TPU Empat Foto',
+                'luas_area_makam' => '2 Ha',
+                'vegetasi' => [['jenis_pohon' => 'Kamboja', 'jumlah' => '10']],
+                'kapasitas_blok' => [['agama' => 'Islam', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '100 makam']],
+                'new_photos' => [
+                    UploadedFile::fake()->image('foto1.jpg'),
+                    UploadedFile::fake()->image('foto2.jpg'),
+                    UploadedFile::fake()->image('foto3.jpg'),
+                    UploadedFile::fake()->image('foto4.jpg'),
+                ],
+            ]);
+
+        $tpuMultiple = DataTpu::where('nama_tpu', 'TPU Empat Foto')->first();
+        $this->assertNotNull($tpuMultiple);
+        $this->assertCount(4, $tpuMultiple->getDokumentasiList());
+    }
+
     public function test_bidang_rth_can_update_tpu(): void
     {
         $tpu = DataTpu::create([
@@ -69,6 +109,7 @@ class DataTpuTest extends TestCase
             'luas_area_makam' => '2 Ha',
             'vegetasi' => [['jenis_pohon' => 'Cemara', 'jumlah' => '10']],
             'kapasitas_blok' => [['agama' => 'Islam', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '100 makam']],
+            'foto_dokumentasi' => ['admin/data-tpu/existing.jpg'],
         ]);
 
         $user = $this->makeUser('bidang-rth');
@@ -84,6 +125,7 @@ class DataTpuTest extends TestCase
                 'kapasitas_blok' => [
                     ['agama' => 'Islam', 'jumlah_blok' => '20 blok', 'jumlah_makam' => '250 makam'],
                 ],
+                'existing_photos' => ['admin/data-tpu/existing.jpg'],
             ]);
 
         $response->assertRedirect(route('admin.resources.show', ['data-tpu', $tpu]));
@@ -92,6 +134,7 @@ class DataTpuTest extends TestCase
         $this->assertSame('TPU Setelah Update', $tpu->nama_tpu);
         $this->assertSame('2.5 Ha', $tpu->luas_area_makam);
         $this->assertCount(2, $tpu->vegetasi);
+        $this->assertCount(1, $tpu->getDokumentasiList());
     }
 
     public function test_superadmin_is_read_only_on_data_tpu(): void

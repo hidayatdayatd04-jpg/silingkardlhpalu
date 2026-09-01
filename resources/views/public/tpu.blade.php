@@ -194,36 +194,25 @@
                             </h3>
 
                             @if(count($photos) > 0)
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    @for($i = 1; $i <= 3; $i++)
-                                        @php
-                                            $field = 'foto_dokumentasi_'.$i;
-                                            $docUrl = $tpu->{$field} ? asset('storage/'.ltrim($tpu->{$field}, '/')) : null;
-                                        @endphp
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    @foreach($photos as $idx => $p)
                                         <div class="space-y-1.5">
-                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Dokumentasi {{ $i }}</span>
-                                            @if($docUrl)
-                                                <div
-                                                    class="aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 relative group cursor-pointer bg-slate-100 dark:bg-slate-800"
-                                                    @click="openLightbox('{{ $docUrl }}', 'Dokumentasi {{ $i }} - {{ $tpu->nama_tpu }}')"
-                                                >
-                                                    <img src="{{ $docUrl }}" alt="Dokumentasi {{ $i }} - {{ $tpu->nama_tpu }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-semibold gap-1.5">
-                                                        <x-icons.ui name="eye" class="w-4 h-4" />
-                                                        <span>Lihat Foto</span>
-                                                    </div>
+                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $p['label'] }}</span>
+                                            <div
+                                                class="aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 relative group cursor-pointer bg-slate-100 dark:bg-slate-800"
+                                                @click="openLightbox('{{ $p['url'] }}', '{{ $p['label'] }} - {{ $tpu->nama_tpu }}')"
+                                            >
+                                                <img src="{{ $p['url'] }}" alt="{{ $p['label'] }} - {{ $tpu->nama_tpu }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-semibold gap-1.5">
+                                                    <x-icons.ui name="eye" class="w-4 h-4" />
+                                                    <span>Lihat Foto</span>
                                                 </div>
-                                            @else
-                                                <div class="aspect-video rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 text-xs">
-                                                    <x-icons.ui name="image" class="w-6 h-6 mb-1 text-slate-400 dark:text-slate-600" />
-                                                    <span>Belum ada foto</span>
-                                                </div>
-                                            @endif
+                                            </div>
                                         </div>
-                                    @endfor
+                                    @endforeach
                                 </div>
                             @else
-                                <div class="p-8 text-center text-slate-500 text-sm">
+                                <div class="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
                                     Belum ada foto dokumentasi untuk TPU ini.
                                 </div>
                             @endif

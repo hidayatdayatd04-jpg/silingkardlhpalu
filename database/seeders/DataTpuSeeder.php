@@ -67,9 +67,11 @@ class DataTpuSeeder extends Seeder
                     ['agama' => 'Hindu', 'jumlah_blok' => '12 blok', 'jumlah_makam' => '192 makam'],
                     ['agama' => 'Buddha', 'jumlah_blok' => '11 blok', 'jumlah_makam' => '176 makam'],
                 ],
-                'foto_dokumentasi_1' => 'admin/data-tpu/tpu_lambara_doc1.jpg',
-                'foto_dokumentasi_2' => 'admin/data-tpu/tpu_lambara_doc2.jpg',
-                'foto_dokumentasi_3' => 'admin/data-tpu/tpu_lambara_doc3.jpg',
+                'foto_dokumentasi' => [
+                    'admin/data-tpu/tpu_lambara_doc1.jpg',
+                    'admin/data-tpu/tpu_lambara_doc2.jpg',
+                    'admin/data-tpu/tpu_lambara_doc3.jpg',
+                ],
             ]
         );
 
@@ -91,9 +93,10 @@ class DataTpuSeeder extends Seeder
                     ['agama' => 'Hindu', 'jumlah_blok' => '15 blok', 'jumlah_makam' => '240 makam'],
                     ['agama' => 'Buddha', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '150 makam'],
                 ],
-                'foto_dokumentasi_1' => 'admin/data-tpu/tpu_poboya_doc1.jpg',
-                'foto_dokumentasi_2' => 'admin/data-tpu/tpu_poboya_doc2.jpg',
-                'foto_dokumentasi_3' => 'admin/data-tpu/tpu_poboya_doc3.jpg',
+                'foto_dokumentasi' => [
+                    'admin/data-tpu/tpu_poboya_doc1.jpg',
+                    'admin/data-tpu/tpu_poboya_doc2.jpg',
+                ],
             ]
         );
 
@@ -115,9 +118,9 @@ class DataTpuSeeder extends Seeder
                     ['agama' => 'Hindu', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '160 makam'],
                     ['agama' => 'Buddha', 'jumlah_blok' => '8 blok', 'jumlah_makam' => '120 makam'],
                 ],
-                'foto_dokumentasi_1' => 'admin/data-tpu/tpu_valagguni_doc1.jpg',
-                'foto_dokumentasi_2' => 'admin/data-tpu/tpu_valagguni_doc2.jpg',
-                'foto_dokumentasi_3' => 'admin/data-tpu/tpu_valagguni_doc3.jpg',
+                'foto_dokumentasi' => [
+                    'admin/data-tpu/tpu_valagguni_doc1.jpg',
+                ],
             ]
         );
     }

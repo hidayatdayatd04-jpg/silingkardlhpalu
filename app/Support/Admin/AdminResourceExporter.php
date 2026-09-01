@@ -228,6 +228,17 @@ class AdminResourceExporter
                     }
                 }
                 $values[] = $lines === [] ? '-' : implode("\n", $lines);
+            } elseif ($column === 'foto_dokumentasi' && is_array($value)) {
+                $lines = [];
+                $idx = 1;
+                foreach ($value as $item) {
+                    if (is_string($item) && filled($item)) {
+                        $url = $this->formatSingleFile($item, $meta['slug']);
+                        $lines[] = "{$idx}. {$url}";
+                        $idx++;
+                    }
+                }
+                $values[] = $lines === [] ? '-' : implode("\n", $lines);
             } elseif (in_array($column, $definition['direct_file_columns'], true) || in_array($column, ['foto_dokumentasi_1', 'foto_dokumentasi_2', 'foto_dokumentasi_3'], true)) {
                 $values[] = $this->formatSingleFile(is_string($value) ? $value : '', $meta['slug']);
             } else {

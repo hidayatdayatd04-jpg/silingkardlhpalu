@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class DataTpu extends Model
 {
@@ -14,6 +13,7 @@ class DataTpu extends Model
         'luas_area_makam',
         'vegetasi',
         'kapasitas_blok',
+        'foto_dokumentasi',
         'foto_dokumentasi_1',
         'foto_dokumentasi_2',
         'foto_dokumentasi_3',
@@ -24,6 +24,7 @@ class DataTpu extends Model
         return [
             'vegetasi' => 'array',
             'kapasitas_blok' => 'array',
+            'foto_dokumentasi' => 'array',
         ];
     }
 
@@ -40,7 +41,6 @@ class DataTpu extends Model
         $total = 0;
         foreach ($vegetasi as $item) {
             $jumlahStr = (string) ($item['jumlah'] ?? '');
-            // Ambil angka pertama dari string (contoh: "13", "1 rumpun" -> 1)
             if (preg_match('/(\d+[\.\d]*)/', str_replace('.', '', $jumlahStr), $matches)) {
                 $total += (int) $matches[1];
             }
@@ -62,7 +62,6 @@ class DataTpu extends Model
         $total = 0;
         foreach ($blok as $item) {
             $makamStr = (string) ($item['jumlah_makam'] ?? '');
-            // Bersihkan titik ribuan dan ekstrak angka (contoh: "1.408 makam" -> 1408)
             $clean = preg_replace('/[^\d]/', '', $makamStr);
             if (is_numeric($clean)) {
                 $total += (int) $clean;
@@ -95,24 +94,40 @@ class DataTpu extends Model
     }
 
     /**
-     * Mendapatkan daftar URL foto dokumentasi yang valid.
+     * Mendapatkan daftar URL foto dokumentasi yang valid (dinamis bisa 0, 1, 2, atau lebih).
      *
-     * @return array<int, array{field: string, label: string, path: string, url: string}>
+     * @return array<int, array{label: string, path: string, url: string}>
      */
     public function getDokumentasiList(): array
     {
         $photos = [];
+
+        // 1. Cek dari kolom JSON foto_dokumentasi
+        if (is_array($this->foto_dokumentasi) && count($this->foto_dokumentasi) > 0) {
+            $counter = 1;
+            foreach ($this->foto_dokumentasi as $path) {
+                if (is_string($path) && filled($path)) {
+                    $photos[] = [
+                        'label' => 'Dokumentasi ' . $counter++,
+                        'path' => (string) $path,
+                        'url' => asset('storage/' . ltrim((string) $path, '/')),
+                    ];
+                }
+            }
+
+            return $photos;
+        }
+
+        // 2. Fallback ke kolom foto_dokumentasi_1/2/3 jika ada
         for ($i = 1; $i <= 3; $i++) {
             $field = 'foto_dokumentasi_' . $i;
             $path = $this->{$field};
 
             if (filled($path)) {
-                $url = asset('storage/' . ltrim((string) $path, '/'));
                 $photos[] = [
-                    'field' => $field,
-                    'label' => 'Dokumentasi ' . $i,
+                    'label' => 'Dokumentasi ' . (count($photos) + 1),
                     'path' => (string) $path,
-                    'url' => $url,
+                    'url' => asset('storage/' . ltrim((string) $path, '/')),
                 ];
             }
         }

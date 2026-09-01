@@ -24,6 +24,8 @@
             ['agama' => 'Kristen', 'jumlah_blok' => '', 'jumlah_makam' => ''],
         ];
     }
+
+    $existingPhotoList = $record->exists ? $record->getDokumentasiList() : [];
 @endphp
 
 @section('content')
@@ -31,9 +33,8 @@
     x-data="{
         vegetasiList: {{ json_encode($initialVegetasi) }},
         blokList: {{ json_encode($initialBlok) }},
-        doc1Preview: '{{ $record->foto_dokumentasi_1 ? asset('storage/'.ltrim($record->foto_dokumentasi_1, '/')) : '' }}',
-        doc2Preview: '{{ $record->foto_dokumentasi_2 ? asset('storage/'.ltrim($record->foto_dokumentasi_2, '/')) : '' }}',
-        doc3Preview: '{{ $record->foto_dokumentasi_3 ? asset('storage/'.ltrim($record->foto_dokumentasi_3, '/')) : '' }}',
+        existingPhotos: {{ json_encode($existingPhotoList) }},
+        newPhotos: [],
         addVegetasi() {
             this.vegetasiList.push({ jenis_pohon: '', jumlah: '' });
         },
@@ -50,17 +51,26 @@
                 this.blokList.splice(index, 1);
             }
         },
-        previewFile(event, docIndex) {
-            const file = event.target.files[0];
-            if (file) {
+        removeExistingPhoto(index) {
+            this.existingPhotos.splice(index, 1);
+        },
+        handleNewFiles(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    if (docIndex === 1) this.doc1Preview = e.target.result;
-                    if (docIndex === 2) this.doc2Preview = e.target.result;
-                    if (docIndex === 3) this.doc3Preview = e.target.result;
+                    this.newPhotos.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name
+                    });
                 };
                 reader.readAsDataURL(file);
-            }
+            });
+            event.target.value = '';
+        },
+        removeNewPhoto(index) {
+            this.newPhotos.splice(index, 1);
         }
     }"
     class="max-w-5xl mx-auto space-y-6"
@@ -68,7 +78,7 @@
     {{-- Header Form --}}
     <x-admin.page-header
         :title="($record->exists ? 'Edit ' : 'Tambah ').$resource['label']"
-        :subtitle="$record->exists ? 'Perbarui informasi data TPU '.$record->nama_tpu : 'Tambahkan inventaris data TPU baru beserta vegetasi dan kapasitas blok.'"
+        :subtitle="$record->exists ? 'Perbarui informasi data TPU '.$record->nama_tpu : 'Tambahkan inventaris data TPU baru beserta vegetasi, kapasitas blok, dan dokumentasi foto lapangan.'"
         icon="park"
         :breadcrumbs="[
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
@@ -309,118 +319,114 @@
             </div>
         </div>
 
-        {{-- Section 4: Dokumentasi 1, 2, 3 --}}
+        {{-- Section 4: Dokumentasi Foto (Dinamis: Bisa 0, 1, 2, 3 atau lebih) --}}
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-5">
-            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
-                    4
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
+                        4
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Dokumentasi Foto Lapangan</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Unggah foto dokumentasi area TPU (fleksibel: bisa kosong, satu, dua, atau ditambah sesuai kebutuhan)</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Dokumentasi Foto</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Unggah hingga 3 foto dokumentasi lapangan area TPU</p>
-                </div>
+
+                @if(!$readOnly)
+                    <label class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all cursor-pointer">
+                        <x-icons.ui name="plus" class="w-3.5 h-3.5" />
+                        <span>Tambah Foto</span>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+                            class="hidden"
+                            @change="handleNewFiles($event)"
+                        />
+                    </label>
+                @endif
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {{-- Dokumentasi 1 --}}
-                <div class="space-y-2 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Dokumentasi 1
-                    </label>
-                    <div class="aspect-video rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden relative group flex items-center justify-center">
-                        <template x-if="doc1Preview">
-                            <img :src="doc1Preview" alt="Dokumentasi 1" class="w-full h-full object-cover" />
-                        </template>
-                        <template x-if="!doc1Preview">
-                            <div class="flex flex-col items-center justify-center text-slate-400 text-xs">
-                                <x-icons.ui name="image" class="w-8 h-8 mb-1" />
-                                <span>Belum ada foto</span>
-                            </div>
-                        </template>
-                    </div>
-                    @if(!$readOnly)
-                        <input
-                            type="file"
-                            name="foto_dokumentasi_1"
-                            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-                            @change="previewFile($event, 1)"
-                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"
-                        />
-                        @if($record->foto_dokumentasi_1)
-                            <label class="flex items-center gap-2 text-xs text-rose-600 mt-1 cursor-pointer">
-                                <input type="checkbox" name="remove_foto_dokumentasi_1" value="1" class="rounded text-rose-600 focus:ring-rose-500" />
-                                <span>Hapus Foto 1</span>
-                            </label>
-                        @endif
-                    @endif
-                </div>
+            {{-- Hidden Inputs untuk Foto yang Dipertahankan --}}
+            <template x-for="(item, index) in existingPhotos" :key="'exist-' + index">
+                <input type="hidden" name="existing_photos[]" :value="item.path" />
+            </template>
 
-                {{-- Dokumentasi 2 --}}
-                <div class="space-y-2 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Dokumentasi 2
-                    </label>
-                    <div class="aspect-video rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden relative group flex items-center justify-center">
-                        <template x-if="doc2Preview">
-                            <img :src="doc2Preview" alt="Dokumentasi 2" class="w-full h-full object-cover" />
-                        </template>
-                        <template x-if="!doc2Preview">
-                            <div class="flex flex-col items-center justify-center text-slate-400 text-xs">
-                                <x-icons.ui name="image" class="w-8 h-8 mb-1" />
-                                <span>Belum ada foto</span>
+            {{-- Galeri Preview Foto --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {{-- 1. Kartu Foto Eksisting yang Tersimpan --}}
+                <template x-for="(item, index) in existingPhotos" :key="'card-exist-' + index">
+                    <div class="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 aspect-video shadow-sm">
+                        <img :src="item.url" :alt="item.label" class="w-full h-full object-cover" />
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-2.5">
+                            <div class="flex justify-end">
+                                @if(!$readOnly)
+                                    <button
+                                        type="button"
+                                        @click="removeExistingPhoto(index)"
+                                        class="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 shadow-md transition-colors cursor-pointer"
+                                        title="Hapus Foto Ini"
+                                    >
+                                        <x-icons.ui name="trash" class="w-3.5 h-3.5" />
+                                    </button>
+                                @endif
                             </div>
-                        </template>
+                            <span class="text-[11px] font-bold text-white tracking-wide" x-text="item.label || ('Foto ' + (index + 1))"></span>
+                        </div>
                     </div>
-                    @if(!$readOnly)
-                        <input
-                            type="file"
-                            name="foto_dokumentasi_2"
-                            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-                            @change="previewFile($event, 2)"
-                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"
-                        />
-                        @if($record->foto_dokumentasi_2)
-                            <label class="flex items-center gap-2 text-xs text-rose-600 mt-1 cursor-pointer">
-                                <input type="checkbox" name="remove_foto_dokumentasi_2" value="1" class="rounded text-rose-600 focus:ring-rose-500" />
-                                <span>Hapus Foto 2</span>
-                            </label>
-                        @endif
-                    @endif
-                </div>
+                </template>
 
-                {{-- Dokumentasi 3 --}}
-                <div class="space-y-2 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Dokumentasi 3
-                    </label>
-                    <div class="aspect-video rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden relative group flex items-center justify-center">
-                        <template x-if="doc3Preview">
-                            <img :src="doc3Preview" alt="Dokumentasi 3" class="w-full h-full object-cover" />
-                        </template>
-                        <template x-if="!doc3Preview">
-                            <div class="flex flex-col items-center justify-center text-slate-400 text-xs">
-                                <x-icons.ui name="image" class="w-8 h-8 mb-1" />
-                                <span>Belum ada foto</span>
+                {{-- 2. Kartu Foto Baru yang Dipilih (Siap Diunggah) --}}
+                <template x-for="(item, index) in newPhotos" :key="'card-new-' + index">
+                    <div class="relative group rounded-2xl overflow-hidden border-2 border-emerald-500/60 bg-emerald-50/30 dark:bg-emerald-950/20 aspect-video shadow-sm">
+                        <img :src="item.preview" :alt="item.name" class="w-full h-full object-cover" />
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold">Baru</span>
+                                <button
+                                    type="button"
+                                    @click="removeNewPhoto(index)"
+                                    class="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 shadow-md transition-colors cursor-pointer"
+                                    title="Batalkan Foto Ini"
+                                >
+                                    <x-icons.ui name="close" class="w-3.5 h-3.5" />
+                                </button>
                             </div>
-                        </template>
+                            <span class="text-[11px] font-bold text-white tracking-wide truncate" x-text="item.name"></span>
+                        </div>
                     </div>
-                    @if(!$readOnly)
+                </template>
+
+                {{-- 3. Kotak Upload Area Tambah Foto --}}
+                @if(!$readOnly)
+                    <label class="rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-400 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 aspect-video flex flex-col items-center justify-center p-4 text-center cursor-pointer transition-colors group">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <x-icons.ui name="camera" class="w-5 h-5" />
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Pilih / Tambah Foto</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Mendukung JPG, PNG, WEBP (maks 5MB)</span>
                         <input
                             type="file"
-                            name="foto_dokumentasi_3"
+                            name="new_photos[]"
+                            multiple
                             accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-                            @change="previewFile($event, 3)"
-                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"
+                            class="hidden"
+                            @change="handleNewFiles($event)"
                         />
-                        @if($record->foto_dokumentasi_3)
-                            <label class="flex items-center gap-2 text-xs text-rose-600 mt-1 cursor-pointer">
-                                <input type="checkbox" name="remove_foto_dokumentasi_3" value="1" class="rounded text-rose-600 focus:ring-rose-500" />
-                                <span>Hapus Foto 3</span>
-                            </label>
-                        @endif
-                    @endif
-                </div>
+                    </label>
+                @endif
             </div>
+
+            {{-- Pesan Jika Kosong (Read-Only Mode) --}}
+            @if($readOnly)
+                <template x-if="existingPhotos.length === 0">
+                    <div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        Tidak ada dokumentasi foto yang diunggah.
+                    </div>
+                </template>
+            @endif
         </div>
 
         {{-- Form Actions --}}

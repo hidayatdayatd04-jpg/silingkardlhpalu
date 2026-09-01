@@ -219,9 +219,7 @@
                         <th colspan="2" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800">Informasi Umum</th>
                         <th colspan="2" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-emerald-100/40 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300">Vegetasi</th>
                         <th colspan="3" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-sky-100/40 dark:bg-sky-950/20 text-sky-900 dark:text-sky-300">Kapasitas Blok</th>
-                        <th rowspan="2" class="px-3 py-3 font-bold text-center border-r border-slate-200 dark:border-slate-700 min-w-[120px]">Dokumentasi 1</th>
-                        <th rowspan="2" class="px-3 py-3 font-bold text-center border-r border-slate-200 dark:border-slate-700 min-w-[120px]">Dokumentasi 2</th>
-                        <th rowspan="2" class="px-3 py-3 font-bold text-center border-r border-slate-200 dark:border-slate-700 min-w-[120px]">Dokumentasi 3</th>
+                        <th rowspan="2" class="px-3 py-3 font-bold text-center border-r border-slate-200 dark:border-slate-700 min-w-[150px]">Dokumentasi Foto</th>
                         <th rowspan="2" class="px-4 py-3 font-bold text-center w-28">Aksi</th>
                     </tr>
                     <tr class="bg-slate-50 dark:bg-slate-800/40 text-xs font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
@@ -239,9 +237,7 @@
                         @php
                             $vegetasi = is_array($record->vegetasi) ? $record->vegetasi : [];
                             $kapasitas = is_array($record->kapasitas_blok) ? $record->kapasitas_blok : [];
-                            $doc1 = $record->foto_dokumentasi_1 ? asset('storage/'.ltrim($record->foto_dokumentasi_1, '/')) : null;
-                            $doc2 = $record->foto_dokumentasi_2 ? asset('storage/'.ltrim($record->foto_dokumentasi_2, '/')) : null;
-                            $doc3 = $record->foto_dokumentasi_3 ? asset('storage/'.ltrim($record->foto_dokumentasi_3, '/')) : null;
+                            $photos = $record->getDokumentasiList();
                         @endphp
                         <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors align-top">
                             {{-- No. --}}
@@ -307,48 +303,25 @@
                                 @endif
                             </td>
 
-                            {{-- Dokumentasi 1 --}}
-                            <td class="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800">
-                                @if($doc1)
-                                    <div class="relative group cursor-pointer inline-block rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700"
-                                         @click="openLightbox('{{ $doc1 }}', 'Dokumentasi 1 - {{ $record->nama_tpu }}')">
-                                        <img src="{{ $doc1 }}" alt="Dokumentasi 1" class="w-24 h-16 object-cover group-hover:scale-105 transition-transform duration-200" />
-                                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                            <x-icons.ui name="eye" class="w-4 h-4" />
-                                        </div>
+                            {{-- Dokumentasi Foto (Dinamis) --}}
+                            <td class="px-3 py-3 border-r border-slate-200 dark:border-slate-800">
+                                @if(count($photos) > 0)
+                                    <div class="flex flex-wrap items-center gap-1.5 justify-center">
+                                        @foreach($photos as $p)
+                                            <div class="relative group cursor-pointer inline-block rounded-lg overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 w-16 h-12 shrink-0 bg-slate-100 dark:bg-slate-800"
+                                                 @click="openLightbox('{{ $p['url'] }}', '{{ $p['label'] }} - {{ $record->nama_tpu }}')">
+                                                <img src="{{ $p['url'] }}" alt="{{ $p['label'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                                    <x-icons.ui name="eye" class="w-3.5 h-3.5" />
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
+                                    <p class="text-[10px] font-bold text-slate-400 text-center mt-1">{{ count($photos) }} Foto</p>
                                 @else
-                                    <span class="text-xs text-slate-400 italic">-</span>
-                                @endif
-                            </td>
-
-                            {{-- Dokumentasi 2 --}}
-                            <td class="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800">
-                                @if($doc2)
-                                    <div class="relative group cursor-pointer inline-block rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700"
-                                         @click="openLightbox('{{ $doc2 }}', 'Dokumentasi 2 - {{ $record->nama_tpu }}')">
-                                        <img src="{{ $doc2 }}" alt="Dokumentasi 2" class="w-24 h-16 object-cover group-hover:scale-105 transition-transform duration-200" />
-                                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                            <x-icons.ui name="eye" class="w-4 h-4" />
-                                        </div>
+                                    <div class="text-center">
+                                        <span class="text-xs text-slate-400 italic">Kosong</span>
                                     </div>
-                                @else
-                                    <span class="text-xs text-slate-400 italic">-</span>
-                                @endif
-                            </td>
-
-                            {{-- Dokumentasi 3 --}}
-                            <td class="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800">
-                                @if($doc3)
-                                    <div class="relative group cursor-pointer inline-block rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700"
-                                         @click="openLightbox('{{ $doc3 }}', 'Dokumentasi 3 - {{ $record->nama_tpu }}')">
-                                        <img src="{{ $doc3 }}" alt="Dokumentasi 3" class="w-24 h-16 object-cover group-hover:scale-105 transition-transform duration-200" />
-                                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                            <x-icons.ui name="eye" class="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-xs text-slate-400 italic">-</span>
                                 @endif
                             </td>
 

@@ -178,41 +178,41 @@
 
     {{-- Dokumentasi Foto --}}
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-4">
-        <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <x-icons.ui name="image" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-            <h3 class="font-bold text-slate-900 dark:text-white text-base">Dokumentasi Foto Lapangan</h3>
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+                <x-icons.ui name="image" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Dokumentasi Foto Lapangan</h3>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
+                {{ count($photos) }} Foto Terlampir
+            </span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            @for($i = 1; $i <= 3; $i++)
-                @php
-                    $field = 'foto_dokumentasi_'.$i;
-                    $url = $record->{$field} ? asset('storage/'.ltrim($record->{$field}, '/')) : null;
-                @endphp
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        <span>Dokumentasi {{ $i }}</span>
-                    </div>
-                    @if($url)
+        @if(count($photos) > 0)
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @foreach($photos as $p)
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <span>{{ $p['label'] }}</span>
+                        </div>
                         <div
-                            class="aspect-video rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 relative group cursor-pointer"
-                            @click="openLightbox('{{ $url }}', 'Dokumentasi {{ $i }} - {{ $record->nama_tpu }}')"
+                            class="aspect-video rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 relative group cursor-pointer bg-slate-100 dark:bg-slate-800"
+                            @click="openLightbox('{{ $p['url'] }}', '{{ $p['label'] }} - {{ $record->nama_tpu }}')"
                         >
-                            <img src="{{ $url }}" alt="Dokumentasi {{ $i }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <img src="{{ $p['url'] }}" alt="{{ $p['label'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-semibold gap-1.5">
                                 <x-icons.ui name="eye" class="w-4 h-4" />
                                 <span>Perbesar</span>
                             </div>
                         </div>
-                    @else
-                        <div class="aspect-video rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400 text-xs gap-1">
-                            <x-icons.ui name="image" class="w-6 h-6" />
-                            <span>Tidak ada foto</span>
-                        </div>
-                    @endif
-                </div>
-            @endfor
-        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 text-xs italic">
+                Belum ada dokumentasi foto yang diunggah untuk TPU ini.
+            </div>
+        @endif
     </div>
 
     {{-- Lightbox Modal --}}
