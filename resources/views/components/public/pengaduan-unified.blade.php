@@ -465,7 +465,7 @@ new class extends Component {
                     />
                 @endif
 
-                <div>
+                <div class="space-y-2">
                     <button type="button" id="btn-detect-location"
                         class="fi-detect-btn">
                         <x-icons.ui name="map-pin" class="detect-icon-normal" />
@@ -473,15 +473,20 @@ new class extends Component {
                         <span class="detect-label">Deteksi Lokasi Saya</span>
                     </button>
 
-                    <p class="detect-error hidden mt-2 flex items-start gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
-                        <x-icons.ui name="alert" class="w-4 h-4 shrink-0 mt-px" />
-                        <span class="detect-error-text"></span>
-                    </p>
+                    <div class="detect-hint flex items-center justify-center gap-1.5 pt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <x-icons.ui name="map-pin" class="size-3.5 text-brand-600 dark:text-brand-400 shrink-0 opacity-70" />
+                        <span>{{ __('Aktifkan GPS/Lokasi Terlebih Dahulu') }}</span>
+                    </div>
 
-                    <p class="detect-success hidden mt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
-                        <x-icons.ui name="check" class="w-4 h-4 shrink-0" />
+                    <div class="detect-error hidden flex items-start gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/40 p-2.5 text-xs font-medium text-red-700 dark:text-red-300">
+                        <x-icons.ui name="alert" class="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                        <span class="detect-error-text"></span>
+                    </div>
+
+                    <div class="detect-success hidden flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                        <x-icons.ui name="check" class="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                         <span class="detect-success-text">{{ __('Lokasi terdeteksi — peta dan alamat terisi otomatis.') }}</span>
-                    </p>
+                    </div>
                 </div>
 
                 @if ($bidang === 'tata-penataan')
@@ -749,9 +754,17 @@ new class extends Component {
             e.preventDefault();
             e.stopPropagation();
 
+            var wrapper = btnDetect.closest('div');
+            var hintEl = wrapper ? wrapper.querySelector('.detect-hint') : null;
+            var errEl = wrapper ? wrapper.querySelector('.detect-error') : null;
+            var successEl = wrapper ? wrapper.querySelector('.detect-success') : null;
+
+            if (errEl) errEl.classList.add('hidden');
+            if (successEl) successEl.classList.add('hidden');
+
             if (!navigator.geolocation) {
-                var errEl = btnDetect.closest('div').querySelector('.detect-error');
-                var errText = btnDetect.closest('div').querySelector('.detect-error-text');
+                var errText = wrapper ? wrapper.querySelector('.detect-error-text') : null;
+                if (hintEl) hintEl.classList.add('hidden');
                 if (errEl && errText) {
                     errText.textContent = 'Browser Anda tidak mendukung geolokasi.';
                     errEl.classList.remove('hidden');
@@ -764,7 +777,7 @@ new class extends Component {
             btnDetect.querySelector('.detect-icon-spin').classList.remove('hidden');
             btnDetect.querySelector('.detect-label').textContent = 'Mendeteksi Lokasi...';
 
-// Strategi watchPosition: kumpulkan pembacaan selama max 15 detik,
+            // Strategi watchPosition: kumpulkan pembacaan selama max 15 detik,
             // ambil yang akurasi terbaik (radius terkecil = paling tepat).
             var bestPos2 = null;
             var watchId2 = null;
@@ -780,7 +793,16 @@ new class extends Component {
             function applyBestPos2() {
                 if (watchId2 !== null) { navigator.geolocation.clearWatch(watchId2); watchId2 = null; }
                 if (collectTimeout2) { clearTimeout(collectTimeout2); collectTimeout2 = null; }
-                if (!bestPos2) { resetBtn(); var wEl = btnDetect.closest('div'); var eEl = wEl.querySelector('.detect-error'); var eTxt = wEl.querySelector('.detect-error-text'); if (eEl && eTxt) { eTxt.textContent = 'Tidak dapat memperoleh posisi. Coba lagi.'; eEl.classList.remove('hidden'); } return; }
+                if (!bestPos2) {
+                    resetBtn();
+                    var wEl = btnDetect.closest('div');
+                    var hEl = wEl ? wEl.querySelector('.detect-hint') : null;
+                    var eEl = wEl ? wEl.querySelector('.detect-error') : null;
+                    var eTxt = wEl ? wEl.querySelector('.detect-error-text') : null;
+                    if (hEl) hEl.classList.add('hidden');
+                    if (eEl && eTxt) { eTxt.textContent = 'Tidak dapat memperoleh posisi. Coba lagi.'; eEl.classList.remove('hidden'); }
+                    return;
+                }
 
                 var lat = bestPos2.coords.latitude;
                 var lon = bestPos2.coords.longitude;
@@ -816,11 +838,15 @@ new class extends Component {
                         if (lonEl) { lonEl.value = lon; lonEl.dispatchEvent(new Event('input', { bubbles: true })); }
 
                         var wrapper2 = btnDetect.closest('div');
-                        var successEl = wrapper2.querySelector('.detect-success');
-                        var successText = wrapper2.querySelector('.detect-success-text');
+                        var hEl2 = wrapper2 ? wrapper2.querySelector('.detect-hint') : null;
+                        var successEl = wrapper2 ? wrapper2.querySelector('.detect-success') : null;
+                        var successText = wrapper2 ? wrapper2.querySelector('.detect-success-text') : null;
+                        var errEl2 = wrapper2 ? wrapper2.querySelector('.detect-error') : null;
+
+                        if (hEl2) hEl2.classList.add('hidden');
+                        if (errEl2) errEl2.classList.add('hidden');
                         if (successEl) successEl.classList.remove('hidden');
                         if (successText) successText.textContent = 'Lokasi berhasil dideteksi (akurasi ±' + Math.round(acc) + ' m)';
-                        wrapper2.querySelector('.detect-error').classList.add('hidden');
 
                         resetBtn();
 
@@ -852,12 +878,16 @@ new class extends Component {
                 if (collectTimeout2) { clearTimeout(collectTimeout2); collectTimeout2 = null; }
                 resetBtn();
                 var wrapper2 = btnDetect.closest('div');
-                var errEl = wrapper2.querySelector('.detect-error');
-                var errText = wrapper2.querySelector('.detect-error-text');
+                var hEl2 = wrapper2 ? wrapper2.querySelector('.detect-hint') : null;
+                var errEl = wrapper2 ? wrapper2.querySelector('.detect-error') : null;
+                var errText = wrapper2 ? wrapper2.querySelector('.detect-error-text') : null;
+                var successEl = wrapper2 ? wrapper2.querySelector('.detect-success') : null;
                 var msg = 'Gagal mendapatkan lokasi.';
                 if (err.code === 1) msg = 'Izin lokasi ditolak. Izinkan akses lokasi pada browser Anda.';
                 else if (err.code === 2) msg = 'Posisi tidak dapat ditentukan. Coba lagi.';
                 else if (err.code === 3) msg = 'Waktu habis. Silakan coba lagi.';
+                if (hEl2) hEl2.classList.add('hidden');
+                if (successEl) successEl.classList.add('hidden');
                 if (errEl && errText) { errText.textContent = msg; errEl.classList.remove('hidden'); }
             }
 
