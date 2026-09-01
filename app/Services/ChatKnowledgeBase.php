@@ -162,7 +162,7 @@ Layanan pengawasan dan penataan lingkungan hidup.
 
 **Pengaduan Tata Penataan:**
 - URL: https://www.silingkardlhpalu.web.id/pengaduan
-- Untuk melapor masalah: Limbah dari industri, Asap dari industri, Kebisingan dari industri
+- Untuk melapor masalah: Limbah dari industri, Asap dari industri, Kebisingan dari industri, Bau, Pencemaran Air
 - Formulir: Isi data diri, jenis pengaduan, deskripsi, foto bukti, lokasi di peta
 - Mendapat nomor tiket
 
@@ -249,6 +249,8 @@ Layanan pengelolaan ruang terbuka hijau kota.
 - Limbah (dari industri)
 - Asap (dari industri)
 - Kebisingan (dari industri)
+- Bau
+- Pencemaran Air
 
 **RTH:**
 - Penebangan Pohon Liar

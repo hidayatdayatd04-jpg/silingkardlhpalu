@@ -7,6 +7,8 @@ enum JenisPengaduanTataPenataan: string
     case LIMBAH = 'limbah';
     case ASAP = 'asap';
     case KEBISINGAN = 'kebisingan';
+    case BAU = 'bau';
+    case PENCEMARAN_AIR = 'pencemaran_air';
 
     public function label(): string
     {
@@ -14,6 +16,8 @@ enum JenisPengaduanTataPenataan: string
             self::LIMBAH => 'Limbah',
             self::ASAP => 'Asap Pembakaran Sampah (Polusi Udara)',
             self::KEBISINGAN => 'Kebisingan',
+            self::BAU => 'Bau',
+            self::PENCEMARAN_AIR => 'Pencemaran Air',
         };
     }
 
@@ -23,6 +27,8 @@ enum JenisPengaduanTataPenataan: string
             self::LIMBAH => 'danger',
             self::ASAP => 'gray',
             self::KEBISINGAN => 'warning',
+            self::BAU => 'amber',
+            self::PENCEMARAN_AIR => 'info',
         };
     }
 
