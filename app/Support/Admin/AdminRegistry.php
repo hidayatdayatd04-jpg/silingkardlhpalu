@@ -1480,7 +1480,6 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
-                    'hint' => 'Contoh: Viar Karya 200, Toyota Dyna 130 HT, Isuzu Giga, Komatsu PC200',
                 ],
                 [
                     'name' => 'tahun_perolehan',
@@ -1488,7 +1487,6 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
-                    'hint' => 'Contoh: 2021, 2022, 2023',
                 ],
             ]);
         }
