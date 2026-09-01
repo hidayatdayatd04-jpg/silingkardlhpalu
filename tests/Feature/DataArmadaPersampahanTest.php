@@ -21,44 +21,16 @@ class DataArmadaPersampahanTest extends TestCase
             ->assertSee('Segera Hadir');
     }
 
-    public function test_bidang_sampah_can_create_and_view_data_armada(): void
+    public function test_index_displays_the_four_categories_and_totals(): void
     {
-        $user = $this->makeUser('bidang-sampah-lb3');
+        DataArmadaPersampahan::ensureCategoriesExist();
 
-        $response = $this->actingAs($user)
-            ->post(route('admin.resources.store', 'data-armada-persampahan'), [
-                'kategori' => 'Kendaraan Roda 2',
-                'merk_type' => 'Viar Karya 200',
-                'tahun_perolehan' => '2021',
-            ]);
-
-        $armada = DataArmadaPersampahan::where('merk_type', 'Viar Karya 200')->first();
-        $this->assertNotNull($armada);
-        $this->assertSame('Viar Karya 200', $armada->merk_type);
-        $this->assertSame(KategoriArmadaPersampahan::RODA_2, $armada->kategori);
-        $this->assertSame('2021', $armada->tahun_perolehan);
-
-        $response->assertRedirect(route('admin.resources.show', ['data-armada-persampahan', $armada]));
-
-        $this->actingAs($user)
-            ->get(route('admin.resources.show', ['data-armada-persampahan', $armada]))
-            ->assertOk()
-            ->assertSee('Viar Karya 200')
-            ->assertSee('2021');
-    }
-
-    public function test_index_page_displays_sheet_tabs_columns_and_total_keseluruhan(): void
-    {
-        DataArmadaPersampahan::create([
-            'kategori' => 'Kendaraan Roda 2',
-            'merk_type' => 'Viar 200cc',
-            'tahun_perolehan' => '2020',
-        ]);
-
-        DataArmadaPersampahan::create([
-            'kategori' => 'Kendaraan Roda 6',
-            'merk_type' => 'Toyota Dyna 130 HT',
-            'tahun_perolehan' => '2022',
+        $roda2 = DataArmadaPersampahan::where('kategori', 'Kendaraan Roda 2')->first();
+        $roda2->update([
+            'daftar_armada' => [
+                ['merk_type' => 'Honda Beat / D1B02N13L2 A/T', 'tahun_perolehan' => '2018'],
+                ['merk_type' => 'Honda Vario / Ati 1121B 01 A/T', 'tahun_perolehan' => '2012'],
+            ],
         ]);
 
         $user = $this->makeUser('bidang-sampah-lb3');
@@ -71,41 +43,46 @@ class DataArmadaPersampahanTest extends TestCase
             ->assertSee('Kendaraan Roda 4')
             ->assertSee('Kendaraan Roda 6')
             ->assertSee('Alat Berat')
-            ->assertSee('Total Keseluruhan')
-            ->assertSee('Viar 200cc')
-            ->assertSee('Toyota Dyna 130 HT');
+            ->assertSee('2 Unit')
+            ->assertSee('Total Keseluruhan');
     }
 
-    public function test_category_sheet_filter_works_on_index(): void
+    public function test_bidang_sampah_can_update_armada_list_and_view_detail(): void
     {
-        DataArmadaPersampahan::create([
-            'kategori' => 'Kendaraan Roda 2',
-            'merk_type' => 'Tossa Giga',
-            'tahun_perolehan' => '2021',
-        ]);
-
-        DataArmadaPersampahan::create([
-            'kategori' => 'Alat Berat',
-            'merk_type' => 'Komatsu PC200',
-            'tahun_perolehan' => '2019',
-        ]);
+        DataArmadaPersampahan::ensureCategoriesExist();
+        $record = DataArmadaPersampahan::where('kategori', 'Kendaraan Roda 2')->firstOrFail();
 
         $user = $this->makeUser('bidang-sampah-lb3');
 
+        $response = $this->actingAs($user)
+            ->put(route('admin.resources.update', ['data-armada-persampahan', $record]), [
+                'kategori' => 'Kendaraan Roda 2',
+                'daftar_armada' => [
+                    ['merk_type' => 'Honda Beat / D1B02N13L2 A/T', 'tahun_perolehan' => '2018'],
+                    ['merk_type' => 'Honda Vario / Ati 1121B 01 A/T', 'tahun_perolehan' => '2012'],
+                ],
+            ]);
+
+        $response->assertRedirect(route('admin.resources.show', ['data-armada-persampahan', $record]));
+
+        $record->refresh();
+        $this->assertSame(2, $record->totalUnit());
+        $this->assertSame('Honda Beat / D1B02N13L2 A/T', $record->daftar_armada[0]['merk_type']);
+
         $this->actingAs($user)
-            ->get(route('admin.resources.index', ['resource' => 'data-armada-persampahan', 'kategori' => 'Kendaraan Roda 2']))
+            ->get(route('admin.resources.show', ['data-armada-persampahan', $record]))
             ->assertOk()
-            ->assertSee('Tossa Giga')
-            ->assertDontSee('Komatsu PC200');
+            ->assertSee('Honda Beat / D1B02N13L2 A/T')
+            ->assertSee('Honda Vario / Ati 1121B 01 A/T')
+            ->assertSee('2018')
+            ->assertSee('2012')
+            ->assertSee('2 Unit');
     }
 
     public function test_superadmin_is_read_only(): void
     {
-        $armada = DataArmadaPersampahan::create([
-            'kategori' => 'Kendaraan Roda 4',
-            'merk_type' => 'Suzuki Carry',
-            'tahun_perolehan' => '2021',
-        ]);
+        DataArmadaPersampahan::ensureCategoriesExist();
+        $record = DataArmadaPersampahan::where('kategori', 'Kendaraan Roda 4')->firstOrFail();
 
         $admin = $this->makeUser('admin');
 
@@ -115,22 +92,11 @@ class DataArmadaPersampahanTest extends TestCase
             ->assertDontSee(route('admin.resources.create', 'data-armada-persampahan'));
 
         $this->actingAs($admin)
-            ->get(route('admin.resources.create', 'data-armada-persampahan'))
-            ->assertForbidden();
-
-        $this->actingAs($admin)
-            ->post(route('admin.resources.store', 'data-armada-persampahan'), [
-                'kategori' => 'Kendaraan Roda 2',
-                'merk_type' => 'Type Uji',
-                'tahun_perolehan' => '2023',
-            ])
-            ->assertForbidden();
-
-        $this->actingAs($admin)
-            ->put(route('admin.resources.update', ['data-armada-persampahan', $armada]), [
+            ->put(route('admin.resources.update', ['data-armada-persampahan', $record]), [
                 'kategori' => 'Kendaraan Roda 4',
-                'merk_type' => 'Suzuki Carry Diubah',
-                'tahun_perolehan' => '2021',
+                'daftar_armada' => [
+                    ['merk_type' => 'Suzuki Carry Pick Up', 'tahun_perolehan' => '2021'],
+                ],
             ])
             ->assertForbidden();
     }

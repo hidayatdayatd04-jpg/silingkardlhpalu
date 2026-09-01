@@ -54,8 +54,23 @@
         removeExistingPhoto(index) {
             this.existingPhotos.splice(index, 1);
         },
+        syncInputFiles() {
+            const input = document.getElementById('realNewPhotosInput');
+            if (!input) return;
+            try {
+                const dt = new DataTransfer();
+                this.newPhotos.forEach(item => {
+                    if (item.file) {
+                        dt.items.add(item.file);
+                    }
+                });
+                input.files = dt.files;
+            } catch (e) {
+                console.warn('DataTransfer sync error:', e);
+            }
+        },
         handleNewFiles(event) {
-            const files = Array.from(event.target.files);
+            const files = Array.from(event.target.files || []);
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -64,6 +79,7 @@
                         preview: e.target.result,
                         name: file.name
                     });
+                    this.syncInputFiles();
                 };
                 reader.readAsDataURL(file);
             });
@@ -71,6 +87,7 @@
         },
         removeNewPhoto(index) {
             this.newPhotos.splice(index, 1);
+            this.syncInputFiles();
         }
     }"
     class="max-w-5xl mx-auto space-y-6"
@@ -108,6 +125,16 @@
         @if($method === 'PUT')
             @method('PUT')
         @endif
+
+        {{-- Hidden Input untuk file yang akan dikirim ke server --}}
+        <input
+            type="file"
+            id="realNewPhotosInput"
+            name="new_photos[]"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+            class="hidden"
+        />
 
         {{-- Section 1: Informasi Umum --}}
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-5">
@@ -409,7 +436,6 @@
                         <span class="text-[10px] text-slate-400 mt-0.5">Mendukung JPG, PNG, WEBP (maks 5MB)</span>
                         <input
                             type="file"
-                            name="new_photos[]"
                             multiple
                             accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
                             class="hidden"

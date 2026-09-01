@@ -126,7 +126,7 @@ class ResourceController extends Controller
         $query = $this->query($meta, $request);
 
         if ($meta['slug'] === 'data-armada-persampahan') {
-            $modelClass = $meta['model'];
+            \App\Models\DataArmadaPersampahan::ensureCategoriesExist();
             $categories = [
                 'Kendaraan Roda 2',
                 'Kendaraan Roda 4',
@@ -134,11 +134,13 @@ class ResourceController extends Controller
                 'Alat Berat',
             ];
 
+            $allRecords = $meta['model']::all();
             $categoryUnits = [];
             foreach ($categories as $cat) {
-                $categoryUnits[$cat] = (int) $modelClass::where('kategori', $cat)->count();
+                $rec = $allRecords->first(fn ($r) => ($r->kategori instanceof \BackedEnum ? $r->kategori->value : $r->kategori) === $cat);
+                $categoryUnits[$cat] = $rec ? $rec->totalUnit() : 0;
             }
-            $totalKeseluruhanUnits = (int) $modelClass::count();
+            $totalKeseluruhanUnits = $allRecords->sum(fn ($r) => $r->totalUnit());
 
             return view('admin.data-armada-persampahan.index', [
                 'resource' => $meta,
@@ -149,7 +151,6 @@ class ResourceController extends Controller
                 'categories' => $categories,
                 'categoryUnits' => $categoryUnits,
                 'totalKeseluruhanUnits' => $totalKeseluruhanUnits,
-                'activeCategory' => $request->query('kategori', ''),
             ]);
         }
 
@@ -195,6 +196,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
             'data-tpu' => 'admin.data-tpu.form',
+            'data-armada-persampahan' => 'admin.data-armada-persampahan.form',
             default => 'admin.resources.form',
         };
 
@@ -273,6 +275,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.show',
             'artikel' => 'admin.artikel.show',
             'data-tpu' => 'admin.data-tpu.show',
+            'data-armada-persampahan' => 'admin.data-armada-persampahan.show',
             default => 'admin.resources.show',
         };
 
@@ -294,6 +297,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
             'data-tpu' => 'admin.data-tpu.form',
+            'data-armada-persampahan' => 'admin.data-armada-persampahan.form',
             default => 'admin.resources.form',
         };
 
@@ -976,6 +980,29 @@ class ResourceController extends Controller
     {
         $payload = [];
 
+        if ($meta['slug'] === 'data-armada-persampahan') {
+            $payload['kategori'] = (string) $request->input('kategori');
+
+            $rawArmada = $request->input('daftar_armada', []);
+            if (is_string($rawArmada)) {
+                $rawArmada = json_decode($rawArmada, true) ?: [];
+            }
+            $armadaList = [];
+            if (is_array($rawArmada)) {
+                foreach ($rawArmada as $item) {
+                    if (is_array($item) && filled($item['merk_type'] ?? null)) {
+                        $armadaList[] = [
+                            'merk_type' => trim((string) $item['merk_type']),
+                            'tahun_perolehan' => trim((string) ($item['tahun_perolehan'] ?? '')),
+                        ];
+                    }
+                }
+            }
+            $payload['daftar_armada'] = $armadaList;
+
+            return $payload;
+        }
+
         if ($meta['slug'] === 'data-tpu') {
             $payload['nama_tpu'] = (string) $request->input('nama_tpu');
             $payload['luas_area_makam'] = (string) $request->input('luas_area_makam');
@@ -1294,6 +1321,19 @@ class ResourceController extends Controller
             return;
         }
 
+        if ($meta['slug'] === 'data-armada-persampahan') {
+            $request->validate([
+                'kategori' => ['required', 'string'],
+                'daftar_armada' => ['nullable', 'array'],
+                'daftar_armada.*.merk_type' => ['nullable', 'string', 'max:255'],
+                'daftar_armada.*.tahun_perolehan' => ['nullable', 'string', 'max:50'],
+            ], [
+                'kategori.required' => 'Kategori kendaraan wajib dipilih.',
+            ]);
+
+            return;
+        }
+
         if ($meta['slug'] === 'data-tpu') {
             $request->validate([
                 'nama_tpu' => ['required', 'string', 'max:255'],
@@ -1380,7 +1420,7 @@ class ResourceController extends Controller
      */
     protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
     {
-        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth', 'data-tpu'], true)) {
+        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth', 'data-tpu', 'data-armada-persampahan'], true)) {
             if (str_starts_with($meta['slug'], 'artikel')) {
                 $this->validateArtikelFields($request, $updating, $model);
             }

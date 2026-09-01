@@ -161,10 +161,11 @@
                 ],
                 [
                     'title' => __('Ruang Terbuka Hijau'),
-                    'desc' => __('Pengaduan dan penyewaan taman.'),
+                    'desc' => __('Pengaduan, penyewaan taman, & data TPU.'),
                     'accent' => 'brand',
                     'icon' => 'rth',
                     'links' => [
+                        [__('Data TPU'), '/tpu'],
                         [__('Pengaduan'), '/pengaduan'],
                         [__('Penyewaan Taman'), '/pinjam-taman'],
                         [__('Cek Penyewaan'), '/cek-pinjam-taman'],

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class DataTpu extends Model
 {
@@ -94,6 +96,30 @@ class DataTpu extends Model
     }
 
     /**
+     * Helper untuk mengubah path storage menjadi URL publik / signed URL yang valid.
+     */
+    public function resolvePhotoUrl(?string $path): ?string
+    {
+        if (blank($path)) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        try {
+            return Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
+        } catch (Throwable $e) {
+            try {
+                return Storage::disk('public')->url($path);
+            } catch (Throwable $e) {
+                return asset('storage/' . ltrim($path, '/'));
+            }
+        }
+    }
+
+    /**
      * Mendapatkan daftar URL foto dokumentasi yang valid (dinamis bisa 0, 1, 2, atau lebih).
      *
      * @return array<int, array{label: string, path: string, url: string}>
@@ -107,15 +133,20 @@ class DataTpu extends Model
             $counter = 1;
             foreach ($this->foto_dokumentasi as $path) {
                 if (is_string($path) && filled($path)) {
-                    $photos[] = [
-                        'label' => 'Dokumentasi ' . $counter++,
-                        'path' => (string) $path,
-                        'url' => asset('storage/' . ltrim((string) $path, '/')),
-                    ];
+                    $url = $this->resolvePhotoUrl((string) $path);
+                    if ($url) {
+                        $photos[] = [
+                            'label' => 'Dokumentasi ' . $counter++,
+                            'path' => (string) $path,
+                            'url' => $url,
+                        ];
+                    }
                 }
             }
 
-            return $photos;
+            if (count($photos) > 0) {
+                return $photos;
+            }
         }
 
         // 2. Fallback ke kolom foto_dokumentasi_1/2/3 jika ada
@@ -124,11 +155,14 @@ class DataTpu extends Model
             $path = $this->{$field};
 
             if (filled($path)) {
-                $photos[] = [
-                    'label' => 'Dokumentasi ' . (count($photos) + 1),
-                    'path' => (string) $path,
-                    'url' => asset('storage/' . ltrim((string) $path, '/')),
-                ];
+                $url = $this->resolvePhotoUrl((string) $path);
+                if ($url) {
+                    $photos[] = [
+                        'label' => 'Dokumentasi ' . (count($photos) + 1),
+                        'path' => (string) $path,
+                        'url' => $url,
+                    ];
+                }
             }
         }
 

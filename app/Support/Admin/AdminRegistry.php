@@ -49,7 +49,7 @@ class AdminRegistry
                     array_merge(self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('statistik-sampah', 'Statistik Sampah', StatistikSampah::class, ['tanggal', 'volume_ton', 'periode']),
                     array_merge(self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
-                    self::resource('data-armada-persampahan', 'Data Armada Persampahan', DataArmadaPersampahan::class, ['merk_type', 'tahun_perolehan', 'kategori']),
+                    self::resource('data-armada-persampahan', 'Data Armada Persampahan', DataArmadaPersampahan::class, ['kategori', 'created_at']),
                 ],
             ],
 
@@ -1469,6 +1469,12 @@ class AdminRegistry
         if ($resource['slug'] === 'data-armada-persampahan') {
             return self::decorateFields($resource, [
                 [
+                    'name' => '_section_info',
+                    'label' => 'Informasi Utama',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
                     'name' => 'kategori',
                     'label' => 'Kategori Kendaraan',
                     'type' => 'select',
@@ -1477,18 +1483,16 @@ class AdminRegistry
                     'wide' => true,
                 ],
                 [
-                    'name' => 'merk_type',
-                    'label' => 'Merek / Type',
-                    'type' => 'text',
+                    'name' => '_section_armada',
+                    'label' => 'Daftar Armada Persampahan',
+                    'type' => 'section',
                     'options' => [],
-                    'required' => true,
                 ],
                 [
-                    'name' => 'tahun_perolehan',
-                    'label' => 'Tahun Perolehan',
-                    'type' => 'text',
+                    'name' => 'daftar_armada',
+                    'label' => 'Data Armada',
+                    'type' => 'daftar_armada',
                     'options' => [],
-                    'required' => true,
                 ],
             ]);
         }
