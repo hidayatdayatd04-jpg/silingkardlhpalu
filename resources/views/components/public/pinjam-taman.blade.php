@@ -357,15 +357,26 @@ new class extends Component {
             @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
 
             {{-- Informasi Kontak Tambahan --}}
-            <div class="pt-1 pb-1 space-y-1.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400">
-                <p class="font-medium text-slate-700 dark:text-slate-300">
-                    {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
-                </p>
-                <div>
+            <div class="rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/70 via-emerald-50/40 to-slate-50/70 dark:from-emerald-950/25 dark:via-emerald-950/15 dark:to-slate-900/40 p-4 sm:p-5 transition-all">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex size-6 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
+                                <x-icons.ui name="info" class="size-3.5" />
+                            </span>
+                            <h4 class="text-xs sm:text-[13.5px] font-bold text-slate-800 dark:text-slate-100">
+                                {{ __('Informasi & Layanan') }}
+                            </h4>
+                        </div>
+                        <p class="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                            {{ __('Untuk informasi lebih lanjut, silahkan hubungi kami melalui kontak berikut :') }}
+                        </p>
+                    </div>
                     <a href="https://wa.me/6285256744102" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                        <x-icons.social.whatsapp class="size-4 flex-shrink-0" />
-                        <span>085256744102</span>
+                        class="inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300/80 dark:border-emerald-800 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-slate-800/80 hover:shadow transition-all shrink-0 group">
+                        <x-icons.social.whatsapp class="size-4.5 flex-shrink-0 transition-transform group-hover:scale-110" />
+                        <span class="tracking-wide">085256744102</span>
+                        <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">WhatsApp</span>
                     </a>
                 </div>
             </div>
