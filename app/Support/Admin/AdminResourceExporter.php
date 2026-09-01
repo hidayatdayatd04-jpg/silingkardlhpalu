@@ -208,7 +208,27 @@ class AdminResourceExporter
             }
 
             $value = $record->getAttribute($column);
-            if (in_array($column, $definition['direct_file_columns'], true)) {
+            if ($column === 'vegetasi' && is_array($value)) {
+                $lines = [];
+                $idx = 1;
+                foreach ($value as $item) {
+                    if (is_array($item) && filled($item['jenis_pohon'] ?? null)) {
+                        $lines[] = "{$idx}. " . ($item['jenis_pohon'] ?? '') . ' (' . ($item['jumlah'] ?? '') . ')';
+                        $idx++;
+                    }
+                }
+                $values[] = $lines === [] ? '-' : implode("\n", $lines);
+            } elseif ($column === 'kapasitas_blok' && is_array($value)) {
+                $lines = [];
+                $idx = 1;
+                foreach ($value as $item) {
+                    if (is_array($item) && filled($item['agama'] ?? null)) {
+                        $lines[] = "{$idx}. " . ($item['agama'] ?? '') . ': ' . ($item['jumlah_blok'] ?? '') . ' - ' . ($item['jumlah_makam'] ?? '');
+                        $idx++;
+                    }
+                }
+                $values[] = $lines === [] ? '-' : implode("\n", $lines);
+            } elseif (in_array($column, $definition['direct_file_columns'], true) || in_array($column, ['foto_dokumentasi_1', 'foto_dokumentasi_2', 'foto_dokumentasi_3'], true)) {
                 $values[] = $this->formatSingleFile(is_string($value) ? $value : '', $meta['slug']);
             } else {
                 $values[] = $value;

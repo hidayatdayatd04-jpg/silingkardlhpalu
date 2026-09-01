@@ -153,6 +153,24 @@ class ResourceController extends Controller
             ]);
         }
 
+        if ($meta['slug'] === 'data-tpu') {
+            $allTpus = $meta['model']::all();
+            $totalTpu = $allTpus->count();
+            $totalMakam = $allTpus->sum(fn ($t) => $t->totalMakam());
+            $totalPohon = $allTpus->sum(fn ($t) => $t->totalPohon());
+
+            return view('admin.data-tpu.index', [
+                'resource' => $meta,
+                'records' => $query->paginate(15)->withQueryString(),
+                'search' => $request->string('q')->toString(),
+                'sortColumn' => $request->string('sort')->toString(),
+                'sortDirection' => $request->string('direction', 'asc')->toString(),
+                'totalTpu' => $totalTpu,
+                'totalMakam' => $totalMakam,
+                'totalPohon' => $totalPohon,
+            ]);
+        }
+
         $view = match ($meta['slug']) {
             'artikel' => 'admin.artikel.index',
             default => 'admin.resources.index',
@@ -176,6 +194,7 @@ class ResourceController extends Controller
         $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
+            'data-tpu' => 'admin.data-tpu.form',
             default => 'admin.resources.form',
         };
 
@@ -253,6 +272,7 @@ class ResourceController extends Controller
         $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.show',
             'artikel' => 'admin.artikel.show',
+            'data-tpu' => 'admin.data-tpu.show',
             default => 'admin.resources.show',
         };
 
@@ -273,6 +293,7 @@ class ResourceController extends Controller
         $view = match ($meta['slug']) {
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
+            'data-tpu' => 'admin.data-tpu.form',
             default => 'admin.resources.form',
         };
 
@@ -946,6 +967,69 @@ class ResourceController extends Controller
     {
         $payload = [];
 
+        if ($meta['slug'] === 'data-tpu') {
+            $payload['nama_tpu'] = (string) $request->input('nama_tpu');
+            $payload['luas_area_makam'] = (string) $request->input('luas_area_makam');
+
+            $rawVegetasi = $request->input('vegetasi', []);
+            if (is_string($rawVegetasi)) {
+                $rawVegetasi = json_decode($rawVegetasi, true) ?: [];
+            }
+            $vegetasi = [];
+            if (is_array($rawVegetasi)) {
+                foreach ($rawVegetasi as $v) {
+                    if (is_array($v) && filled($v['jenis_pohon'] ?? null)) {
+                        $vegetasi[] = [
+                            'jenis_pohon' => trim((string) $v['jenis_pohon']),
+                            'jumlah' => trim((string) ($v['jumlah'] ?? '')),
+                        ];
+                    }
+                }
+            }
+            $payload['vegetasi'] = $vegetasi;
+
+            $rawBlok = $request->input('kapasitas_blok', []);
+            if (is_string($rawBlok)) {
+                $rawBlok = json_decode($rawBlok, true) ?: [];
+            }
+            $kapasitasBlok = [];
+            if (is_array($rawBlok)) {
+                foreach ($rawBlok as $b) {
+                    if (is_array($b) && filled($b['agama'] ?? null)) {
+                        $kapasitasBlok[] = [
+                            'agama' => trim((string) $b['agama']),
+                            'jumlah_blok' => trim((string) ($b['jumlah_blok'] ?? '')),
+                            'jumlah_makam' => trim((string) ($b['jumlah_makam'] ?? '')),
+                        ];
+                    }
+                }
+            }
+            $payload['kapasitas_blok'] = $kapasitasBlok;
+
+            for ($i = 1; $i <= 3; $i++) {
+                $photoField = 'foto_dokumentasi_' . $i;
+                $removeField = 'remove_foto_dokumentasi_' . $i;
+
+                if ($request->boolean($removeField)) {
+                    if ($record->exists && filled($record->{$photoField})) {
+                        app(FileUploadService::class)->deletePath($record->{$photoField});
+                    }
+                    $payload[$photoField] = null;
+                } elseif ($request->hasFile($photoField)) {
+                    $file = $request->file($photoField);
+                    $stored = app(FileUploadService::class)->store($file, 'admin/data-tpu', 'public');
+                    if ($stored !== false) {
+                        if ($record->exists && filled($record->{$photoField})) {
+                            app(FileUploadService::class)->deletePath($record->{$photoField});
+                        }
+                        $payload[$photoField] = $stored;
+                    }
+                }
+            }
+
+            return $payload;
+        }
+
         foreach (AdminRegistry::formFields($meta) as $field) {
             $name = $field['name'];
             $type = $field['type'] ?? 'text';
@@ -1150,6 +1234,26 @@ class ResourceController extends Controller
             return;
         }
 
+        if ($meta['slug'] === 'data-tpu') {
+            $request->validate([
+                'nama_tpu' => ['required', 'string', 'max:255'],
+                'luas_area_makam' => ['required', 'string', 'max:100'],
+                'vegetasi' => ['nullable', 'array'],
+                'kapasitas_blok' => ['nullable', 'array'],
+                'foto_dokumentasi_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+                'foto_dokumentasi_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+                'foto_dokumentasi_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+            ], [
+                'nama_tpu.required' => 'Nama TPU wajib diisi.',
+                'luas_area_makam.required' => 'Luas area makam wajib diisi.',
+                'foto_dokumentasi_1.image' => 'Dokumentasi 1 harus berupa file gambar.',
+                'foto_dokumentasi_2.image' => 'Dokumentasi 2 harus berupa file gambar.',
+                'foto_dokumentasi_3.image' => 'Dokumentasi 3 harus berupa file gambar.',
+            ]);
+
+            return;
+        }
+
         $pengaduanSlugs = ['pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth'];
 
         if (! in_array($meta['slug'], $pengaduanSlugs)) {
@@ -1211,8 +1315,10 @@ class ResourceController extends Controller
      */
     protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
     {
-        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth'], true)) {
-            $this->validateArtikelFields($request, $updating, $model);
+        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth', 'data-tpu'], true)) {
+            if (str_starts_with($meta['slug'], 'artikel')) {
+                $this->validateArtikelFields($request, $updating, $model);
+            }
 
             return;
         }

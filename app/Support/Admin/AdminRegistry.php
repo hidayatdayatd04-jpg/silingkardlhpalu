@@ -5,6 +5,7 @@ namespace App\Support\Admin;
 use App\Models\Artikel;
 use App\Models\DataArmadaPersampahan;
 use App\Models\DataTanamPohon;
+use App\Models\DataTpu;
 use App\Models\Pelanggaran;
 use App\Models\PengaduanPengendalian;
 use App\Models\PengaduanRth;
@@ -68,6 +69,7 @@ class AdminRegistry
                     array_merge(self::resource('pengaduan-rth', 'Pengaduan RTH', PengaduanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
                     array_merge(self::resource('pinjam-taman', 'Penyewaan Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']), ['can_create' => false]),
                     self::resource('data-tanam-pohon', 'Data Tanam Pohon', DataTanamPohon::class, ['jenis_pohon', 'jumlah_pohon', 'nama_penanggung_jawab', 'latitude', 'longitude']),
+                    self::resource('data-tpu', 'Data Taman Pemakaman Umum (TPU)', DataTpu::class, ['nama_tpu', 'luas_area_makam', 'created_at']),
                 ],
             ],
             'konten' => [
@@ -1487,6 +1489,85 @@ class AdminRegistry
                     'type' => 'text',
                     'options' => [],
                     'required' => true,
+                ],
+            ]);
+        }
+
+        // Custom fields untuk resource 'data-tpu'
+        if ($resource['slug'] === 'data-tpu') {
+            return self::decorateFields($resource, [
+                [
+                    'name' => '_section_info',
+                    'label' => 'Informasi Umum',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'nama_tpu',
+                    'label' => 'Nama TPU',
+                    'type' => 'text',
+                    'options' => [],
+                    'required' => true,
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'luas_area_makam',
+                    'label' => 'Luas Area Makam',
+                    'type' => 'text',
+                    'options' => [],
+                    'required' => true,
+                    'hint' => 'Contoh: 2 Ha',
+                ],
+                [
+                    'name' => '_section_vegetasi',
+                    'label' => 'Vegetasi Pohon Pelindung',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'vegetasi',
+                    'label' => 'Data Vegetasi',
+                    'type' => 'vegetasi',
+                    'options' => [],
+                ],
+                [
+                    'name' => '_section_kapasitas',
+                    'label' => 'Kapasitas Blok',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'kapasitas_blok',
+                    'label' => 'Data Kapasitas Blok',
+                    'type' => 'kapasitas_blok',
+                    'options' => [],
+                ],
+                [
+                    'name' => '_section_dokumentasi',
+                    'label' => 'Dokumentasi Foto',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'foto_dokumentasi_1',
+                    'label' => 'Dokumentasi 1',
+                    'type' => 'file',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'foto_dokumentasi_2',
+                    'label' => 'Dokumentasi 2',
+                    'type' => 'file',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'foto_dokumentasi_3',
+                    'label' => 'Dokumentasi 3',
+                    'type' => 'file',
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif',
+                    'options' => [],
                 ],
             ]);
         }

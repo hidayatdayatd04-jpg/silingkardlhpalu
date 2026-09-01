@@ -11,6 +11,7 @@
         'pelanggaran' => 'alert-triangle',
         'sosialisasi' => 'presentation',
         'data-tanam-pohon' => 'seedling',
+        'data-tpu' => 'park',
         'artikel' => 'news',
         'user' => 'user-plus',
     ];

@@ -6,6 +6,7 @@ use App\Listeners\LogSuccessfulLogin;
 use App\Listeners\LogSuccessfulLogout;
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
+use App\Models\DataTpu;
 use App\Models\ObjekPengawasan;
 use App\Models\Pelanggaran;
 use App\Models\PengaduanPengendalian;
@@ -132,6 +133,7 @@ class AppServiceProvider extends ServiceProvider
             ObjekPengawasan::class,
             Artikel::class,
             User::class,
+            DataTpu::class,
         ] as $auditable) {
             $auditable::observe(ActivityLogObserver::class);
         }
@@ -158,6 +160,7 @@ class AppServiceProvider extends ServiceProvider
             Sosialisasi::class,
             Artikel::class,
             DataTanamPohon::class,
+            DataTpu::class,
         ] as $notifiable) {
             $notifiable::observe(NotificationObserver::class);
         }

@@ -77,7 +77,7 @@ class AdminResourceReadOnlyTest extends TestCase
     public function test_administrator_utama_cannot_see_tambah_button_or_create_operational_resources(): void
     {
         $admin = $this->makeUser('admin');
-        $operationalSlugs = ['statistik-sampah', 'data-armada-persampahan', 'sosialisasi', 'data-tanam-pohon', 'pelanggaran'];
+        $operationalSlugs = ['statistik-sampah', 'data-armada-persampahan', 'sosialisasi', 'data-tanam-pohon', 'data-tpu', 'pelanggaran'];
 
         foreach ($operationalSlugs as $slug) {
             $this->actingAs($admin)
@@ -143,6 +143,15 @@ class AdminResourceReadOnlyTest extends TestCase
 
         $this->actingAs($bidangRth)
             ->get(route('admin.resources.create', 'data-tanam-pohon'))
+            ->assertOk();
+
+        $this->actingAs($bidangRth)
+            ->get(route('admin.resources.index', 'data-tpu'))
+            ->assertOk()
+            ->assertSee(route('admin.resources.create', 'data-tpu'));
+
+        $this->actingAs($bidangRth)
+            ->get(route('admin.resources.create', 'data-tpu'))
             ->assertOk();
     }
 

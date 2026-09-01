@@ -229,6 +229,17 @@ Route::redirect('/pengaduan-rth', '/pengaduan?bidang=rth');
 Route::redirect('/cek-pengaduan-rth', '/lacak');
 Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
 Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middleware('throttle:30,1');
+Route::get('/tpu', function () {
+    $tpus = \App\Models\DataTpu::all();
+    return view('public.tpu', [
+        'tpus' => $tpus,
+        'totalTpu' => $tpus->count(),
+        'totalLuas' => $tpus->sum(fn ($t) => (float) filter_var($t->luas_area_makam, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)),
+        'totalMakam' => $tpus->sum(fn ($t) => $t->totalMakam()),
+        'totalPohon' => $tpus->sum(fn ($t) => $t->totalPohon()),
+    ]);
+})->name('tpu')->middleware('throttle:60,1');
+Route::redirect('/taman-pemakaman-umum', '/tpu');
 
 // Sampah & LB3 Public Routes
 Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->middleware('throttle:60,1');

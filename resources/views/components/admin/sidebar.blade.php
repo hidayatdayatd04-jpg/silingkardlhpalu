@@ -15,6 +15,7 @@
         'data-armada-persampahan' => 'truck',
         'pinjam-taman' => 'park-bench',
         'data-tanam-pohon' => 'seedling',
+        'data-tpu' => 'park',
         'pengaduan-tata-penataan' => 'building',
         'pelanggaran' => 'alert-triangle',
         'sosialisasi' => 'presentation',

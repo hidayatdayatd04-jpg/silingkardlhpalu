@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Artikel;
 use App\Models\DataTanamPohon;
+use App\Models\DataTpu;
 use App\Models\Pelanggaran;
 use App\Models\PengaduanPengendalian;
 use App\Models\PengaduanRth;
@@ -58,6 +59,8 @@ class NotificationObserver
                 : null,
             $model instanceof DataTanamPohon => $this->notify('rth', 'seedling', 'green', 'Data Tanam Pohon Baru',
                 'Data tanam pohon baru ditambahkan.', 'data-tanam-pohon', $model->getKey()),
+            $model instanceof DataTpu => $this->notify('rth', 'park', 'teal', 'Data TPU Baru',
+                'Data TPU "'.$model->nama_tpu.'" ditambahkan.', 'data-tpu', $model->getKey()),
             default => null,
         };
     }
@@ -110,6 +113,7 @@ class NotificationObserver
             $model instanceof Sosialisasi => 'sosialisasi',
             $model instanceof Artikel => 'artikel',
             $model instanceof DataTanamPohon => 'data-tanam-pohon',
+            $model instanceof DataTpu => 'data-tpu',
             default => null,
         };
 
