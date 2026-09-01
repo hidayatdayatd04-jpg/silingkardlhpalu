@@ -214,7 +214,7 @@
                         {{-- Tab 1: Galeri Dokumentasi --}}
                         <div x-show="getTab({{ $tpu->id }}) === 'overview'" class="space-y-4">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                Dokumentasi Lapangan {{ $tpu->nama_tpu }}
+                                Dokumentasi {{ $tpu->nama_tpu }}
                             </h3>
 
                             @if(count($photos) > 0)
