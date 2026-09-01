@@ -459,6 +459,14 @@ class AdminRegistry
                     'readonly_on_edit' => true,
                 ],
                 [
+                    'name' => 'nik_npwrd',
+                    'label' => 'NIK / NPWRD',
+                    'type' => 'text',
+                    'options' => [],
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
                     'name' => '_section_pengaduan',
                     'label' => 'Informasi Pengaduan',
                     'type' => 'section',

@@ -18,6 +18,7 @@ class StorePengaduanSampahRequest extends FormRequest
         return [
             'nama_pelapor' => ['required', 'string', 'max:255'],
             'nomor_hp' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
+            'nik_npwrd' => ['nullable', 'string', 'max:50'],
             'jenis_pengaduan' => ['required', Rule::enum(JenisPengaduanSampah::class)],
             'deskripsi' => ['required', 'string', 'max:2000'],
             'alamat' => ['required', 'string', 'max:500'],

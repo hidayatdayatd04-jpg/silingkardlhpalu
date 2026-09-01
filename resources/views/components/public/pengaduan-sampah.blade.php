@@ -15,6 +15,7 @@ new class extends Component
 
     public ?string $nama_pelapor = null;
     public ?string $nomor_hp = null;
+    public ?string $nik_npwrd = null;
     public ?string $jenis_pengaduan = null;
     public ?string $deskripsi = null;
     public ?string $alamat = null;
@@ -45,6 +46,7 @@ new class extends Component
         $pengaduan = PengaduanSampah::create([
             'nama_pelapor' => $validated['nama_pelapor'],
             'nomor_hp' => $validated['nomor_hp'],
+            'nik_npwrd' => $validated['nik_npwrd'] ?? null,
             'jenis_pengaduan' => $jenisPengaduan,
             'deskripsi' => $validated['deskripsi'],
             'alamat' => $validated['alamat'],
@@ -65,7 +67,7 @@ new class extends Component
         // Foto diproses sinkron di atas — langsung balik ke layar sukses bila selesai.
         $this->checkPhotoStatus();
 
-        $this->reset(['nama_pelapor', 'nomor_hp', 'deskripsi', 'alamat', 'photos']);
+        $this->reset(['nama_pelapor', 'nomor_hp', 'nik_npwrd', 'deskripsi', 'alamat', 'photos']);
         $this->latitude = -0.9;
         $this->longitude = 119.87;
         $this->jenis_pengaduan = JenisPengaduanSampah::SAMPAH_MENUMPUK->value;
@@ -123,6 +125,14 @@ new class extends Component
                     placeholder="{{ __('Contoh: 08123456789') }}"
                 />
 
+                <x-public.input
+                    wire:model="nik_npwrd"
+                    name="nik_npwrd"
+                    label="{{ __('NIK / NPWRD') }}"
+                    placeholder="{{ __('Masukkan NIK atau NPWRD') }}"
+                    maxlength="50"
+                />
+
                 <x-public.select
                     wire:model="jenis_pengaduan"
                     name="jenis_pengaduan"
@@ -157,15 +167,6 @@ new class extends Component
 
                 <div class="space-y-2.5">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ __('Foto Bukti') }}</label>
-                    <div class="flex items-center gap-3 rounded-xl bg-amber-500/10 px-4 py-3 text-amber-950 dark:bg-amber-400/10 dark:text-amber-100" style="border: none !important; box-shadow: none;">
-                        <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:bg-amber-400/25 dark:text-amber-300">
-                            <x-icons.ui name="alert" class="size-4" />
-                        </div>
-                        <p class="text-xs sm:text-[13px] leading-relaxed">
-                            <span class="font-bold text-amber-900 dark:text-amber-300">{{ __('Penting:') }}</span>
-                            <span class="font-medium text-amber-950 dark:text-amber-100">{{ __('Khusus Pelapor di Bidang Sampah & LB3 Wajib Sertakan Bukti Pembayaran Retribusi Sampah.') }}</span>
-                        </p>
-                    </div>
                     <input wire:model="photos" type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" aria-label="{{ __('Foto Bukti') }}" class="flex h-10 w-full rounded-md border border-slate-200 px-3 text-sm dark:border-slate-800" />
                     @error('photos') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror
                     @error('photos.*') <span class="text-xs text-danger-500">{{ $message }}</span> @enderror

@@ -16,6 +16,7 @@ class PengaduanSampah extends Model
         'nomor_tiket',
         'nama_pelapor',
         'nomor_hp',
+        'nik_npwrd',
         'jenis_pengaduan',
         'deskripsi',
         'alamat',

@@ -27,6 +27,7 @@ new class extends Component {
     public string $bidang = 'pengendalian';
     public ?string $nama_pelapor = null;
     public ?string $nomor_hp = null;
+    public ?string $nik_npwrd = null;
     public ?string $jenis_pengaduan = null;
     public ?string $nama_terlapor = null;
     public ?string $nama_perusahaan_terlapor = null;
@@ -65,7 +66,10 @@ new class extends Component {
             return;
         }
         $this->jenis_pengaduan = '';
-        $this->resetValidation(['jenis_pengaduan']);
+        if ($value !== 'sampah') {
+            $this->nik_npwrd = null;
+        }
+        $this->resetValidation(['jenis_pengaduan', 'nik_npwrd']);
     }
 
     public function removePhoto(int $index): void
@@ -123,6 +127,10 @@ new class extends Component {
                 'longitude' => (float) $this->longitude,
             ];
 
+            if ($this->bidang === 'sampah') {
+                $payload['nik_npwrd'] = $this->nik_npwrd;
+            }
+
             [$modelClass, $fotoClass, $fkColumn, $storageDir] = match ($this->bidang) {
                 'pengendalian' => [PengaduanPengendalian::class, PengaduanPengendalianFoto::class, 'pengaduan_pengendalian_id', 'pengaduan-pengendalian'],
                 'sampah' => [PengaduanSampah::class, PengaduanSampahFoto::class, 'pengaduan_sampah_id', 'pengaduan-sampah'],
@@ -176,6 +184,10 @@ new class extends Component {
             $base['nama_perusahaan_terlapor'] = ['nullable', 'string', 'max:255'];
         }
 
+        if ($this->bidang === 'sampah') {
+            $base['nik_npwrd'] = ['nullable', 'string', 'max:50'];
+        }
+
         return $base;
     }
 
@@ -185,6 +197,7 @@ new class extends Component {
             'nomor_hp.required' => 'Nomor telepon wajib diisi.',
             'nomor_hp.regex' => 'Format nomor telepon tidak valid. Gunakan format: 08xxx.',
             'nomor_hp.max' => 'Nomor telepon maksimal 15 digit.',
+            'nik_npwrd.max' => 'NIK/NPWRD maksimal 50 karakter.',
             'photos.required' => 'Foto bukti wajib diunggah minimal 1 foto.',
             'photos.array' => 'Foto bukti harus berupa array.',
             'photos.min' => 'Foto bukti minimal 1 foto.',
@@ -202,7 +215,7 @@ new class extends Component {
     private function resetForm(): void
     {
         $this->reset([
-            'nama_pelapor', 'nomor_hp', 'jenis_pengaduan', 'nama_terlapor',
+            'nama_pelapor', 'nomor_hp', 'nik_npwrd', 'jenis_pengaduan', 'nama_terlapor',
             'nama_perusahaan_terlapor', 'alamat', 'deskripsi', 'photos',
             'latitude', 'longitude',
         ]);
@@ -442,6 +455,16 @@ new class extends Component {
                     required
                 />
 
+                @if ($bidang === 'sampah')
+                    <x-public.input
+                        wire:model="nik_npwrd"
+                        name="nik_npwrd"
+                        label="{{ __('NIK / NPWRD') }}"
+                        placeholder="{{ __('Masukkan NIK atau NPWRD') }}"
+                        maxlength="50"
+                    />
+                @endif
+
                 <div>
                     <button type="button" id="btn-detect-location"
                         class="fi-detect-btn">
@@ -503,17 +526,6 @@ new class extends Component {
 
                 <div class="fi-field">
                     <label class="fi-label">{{ __('Foto Bukti') }} <span class="fi-required">*</span></label>
-                    @if ($bidang === 'sampah')
-                        <div class="mb-3 flex items-center gap-3 rounded-xl bg-amber-500/10 px-4 py-3 text-amber-950 dark:bg-amber-400/10 dark:text-amber-100" style="border: none !important; box-shadow: none;">
-                            <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:bg-amber-400/25 dark:text-amber-300">
-                                <x-icons.ui name="alert" class="size-4" />
-                            </div>
-                            <p class="text-xs sm:text-[13px] leading-relaxed">
-                                <span class="font-bold text-amber-900 dark:text-amber-300">{{ __('Penting:') }}</span>
-                                <span class="font-medium text-amber-950 dark:text-amber-100">{{ __('Khusus Pelapor di Bidang Sampah & LB3 Wajib Sertakan Bukti Pembayaran Retribusi Sampah.') }}</span>
-                            </p>
-                        </div>
-                    @endif
                     <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Foto Bukti', exts: ['jpg','jpeg','png','webp','avif','heic','heif'], maxSizeMB: 5, maxCount: 5, countSelector: '[data-photo-item]' })">
                         <button type="button" class="fi-file-btn" x-on:click="$refs.fileInput.click()">{{ __('Choose Files') }}</button>
                         <span class="fi-file-status">{{ __('No file chosen') }}</span>
