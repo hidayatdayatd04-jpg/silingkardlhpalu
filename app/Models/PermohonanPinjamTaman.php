@@ -20,7 +20,6 @@ class PermohonanPinjamTaman extends Model
         'tanggal_selesai',
         'surat_permohonan',
         'jaminan_kebersihan',
-        'surat_jaminan',
         'status',
         'catatan_admin',
     ];

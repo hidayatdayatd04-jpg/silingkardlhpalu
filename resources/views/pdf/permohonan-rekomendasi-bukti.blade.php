@@ -34,7 +34,6 @@
         <tr><td class="label">Jenis Usaha</td><td>{{ $permohonan->jenis_usaha }}</td></tr>
         <tr><td class="label">Alamat</td><td>{{ $permohonan->alamat_lengkap }}</td></tr>
         <tr><td class="label">Telepon</td><td>{{ $permohonan->nomor_telepon }}</td></tr>
-        <tr><td class="label">Jenis Pengajuan</td><td>{{ $permohonan->jenis_pengajuan }}</td></tr>
         <tr><td class="label">Tanggal Pengajuan</td><td>{{ $permohonan->created_at->format('d F Y H:i') }} WITA</td></tr>
         <tr><td class="label">Status</td><td>{{ $permohonan->status }}</td></tr>
         <tr><td class="label">Jumlah Dokumen Pendukung</td><td>{{ $permohonan->dokumens->count() }} file</td></tr>

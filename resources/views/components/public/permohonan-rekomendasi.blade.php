@@ -6,7 +6,6 @@ use App\Livewire\Concerns\ThrottlesPublic;
 use App\Livewire\Concerns\VerifiesGoogleRecaptcha;
 use App\Models\PermohonanDokumen;
 use App\Models\PermohonanRekomendasi;
-use App\Models\PengajuanRintekPertek;
 use App\Services\FileUploadService;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -24,7 +23,6 @@ new class extends Component {
     public ?string $npwp = null;
     public ?string $jenis_usaha = null;
     public ?string $jenis_usaha_lainnya = null;
-    public ?string $jenis_pengajuan = null;
     public ?string $alamat_lengkap = null;
     public ?string $nomor_telepon = null;
 
@@ -72,7 +70,6 @@ new class extends Component {
             'jenis_usaha' => $validated['jenis_usaha'] === 'Lainnya'
                 ? trim($validated['jenis_usaha_lainnya'])
                 : $validated['jenis_usaha'],
-            'jenis_pengajuan' => $validated['jenis_pengajuan'],
             'alamat_lengkap' => $validated['alamat_lengkap'],
             'nomor_telepon' => $validated['nomor_telepon'],
             'surat_permohonan' => $suratPath,
@@ -97,7 +94,7 @@ new class extends Component {
         $this->successTicket = $permohonan->nomor_tiket;
         $this->reset([
             'step', 'nama_perusahaan', 'nama_pemilik', 'npwp', 'jenis_usaha', 'jenis_usaha_lainnya',
-            'jenis_pengajuan', 'alamat_lengkap', 'nomor_telepon',
+            'alamat_lengkap', 'nomor_telepon',
             'surat_permohonan', 'dokumen_pendukung',
         ]);
         $this->step = 1;
@@ -109,11 +106,6 @@ new class extends Component {
             unset($this->dokumen_pendukung[$index]);
             $this->dokumen_pendukung = array_values($this->dokumen_pendukung);
         }
-    }
-
-    public function jenisPengajuanOptions(): array
-    {
-        return PengajuanRintekPertek::JENIS_PENGAJUAN_OPTIONS;
     }
 
     public function jenisUsahaOptions(): array
@@ -226,24 +218,16 @@ new class extends Component {
                     />
 
                     @if ($jenis_usaha === 'Lainnya')
-                        <x-public.input
-                            wire:model="jenis_usaha_lainnya"
-                            name="jenis_usaha_lainnya"
-                            label="{{ __('Sebutkan Jenis Usaha') }}"
-                            placeholder="{{ __('Contoh: Laundry Kiloan') }}"
-                            required
-                        />
+                        <div class="md:col-span-2">
+                            <x-public.input
+                                wire:model="jenis_usaha_lainnya"
+                                name="jenis_usaha_lainnya"
+                                label="{{ __('Sebutkan Jenis Usaha') }}"
+                                placeholder="{{ __('Contoh: Laundry Kiloan') }}"
+                                required
+                            />
+                        </div>
                     @endif
-
-                    <x-public.select
-                        wire:model="jenis_pengajuan"
-                        name="jenis_pengajuan"
-                        label="{{ __('Jenis Pengajuan') }}"
-                        :options="$this->jenisPengajuanOptions()"
-                        :searchable="true"
-                        placeholder="{{ __('-- Pilih Jenis Pengajuan --') }}"
-                        required
-                    />
 
                     <x-public.input
                         wire:model="nomor_telepon"

@@ -20,14 +20,12 @@ new class extends Component {
     public string $nomor_hp = '';
     public string $nama_kegiatan = '';
     public string $nama_taman = '';
-    public string $nama_taman_manual = '';
     public string $tanggal_kegiatan = '';
     public string $tanggal_selesai = '';
     // Properti file upload harus bertipe TemporaryUploadedFile agar Livewire
     // dapat meng-hydrate file sementara (tipe string membuat upload gagal 419).
     public ?TemporaryUploadedFile $surat_permohonan = null;
     public $jaminan_kebersihan = false;
-    public ?TemporaryUploadedFile $surat_jaminan = null;
     public ?string $successTicket = null;
     public $conflictWarning = false;
 
@@ -94,16 +92,9 @@ new class extends Component {
         }
     }
 
-    // Nama taman final: nama resmi yang dipilih, atau nama manual saat opsi Lainnya.
     protected function resolvedNamaTaman(): ?string
     {
-        if (! $this->nama_taman) {
-            return null;
-        }
-
-        return $this->nama_taman === '__lainnya__'
-            ? ($this->nama_taman_manual ?: null)
-            : $this->nama_taman;
+        return $this->nama_taman ?: null;
     }
 
     public function getCalendarDaysProperty(): array
@@ -173,42 +164,34 @@ new class extends Component {
             return;
         }
 
-        $isManualTaman = $validated['nama_taman'] === '__lainnya__';
-        $namaTamanFinal = $isManualTaman ? $validated['nama_taman_manual'] : $validated['nama_taman'];
-
         $fileService = app(FileUploadService::class);
 
         $record = PermohonanPinjamTaman::create([
             'nama_pemohon' => $validated['nama_pemohon'],
             'nomor_hp' => $validated['nomor_hp'],
             'nama_kegiatan' => $validated['nama_kegiatan'],
-            'nama_taman' => $namaTamanFinal,
+            'nama_taman' => $validated['nama_taman'],
             'tanggal_kegiatan' => $validated['tanggal_kegiatan'],
             'tanggal_selesai' => $validated['tanggal_selesai'] ?: $validated['tanggal_kegiatan'],
             // Surat wajib PDF -> disimpan apa adanya (file sementara ikut dibersihkan).
             'surat_permohonan' => $fileService->store($this->surat_permohonan, 'pinjam-taman', 'public') ?: null,
             'jaminan_kebersihan' => true,
-            'surat_jaminan' => $this->surat_jaminan ? ($fileService->store($this->surat_jaminan, 'pinjam-taman', 'public') ?: null) : null,
         ]);
 
         $this->successTicket = $record->nomor_tiket;
-        $this->reset(['nama_pemohon', 'nomor_hp', 'nama_kegiatan', 'nama_taman', 'nama_taman_manual', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan', 'surat_jaminan']);
+        $this->reset(['nama_pemohon', 'nomor_hp', 'nama_kegiatan', 'nama_taman', 'tanggal_kegiatan', 'tanggal_selesai', 'surat_permohonan', 'jaminan_kebersihan']);
         $this->conflictWarning = false;
     }
 
     public function getTamansProperty()
     {
-        $tamans = [
+        return [
             'Taman Vatulemo' => 'Taman Vatulemo',
             'Taman Gor' => 'Taman Gor',
             'Taman Nasional' => 'Taman Nasional',
             'Taman Doyata' => 'Taman Doyata',
             'Taman Lasoso' => 'Taman Lasoso',
         ];
-
-        $tamans['__lainnya__'] = 'Lainnya';
-
-        return $tamans;
     }
 };
 ?>
@@ -311,16 +294,6 @@ new class extends Component {
                 required
             />
 
-            @if ($nama_taman === '__lainnya__')
-                <x-public.input
-                    wire:model="nama_taman_manual"
-                    name="nama_taman_manual"
-                    label="{{ __('Nama Taman (Lainnya)') }}"
-                    placeholder="{{ __('Tulis nama taman...') }}"
-                    required
-                />
-            @endif
-
             <div class="grid md:grid-cols-2 gap-5">
                 <x-admin.date-field
                     id="tanggal_kegiatan"
@@ -382,28 +355,6 @@ new class extends Component {
                 <span class="fi-check-label">{{ __('Saya berjanji menjaga kebersihan taman') }}</span>
             </label>
             @error('jaminan_kebersihan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
-
-            {{-- Surat Jaminan (opsional) --}}
-            <div class="fi-field">
-                <label class="fi-label">
-                    <span class="fi-icon-badge"><x-icons.ui name="shield" /></span>
-                    {{ __('Surat Jaminan') }}
-                    <span style="font-weight:400;color:#5b6b63;font-size:12.5px;">(opsional, PDF max 5MB)</span>
-                </label>
-                <div class="fi-file-drop" x-on:change.capture="dlhFileGuard($event, { label: 'Surat Jaminan', exts: ['pdf'], maxSizeMB: 5 })">
-                    <button type="button" class="fi-file-btn" x-on:click="$refs.jaminanInput.click()">{{ __('Pilih File') }}</button>
-                    <span class="fi-file-status">
-                        @if ($surat_jaminan)
-                            <span class="text-brand-600 dark:text-brand-400 font-medium">{{ $surat_jaminan->getClientOriginalName() }}</span>
-                        @else
-                            {{ __('Belum ada file dipilih') }}
-                        @endif
-                    </span>
-                    <input wire:model="surat_jaminan" x-ref="jaminanInput" type="file" accept="application/pdf,.pdf"
-                        style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" />
-                </div>
-                @error('surat_jaminan') <p class="fi-error"><x-icons.ui name="alert" />{{ $message }}</p> @enderror
-            </div>
 
             @error('form')
                 <div class="dlh-limit-alert" role="alert">

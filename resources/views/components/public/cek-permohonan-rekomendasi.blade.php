@@ -163,8 +163,8 @@ new class extends Component
                 @endif
                 <div class="grid grid-cols-2 gap-4 mt-5 text-sm">
                     <div>
-                        <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Jenis Pengajuan') }}</span>
-                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->jenis_pengajuan }}</span>
+                        <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Jenis Usaha') }}</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $permohonan->jenis_usaha }}</span>
                     </div>
                     <div>
                         <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">{{ __('Tanggal Pengajuan') }}</span>

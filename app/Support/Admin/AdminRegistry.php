@@ -36,7 +36,7 @@ class AdminRegistry
                 'icon' => 'alert-circle',
                 'items' => [
                     array_merge(self::resource('pengaduan-pengendalian', 'Pengaduan Pengendalian', PengaduanPengendalian::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
-                    array_merge(self::resource('permohonan-rekomendasi', 'Permohonan/Rekomendasi', PermohonanRekomendasi::class, ['nomor_tiket', 'nama_perusahaan', 'jenis_usaha', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('permohonan-rekomendasi', 'Permohonan/Rekomendasi', PermohonanRekomendasi::class, ['nomor_tiket', 'nama_perusahaan', 'jenis_usaha', 'status', 'created_at']), ['can_create' => false]),
                 ],
             ],
             'sampah-lb3' => [

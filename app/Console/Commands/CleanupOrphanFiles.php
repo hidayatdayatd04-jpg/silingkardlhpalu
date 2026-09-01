@@ -202,7 +202,7 @@ class CleanupOrphanFiles extends Command
             [SidakMedia::class, ['path']],
             [ObjekPengawasanDokumen::class, ['file_path']],
             [PermohonanRekomendasi::class, ['surat_permohonan']],
-            [PermohonanPinjamTaman::class, ['surat_permohonan', 'surat_jaminan']],
+            [PermohonanPinjamTaman::class, ['surat_permohonan']],
             [PengajuanRintekPertek::class, [
                 'surat_permohonan', 'dplh_ukl_upl', 'nib', 'sppl', 'denah_tps_lb3', 'sop_tanggap_darurat',
             ]],

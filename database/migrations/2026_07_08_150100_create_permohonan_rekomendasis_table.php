@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('jenis_usaha');
             $table->text('alamat_lengkap');
             $table->string('nomor_telepon', 20);
-            $table->string('jenis_pengajuan');
             $table->string('surat_permohonan');
             $table->string('status')->default('Belum Ditindaklanjuti');
             $table->text('catatan_verifikasi')->nullable();

@@ -17,7 +17,6 @@ class PermohonanRekomendasi extends Model
         'jenis_usaha',
         'alamat_lengkap',
         'nomor_telepon',
-        'jenis_pengajuan',
         'surat_permohonan',
         'status',
         'catatan_verifikasi',

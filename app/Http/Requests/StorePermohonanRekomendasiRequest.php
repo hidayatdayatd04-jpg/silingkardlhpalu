@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StorePermohonanRekomendasiRequest extends FormRequest
 {
@@ -20,7 +19,6 @@ class StorePermohonanRekomendasiRequest extends FormRequest
             'npwp' => ['required', 'string', 'regex:/^\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}$/'],
             'jenis_usaha' => ['required', 'string', 'max:255'],
             'jenis_usaha_lainnya' => ['required_if:jenis_usaha,Lainnya', 'nullable', 'string', 'max:255'],
-            'jenis_pengajuan' => ['required', 'string', Rule::in(array_keys(\App\Models\PengajuanRintekPertek::JENIS_PENGAJUAN_OPTIONS))],
             'alamat_lengkap' => ['required', 'string', 'max:2000'],
             'nomor_telepon' => ['required', 'string', 'regex:/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/'],
             'surat_permohonan' => ['required', 'file', 'mimes:pdf', 'max:5120'],
