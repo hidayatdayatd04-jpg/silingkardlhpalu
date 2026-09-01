@@ -5,7 +5,7 @@
 
 @php
     $isUser = $resource['slug'] === 'user';
-    $canEdit = ($resource['can_edit'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
+    $canEdit = $resource['can_edit'] ?? true;
     $canCreate = ($resource['can_create'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
 @endphp
 

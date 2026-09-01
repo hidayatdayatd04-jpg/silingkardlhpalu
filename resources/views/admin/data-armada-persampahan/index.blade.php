@@ -4,7 +4,7 @@
 @section('heading', $resource['label'])
 
 @php
-    $canEdit = ($resource['can_edit'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
+    $canEdit = $resource['can_edit'] ?? true;
     $canCreate = ($resource['can_create'] ?? true) && (!auth()->user()?->isSuperadmin() || ($resource['group'] ?? null) === 'konten');
     $recordIds = $records->pluck('id')->toArray();
     $filterKeys = collect($resource['filters'])->pluck('key')->all();
@@ -12,22 +12,18 @@
     $sheetConfig = [
         'Kendaraan Roda 2' => [
             'icon' => 'truck',
-            'desc' => 'Motor roda tiga & patroli',
             'accent' => 'sky',
         ],
         'Kendaraan Roda 4' => [
             'icon' => 'truck',
-            'desc' => 'Pick-up, tangki & patroli',
             'accent' => 'emerald',
         ],
         'Kendaraan Roda 6' => [
             'icon' => 'truck',
-            'desc' => 'Dump truck, arm roll & compactor',
             'accent' => 'amber',
         ],
         'Alat Berat' => [
             'icon' => 'tool',
-            'desc' => 'Bulldozer, excavator & loader',
             'accent' => 'rose',
         ],
     ];
@@ -134,7 +130,6 @@
                             </span>
                             <div>
                                 <h3 class="text-sm font-bold {{ $isActive ? 'text-teal-950 dark:text-teal-100' : 'text-slate-900 dark:text-white' }}">{{ $cat }}</h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">{{ $cfg['desc'] }}</p>
                             </div>
                         </div>
                         @if($isActive)
