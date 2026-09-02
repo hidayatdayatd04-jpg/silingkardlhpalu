@@ -138,7 +138,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total TPU</p>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalTpu ?? 0) }}</h3>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalTpu ?? 0, 0, ',', '.') }}</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Taman Pemakaman Terdaftar</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
@@ -164,7 +164,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Estimasi Kapasitas</p>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalMakam ?? 0) }}</h3>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalMakam ?? 0, 0, ',', '.') }}</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Total Makam Tersedia</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
@@ -177,7 +177,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Vegetasi Pohon</p>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalPohon ?? 0) }}</h3>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($totalPohon ?? 0, 0, ',', '.') }}</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pohon Pelindung Area TPU</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">

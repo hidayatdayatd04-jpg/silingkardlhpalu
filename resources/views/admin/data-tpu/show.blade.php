@@ -77,7 +77,7 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Pohon Pelindung</p>
-                <h4 class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ $record->totalPohon() }} Pohon</h4>
+                <h4 class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ number_format($record->totalPohon(), 0, ',', '.') }} Pohon</h4>
                 <p class="text-xs text-slate-400">{{ count($vegetasi) }} jenis pohon terdata</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -88,8 +88,8 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Kapasitas Makam</p>
-                <h4 class="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">{{ number_format($record->totalMakam()) }} Makam</h4>
-                <p class="text-xs text-slate-400">{{ $record->totalBlok() }} blok makam</p>
+                <h4 class="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">{{ number_format($record->totalMakam(), 0, ',', '.') }} Makam</h4>
+                <p class="text-xs text-slate-400">{{ number_format($record->totalBlok(), 0, ',', '.') }} blok makam</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                 <x-icons.ui name="building" class="w-6 h-6" />

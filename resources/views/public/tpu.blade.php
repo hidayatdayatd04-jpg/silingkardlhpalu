@@ -58,7 +58,7 @@
                     <div class="w-11 h-11 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-2.5">
                         <x-icons.ui name="park" class="w-5 h-5" />
                     </div>
-                    <p class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ $totalTpu }}</p>
+                    <p class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ number_format($totalTpu, 0, ',', '.') }}</p>
                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mt-1">TPU Terdata</p>
                 </div>
 
@@ -74,7 +74,7 @@
                     <div class="w-11 h-11 mx-auto rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 flex items-center justify-center mb-2.5">
                         <x-icons.ui name="building" class="w-5 h-5" />
                     </div>
-                    <p class="text-2xl sm:text-3xl font-black text-sky-700 dark:text-sky-400 tracking-tight">{{ number_format($totalMakam) }}</p>
+                    <p class="text-2xl sm:text-3xl font-black text-sky-700 dark:text-sky-400 tracking-tight">{{ number_format($totalMakam, 0, ',', '.') }}</p>
                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mt-1">Total Makam</p>
                 </div>
 
@@ -82,7 +82,7 @@
                     <div class="w-11 h-11 mx-auto rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center mb-2.5">
                         <x-icons.ui name="seedling" class="w-5 h-5" />
                     </div>
-                    <p class="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400 tracking-tight">{{ number_format($totalPohon) }}</p>
+                    <p class="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400 tracking-tight">{{ number_format($totalPohon, 0, ',', '.') }}</p>
                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mt-1">Pohon Pelindung</p>
                 </div>
             </div>
@@ -172,13 +172,13 @@
                                 {{-- Badge Kapasitas --}}
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-300 text-xs font-bold">
                                     <x-icons.ui name="building" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                                    <span>{{ number_format($tpu->totalMakam()) }} Makam</span>
+                                    <span>{{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam</span>
                                 </span>
 
                                 {{-- Badge Vegetasi --}}
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-300 text-xs font-bold">
                                     <x-icons.ui name="seedling" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                                    <span>{{ $tpu->totalPohon() }} Pohon Pelindung</span>
+                                    <span>{{ number_format($tpu->totalPohon(), 0, ',', '.') }} Pohon Pelindung</span>
                                 </span>
                             </div>
                         </div>
@@ -249,7 +249,7 @@
                                     Daftar Jenis Pohon Pelindung
                                 </h3>
                                 <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                                    Total: {{ $tpu->totalPohon() }} Pohon
+                                    Total: {{ number_format($tpu->totalPohon(), 0, ',', '.') }} Pohon
                                 </span>
                             </div>
 
@@ -294,7 +294,7 @@
                                     Daftar Kapasitas Blok & Daya Tampung Makam
                                 </h3>
                                 <span class="text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
-                                    Total: {{ number_format($tpu->totalMakam()) }} Makam
+                                    Total: {{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam
                                 </span>
                             </div>
 
