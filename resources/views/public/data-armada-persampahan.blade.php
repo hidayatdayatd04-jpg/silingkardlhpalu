@@ -362,8 +362,8 @@
                         href="/peta-persampahan"
                         class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors shadow-sm inline-flex items-center gap-2"
                     >
-                        <x-icons.ui name="map-pin" class="w-4 h-4 text-white" />
-                        <span>Peta Titik TPS</span>
+                        <x-icons.ui name="route" class="w-4 h-4 text-white" />
+                        <span>Jalur Angkut</span>
                     </a>
                     <a
                         href="/pengaduan?bidang=sampah"
