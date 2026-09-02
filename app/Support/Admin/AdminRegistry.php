@@ -1325,7 +1325,7 @@ class AdminRegistry
             $namaTaman = [
                 'Taman Vatulemo',
                 'Taman Gor',
-                'Taman Nasional',
+                'Taman Bundaran Nasional',
                 'Taman Doyata',
                 'Taman Lasoso',
             ];

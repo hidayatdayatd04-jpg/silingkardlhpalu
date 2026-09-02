@@ -189,7 +189,7 @@ Layanan pengelolaan ruang terbuka hijau kota.
 - URL: https://www.silingkardlhpalu.web.id/pinjam-taman
 - Untuk meminjam taman kota untuk acara/acara komunitas
 - Formulir: Data pemohon, nama acara, pilihan taman, tanggal mulai/selesai, surat permohonan (PDF), jaminan kebersihan
-- Tersedia taman: Taman Vatulemo, Taman Gor, Taman Nasional, Taman Doyata, Taman Lasoso
+- Tersedia taman: Taman Vatulemo, Taman Gor, Taman Bundaran Nasional, Taman Doyata, Taman Lasoso
 - Mendapat nomor tiket
 
 **Cek Penyewaan Taman:**

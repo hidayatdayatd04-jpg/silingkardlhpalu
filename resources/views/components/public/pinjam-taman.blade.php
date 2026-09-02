@@ -188,7 +188,7 @@ new class extends Component {
         return [
             'Taman Vatulemo' => 'Taman Vatulemo',
             'Taman Gor' => 'Taman Gor',
-            'Taman Nasional' => 'Taman Nasional',
+            'Taman Bundaran Nasional' => 'Taman Bundaran Nasional',
             'Taman Doyata' => 'Taman Doyata',
             'Taman Lasoso' => 'Taman Lasoso',
         ];

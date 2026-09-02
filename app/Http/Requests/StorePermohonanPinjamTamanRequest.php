@@ -17,6 +17,7 @@ class StorePermohonanPinjamTamanRequest extends FormRequest
         $officialTamans = [
             'Taman Vatulemo',
             'Taman Gor',
+            'Taman Bundaran Nasional',
             'Taman Nasional',
             'Taman Doyata',
             'Taman Lasoso',
