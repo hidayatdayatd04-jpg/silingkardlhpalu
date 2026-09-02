@@ -105,6 +105,7 @@ $collections = $layers->map(fn ($layer) => [
     'nama_layer' => $layer->nama_layer,
     'deskripsi' => $layer->deskripsi,
     'bidang' => $layer->bidang,
+    'tampilkan_di' => $layer->tampilkan_di,
     'jenis_geometri' => $layer->jenis_geometri,
             'metadata' => $layer->metadata ?? ['color' => GisDataLayer::defaultColor($layer->bidang)],
             'is_visible' => $layer->is_visible,
@@ -203,6 +204,7 @@ $collections = $layers->map(fn ($layer) => [
 
                     $child = GisDataLayer::create([
                         'bidang' => $layer->bidang,
+                        'tampilkan_di' => $layer->tampilkan_di ?? ($layer->bidang === 'sampah-lb3' ? 'jalur-angkut' : null),
                         'parent_id' => $layer->id,
                         'nama_layer' => $sub['name'],
                         'deskripsi' => $layer->deskripsi,
@@ -216,7 +218,7 @@ $collections = $layers->map(fn ($layer) => [
                             'imported_at' => now()->toISOString(),
                         ],
                         'is_visible' => true,
-                        'is_public' => false,
+                        'is_public' => (bool) $layer->is_public,
                         'z_index' => $maxZ + 1,
                     ]);
                     $maxZ++;
@@ -225,6 +227,7 @@ $collections = $layers->map(fn ($layer) => [
                         'id' => $child->id,
                         'nama_layer' => $child->nama_layer,
                         'bidang' => $child->bidang,
+                        'tampilkan_di' => $child->tampilkan_di,
                         'jenis_geometri' => $jenisGeometri,
                         'parent_id' => $child->parent_id,
                         'metadata' => $child->metadata,
@@ -252,6 +255,7 @@ $collections = $layers->map(fn ($layer) => [
 
             $color = $request->input('color', GisDataLayer::defaultColor($bidang));
             $deskripsi = $request->input('deskripsi');
+            $tampilkanDi = $request->input('tampilkan_di', $bidang === 'sampah-lb3' ? 'jalur-angkut' : null);
 
             // ═══ ZIP: bisa multi-layer (satu subfolder = satu layer) ═══
             if ($extension === 'zip') {
@@ -269,6 +273,7 @@ $collections = $layers->map(fn ($layer) => [
 
                     $layer = GisDataLayer::create([
                         'bidang' => $bidang,
+                        'tampilkan_di' => $tampilkanDi,
                         'nama_layer' => $layerData['name'],
                         'deskripsi' => $deskripsi,
                         'jenis_geometri' => $jenisGeometri,
@@ -285,6 +290,8 @@ $collections = $layers->map(fn ($layer) => [
                     $createdLayers[] = [
                         'id' => $layer->id,
                         'nama_layer' => $layer->nama_layer,
+                        'bidang' => $layer->bidang,
+                        'tampilkan_di' => $layer->tampilkan_di,
                         'jenis_geometri' => $jenisGeometri,
                         'feature_count' => count($features),
                     ];
@@ -324,6 +331,7 @@ $collections = $layers->map(fn ($layer) => [
 
             $layer = GisDataLayer::create([
                 'bidang' => $bidang,
+                'tampilkan_di' => $tampilkanDi,
                 'nama_layer' => $request->input('nama_layer'),
                 'deskripsi' => $deskripsi,
                 'jenis_geometri' => $jenisGeometri,
@@ -351,7 +359,7 @@ $collections = $layers->map(fn ($layer) => [
                 $warnings[] = $shpWarning;
             }
             if (! empty($warnings)) {
-                $msg .= ". Catatan: " . implode(', ', $warnings);
+                $msg .= ". Catatan: " . implode('; ', $warnings);
             }
 
             return response()->json([
@@ -360,16 +368,28 @@ $collections = $layers->map(fn ($layer) => [
                 'layer' => [
                     'id' => $layer->id,
                     'nama_layer' => $layer->nama_layer,
+                    'bidang' => $layer->bidang,
+                    'tampilkan_di' => $layer->tampilkan_di,
                     'jenis_geometri' => $jenisGeometri,
-                    'feature_count' => count($features),
+                    'metadata' => $layer->metadata,
+                    'is_visible' => $layer->is_visible,
+                    'is_public' => $layer->is_public,
+                    'geojson' => $layer->toGeoJson(),
                 ],
             ]);
-        } catch (\Exception $e) {
-            Log::error("IMPORT FAILED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
-            Storage::disk('local')->delete($tempPath);
+        } catch (\Throwable $e) {
+            if (isset($tempPath)) {
+                Storage::disk('local')->delete($tempPath);
+            }
+            Log::error('GIS Import error', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengimpor berkas peta. Pastikan format berkas sesuai (SHP/ZIP, GeoJSON, KML, atau CSV) dan berkas tidak rusak.',
+                'message' => "Gagal import: {$e->getMessage()}",
             ], 422);
         }
     }
@@ -411,12 +431,13 @@ $collections = $layers->map(fn ($layer) => [
     public function storeLayer(Request $request)
     {
         $validated = $request->validate([
-            'bidang' => 'required|string|in:sampah-lb3',
-            'nama_layer' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string|max:500',
-            'color' => 'nullable|string|max:7',
+            'nama_layer'     => 'required|string|max:255',
+            'bidang'         => 'required|string|in:sampah-lb3',
+            'deskripsi'      => 'nullable|string|max:500',
+            'parent_id'      => 'nullable|exists:gis_data_layer,id',
+            'color'          => 'nullable|string|max:7',
             'jenis_geometri' => 'nullable|string|in:point,line,polygon,mixed',
-            'parent_id' => 'nullable|integer|exists:gis_data_layers,id',
+            'tampilkan_di'   => 'nullable|string|in:jalur-angkut,tpa',
         ]);
 
         // Jika membuat sub-layer, warisi bidang dari parent dan otorisasi
@@ -438,8 +459,11 @@ $collections = $layers->map(fn ($layer) => [
         // Urutan z_index dihitung dalam cakupan parent (layer akar vs sub-layer).
         $maxZ = (int) GisDataLayer::where('parent_id', $validated['parent_id'] ?? null)->max('z_index');
 
+        $tampilkanDi = $validated['tampilkan_di'] ?? ($parent ? $parent->tampilkan_di : ($validated['bidang'] === 'sampah-lb3' ? 'jalur-angkut' : null));
+
         $layer = GisDataLayer::create([
             'bidang' => $validated['bidang'],
+            'tampilkan_di' => $tampilkanDi,
             'parent_id' => $validated['parent_id'] ?? null,
             'nama_layer' => $validated['nama_layer'],
             'deskripsi' => $request->input('deskripsi'),
@@ -462,10 +486,16 @@ $collections = $layers->map(fn ($layer) => [
                 'parent_id' => $layer->parent_id,
                 'nama_layer' => $layer->nama_layer,
                 'bidang' => $layer->bidang,
+                'tampilkan_di' => $layer->tampilkan_di,
                 'jenis_geometri' => $layer->jenis_geometri,
                 'metadata' => $layer->metadata,
                 'is_visible' => $layer->is_visible,
                 'is_public' => $layer->is_public,
+                'public_page' => ($layer->bidang === 'sampah-lb3')
+                    ? (($layer->tampilkan_di === 'tpa')
+                        ? ['label' => 'TPA', 'url' => '/tpa']
+                        : ['label' => 'Jalur Angkut', 'url' => '/jalur-angkut'])
+                    : null,
                 'geojson' => ['type' => 'FeatureCollection', 'features' => []],
             ],
         ]);
@@ -481,6 +511,7 @@ $collections = $layers->map(fn ($layer) => [
         $validated = $request->validate([
             'nama_layer' => 'sometimes|string|max:255',
             'deskripsi'  => 'nullable|string|max:500',
+            'tampilkan_di' => 'nullable|string|in:jalur-angkut,tpa',
             'is_visible' => 'sometimes|boolean',
             'is_public'  => 'sometimes|boolean',
             'show_in_filter' => 'sometimes|boolean',
@@ -496,6 +527,10 @@ $collections = $layers->map(fn ($layer) => [
 
         $validated['metadata'] = $metadata;
         $layer->update($validated);
+
+        if (isset($validated['tampilkan_di'])) {
+            GisDataLayer::where('parent_id', $layer->id)->update(['tampilkan_di' => $validated['tampilkan_di']]);
+        }
 
         return response()->json([
             'success' => true,

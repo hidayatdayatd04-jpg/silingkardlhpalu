@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Data Armada Persampahan - Dinas Lingkungan Hidup Kota Palu')
-@section('description', 'Informasi resmi data armada dan sarana pengangkutan persampahan serta alat berat operasional Dinas Lingkungan Hidup Kota Palu.')
+@section('title', 'Monitoring Armada Persampahan - Dinas Lingkungan Hidup Kota Palu')
+@section('description', 'Peta pelacakan GPS armada pengangkut sampah secara real-time dan transparansi data sarana operasional kebersihan Dinas Lingkungan Hidup Kota Palu.')
 
 @php
     $sheetConfig = [
@@ -12,7 +12,6 @@
             'text' => 'text-sky-700 dark:text-sky-300',
             'border' => 'border-sky-200 dark:border-sky-800/60',
             'badge' => 'bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300',
-            'desc' => 'Armada roda dua untuk pengangkutan sampah lorong dan penjangkauan jalan lingkungan sempit.',
         ],
         'Kendaraan Roda 4' => [
             'icon' => 'truck',
@@ -21,7 +20,6 @@
             'text' => 'text-emerald-700 dark:text-emerald-300',
             'border' => 'border-emerald-200 dark:border-emerald-800/60',
             'badge' => 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300',
-            'desc' => 'Armada pick-up dan kendaraan operasional pengumpulan sampah pada rute pemukiman perkotaan.',
         ],
         'Kendaraan Roda 6' => [
             'icon' => 'truck',
@@ -30,7 +28,6 @@
             'text' => 'text-amber-700 dark:text-amber-300',
             'border' => 'border-amber-200 dark:border-amber-800/60',
             'badge' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
-            'desc' => 'Dump truck dan truk arm-roll untuk pengangkutan sampah volume besar menuju TPA Kawatuna.',
         ],
         'Alat Berat' => [
             'icon' => 'excavator',
@@ -39,9 +36,10 @@
             'text' => 'text-rose-700 dark:text-rose-300',
             'border' => 'border-rose-200 dark:border-rose-800/60',
             'badge' => 'bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300',
-            'desc' => 'Ekskavator dan loader pendukung perataan, pemadatan, serta pengelolaan sampah di TPA.',
         ],
     ];
+
+    $totalArmada = $totalKeseluruhan ?? 0;
 
     $allCategoriesData = [];
     foreach ($categories as $catName => $catData) {
@@ -53,332 +51,654 @@
     }
 @endphp
 
+@push('styles')
+<style>
+    .monitoring-armada-page {
+        position: relative;
+        overflow-x: clip;
+    }
+    .monitoring-armada-page::before {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        top: 12rem;
+        right: -10rem;
+        width: 24rem;
+        height: 24rem;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(16, 185, 129, .1), transparent 68%);
+        filter: blur(5px);
+        pointer-events: none;
+    }
+    .persampahan-map-frame {
+        position: relative;
+        border-radius: 1.5rem;
+    }
+    .persampahan-map-frame::before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 1px 1px auto;
+        height: 4.5rem;
+        border-radius: 1.45rem 1.45rem 0 0;
+        background: linear-gradient(180deg, rgba(255, 255, 255, .22), transparent);
+        pointer-events: none;
+    }
+    .monitoring-armada-page .map-container {
+        position: relative;
+        width: 100%;
+        height: clamp(30rem, 65vw, 46rem);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(16, 76, 51, .14);
+        background: #e7f2eb;
+        box-shadow: 0 1px 2px rgba(10, 48, 30, .05), 0 24px 48px -30px rgba(10, 48, 30, .38);
+    }
+    .dark .monitoring-armada-page .map-container {
+        border-color: rgba(110, 231, 183, .2);
+        background: #0b241a;
+    }
+    .monitoring-armada-page .map-container .maplibregl-map {
+        width: 100%;
+        height: 100%;
+    }
+    .monitoring-armada-page .map-container .maplibregl-ctrl-group {
+        border: 1px solid rgba(16, 76, 51, .12) !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        box-shadow: 0 10px 24px -12px rgba(10, 48, 30, .35) !important;
+    }
+    .monitoring-armada-page .map-container .maplibregl-ctrl:not(.dlh-tools-ctrl):not(.dlh-tools-ctrl__item) {
+        margin: 12px !important;
+    }
+    .monitoring-armada-page .map-container .maplibregl-ctrl-top-right {
+        top: 12px !important;
+        right: 12px !important;
+    }
+    .monitoring-armada-page .map-container .maplibregl-ctrl-bottom-right {
+        bottom: 12px !important;
+        right: 12px !important;
+    }
+    .monitoring-armada-page .map-container .maplibregl-popup-content {
+        border: 1px solid rgba(16, 76, 51, .12) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 18px 40px -16px rgba(10, 48, 30, .34) !important;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    /* Custom vehicle marker icon — persis Gambar 2 (clean floating icon) */
+    .custom-vehicle-icon {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        cursor: pointer;
+    }
+    .custom-vehicle-icon img {
+        filter: drop-shadow(0 3px 8px rgba(15, 23, 42, 0.42));
+        transition: transform .25s ease, filter .25s ease;
+    }
+    .custom-vehicle-icon:hover img {
+        filter: drop-shadow(0 6px 16px rgba(15, 23, 42, 0.6));
+    }
+
+    /* Overlay panel filter di dalam peta */
+    .map-floating-overlay {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 16px;
+        padding: 6px 10px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -3px rgba(0, 0, 0, 0.05);
+        max-width: calc(100% - 80px);
+    }
+    .dark .map-floating-overlay {
+        background: rgba(15, 23, 42, 0.92);
+        border-color: rgba(51, 65, 85, 0.8);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    .map-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 11.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+    .map-status-pill.active {
+        background: #059669;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+    .map-status-pill:not(.active) {
+        background: rgba(241, 245, 249, 0.8);
+        color: #475569;
+        border-color: rgba(226, 232, 240, 0.8);
+    }
+    .dark .map-status-pill:not(.active) {
+        background: rgba(30, 41, 59, 0.8);
+        color: #cbd5e1;
+        border-color: rgba(51, 65, 85, 0.6);
+    }
+    .map-status-pill:not(.active):hover {
+        background: rgba(226, 232, 240, 1);
+        color: #0f172a;
+    }
+    .dark .map-status-pill:not(.active):hover {
+        background: rgba(51, 65, 85, 1);
+        color: #ffffff;
+    }
+
+    /* Toggle switch armada custom */
+    .armada-switch-track {
+        width: 36px;
+        height: 20px;
+        background-color: #10b981;
+        border-radius: 9999px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.25s ease;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .armada-switch-track.off {
+        background-color: #cbd5e1 !important;
+    }
+    .dark .armada-switch-track.off {
+        background-color: #475569 !important;
+    }
+    .armada-switch-thumb {
+        width: 16px;
+        height: 16px;
+        background-color: #ffffff;
+        border-radius: 9999px;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transform: translateX(16px);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    .armada-switch-track.off .armada-switch-thumb {
+        transform: translateX(0px) !important;
+    }
+
+    @media (max-width: 640px) {
+        .monitoring-armada-page::before { right: -13rem; }
+        .monitoring-armada-page .map-container { height: 26rem; border-radius: 1.25rem; }
+        .map-floating-overlay { top: 10px; left: 10px; padding: 5px 8px; max-width: calc(100% - 60px); }
+        .map-status-pill { padding: 4px 8px; font-size: 10.5px; }
+    }
+</style>
+@endpush
+
 @section('content')
-<div
-    x-data="{
-        search: '',
-        activeCategory: 'all',
-        categories: {{ Js::from($allCategoriesData) }},
-        matchesSearch(item) {
-            if (!this.search.trim()) return true;
-            const q = this.search.toLowerCase().trim();
-            const merk = (item.merk_type || '').toLowerCase();
-            const tahun = (item.tahun_perolehan || '').toLowerCase();
-            return merk.includes(q) || tahun.includes(q);
-        },
-        categoryHasMatches(cat) {
-            if (this.activeCategory !== 'all' && this.activeCategory !== cat.name) return false;
-            if (!this.search.trim()) return true;
-            return (cat.items || []).some(item => this.matchesSearch(item));
-        },
-        filteredCount(cat) {
-            return (cat.items || []).filter(item => this.matchesSearch(item)).length;
-        },
-        totalFilteredAll() {
-            let total = 0;
-            this.categories.forEach(cat => {
-                if (this.activeCategory === 'all' || this.activeCategory === cat.name) {
-                    total += this.filteredCount(cat);
-                }
-            });
-            return total;
-        }
-    }"
-    class="min-h-screen bg-slate-50/70 dark:bg-slate-950 pb-20 antialiased"
->
-    {{-- Hero Section --}}
-    <section class="relative pt-12 pb-16 md:pt-16 md:pb-20 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto space-y-4">
-                {{-- Badge --}}
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold tracking-wide">
-                    <x-icons.ui name="recycle" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>Bidang Pengelolaan Sampah & LB3</span>
-                </div>
+<div class="monitoring-armada-page space-y-8">
+    <x-public.page-hero
+        badge="{{ __('Sampah & LB3') }}"
+        icon="truck"
+        title="{{ __('Monitoring Armada Persampahan') }}"
+        description="{{ __('Peta pemantauan GPS armada pengangkut sampah secara real-time dan transparansi data sarana operasional kebersihan Dinas Lingkungan Hidup Kota Palu.') }}"
+    />
 
-                {{-- Heading --}}
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                    Data Armada Persampahan <span class="text-emerald-700 dark:text-emerald-400">Kota Palu</span>
-                </h1>
-
-                {{-- Subtitle --}}
-                <p class="text-base sm:text-lg text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-                    Keterbukaan data dan transparansi sarana armada operasional pengangkutan sampah serta alat berat Dinas Lingkungan Hidup Kota Palu.
-                </p>
-            </div>
-
-            {{-- Stat Cards --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-10 md:mt-12">
-                @foreach($categories as $catName => $catData)
-                    @php
-                        $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'bg' => 'bg-emerald-100', 'text' => 'text-emerald-700'];
-                    @endphp
-                    <button
-                        type="button"
-                        @click="activeCategory = '{{ $catName }}'"
-                        class="p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 shadow-xs text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-emerald-500/50 cursor-pointer focus:outline-none"
-                        :class="activeCategory === '{{ $catName }}' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30' : ''"
-                    >
-                        <div class="w-11 h-11 mx-auto rounded-xl {{ $cfg['bg'] }} {{ $cfg['text'] }} flex items-center justify-center mb-2.5">
-                            <x-icons.ui :name="$cfg['icon']" class="w-5 h-5" />
-                        </div>
-                        <p class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ number_format($catData['count']) }}</p>
-                        <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mt-1">{{ $catName }}</p>
+    {{-- Map Container with Floating Status Filters & Toggle --}}
+    <div class="space-y-6">
+        <div class="persampahan-map-frame reveal reveal-scale">
+            <div class="map-container" role="region" aria-label="Peta pemantauan GPS armada persampahan DLH Kota Palu">
+                {{-- Floating Overlay Bar Inside Map (Semua Status, Bergerak, Parkir, Toggle Armada) --}}
+                <div class="map-floating-overlay">
+                    <button type="button" data-status="all" class="map-status-pill active armada-status-btn">
+                        {{ __('Semua Status') }}
                     </button>
-                @endforeach
-            </div>
+                    <button type="button" data-status="active" class="map-status-pill armada-status-btn">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ __('Bergerak / Aktif') }} (<span id="map-total-active">0</span>)</span>
+                    </button>
+                    <button type="button" data-status="parked" class="map-status-pill armada-status-btn">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>{{ __('Parkir / Standby') }} (<span id="map-total-parked">0</span>)</span>
+                    </button>
 
-            {{-- Total Keseluruhan Banner (High Contrast) --}}
-            <div class="mt-8 flex justify-center">
-                <div class="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white shadow-lg border border-slate-800 dark:border-slate-700">
-                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                        <x-icons.ui name="truck" class="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Total Keseluruhan Armada:</span>
-                        <span class="text-lg font-black text-emerald-400">{{ number_format($totalKeseluruhan) }} Unit</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+                    <div class="hidden md:block h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
-    {{-- Main Content --}}
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {{-- Search & Filter Tabs --}}
-        <div class="space-y-4">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                {{-- Search Bar --}}
-                <div class="relative flex-1 w-full max-w-xl">
-                    <div class="relative flex items-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 hover:border-slate-300 dark:hover:border-slate-700">
-                        <div class="flex items-center justify-center pl-4 pr-2 text-slate-400 dark:text-slate-500 pointer-events-none">
-                            <x-icons.ui name="search" class="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                        </div>
-                        <input
-                            type="text"
-                            x-model="search"
-                            placeholder="Cari merek, tipe armada, atau tahun perolehan..."
-                            class="w-full py-3.5 pr-10 bg-transparent text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium"
-                        >
-                        <button
-                            x-show="search.length > 0"
-                            @click="search = ''"
-                            type="button"
-                            class="absolute right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                            title="Hapus pencarian"
-                        >
-                            <x-icons.ui name="close" class="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Quick Filter Scope Note --}}
-                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <x-icons.ui name="info-circle" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>Menampilkan <strong class="text-slate-800 dark:text-slate-100" x-text="totalFilteredAll()"></strong> unit armada</span>
-                </div>
-            </div>
-
-            {{-- Category Filter Pills --}}
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
-                <button
-                    type="button"
-                    @click="activeCategory = 'all'"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer focus:outline-none"
-                    :class="activeCategory === 'all'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/50'"
-                >
-                    <span>Semua Kategori</span>
-                    <span
-                        class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-                        :class="activeCategory === 'all' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
-                    >
-                        {{ $totalKeseluruhan }}
-                    </span>
-                </button>
-
-                @foreach($categories as $catName => $catData)
-                    <button
-                        type="button"
-                        @click="activeCategory = '{{ $catName }}'"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer focus:outline-none"
-                        :class="activeCategory === '{{ $catName }}'
-                            ? 'bg-emerald-600 text-white shadow-sm'
-                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/50'"
-                    >
-                        <span>{{ $catName }}</span>
-                        <span
-                            class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-                            :class="activeCategory === '{{ $catName }}' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
-                        >
-                            {{ $catData['count'] }}
+                    {{-- Toggle Sembunyikan/Munculkan Armada Button --}}
+                    <button type="button" id="armada-toggle-btn"
+                        class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100/90 hover:bg-slate-200 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition-all cursor-pointer select-none">
+                        <span id="armada-toggle-label">{{ __('Sembunyikan Armada') }}</span>
+                        <span id="armada-toggle-track" class="armada-switch-track">
+                            <span class="armada-switch-thumb"></span>
                         </span>
                     </button>
+                </div>
+
+                {{-- MapLibre Container --}}
+                <div id="monitoring-armada-map" style="width:100%;height:100%"></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Data Operasional Sarana & Armada Persampahan --}}
+    <div
+        x-data="{
+            search: '',
+            activeCategory: 'all',
+            categories: {{ Js::from($allCategoriesData) }},
+            matchesSearch(item) {
+                if (!this.search.trim()) return true;
+                const q = this.search.toLowerCase().trim();
+                const merk = (item.merk_type || '').toLowerCase();
+                const tahun = (item.tahun_perolehan || '').toLowerCase();
+                return merk.includes(q) || tahun.includes(q);
+            },
+            categoryHasMatches(cat) {
+                if (this.activeCategory !== 'all' && this.activeCategory !== cat.name) return false;
+                if (!this.search.trim()) return true;
+                return (cat.items || []).some(item => this.matchesSearch(item));
+            },
+            filteredCount(cat) {
+                return (cat.items || []).filter(item => this.matchesSearch(item)).length;
+            },
+            totalFilteredAll() {
+                let total = 0;
+                this.categories.forEach(cat => {
+                    if (this.activeCategory === 'all' || this.activeCategory === cat.name) {
+                        total += this.filteredCount(cat);
+                    }
+                });
+                return total;
+            }
+        }"
+        class="space-y-8"
+    >
+        {{-- KPI Cards Section --}}
+        <div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                @foreach($categories as $catName => $catData)
+                    @php $cfg = $sheetConfig[$catName] ?? $sheetConfig['Kendaraan Roda 4']; @endphp
+                    <div
+                        @click="activeCategory = (activeCategory === '{{ $catName }}' ? 'all' : '{{ $catName }}')"
+                        :class="activeCategory === '{{ $catName }}' ? 'ring-2 ring-emerald-500 shadow-md transform -translate-y-1' : 'hover:shadow-sm'"
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-200"
+                    >
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl {{ $cfg['bg'] }} flex items-center justify-center text-{{ $cfg['color'] }}-600 dark:text-{{ $cfg['color'] }}-400 mb-3">
+                            <x-icons.ui :name="$cfg['icon']" class="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white leading-none mb-1">
+                            {{ $catData['count'] }}
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            {{ $catName }}
+                        </div>
+                    </div>
                 @endforeach
+            </div>
+
+            {{-- Total Bar --}}
+            <div class="mt-4 bg-slate-900 dark:bg-slate-800 text-white rounded-2xl p-3.5 sm:p-4 flex items-center justify-center gap-3 shadow-sm border border-slate-800">
+                <x-icons.ui name="truck" class="w-5 h-5 text-emerald-400" />
+                <span class="text-xs sm:text-sm font-semibold tracking-wide">TOTAL KESELURUHAN ARMADA:</span>
+                <span class="text-base sm:text-lg font-black text-emerald-400">{{ $totalArmada }} Unit</span>
             </div>
         </div>
 
-        {{-- Category Card Sections --}}
-        <div class="space-y-8">
+        {{-- Search & Category Filter Section (Persis Gambar 3) --}}
+        <div class="space-y-4">
+            {{-- Search Bar Rounded-Full Pill Sesuai Gambar 3 --}}
+            <div class="relative w-full">
+                <div class="relative flex items-center">
+                    <div class="absolute left-4 sm:left-5 pointer-events-none text-slate-400 dark:text-slate-500 flex items-center justify-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                    <input
+                        x-model="search"
+                        type="text"
+                        placeholder="Cari merek, tipe armada, atau tahun perolehan..."
+                        class="w-full h-12 sm:h-14 pl-11 sm:pl-13 pr-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    />
+                    <button
+                        x-show="search.length > 0"
+                        @click="search = ''"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5"
+                    >
+                        <x-icons.ui name="x" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {{-- Category Filter Badges & Count Display --}}
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    <button
+                        @click="activeCategory = 'all'"
+                        :class="activeCategory === 'all' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+                    >
+                        Semua ({{ $totalArmada }})
+                    </button>
+                    @foreach($categories as $catName => $catData)
+                        <button
+                            @click="activeCategory = '{{ $catName }}'"
+                            :class="activeCategory === '{{ $catName }}' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
+                            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+                        >
+                            {{ $catName }} ({{ $catData['count'] }})
+                        </button>
+                    @endforeach
+                </div>
+
+                <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 self-end sm:self-center">
+                    <x-icons.ui name="info-circle" class="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Menampilkan <strong class="text-slate-800 dark:text-slate-200 font-bold" x-text="totalFilteredAll()"></strong> unit armada</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tables by Category --}}
+        <div class="space-y-6">
             @foreach($categories as $catName => $catData)
                 @php
-                    $cfg = $sheetConfig[$catName] ?? ['icon' => 'truck', 'color' => 'emerald', 'bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'desc' => ''];
+                    $cfg = $sheetConfig[$catName] ?? $sheetConfig['Kendaraan Roda 4'];
                     $items = $catData['items'];
-                    $unitCount = $catData['count'];
                 @endphp
 
                 <div
                     x-show="categoryHasMatches(categories.find(c => c.name === '{{ $catName }}'))"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden"
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-all"
                 >
-                    {{-- Card Header --}}
-                    <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-12 h-12 rounded-2xl {{ $cfg['bg'] }} {{ $cfg['text'] }} flex items-center justify-center shadow-xs shrink-0">
-                                    <x-icons.ui :name="$cfg['icon']" class="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                        {{ $catName }}
-                                    </h2>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
-                                        {{ $cfg['desc'] }}
-                                    </p>
-                                </div>
+                    {{-- Header Table --}}
+                    <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 {{ $cfg['bg'] }}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-{{ $cfg['color'] }}-600 dark:text-{{ $cfg['color'] }}-400 shadow-sm">
+                                <x-icons.ui :name="$cfg['icon']" class="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
-
-                            <div class="flex items-center gap-2 self-start sm:self-auto">
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl {{ $cfg['bg'] }} {{ $cfg['text'] }} text-xs font-extrabold border {{ $cfg['border'] ?? 'border-slate-200 dark:border-slate-700' }}">
-                                    <x-icons.ui :name="$cfg['icon']" class="w-4 h-4" />
-                                    Total {{ $catName }}: {{ number_format($unitCount) }} Unit
-                                </span>
+                            <div>
+                                <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    {{ $catName }}
+                                    <span class="text-xs px-2 py-0.5 rounded-full {{ $cfg['badge'] }} font-semibold">
+                                        {{ $catData['count'] }} Unit
+                                    </span>
+                                </h3>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Data Table --}}
+                    {{-- Table Content --}}
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
+                        <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    <th class="w-16 px-5 py-3.5 text-center">NO</th>
-                                    <th class="px-5 py-3.5">MEREK / TYPE</th>
-                                    <th class="w-52 px-5 py-3.5">TAHUN PEROLEHAN</th>
-                                    <th class="w-48 px-5 py-3.5 text-center">STATUS OPERASIONAL</th>
+                                <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <th class="py-3 px-4 w-16 text-center">No</th>
+                                    <th class="py-3 px-4">Merk / Tipe Armada</th>
+                                    <th class="py-3 px-4 w-40 text-center">Tahun Perolehan</th>
+                                    <th class="py-3 px-4 w-32 text-center">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                @forelse($items as $i => $item)
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                                @forelse($items as $idx => $item)
                                     <tr
                                         x-show="matchesSearch({{ Js::from($item) }})"
-                                        class="transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                                        class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                                     >
-                                        <td class="px-5 py-3.5 text-center font-bold text-slate-400 text-xs">
-                                            {{ $i + 1 }}
+                                        <td class="py-3.5 px-4 text-center text-slate-400 dark:text-slate-500 font-mono text-xs">
+                                            {{ $idx + 1 }}
                                         </td>
-                                        <td class="px-5 py-3.5">
-                                            <div class="flex items-center gap-2.5">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                                                <span class="font-bold text-slate-900 dark:text-slate-100">
-                                                    {{ $item['merk_type'] ?? '-' }}
+                                        <td class="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-100">
+                                            {{ $item['merk_type'] ?? '-' }}
+                                        </td>
+                                        <td class="py-3.5 px-4 text-center text-slate-600 dark:text-slate-400">
+                                            @if(!empty($item['tahun_perolehan']))
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium">
+                                                    <x-icons.ui name="calendar" class="w-3 h-3 text-slate-400" />
+                                                    {{ $item['tahun_perolehan'] }}
                                                 </span>
-                                            </div>
+                                            @else
+                                                <span class="text-slate-400">-</span>
+                                            @endif
                                         </td>
-                                        <td class="px-5 py-3.5">
-                                            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium text-xs">
-                                                <x-icons.ui name="calendar" class="w-4 h-4 text-slate-400" />
-                                                {{ $item['tahun_perolehan'] ?? '-' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-5 py-3.5 text-center">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
-                                                <x-icons.ui name="check-circle" class="w-3.5 h-3.5" />
-                                                Operasional DLH
+                                        <td class="py-3.5 px-4 text-center">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] font-bold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                Operasional
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-5 py-10 text-center text-sm text-slate-400">
-                                            Belum ada data unit armada yang tercatat pada kategori ini.
+                                        <td colspan="4" class="py-8 text-center text-slate-400 text-xs sm:text-sm">
+                                            Belum ada data armada untuk kategori ini.
                                         </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-
-                    {{-- Card Footer --}}
-                    <div class="px-5 py-3.5 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-                        <span>Unit armada siap melayani kebersihan dan pengangkutan wilayah Kota Palu.</span>
-                        <span class="font-bold text-slate-700 dark:text-slate-300">Total {{ $catName }}: {{ number_format($unitCount) }} Unit</span>
-                    </div>
                 </div>
             @endforeach
-        </div>
 
-        {{-- No Search Results State --}}
-        <div
-            x-show="totalFilteredAll() === 0 && search.trim().length > 0"
-            x-cloak
-            class="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
-        >
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
-                <x-icons.ui name="search" class="w-7 h-7" />
-            </div>
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Tidak ada armada ditemukan</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                Tidak ada data armada yang cocok dengan kata kunci "<span class="font-bold text-slate-700 dark:text-slate-300" x-text="search"></span>". Coba kata kunci lainnya.
-            </p>
-            <button
-                type="button"
-                @click="search = ''; activeCategory = 'all'"
-                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs hover:bg-emerald-700 transition-colors"
+            {{-- Empty Search State --}}
+            <div
+                x-show="totalFilteredAll() === 0"
+                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center space-y-3"
             >
-                Reset Pencarian
-            </button>
+                <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                    <x-icons.ui name="search" class="w-6 h-6" />
+                </div>
+                <h4 class="text-base font-bold text-slate-800 dark:text-white">Tidak ada data armada yang sesuai</h4>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                    Pencarian untuk "<span x-text="search" class="font-bold text-slate-700 dark:text-slate-300"></span>" tidak menemukan hasil. Coba gunakan kata kunci yang lain.
+                </p>
+                <button
+                    @click="search = ''; activeCategory = 'all'"
+                    class="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs hover:bg-emerald-100 transition-colors"
+                >
+                    Reset Filter Pencarian
+                </button>
+            </div>
         </div>
 
-        {{-- Bottom Public CTA & Service Links (Solid High Contrast) --}}
-        <div class="p-6 sm:p-10 rounded-3xl bg-slate-900 text-white shadow-xl border border-slate-800 relative overflow-hidden space-y-4">
-            <div class="relative z-10 max-w-2xl space-y-4">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">
-                    <x-icons.ui name="truck" class="w-3.5 h-3.5" />
-                    <span>Layanan Kebersihan Kota Palu</span>
+        {{-- Bottom Information Banner --}}
+        <div class="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-950 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-sm">
+            <div class="relative z-10 max-w-2xl space-y-3">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold backdrop-blur-sm border border-emerald-500/30">
+                    <x-icons.ui name="shield-check" class="w-3.5 h-3.5" />
+                    Transparansi Pelayanan Publik
                 </div>
-                <h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                    Wujudkan Kota Palu Bersih, Sehat, dan Berkelanjutan
-                </h3>
-                <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-                    Masyarakat dapat memantau sebaran titik TPS atau menyampaikan laporan dan pengaduan timbunan sampah liar melalui kanal resmi SILINGKAR DLH Kota Palu.
+                <h3 class="text-xl sm:text-2xl font-bold tracking-tight">Kesiapsiagaan Sarana Kebersihan Kota Palu</h3>
+                <p class="text-xs sm:text-sm text-emerald-100/80 leading-relaxed">
+                    Data armada di atas mencakup unit yang dioperasikan secara berkala oleh Dinas Lingkungan Hidup Kota Palu untuk menjamin kebersihan lingkungan dan kelancaran alur pembuangan sampah dari perumahan hingga TPA Kawatuna.
                 </p>
-                <div class="flex flex-wrap items-center gap-3 pt-2">
-                    <a
-                        href="/peta-persampahan"
-                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors shadow-sm inline-flex items-center gap-2"
-                    >
-                        <x-icons.ui name="route" class="w-4 h-4 text-white" />
-                        <span>Jalur Angkut</span>
-                    </a>
-                    <a
-                        href="/pengaduan?bidang=sampah"
-                        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-colors inline-flex items-center gap-2"
-                    >
-                        <x-icons.ui name="megaphone" class="w-4 h-4 text-slate-300" />
-                        <span>Pengaduan Sampah</span>
-                    </a>
-                </div>
             </div>
-
             <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-slate-600">
                 <x-icons.ui name="truck" class="w-72 h-72 text-white" />
             </div>
         </div>
-    </main>
+    </div>
 </div>
+
+@push('scripts')
+@vite('resources/js/map-bundle.js')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var initialArmada = @json($gpsArmada ?? []);
+        var currentStatus = 'all'; // 'all', 'active', 'parked'
+        var activeMarkers = [];
+        var mapInstance = null;
+        var isArmadaVisible = true;
+        var lastVehicleData = initialArmada;
+
+        window.ensureMaplibreLoaded(function () {
+            var defaultCenter = [119.8707, -0.9003];
+            mapInstance = new maplibregl.Map({
+                container: 'monitoring-armada-map',
+                style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+                center: defaultCenter,
+                zoom: 12.8,
+                attributionControl: false
+            });
+
+            mapInstance.addControl(new DlhZoomControl(), 'top-right');
+            if (window.DlhToolsControl && window.dlhToolsDropdown) mapInstance.addControl(window.dlhToolsDropdown(), 'bottom-left');
+            if (window.DlhBasemapSwitcher) mapInstance.addControl(new DlhBasemapSwitcher(), 'bottom-right');
+
+            mapInstance.on('load', function () {
+                renderArmada(initialArmada);
+                // Polling live GPS armada data every 12 seconds
+                setInterval(fetchArmadaLive, 12000);
+            });
+        });
+
+        function fetchArmadaLive() {
+            fetch('/api/armada-aktif')
+                .then(function (res) { return res.json(); })
+                .then(function (res) {
+                    var data = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+                    lastVehicleData = data;
+                    renderArmada(data);
+                })
+                .catch(function (err) {
+                    console.debug('Polling armada GPS silent:', err);
+                });
+        }
+
+        function renderArmada(vehicleData) {
+            if (!mapInstance) return;
+            var list = Array.isArray(vehicleData) ? vehicleData : [];
+            lastVehicleData = list;
+
+            var totalAll = list.length;
+            var totalActive = list.filter(function (v) { return parseInt(v.acc) === 1; }).length;
+            var totalParked = totalAll - totalActive;
+
+            var elActive = document.getElementById('map-total-active');
+            var elParked = document.getElementById('map-total-parked');
+            if (elActive) elActive.textContent = totalActive;
+            if (elParked) elParked.textContent = totalParked;
+
+            if (!isArmadaVisible) {
+                activeMarkers.forEach(function (m) { m.remove(); });
+                activeMarkers = [];
+                return;
+            }
+
+            var filtered = list.filter(function (v) {
+                var isActive = (parseInt(v.acc) === 1);
+                var statusStr = isActive ? 'active' : 'parked';
+                if (currentStatus !== 'all' && currentStatus !== statusStr) return false;
+                return true;
+            });
+
+            var newImeis = new Set(filtered.map(function (v) { return v.imei; }));
+
+            activeMarkers = activeMarkers.filter(function (m) {
+                if (!newImeis.has(m._imei)) {
+                    m.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            var esc = function (s) { return String(s == null ? '' : s).replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+
+            filtered.forEach(function (v) {
+                var lat = parseFloat(v.latitude), lng = parseFloat(v.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                var isTruck = (parseInt(v.veh_type) === 4);
+                var iconUrl = isTruck ? '/assets/tracking/truck_blue.png' : '/assets/tracking/car_blue.png';
+                var angle = parseFloat(v.angle) || 0;
+                var isActive = (parseInt(v.acc) === 1);
+                var statusText = isActive ? 'Aktif Melayani' : 'Parkir / Mesin Mati';
+                var statusColor = isActive ? '#059669' : '#d97706';
+                var statusBg = isActive ? '#ecfdf5' : '#fffbeb';
+
+                var popupHtml = '<div style="min-width:210px;padding:14px;font-family:system-ui,-apple-system,sans-serif">'
+                    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+                    + '<div style="width:8px;height:8px;border-radius:50%;background:' + statusColor + '"></div>'
+                    + '<h4 style="font-weight:700;font-size:13px;color:#0f172a;margin:0">' + esc(v.title || 'Armada DLH') + '</h4>'
+                    + '</div>'
+                    + '<div style="margin-bottom:8px;display:inline-block;padding:2px 8px;border-radius:6px;background:' + statusBg + ';color:' + statusColor + ';font-size:11px;font-weight:700">' + statusText + '</div>'
+                    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:#475569;border-top:1px solid #f1f5f9;padding-top:6px">'
+                    + '<div><span style="color:#94a3b8;font-size:10px;display:block">Kecepatan</span><strong>' + esc(v.speed || '0') + ' km/h</strong></div>'
+                    + '<div><span style="color:#94a3b8;font-size:10px;display:block">Tipe</span><strong>' + (isTruck ? 'Truk R6' : 'Pickup R4') + '</strong></div>'
+                    + '</div>'
+                    + '<div style="margin-top:6px;font-size:10px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:4px">Update: ' + esc(v.server_time || '-') + '</div>'
+                    + '</div>';
+
+                var existing = activeMarkers.find(function (m) { return m._imei === v.imei; });
+                if (existing) {
+                    existing.setLngLat([lng, lat]);
+                    var img = existing.getElement().querySelector('img');
+                    if (img) {
+                        img.src = iconUrl;
+                        img.style.transform = 'rotate(' + angle + 'deg)';
+                    }
+                    existing.setPopup(new maplibregl.Popup({ offset: [0, -20], closeButton: true }).setHTML(popupHtml));
+                } else {
+                    var el = document.createElement('div');
+                    el.className = 'custom-vehicle-icon';
+                    el.innerHTML = '<img src="' + iconUrl + '" alt="" style="width:36px;height:36px;transform:rotate(' + angle + 'deg);transition:transform 0.3s ease;cursor:pointer" />';
+
+                    var marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                        .setLngLat([lng, lat])
+                        .setPopup(new maplibregl.Popup({ offset: [0, -20], closeButton: true }).setHTML(popupHtml))
+                        .addTo(mapInstance);
+                    marker._imei = v.imei;
+                    activeMarkers.push(marker);
+                }
+            });
+        }
+
+        // Status pill button clicks (Semua Status, Bergerak, Parkir)
+        document.querySelectorAll('.armada-status-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var st = btn.getAttribute('data-status');
+                currentStatus = st;
+                document.querySelectorAll('.armada-status-btn').forEach(function (b) {
+                    b.classList.toggle('active', b.getAttribute('data-status') === st);
+                });
+                renderArmada(lastVehicleData);
+            });
+        });
+
+        // Toggle Armada switch button
+        var toggleBtn = document.getElementById('armada-toggle-btn');
+        var toggleLabel = document.getElementById('armada-toggle-label');
+        var toggleTrack = document.getElementById('armada-toggle-track');
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                isArmadaVisible = !isArmadaVisible;
+
+                if (isArmadaVisible) {
+                    if (toggleLabel) toggleLabel.textContent = 'Sembunyikan Armada';
+                    if (toggleTrack) toggleTrack.classList.remove('off');
+                } else {
+                    if (toggleLabel) toggleLabel.textContent = 'Munculkan Armada';
+                    if (toggleTrack) toggleTrack.classList.add('off');
+                }
+
+                renderArmada(lastVehicleData);
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

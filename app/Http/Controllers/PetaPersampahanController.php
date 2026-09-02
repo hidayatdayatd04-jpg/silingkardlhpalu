@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\GisDataLayer;
-use App\Models\GpsVehicleCache;
-use App\Models\StatistikSampah;
-use App\Enums\StatistikSampahPeriode;
 
 class PetaPersampahanController extends Controller
 {
     public function index()
+    {
+        return $this->jalurAngkut();
+    }
+
+    public function jalurAngkut()
     {
         // Ambil SELURUH layer bidang sampah-lb3 (tanpa filter public di sini),
         // karena kita perlu mengetahui induk/root untuk menerapkan aturan visibilitas.
@@ -34,20 +36,17 @@ class PetaPersampahanController extends Controller
         }
 
         // Aturan visibilitas publik: sebuah layer tampil di publik hanya jika
-        // dirinya visible & public DAN layer utamanya (root) juga visible & public.
-        // Jika layer utama disembunyikan dari publik, maka seluruh sub-layer
-        // (jalur per kelurahan) ikut disembunyikan beserta datanya di peta.
+        // dirinya visible & public DAN layer utamanya (root) juga visible & public
+        // DAN target tampilkan_di adalah jalur-angkut (atau null).
         $visibleLayers = $allLayers->filter(function ($l) use ($rootOf) {
             $root = $rootOf[$l->id] ?? $l;
-            return $l->is_visible && $l->is_public
+            $target = $root->tampilkan_di ?: 'jalur-angkut';
+            return $target === 'jalur-angkut'
+                && $l->is_visible && $l->is_public
                 && $root->is_visible && $root->is_public;
         });
 
-        // Flat array (untuk inisialisasi peta di JS) — SEMUA layer yang lolos
-        // aturan visibilitas dikirim ke peta, termasuk layer "Tanpa Filter"
-        // (show_in_filter = false). Layer tanpa filter tetap digambar di peta
-        // (line/icon/polygon dari data .shp), hanya saja tidak muncul sebagai
-        // kartu filter maupun grup legend — pengaturannya ada di vehicleTypes.
+        // Flat array (untuk inisialisasi peta di JS)
         $layers = $visibleLayers->map(fn ($layer) => [
             'id' => $layer->id,
             'nama_layer' => $layer->nama_layer,
@@ -57,11 +56,7 @@ class PetaPersampahanController extends Controller
             'geojson' => $layer->toGeoJson(),
         ])->values()->all();
 
-        // Kategorisasi tipe kendaraan DIAMBIL DARI DATA: setiap layer akar (root)
-        // adalah satu tipe kendaraan (LABEL diambil dari nama layer utama, mis.
-        // "Jalur Armada Pickup"), dan sub-layer-nya adalah jalur per kelurahan
-        // (LABEL kelurahan diambil dari nama sub-layer). Key/warna/icon hanya
-        // untuk styling, sedangkan teks yang tampil di publik murni dari data.
+        // Kategorisasi tipe kendaraan DIAMBIL DARI DATA
         $typeInfo = function (string $nama): array {
             $n = strtolower($nama);
             if (str_contains($n, 'pick')) {
@@ -79,12 +74,9 @@ class PetaPersampahanController extends Controller
 
         $vehicleTypes = [];
         foreach ($visibleLayers as $l) {
-            // Hanya layer akar yang menjadi entri tipe kendaraan.
             if (!is_null($l->parent_id)) {
                 continue;
             }
-            // Layer akar yang dimatikan toggle "Tampilkan di Filter"-nya
-            // tidak muncul sebagai tipe kendaraan di filter publik.
             if (!$l->show_in_filter) {
                 continue;
             }
@@ -94,9 +86,6 @@ class PetaPersampahanController extends Controller
                 continue;
             }
 
-            // Layer milik tipe ini = root itu sendiri + sub-layer langsung
-            // yang toggle "Tampilkan di Filter"-nya aktif. Sub-layer yang
-            // dimatikan tidak ikut dihitung (kelurahan, total, layerIds).
             $typeLayers = $visibleLayers->filter(function ($c) use ($l) {
                 if ($c->id === $l->id) {
                     return true;
@@ -126,7 +115,6 @@ class PetaPersampahanController extends Controller
             ];
         }
 
-        // Tipe default: tipe pertama yang punya data jalur.
         $defaultType = null;
         foreach ($vehicleTypes as $key => $vt) {
             if ($vt['total'] > 0) {
@@ -138,51 +126,51 @@ class PetaPersampahanController extends Controller
             $defaultType = array_key_first($vehicleTypes) ?? 'pickup';
         }
 
-        // Semua catatan statistik dikirim ke publik dan dipisah per periode.
-        // Sebelumnya hanya 12 catatan paling lama yang terkirim, sehingga data
-        // terbaru atau data setelah entri ke-12 tidak pernah terlihat publik.
-        $stats = StatistikSampah::query()
-            ->select(['tanggal', 'volume_ton', 'periode'])
-            ->orderBy('tanggal')
-            ->orderBy('created_at')
-            ->get();
-
-        $chartSeries = collect(StatistikSampahPeriode::cases())
-            ->mapWithKeys(function (StatistikSampahPeriode $periode) use ($stats): array {
-                $records = $stats
-                    ->filter(fn (StatistikSampah $stat) => $stat->periode === $periode)
-                    ->values()
-                    ->map(fn (StatistikSampah $stat): array => [
-                        'date' => $stat->tanggal->toDateString(),
-                        'label' => $stat->tanggal->translatedFormat('d M Y'),
-                        'value' => (float) $stat->volume_ton,
-                    ])
-                    ->all();
-
-                return [$periode->value => $records];
-            })
-            ->all();
-
-        $chartPeriodLabels = collect(StatistikSampahPeriode::cases())
-            ->mapWithKeys(fn (StatistikSampahPeriode $periode) => [$periode->value => $periode->label()])
-            ->all();
-
-        $chartDefaultPeriod = collect(StatistikSampahPeriode::cases())
-            ->map(fn (StatistikSampahPeriode $periode) => $periode->value)
-            ->first(fn (string $periode) => ! empty($chartSeries[$periode]))
-            ?? StatistikSampahPeriode::HARIAN->value;
-
-        // Hanya kolom publik — 'raw_data' tidak boleh bocor ke pengunjung.
-        $armada = GpsVehicleCache::select(GpsVehicleCache::PUBLIC_COLUMNS)->get();
-
-        return view('public.peta-persampahan', [
+        return view('public.jalur-angkut', [
             'layers' => $layers,
             'vehicleTypes' => $vehicleTypes,
             'defaultType' => $defaultType,
-            'armada' => $armada,
-            'chartSeries' => $chartSeries,
-            'chartPeriodLabels' => $chartPeriodLabels,
-            'chartDefaultPeriod' => $chartDefaultPeriod,
+        ]);
+    }
+
+    public function tpa()
+    {
+        $allLayers = GisDataLayer::where('bidang', 'sampah-lb3')
+            ->orderBy('z_index')
+            ->orderBy('created_at')
+            ->get();
+
+        $byId = $allLayers->keyBy('id');
+        $rootOf = [];
+        foreach ($allLayers as $l) {
+            $root = $l;
+            $pid = $l->parent_id;
+            $guard = 0;
+            while ($pid && isset($byId[$pid]) && $guard++ < 20) {
+                $root = $byId[$pid];
+                $pid = $root->parent_id;
+            }
+            $rootOf[$l->id] = $root;
+        }
+
+        $visibleLayers = $allLayers->filter(function ($l) use ($rootOf) {
+            $root = $rootOf[$l->id] ?? $l;
+            return ($root->tampilkan_di === 'tpa')
+                && $l->is_visible
+                && ($l->is_public || $root->is_public);
+        });
+
+        $layers = $visibleLayers->map(fn ($layer) => [
+            'id' => $layer->id,
+            'nama_layer' => $layer->nama_layer,
+            'deskripsi' => $layer->deskripsi,
+            'jenis_geometri' => $layer->jenis_geometri,
+            'metadata' => $layer->metadata ?? ['color' => GisDataLayer::defaultColor($layer->bidang)],
+            'geojson' => $layer->toGeoJson(),
+        ])->values()->all();
+
+        return view('public.tpa-persampahan', [
+            'layers' => $layers,
         ]);
     }
 

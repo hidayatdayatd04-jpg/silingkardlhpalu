@@ -317,9 +317,9 @@
                 </div>
 
                 <!-- Bidang Sampah LB3 -->
-                <div x-data="{ open: false }" @click.away="open = false" class="relative">
+                <div x-data="{ open: false, petaOpen: false }" @click.away="open = false; petaOpen = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'data-armada-persampahan') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'data-armada-persampahan', 'monitoring-armada', 'statistik-timbulan-sampah', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Sampah & LB3') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
@@ -332,8 +332,30 @@
                         x-transition:leave-end="opacity-0 translate-y-1"
                         class="absolute left-0 mt-3 w-max min-w-[260px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
                         style="display: none;">
-                        <a href="/peta-persampahan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('peta-persampahan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Peta Persampahan') }}</a>
-                        <a href="/data-armada-persampahan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('data-armada-persampahan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Data Armada Persampahan') }}</a>
+
+                        {{-- Submenu Peta Persampahan (perantara navigasi ke Jalur Angkut & TPA) --}}
+                        <div class="relative">
+                            <div class="flex items-center justify-between rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*') ? 'bg-brand-50/50 dark:bg-brand-900/10' : '' }}">
+                                <button type="button" @click="petaOpen = !petaOpen" class="flex-1 w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors whitespace-nowrap flex items-center justify-between cursor-pointer">
+                                    <span>{{ __('Peta Persampahan') }}</span>
+                                    <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200 text-slate-400" x-bind:class="{ 'rotate-90': petaOpen }" />
+                                </button>
+                            </div>
+                            <div x-show="petaOpen"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-x-1"
+                                x-transition:enter-end="opacity-100 translate-x-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-x-0"
+                                x-transition:leave-end="opacity-0 -translate-x-1"
+                                class="pl-4 space-y-1 mt-1" style="display: none;">
+                                <a href="/jalur-angkut" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('jalur-angkut', 'peta-persampahan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Jalur Angkut') }}</a>
+                                <a href="/tpa" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('tpa') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('TPA') }}</a>
+                            </div>
+                        </div>
+
+                        <a href="/data-armada-persampahan" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('data-armada-persampahan', 'monitoring-armada') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Monitoring Armada') }}</a>
+                        <a href="/statistik-timbulan-sampah" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Statistik Timbulan Sampah') }}</a>
                         <a href="/registrasi-usaha-lb3" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('registrasi-usaha-lb3') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Registrasi Usaha LB3') }}</a>
                         <a href="/cek-registrasi-lb3" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('cek-registrasi-lb3') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Cek Registrasi LB3') }}</a>
                         <a href="/pengajuan-rintek-pertek" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('pengajuan-rintek-pertek') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Pengajuan RINTEK/PERTEK') }}</a>
@@ -588,8 +610,8 @@
                 </div>
 
                 <!-- Bidang Sampah LB3 (Dropdown Mobile) -->
-                <div x-data="{ open: {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'data-armada-persampahan') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('peta-persampahan', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'data-armada-persampahan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
+                <div x-data="{ open: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'data-armada-persampahan', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'true' : 'false' }}, petaOpen: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'data-armada-persampahan', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Sampah & LB3') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
@@ -597,8 +619,21 @@
                          x-transition:enter="transition ease-out duration-100"
                          x-transition:enter-start="opacity-0 -translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0">
-                        <a href="/peta-persampahan" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Peta Persampahan') }}</a>
-                        <a href="/data-armada-persampahan" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('data-armada-persampahan') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Data Armada Persampahan') }}</a>
+                        
+                        {{-- Submenu Peta Persampahan (Mobile Accordion) --}}
+                        <div>
+                            <button type="button" @click="petaOpen = !petaOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer">
+                                <span>{{ __('Peta Persampahan') }}</span>
+                                <x-icons.ui name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-180': petaOpen }" />
+                            </button>
+                            <div x-show="petaOpen" class="pl-3 space-y-1 mt-1">
+                                <a href="/jalur-angkut" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('jalur-angkut', 'peta-persampahan') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Jalur Angkut') }}</a>
+                                <a href="/tpa" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('tpa') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('TPA') }}</a>
+                            </div>
+                        </div>
+
+                        <a href="/data-armada-persampahan" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('data-armada-persampahan', 'monitoring-armada') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Monitoring Armada') }}</a>
+                        <a href="/statistik-timbulan-sampah" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Statistik Timbulan Sampah') }}</a>
                         <a href="/registrasi-usaha-lb3" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Registrasi Usaha LB3') }}</a>
                         <a href="/cek-registrasi-lb3" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Cek Registrasi LB3') }}</a>
                         <a href="/pengajuan-rintek-pertek" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Pengajuan RINTEK/PERTEK') }}</a>
@@ -630,7 +665,7 @@
                          x-transition:enter="transition ease-out duration-100"
                          x-transition:enter-start="opacity-0 -translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0">
-                        <a href="/tpu" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('tpu*') ? 'text-brand-600 dark:text-brand-400 font-semibold bg-brand-50/40 dark:bg-brand-900/20' : '' }}">{{ __('Taman Pemakaman Umum (TPU)') }}</a>
+                        <a href="/tpu" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Taman Pemakaman Umum (TPU)') }}</a>
                         <a href="/pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Penyewaan Taman') }}</a>
                         <a href="/cek-pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Cek Penyewaan Taman') }}</a>
                     </div>
@@ -649,36 +684,30 @@
                         <div>
                             <div class="flex items-center justify-between rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                                 <a href="/uptd/lab-lingkungan" class="flex-1 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-600">UPTD Lab Lingkungan</a>
-                                <button @click="labOpen = !labOpen" class="px-3 py-2 text-slate-500 hover:text-brand-600 focus:outline-none cursor-pointer">
-                                    <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': labOpen }" />
+                                <button type="button" @click="labOpen = !labOpen" class="px-2 py-2 text-slate-400 hover:text-brand-600 focus:outline-none cursor-pointer">
+                                    <x-icons.ui name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-180': labOpen }" />
                                 </button>
                             </div>
-                            <div x-show="labOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="opacity-0 -translate-y-1"
-                                 x-transition:enter-end="opacity-100 translate-y-0">
-                                <a href="/uptd/jurnal-lab" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Jurnal Lab</a>
+                            <div x-show="labOpen" class="pl-3 space-y-1 mt-1">
+                                <a href="/uptd/jurnal-lab" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Jurnal Lab</a>
                             </div>
                         </div>
                         <div>
                             <div class="flex items-center justify-between rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                                 <a href="/uptd/tpa-kawatuna" class="flex-1 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-600">UPTD TPA Kawatuna</a>
-                                <button @click="tpaOpen = !tpaOpen" class="px-3 py-2 text-slate-500 hover:text-brand-600 focus:outline-none cursor-pointer">
-                                    <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': tpaOpen }" />
+                                <button type="button" @click="tpaOpen = !tpaOpen" class="px-2 py-2 text-slate-400 hover:text-brand-600 focus:outline-none cursor-pointer">
+                                    <x-icons.ui name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-180': tpaOpen }" />
                                 </button>
                             </div>
-                            <div x-show="tpaOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="opacity-0 -translate-y-1"
-                                 x-transition:enter-end="opacity-100 translate-y-0">
-                                <a href="/uptd/tpa-kawatuna/sejarah" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Sejarah</a>
+                            <div x-show="tpaOpen" class="pl-3 space-y-1 mt-1">
+                                <a href="/uptd/tpa-kawatuna/sejarah" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Sejarah</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Informasi (Dropdown Mobile) -->
-                <div x-data="{ open: {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'true' : 'false' }}, subOpen: false }">
+                <div x-data="{ open: {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'true' : 'false' }}, infoOpen: {{ request()->is('lacak', 'berita*', 'tentang') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('lacak', 'berita*', 'tentang', 'pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Informasi') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
@@ -687,17 +716,6 @@
                          x-transition:enter="transition ease-out duration-100"
                          x-transition:enter-start="opacity-0 -translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0">
-                        <div x-data="{ subOpen: false }">
-                            <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold {{ request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
-                                <span>{{ __('Layanan Informasi Publik') }}</span>
-                                <x-icons.ui name="chevron-right" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-90': subOpen }" />
-                            </button>
-                            <div x-show="subOpen" class="pl-4 space-y-1 mt-1" style="display: none;"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="opacity-0 -translate-y-1"
-                                 x-transition:enter-end="opacity-100 translate-y-0">
-                                <a href="/pengaduan" class="block px-3 py-2 rounded-lg text-sm font-medium {{ request()->is('pengaduan') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">{{ __('Pengaduan') }}</a>
-                            </div>
                         </div>
                         <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
                         <a href="/lacak" class="block px-3 py-2 rounded-lg text-sm font-medium {{ request()->is('lacak') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">{{ __('Lacak Pelaporan') }}</a>
@@ -764,8 +782,10 @@
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Peta Persampahan & Armada') }}</a></li>
-                        <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan Sampah') }}</a></li>
+                        <li><a href="/jalur-angkut" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Jalur Angkut') }}</a></li>
+                        <li><a href="/tpa" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('TPA Kawatuna') }}</a></li>
+                        <li><a href="/data-armada-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Monitoring Armada') }}</a></li>
+                        <li><a href="/statistik-timbulan-sampah" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Statistik Timbulan Sampah') }}</a></li>
                         <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Registrasi LB3') }}</a></li>
                         <li><a href="/cek-registrasi-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Registrasi LB3') }}</a></li>
                         <li><a href="/pengajuan-rintek-pertek" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengajuan RINTEK/PERTEK') }}</a></li>

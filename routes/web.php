@@ -242,8 +242,12 @@ Route::get('/tpu', function () {
 Route::redirect('/taman-pemakaman-umum', '/tpu');
 
 // Sampah & LB3 Public Routes
-Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/jalur-angkut', [\App\Http\Controllers\PetaPersampahanController::class, 'jalurAngkut'])->name('jalur-angkut')->middleware('throttle:60,1');
+Route::get('/tpa', [\App\Http\Controllers\PetaPersampahanController::class, 'tpa'])->name('tpa')->middleware('throttle:60,1');
+Route::get('/peta-persampahan', fn () => redirect()->route('jalur-angkut'))->name('peta-persampahan');
 Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers'])->middleware('throttle:120,1');
+Route::get('/statistik-timbulan-sampah', [\App\Http\Controllers\StatistikSampahPublicController::class, 'index'])->name('statistik-timbulan-sampah')->middleware('throttle:60,1');
+Route::redirect('/statistik-sampah', '/statistik-timbulan-sampah');
 Route::redirect('/pengaduan-sampah', '/pengaduan?bidang=sampah');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-sampah', '/lacak');
@@ -251,7 +255,8 @@ Route::get('/registrasi-usaha-lb3', fn () => view('public.registrasi-usaha-lb3')
 Route::get('/cek-registrasi-lb3', fn () => view('public.cek-registrasi-lb3'))->middleware('throttle:30,1');
 Route::get('/pengajuan-rintek-pertek', fn () => view('public.pengajuan-rintek-pertek'));
 Route::get('/cek-rintek-pertek', fn () => view('public.cek-rintek-pertek'))->middleware('throttle:30,1');
-Route::get('/data-armada-persampahan', function () {
+
+Route::get('/monitoring-armada', function () {
     \App\Models\DataArmadaPersampahan::ensureCategoriesExist();
     $armadas = \App\Models\DataArmadaPersampahan::all();
 
@@ -273,13 +278,17 @@ Route::get('/data-armada-persampahan', function () {
     }
 
     $totalKeseluruhan = $armadas->sum(fn ($a) => $a->totalUnit());
+    $gpsArmada = \App\Models\GpsVehicleCache::select(\App\Models\GpsVehicleCache::PUBLIC_COLUMNS)->get();
 
     return view('public.data-armada-persampahan', [
         'armadas' => $armadas,
         'categories' => $categories,
         'totalKeseluruhan' => $totalKeseluruhan,
+        'gpsArmada' => $gpsArmada,
     ]);
-})->name('data-armada-persampahan')->middleware('throttle:60,1');
+})->name('monitoring-armada')->middleware('throttle:60,1');
+
+Route::redirect('/data-armada-persampahan', '/monitoring-armada')->name('data-armada-persampahan');
 Route::get('/pengajuan-rintek-pertek/{nomor_pengajuan}/bukti-pdf', function (string $nomor_pengajuan) {
     $pengajuan = PengajuanRintekPertek::where('nomor_pengajuan', $nomor_pengajuan)->firstOrFail();
 

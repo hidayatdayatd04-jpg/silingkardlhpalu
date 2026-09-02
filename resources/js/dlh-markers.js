@@ -152,6 +152,8 @@ window.DlhMarkers = (function () {
      * @returns {string} marker type key
      */
     function detectType(layerName, props) {
+        if (props && props._marker_type) return props._marker_type;
+        if (props && props.marker_type) return props.marker_type;
         var name = (layerName || '').toLowerCase();
         var jenis = ((props && props.JENIS_ASET) || '').toLowerCase();
         var nama = ((props && props.NAMA) || '').toLowerCase();

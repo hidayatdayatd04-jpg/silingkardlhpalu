@@ -13,6 +13,7 @@ class GisDataLayer extends Model
 
     protected $fillable = [
         'bidang',
+        'tampilkan_di',
         'parent_id',
         'nama_layer',
         'deskripsi',
@@ -85,13 +86,14 @@ class GisDataLayer extends Model
     }
 
     /**
-     * Map bidang to public page info: [label, url]
-     * Returns null if bidang has no public-facing map page.
+     * Map bidang / tampilkan_di to public page info: [label, url]
      */
     public static function publicPages(): array
     {
         return [
-            'sampah-lb3' => ['label' => 'Peta Persampahan', 'url' => '/peta-persampahan'],
+            'sampah-lb3' => ['label' => 'Jalur Angkut', 'url' => '/jalur-angkut'],
+            'sampah-lb3:jalur-angkut' => ['label' => 'Jalur Angkut', 'url' => '/jalur-angkut'],
+            'sampah-lb3:tpa' => ['label' => 'TPA', 'url' => '/tpa'],
         ];
     }
 

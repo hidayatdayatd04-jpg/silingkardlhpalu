@@ -17,17 +17,22 @@
     // Js::from() menghasilkan ekspresi JSON yang aman disisipkan ke <script>
     // (karakter <, >, & di-escape) sehingga tidak perlu {!! !!} mentah.
     $layersJs = \Illuminate\Support\Js::from($layers->map(fn($l) => [
-    'id' => $l->id,
-    'parent_id' => $l->parent_id,
-    'nama_layer' => $l->nama_layer,
-    'deskripsi' => $l->deskripsi,
-    'bidang' => $l->bidang,
+        'id' => $l->id,
+        'parent_id' => $l->parent_id,
+        'nama_layer' => $l->nama_layer,
+        'deskripsi' => $l->deskripsi,
+        'bidang' => $l->bidang,
+        'tampilkan_di' => $l->tampilkan_di ?? ($l->bidang === 'sampah-lb3' ? 'jalur-angkut' : null),
         'jenis_geometri' => $l->jenis_geometri,
         'metadata' => $l->metadata,
         'is_visible' => $l->is_visible,
         'is_public' => $l->is_public,
         'show_in_filter' => $l->show_in_filter,
-        'public_page' => $publicPageMap[$l->bidang] ?? null,
+        'public_page' => ($l->bidang === 'sampah-lb3')
+            ? (($l->tampilkan_di === 'tpa')
+                ? ['label' => 'TPA', 'url' => '/tpa']
+                : ['label' => 'Jalur Angkut', 'url' => '/jalur-angkut'])
+            : null,
         'geojson' => $l->toGeoJson(),
     ]));
 @endphp
@@ -470,15 +475,15 @@
                                         </template>
 
                                         <!-- Public page badge (only if layer has a public page) -->
-                                        <template x-if="layer.public_page">
-                                            <a :href="layer.public_page.url" target="_blank" class="page-badge" :title="'Tampil di: ' + layer.public_page.label">
+                                        <template x-if="getPublicPage(layer)">
+                                            <a :href="getPublicPage(layer).url" target="_blank" class="page-badge" :title="'Tampil di: ' + getPublicPage(layer).label">
                                                 <x-admin.icon name="external-link" :size="10" />
-                                                <span x-text="layer.public_page.label"></span>
+                                                <span x-text="getPublicPage(layer).label"></span>
                                             </a>
                                         </template>
 
                                         <!-- No public page -->
-                                        <template x-if="!layer.public_page">
+                                        <template x-if="!getPublicPage(layer)">
                                             <span class="text-[9.5px] text-slate-400 font-medium italic">Tidak ada halaman publik</span>
                                         </template>
                                     </div>
@@ -871,6 +876,18 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                                     placeholder="Contoh: Titik TPA Palu" />
                             </div>
 
+                            <template x-if="importForm.bidang === 'sampah-lb3'">
+                                <div>
+                                    <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Tampilkan Di</label>
+                                    <select x-model="importForm.tampilkan_di"
+                                        class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500">
+                                        <option value="jalur-angkut">Jalur Angkut</option>
+                                        <option value="tpa">TPA</option>
+                                    </select>
+                                    <p class="text-[11px] text-slate-400 mt-1">Pilih halaman publik tujuan data persampahan ini.</p>
+                                </div>
+                            </template>
+
                             <div>
                                 <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Deskripsi <span class="font-normal text-slate-400">(opsional)</span></label>
                                 <input type="text" x-model="importForm.deskripsi"
@@ -963,6 +980,17 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
                     <input type="text" x-model="createForm.nama_layer" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Titik TPA Palu" />
                 </div>
+                <template x-if="createForm.bidang === 'sampah-lb3' && !createForm.parent_id">
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Tampilkan Di</label>
+                        <select x-model="createForm.tampilkan_di"
+                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500">
+                            <option value="jalur-angkut">Jalur Angkut</option>
+                            <option value="tpa">TPA</option>
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Pilih halaman publik tujuan layer persampahan ini.</p>
+                    </div>
+                </template>
                 <template x-if="createForm.parent_id">
                     <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3">
                         <p class="text-[12px] text-emerald-700 font-semibold">Sub-layer dari: <span x-text="getLayerName(createForm.parent_id)"></span></p>
@@ -1027,6 +1055,17 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Nama Layer</label>
                     <input type="text" x-model="layerEditModal.nama_layer" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" placeholder="Nama layer" />
                 </div>
+                <template x-if="layerEditModal.bidang === 'sampah-lb3' && !layerEditModal.parent_id">
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Tampilkan Di</label>
+                        <select x-model="layerEditModal.tampilkan_di"
+                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500">
+                            <option value="jalur-angkut">Jalur Angkut</option>
+                            <option value="tpa">TPA</option>
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Pilih halaman publik tujuan layer persampahan ini.</p>
+                    </div>
+                </template>
                 <div>
                     <label class="block text-[13px] font-semibold text-slate-700 mb-1.5">Warna</label>
                     <div class="flex items-center gap-3">
@@ -1197,15 +1236,15 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             showDrawToolbar: false,
             importing: false,
             dragover: false,
-            // â•â•â• Draw state (titik saja) â•â•â•
+            // ═══ Draw state (titik saja) ═══
             drawMode: 'simple_select',
             tempMarker: null,
-            importForm: { nama_layer: '', deskripsi: '', bidang: '{{ $accessibleBidang[0] ?? "rth" }}', color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "rth") }}', file: null, layer_id: null },
+            importForm: { nama_layer: '', deskripsi: '', bidang: '{{ $accessibleBidang[0] ?? "sampah-lb3" }}', tampilkan_di: 'jalur-angkut', color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "sampah-lb3") }}', file: null, layer_id: null },
             currentBasemap: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
             toast: { show: false, message: '', type: 'success', hasAction: false },
             toastActionCallback: null,
 
-            // â•â•â• Panel state â•â•â•
+            // ═══ Panel state ═══
             expandedLayer: null,
             // Id parent yang sedang dibuka (menampilkan sub-layer di bawahnya).
             expandedParents: [],
@@ -1217,9 +1256,10 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             creating: false,
             createForm: {
                 nama_layer: '',
-                bidang: '{{ $accessibleBidang[0] ?? "rth" }}',
+                bidang: '{{ $accessibleBidang[0] ?? "sampah-lb3" }}',
+                tampilkan_di: 'jalur-angkut',
                 deskripsi: '',
-                color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "rth") }}',
+                color: '{{ \App\Models\GisDataLayer::defaultColor($accessibleBidang[0] ?? "sampah-lb3") }}',
                 parent_id: null, // jika diset, buat sub-layer di dalam layer ini
             },
 
@@ -1234,8 +1274,8 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
             newFieldKey: '',
             newFieldValue: '',
 
-            // Edit layer sederhana: hanya nama + warna.
-            layerEditModal: { show: false, layerId: null, nama_layer: '', warna: '#22c55e', saving: false },
+            // Edit layer: nama + warna + tampilkan_di.
+            layerEditModal: { show: false, layerId: null, nama_layer: '', bidang: '', tampilkan_di: 'jalur-angkut', parent_id: null, warna: '#22c55e', saving: false },
 
             // Konfirmasi hapus layer (pengganti window.confirm).
             deleteModal: { show: false, layer: null, deleting: false },
@@ -2172,7 +2212,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 this._layerHandlers[id].push({ type, layer, fn });
             },
 
-            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DRAW TOOLS (Titik saja) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            // ═══ DRAW TOOLS (Titik saja) ═══
             startPointDraw() {
                 this.drawMode = 'point';
                 this.map.getCanvas().style.cursor = 'crosshair';
@@ -2221,7 +2261,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 }
             },
 
-            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IMPORT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            // ═══ IMPORT ═══
             async submitImport() {
                 if (!this.importForm.file) return;
                 // Untuk import baru (tanpa layer_id) nama_layer wajib.
@@ -2236,6 +2276,9 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     formData.append('nama_layer', this.importForm.nama_layer);
                     formData.append('deskripsi', this.importForm.deskripsi || '');
                     formData.append('bidang', this.importForm.bidang);
+                    if (this.importForm.bidang === 'sampah-lb3') {
+                        formData.append('tampilkan_di', this.importForm.tampilkan_di || 'jalur-angkut');
+                    }
                     formData.append('color', this.importForm.color);
                 }
 
@@ -2249,31 +2292,31 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
-        this.showToast(data.message, 'success');
-        this.showImport = false;
-        if (targetLayerId && data.layers && data.layers.length) {
-            // Import ke dalam parent → tambahkan sub-layer ke UI tanpa reload.
-            if (!this.expandedParents.includes(targetLayerId)) this.expandedParents.push(targetLayerId);
-            this.expandedLayer = targetLayerId;
-            data.layers.forEach(child => {
-                this.layers.push(child);
-                this.addLayerToMap(child);
-            });
-            this.showToast(data.message, 'success');
-            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
-        } else if (targetLayerId && data.layer) {
-            // Soft refresh: perbarui data layer & rebuild marker tanpa reload.
-            const layer = this.layers.find(l => l.id == targetLayerId);
-            if (layer) {
-                layer.geojson = data.layer.geojson;
-                layer.jenis_geometri = data.layer.jenis_geometri;
-                layer.metadata = data.layer.metadata || layer.metadata;
-                this.refreshLayerMarkers(layer);
-            }
-            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
+                        this.showToast(data.message, 'success');
+                        this.showImport = false;
+                        if (targetLayerId && data.layers && data.layers.length) {
+                            // Import ke dalam parent → tambahkan sub-layer ke UI tanpa reload.
+                            if (!this.expandedParents.includes(targetLayerId)) this.expandedParents.push(targetLayerId);
+                            this.expandedLayer = targetLayerId;
+                            data.layers.forEach(child => {
+                                this.layers.push(child);
+                                this.addLayerToMap(child);
+                            });
+                            this.showToast(data.message, 'success');
+                            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, tampilkan_di: 'jalur-angkut', color: this.importForm.color, file: null, layer_id: null };
+                        } else if (targetLayerId && data.layer) {
+                            // Soft refresh: perbarui data layer & rebuild marker tanpa reload.
+                            const layer = this.layers.find(l => l.id == targetLayerId);
+                            if (layer) {
+                                layer.geojson = data.layer.geojson;
+                                layer.jenis_geometri = data.layer.jenis_geometri;
+                                layer.metadata = data.layer.metadata || layer.metadata;
+                                this.refreshLayerMarkers(layer);
+                            }
+                            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, tampilkan_di: 'jalur-angkut', color: this.importForm.color, file: null, layer_id: null };
                         } else {
                             // Import baru: reload agar auto-fit bounds bekerja.
-                            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, color: this.importForm.color, file: null, layer_id: null };
+                            this.importForm = { nama_layer: '', deskripsi: '', bidang: this.importForm.bidang, tampilkan_di: 'jalur-angkut', color: this.importForm.color, file: null, layer_id: null };
                             if (data.layer && data.layer.id) {
                                 sessionStorage.setItem('peta_import_fit_layer', data.layer.id);
                             }
@@ -2281,7 +2324,6 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                         }
                     } else {
                         const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal import');
-                        this.showToast(msg, 'error');
                     }
                 } catch (e) {
                     this.showToast('Gagal import: ' + e.message, 'error');
@@ -2290,25 +2332,50 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 }
             },
 
-            // â•â•â• Buka modal import (reset layer_id saat dibuka dari action bar) â•â•â•
+            // ═══ Buka modal import (reset layer_id saat dibuka dari action bar) ═══
             openImport() {
                 this.importForm.layer_id = null;
                 this.showImport = true;
             },
 
-            // â•â•â• Import per-layer: set target lalu buka modal â•â•â•
+            // Buka modal "Buat Layer" dengan parent sudah dipilih (sub-layer).
+            createSubLayer(layer) {
+                const parentColor = (layer.metadata && layer.metadata.color) || this.defaultColorFor(layer.bidang);
+                this.createForm = {
+                    nama_layer: '',
+                    bidang: layer.bidang,
+                    tampilkan_di: layer.tampilkan_di || 'jalur-angkut',
+                    deskripsi: '',
+                    color: parentColor,
+                    parent_id: layer.id,
+                };
+                if (!this.expandedParents.includes(layer.id)) this.expandedParents.push(layer.id);
+                this.showCreateLayer = true;
+            },
+
+            getPublicPage(layer) {
+                if (layer.bidang === 'sampah-lb3') {
+                    const target = layer.tampilkan_di || 'jalur-angkut';
+                    return target === 'tpa'
+                        ? { label: 'TPA', url: '/tpa' }
+                        : { label: 'Jalur Angkut', url: '/jalur-angkut' };
+                }
+                return layer.public_page || null;
+            },
+
+            // ═══ Import per-layer: set target lalu buka modal ═══
             importToLayer(layer) {
                 this.importForm.layer_id = layer.id;
                 this.showImport = true;
             },
 
-            // â•â•â• Ambil nama layer dari id (untuk label import per-layer) â•â•â•
+            // ═══ Ambil nama layer dari id (untuk label import per-layer) ═══
             getLayerName(id) {
                 const l = this.layers.find(x => x.id == id);
                 return l ? l.nama_layer : '';
             },
 
-            // â•â•â• BUAT LAYER (layer kosong) â•â•â•
+            // ═══ BUAT LAYER (layer kosong) ═══
             async createLayer() {
                 if (!this.createForm.nama_layer.trim()) {
                     this.showToast('Nama layer wajib diisi', 'error');
@@ -2328,6 +2395,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                         body: JSON.stringify({
                             bidang: this.createForm.bidang,
                             nama_layer: this.createForm.nama_layer,
+                            tampilkan_di: this.createForm.tampilkan_di || 'jalur-angkut',
                             deskripsi: this.createForm.deskripsi || '',
                             color: this.createForm.color,
                             parent_id: this.createForm.parent_id || null,
@@ -2344,6 +2412,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                         this.createForm = {
                             nama_layer: '',
                             bidang: this.createForm.bidang,
+                            tampilkan_di: 'jalur-angkut',
                             deskripsi: '',
                             color: this.defaultColorFor(this.createForm.bidang),
                             parent_id: null,
@@ -2356,20 +2425,6 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 } finally {
                     this.creating = false;
                 }
-            },
-
-            // Buka modal "Buat Layer" dengan parent sudah dipilih (sub-layer).
-            createSubLayer(layer) {
-                const parentColor = (layer.metadata && layer.metadata.color) || this.defaultColorFor(layer.bidang);
-                this.createForm = {
-                    nama_layer: '',
-                    bidang: layer.bidang,
-                    deskripsi: '',
-                    color: parentColor,
-                    parent_id: layer.id,
-                };
-                if (!this.expandedParents.includes(layer.id)) this.expandedParents.push(layer.id);
-                this.showCreateLayer = true;
             },
 
             // â•â•â• Default warna per bidang (JS mirror dari GisDataLayer::defaultColor) â•â•â•
@@ -2395,6 +2450,9 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                 show: true,
                 layerId: layer.id,
                 nama_layer: layer.nama_layer,
+                bidang: layer.bidang,
+                tampilkan_di: layer.tampilkan_di || 'jalur-angkut',
+                parent_id: layer.parent_id,
                 warna: layer.metadata?.color || '#22c55e',
                 saving: false,
             };
@@ -2414,6 +2472,7 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     body: JSON.stringify({
                         nama_layer: m.nama_layer.trim(),
                         color: m.warna,
+                        tampilkan_di: m.tampilkan_di || 'jalur-angkut',
                     }),
                 });
                 const data = await res.json();
@@ -2421,6 +2480,10 @@ Memuat <span x-text="childrenOf(layer).length"></span> sub-layer di bawah ini.
                     const layer = this.layers.find(l => l.id == m.layerId);
                     if (layer) {
                         layer.nama_layer = m.nama_layer.trim();
+                        layer.tampilkan_di = m.tampilkan_di;
+                        layer.public_page = m.tampilkan_di === 'tpa'
+                            ? { label: 'TPA', url: '/tpa' }
+                            : { label: 'Jalur Angkut', url: '/jalur-angkut' };
                         layer.metadata = layer.metadata || {};
                         layer.metadata.color = m.warna;
                         this.refreshLayerMarkers(layer);

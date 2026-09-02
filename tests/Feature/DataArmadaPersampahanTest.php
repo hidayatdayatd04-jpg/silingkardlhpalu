@@ -24,15 +24,18 @@ class DataArmadaPersampahanTest extends TestCase
             ],
         ]);
 
-        $this->get('/data-armada-persampahan')
+        $this->get('/monitoring-armada')
             ->assertOk()
-            ->assertSee('Data Armada Persampahan')
+            ->assertSee('Monitoring Armada Persampahan')
             ->assertSee('Kendaraan Roda 2')
             ->assertSee('Kendaraan Roda 4')
             ->assertSee('Kendaraan Roda 6')
             ->assertSee('Alat Berat')
             ->assertSee('Honda Beat / D1B02N13L2 A/T')
             ->assertSee('2018');
+
+        $this->get('/data-armada-persampahan')
+            ->assertRedirect('/monitoring-armada');
     }
 
     public function test_index_displays_the_four_categories_and_totals(): void
