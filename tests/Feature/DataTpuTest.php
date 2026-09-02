@@ -16,6 +16,8 @@ class DataTpuTest extends TestCase
 
     public function test_public_nav_and_tpu_page_displays_data(): void
     {
+        (new \Database\Seeders\DataTpuSeeder())->run();
+
         $response = $this->get('/tpu');
         $response->assertOk()
             ->assertSee('Taman Pemakaman Umum')
