@@ -3,7 +3,6 @@
 namespace App\Support\Admin;
 
 use App\Models\Artikel;
-use App\Models\DataArmadaPersampahan;
 use App\Models\DataTanamPohon;
 use App\Models\DataTpu;
 use App\Models\Pelanggaran;
@@ -49,7 +48,6 @@ class AdminRegistry
                     array_merge(self::resource('registrasi-usaha-lb3', 'Registrasi Usaha LB3', RegistrasiUsahaLb3::class, ['nomor_registrasi', 'nama_perusahaan', 'status', 'created_at']), ['can_create' => false]),
                     self::resource('statistik-sampah', 'Statistik Sampah', StatistikSampah::class, ['tanggal', 'volume_ton', 'periode']),
                     array_merge(self::resource('pengajuan-rintek-pertek', 'RINTEK/PERTEK', PengajuanRintekPertek::class, ['nomor_pengajuan', 'nama_perusahaan', 'jenis_pengajuan', 'status', 'created_at']), ['can_create' => false]),
-                    self::resource('data-armada-persampahan', 'Data Armada Persampahan', DataArmadaPersampahan::class, ['kategori', 'created_at']),
                 ],
             ],
 
@@ -1465,38 +1463,6 @@ class AdminRegistry
             ]);
         }
 
-        // Custom fields untuk resource 'data-armada-persampahan'
-        if ($resource['slug'] === 'data-armada-persampahan') {
-            return self::decorateFields($resource, [
-                [
-                    'name' => '_section_info',
-                    'label' => 'Informasi Utama',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'kategori',
-                    'label' => 'Kategori Kendaraan',
-                    'type' => 'select',
-                    'options' => \App\Enums\KategoriArmadaPersampahan::options(),
-                    'required' => true,
-                    'wide' => true,
-                ],
-                [
-                    'name' => '_section_armada',
-                    'label' => 'Daftar Armada Persampahan',
-                    'type' => 'section',
-                    'options' => [],
-                ],
-                [
-                    'name' => 'daftar_armada',
-                    'label' => 'Data Armada',
-                    'type' => 'daftar_armada',
-                    'options' => [],
-                ],
-            ]);
-        }
-
         // Custom fields untuk resource 'data-tpu'
         if ($resource['slug'] === 'data-tpu') {
             return self::decorateFields($resource, [
@@ -2054,15 +2020,6 @@ class AdminRegistry
                         'sosialisasi' => 'Sosialisasi',
                         'monitoring-evaluasi' => 'Monitoring & Evaluasi',
                     ],
-                ],
-            ],
-            'data-armada-persampahan' => [
-                'kategori' => [
-                    'key'     => 'kategori',
-                    'label'   => 'Kategori',
-                    'type'    => 'select',
-                    'column'  => 'kategori',
-                    'options' => \App\Enums\KategoriArmadaPersampahan::options(),
                 ],
             ],
         ];

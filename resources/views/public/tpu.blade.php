@@ -9,17 +9,32 @@
         search: '',
         activeTab: {},
         lightboxOpen: false,
-        lightboxImage: '',
-        lightboxTitle: '',
-        openLightbox(img, title) {
-            this.lightboxImage = img;
-            this.lightboxTitle = title;
+        lightboxPhotos: [],
+        lightboxIndex: 0,
+        lightboxTpuName: '',
+        openLightbox(photos, index, tpuName) {
+            this.lightboxPhotos = photos || [];
+            this.lightboxIndex = index || 0;
+            this.lightboxTpuName = tpuName || '';
             this.lightboxOpen = true;
-            document.body.classList.add('overflow-hidden');
+            document.body.style.overflow = 'hidden';
         },
         closeLightbox() {
             this.lightboxOpen = false;
-            document.body.classList.remove('overflow-hidden');
+            document.body.style.overflow = '';
+        },
+        nextPhoto() {
+            if (this.lightboxPhotos.length > 1) {
+                this.lightboxIndex = (this.lightboxIndex + 1) % this.lightboxPhotos.length;
+            }
+        },
+        prevPhoto() {
+            if (this.lightboxPhotos.length > 1) {
+                this.lightboxIndex = (this.lightboxIndex - 1 + this.lightboxPhotos.length) % this.lightboxPhotos.length;
+            }
+        },
+        currentPhoto() {
+            return this.lightboxPhotos[this.lightboxIndex] || { url: '', label: '' };
         },
         getTab(tpuId) {
             return this.activeTab[tpuId] || 'overview';
@@ -28,7 +43,9 @@
             this.activeTab[tpuId] = tab;
         }
     }"
-    x-on:keydown.escape.window="closeLightbox()"
+    x-on:keydown.escape.window="if (lightboxOpen) closeLightbox()"
+    x-on:keydown.arrow-right.window="if (lightboxOpen) nextPhoto()"
+    x-on:keydown.arrow-left.window="if (lightboxOpen) prevPhoto()"
     class="min-h-screen bg-slate-50/70 dark:bg-slate-950 pb-20 antialiased"
 >
     {{-- Hero Section --}}
@@ -224,7 +241,7 @@
                                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $p['label'] }}</span>
                                             <div
                                                 class="aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 relative group cursor-pointer bg-slate-100 dark:bg-slate-800"
-                                                @click="openLightbox('{{ $p['url'] }}', '{{ $p['label'] }} - {{ $tpu->nama_tpu }}')"
+                                                @click="openLightbox({{ Js::from($photos) }}, {{ $idx }}, '{{ addslashes($tpu->nama_tpu) }}')"
                                             >
                                                 <img src="{{ $p['url'] }}" alt="{{ $p['label'] }} - {{ $tpu->nama_tpu }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-semibold gap-1.5">
@@ -375,30 +392,123 @@
         </div>
     </main>
 
-    {{-- Lightbox Modal --}}
-    <div
-        x-show="lightboxOpen"
-        x-cloak
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
-        @click.self="closeLightbox()"
-    >
-        <div class="relative max-w-5xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
-            <div class="flex items-center justify-between px-4 py-3 bg-slate-800 text-white border-b border-slate-700">
-                <span class="text-sm font-bold truncate" x-text="lightboxTitle"></span>
-                <button @click="closeLightbox()" class="p-1.5 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer">
-                    <x-icons.ui name="close" class="w-5 h-5" />
-                </button>
-            </div>
-            <div class="p-2 flex items-center justify-center max-h-[calc(90vh-60px)]">
-                <img :src="lightboxImage" alt="Preview Foto Dokumentasi TPU" class="max-h-[calc(90vh-80px)] max-w-full object-contain rounded-lg" />
+    {{-- Lightbox Modal (Teleported to Body to Escape Ancestor Transforms & Stacking Context) --}}
+    <template x-teleport="body">
+        <div
+            x-show="lightboxOpen"
+            x-cloak
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
+            @click.self="closeLightbox()"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Dokumentasi TPU"
+        >
+            <div
+                x-show="lightboxOpen"
+                x-transition:enter="transition ease-out duration-300 transform"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-200 transform"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden"
+            >
+                {{-- Header Bar --}}
+                <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900/95 border-b border-slate-800 text-white select-none shrink-0">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                            <x-icons.ui name="image" class="w-4 h-4" />
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold text-white truncate" x-text="lightboxTpuName"></h4>
+                            <p class="text-xs text-slate-400 font-medium truncate">
+                                <span x-text="currentPhoto().label"></span>
+                                <template x-if="lightboxPhotos.length > 1">
+                                    <span>&bull; <span x-text="(lightboxIndex + 1) + ' dari ' + lightboxPhotos.length"></span></span>
+                                </template>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <template x-if="currentPhoto().url">
+                            <a
+                                :href="currentPhoto().url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                                title="Buka Gambar Resolusi Penuh"
+                            >
+                                <x-icons.ui name="external-link" class="w-4 h-4" />
+                            </a>
+                        </template>
+                        <button
+                            type="button"
+                            @click="closeLightbox()"
+                            class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                            aria-label="Tutup"
+                        >
+                            <x-icons.ui name="close" class="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Image Container with Navigation Arrows --}}
+                <div class="relative flex-1 min-h-0 bg-black/50 p-3 sm:p-4 flex items-center justify-center overflow-hidden">
+                    {{-- Previous button --}}
+                    <button
+                        type="button"
+                        x-show="lightboxPhotos.length > 1"
+                        @click="prevPhoto()"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
+                        aria-label="Foto Sebelumnya"
+                    >
+                        <x-icons.ui name="chevron-left" class="w-5 h-5" />
+                    </button>
+
+                    <template x-if="lightboxOpen && currentPhoto()?.url">
+                        <img
+                            :src="currentPhoto().url"
+                            :alt="currentPhoto().label + ' - ' + lightboxTpuName"
+                            :key="currentPhoto().url"
+                            class="max-h-[70vh] w-auto max-w-full object-contain rounded-xl shadow-2xl select-none"
+                        />
+                    </template>
+
+                    {{-- Next button --}}
+                    <button
+                        type="button"
+                        x-show="lightboxPhotos.length > 1"
+                        @click="nextPhoto()"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
+                        aria-label="Foto Berikutnya"
+                    >
+                        <x-icons.ui name="chevron-right" class="w-5 h-5" />
+                    </button>
+                </div>
+
+                {{-- Thumbnail Strip if multiple photos --}}
+                <template x-if="lightboxPhotos.length > 1">
+                    <div class="px-4 py-2.5 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-center gap-2 overflow-x-auto">
+                        <template x-for="(ph, idx) in lightboxPhotos" :key="idx">
+                            <button
+                                type="button"
+                                @click="lightboxIndex = idx"
+                                class="relative h-12 w-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
+                                :class="lightboxIndex === idx ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-700 opacity-60 hover:opacity-100'"
+                            >
+                                <img :src="ph.url" :alt="ph.label" class="w-full h-full object-cover" />
+                            </button>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
-    </div>
+    </template>
 </div>
 @endsection

@@ -7,7 +7,6 @@
 
     $iconMap = [
         'statistik-sampah' => 'chart-bar',
-        'data-armada-persampahan' => 'truck',
         'pelanggaran' => 'alert-triangle',
         'sosialisasi' => 'presentation',
         'data-tanam-pohon' => 'seedling',

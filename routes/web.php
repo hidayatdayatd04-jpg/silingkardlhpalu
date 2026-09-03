@@ -257,33 +257,9 @@ Route::get('/pengajuan-rintek-pertek', fn () => view('public.pengajuan-rintek-pe
 Route::get('/cek-rintek-pertek', fn () => view('public.cek-rintek-pertek'))->middleware('throttle:30,1');
 
 Route::get('/monitoring-armada', function () {
-    \App\Models\DataArmadaPersampahan::ensureCategoriesExist();
-    $armadas = \App\Models\DataArmadaPersampahan::all();
-
-    $categoryOrder = [
-        'Kendaraan Roda 2',
-        'Kendaraan Roda 4',
-        'Kendaraan Roda 6',
-        'Alat Berat',
-    ];
-
-    $categories = [];
-    foreach ($categoryOrder as $catName) {
-        $record = $armadas->first(fn ($a) => ($a->kategori instanceof \BackedEnum ? $a->kategori->value : $a->kategori) === $catName);
-        $categories[$catName] = [
-            'record' => $record,
-            'items' => is_array($record?->daftar_armada) ? $record->daftar_armada : [],
-            'count' => $record ? $record->totalUnit() : 0,
-        ];
-    }
-
-    $totalKeseluruhan = $armadas->sum(fn ($a) => $a->totalUnit());
     $gpsArmada = \App\Models\GpsVehicleCache::select(\App\Models\GpsVehicleCache::PUBLIC_COLUMNS)->get();
 
     return view('public.data-armada-persampahan', [
-        'armadas' => $armadas,
-        'categories' => $categories,
-        'totalKeseluruhan' => $totalKeseluruhan,
         'gpsArmada' => $gpsArmada,
     ]);
 })->name('monitoring-armada')->middleware('throttle:60,1');

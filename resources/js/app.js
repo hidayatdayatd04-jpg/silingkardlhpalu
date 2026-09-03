@@ -236,6 +236,8 @@ window.addEventListener('guest-map-vehicles-updated', function (e) {
 window.addEventListener('error', function (e) {
     var img = e.target;
     if (!(img instanceof HTMLImageElement) || img.dataset.dlhImgFallback) return;
+    var src = img.getAttribute('src');
+    if (!src || src.trim() === '' || src === 'about:blank') return;
     img.dataset.dlhImgFallback = '1';
     var w = img.clientWidth || img.width || 0;
     var small = w > 0 && w < 80;
