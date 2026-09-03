@@ -51,7 +51,7 @@ new class extends Component {
     {
         return [
             'nama_pelapor.required' => 'Nama lengkap pelapor wajib diisi.',
-            'nomor_hp.required' => 'Nomor WhatsApp / HP wajib diisi.',
+            'nomor_hp.required' => 'Nomor WhatsApp wajib diisi.',
             'jenis_tindakan.required' => 'Jenis tindakan wajib dipilih.',
             'lokasi_pohon.required' => 'Lokasi pohon wajib diisi dengan jelas.',
             'alasan_pengajuan.required' => 'Alasan pengajuan wajib dijelaskan.',
@@ -174,7 +174,7 @@ new class extends Component {
                         wire:model="nomor_hp"
                         name="nomor_hp"
                         type="tel"
-                        label="{{ __('Nomor WhatsApp / HP Aktif') }}"
+                        label="{{ __('Nomor WhatsApp') }}"
                         placeholder="{{ __('Contoh: 081234567890') }}"
                         required
                     />
