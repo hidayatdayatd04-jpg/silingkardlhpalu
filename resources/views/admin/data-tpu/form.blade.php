@@ -278,7 +278,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900 dark:text-white">Kapasitas Blok Makam</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Pembagian blok dan daya tampung makam per agama</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pembagian blok dan jumlah makam yang telah terisi berdasarkan agama</p>
                     </div>
                 </div>
 
