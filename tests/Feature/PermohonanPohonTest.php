@@ -35,6 +35,7 @@ class PermohonanPohonTest extends TestCase
         $response->assertSee('Dinas Lingkungan Hidup (DLH) Kota Palu');
         $response->assertSee('TIDAK MENERIMA');
         $response->assertSee('area pribadi');
+        $response->assertSee('seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya');
         $response->assertDontSee('Sudah pernah mengajukan permohonan?');
     }
 

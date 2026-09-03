@@ -119,7 +119,7 @@ new class extends Component {
                     Dinas Lingkungan Hidup (DLH) Kota Palu <strong>hanya melayani permohonan penebangan atau pemangkasan pohon pelindung/perindang yang berada di fasilitas umum</strong>, seperti sempadan jalan raya, trotoar, jalur hijau publik, median jalan, atau taman kota.
                 </p>
                 <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-900 dark:text-rose-200 leading-relaxed text-xs">
-                    <strong class="font-bold">{{ __('PENTING:') }}</strong> {{ __('DLH TIDAK MENERIMA laporan atau permohonan untuk pohon yang berada di area pribadi (seperti pekarangan rumah, halaman pribadi, lahan milik perorangan/swasta, maupun area privat lainnya).') }}
+                    <strong class="font-bold">{{ __('PENTING:') }}</strong> {{ __('DLH TIDAK MENERIMA laporan atau permohonan untuk pohon yang berada di area pribadi (seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya).') }}
                     <span class="block mt-1 text-[11px] text-rose-800/80 dark:text-rose-300/80 italic">{{ __('*Pemangkasan/penebangan pohon pada area pribadi sepenuhnya menjadi tanggung jawab pemilik lahan.') }}</span>
                 </div>
             </div>
