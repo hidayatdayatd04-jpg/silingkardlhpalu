@@ -188,6 +188,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user has admin panel access
+     */
+    public function hasAdminAccess(): bool
+    {
+        return \App\Support\AdminAccess::hasAnyPanelRole($this);
+    }
+
+    /**
      * Get user's primary admin role enum
      */
     public function adminRole(): ?\App\Enums\AdminRole

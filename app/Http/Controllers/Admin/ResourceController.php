@@ -469,7 +469,7 @@ class ResourceController extends Controller
 
         // data-tpu merupakan resource publik (dokumentasi foto pemakaman umum) sehingga dapat diakses publik
         if ($resource !== 'data-tpu') {
-            abort_unless(auth()->check() && auth()->user()->hasAdminAccess(), 403, 'Akses file ditolak. Silakan masuk terlebih dahulu.');
+            abort_unless(auth()->check() && \App\Support\AdminAccess::hasAnyPanelRole(auth()->user()), 403, 'Akses file ditolak. Silakan masuk terlebih dahulu.');
             $this->authorize($meta);
         }
 
