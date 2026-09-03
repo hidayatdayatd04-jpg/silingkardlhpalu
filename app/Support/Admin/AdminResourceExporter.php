@@ -222,8 +222,23 @@ class AdminResourceExporter
                 $lines = [];
                 $idx = 1;
                 foreach ($value as $item) {
-                    if (is_array($item) && filled($item['agama'] ?? null)) {
-                        $lines[] = "{$idx}. " . ($item['agama'] ?? '') . ': ' . ($item['jumlah_blok'] ?? '') . ' - ' . ($item['jumlah_makam'] ?? '');
+                        $detailParts = [];
+                        if (filled($item['jumlah_blok'] ?? null)) {
+                            $detailParts[] = 'Blok: ' . $item['jumlah_blok'];
+                        }
+                        if (filled($item['kapasitas_per_blok'] ?? null)) {
+                            $detailParts[] = 'Kap/Blok: ' . $item['kapasitas_per_blok'];
+                        }
+                        if (filled($item['jumlah_makam'] ?? null)) {
+                            $detailParts[] = 'Total: ' . $item['jumlah_makam'];
+                        }
+                        if (filled($item['makam_terisi'] ?? null)) {
+                            $detailParts[] = 'Terisi: ' . $item['makam_terisi'];
+                        }
+                        if (filled($item['makam_kosong'] ?? null)) {
+                            $detailParts[] = 'Kosong: ' . $item['makam_kosong'];
+                        }
+                        $lines[] = "{$idx}. " . ($item['agama'] ?? '') . ' (' . implode(', ', $detailParts) . ')';
                         $idx++;
                     }
                 }

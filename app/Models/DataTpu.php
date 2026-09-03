@@ -96,6 +96,50 @@ class DataTpu extends Model
     }
 
     /**
+     * Menghitung total makam yang telah terisi dari seluruh blok agama.
+     */
+    public function totalMakamTerisi(): int
+    {
+        $blok = $this->kapasitas_blok ?? [];
+        if (! is_array($blok)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($blok as $item) {
+            $terisiStr = (string) ($item['makam_terisi'] ?? '');
+            $clean = preg_replace('/[^\d]/', '', $terisiStr);
+            if (is_numeric($clean) && $clean !== '') {
+                $total += (int) $clean;
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * Menghitung total makam yang masih kosong dari seluruh blok agama.
+     */
+    public function totalMakamKosong(): int
+    {
+        $blok = $this->kapasitas_blok ?? [];
+        if (! is_array($blok)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($blok as $item) {
+            $kosongStr = (string) ($item['makam_kosong'] ?? '');
+            $clean = preg_replace('/[^\d]/', '', $kosongStr);
+            if (is_numeric($clean) && $clean !== '') {
+                $total += (int) $clean;
+            }
+        }
+
+        return $total;
+    }
+
+    /**
      * Helper untuk mengubah path storage menjadi URL publik / signed URL yang valid.
      */
     public function resolvePhotoUrl(?string $path): ?string

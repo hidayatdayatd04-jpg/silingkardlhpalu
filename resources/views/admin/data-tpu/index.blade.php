@@ -218,7 +218,7 @@
                         <th rowspan="2" class="px-3 py-3 font-bold text-center w-12 border-r border-slate-200 dark:border-slate-700">No.</th>
                         <th colspan="2" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800">Informasi Umum</th>
                         <th colspan="2" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-emerald-100/40 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300">Vegetasi</th>
-                        <th colspan="3" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-sky-100/40 dark:bg-sky-950/20 text-sky-900 dark:text-sky-300">Kapasitas Blok</th>
+                        <th colspan="6" class="px-4 py-2 font-bold text-center border-r border-slate-200 dark:border-slate-700 bg-sky-100/40 dark:bg-sky-950/20 text-sky-900 dark:text-sky-300">Kapasitas Blok</th>
                         <th rowspan="2" class="px-3 py-3 font-bold text-center border-r border-slate-200 dark:border-slate-700 min-w-[150px]">Dokumentasi Foto</th>
                         <th rowspan="2" class="px-4 py-3 font-bold text-center w-28">Aksi</th>
                     </tr>
@@ -229,7 +229,10 @@
                         <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[80px]">Jumlah</th>
                         <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[90px]">Agama</th>
                         <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[90px]">Jumlah Blok</th>
-                        <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[110px]">Jumlah Makam</th>
+                        <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[100px]">Kap. / Blok</th>
+                        <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[110px]">Total Kapasitas</th>
+                        <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[90px]">Terisi</th>
+                        <th class="px-3 py-2 text-center border-r border-slate-200 dark:border-slate-700 min-w-[90px]">Kosong</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -280,8 +283,8 @@
                                 @endif
                             </td>
 
-                            {{-- Kapasitas Blok (Agama, Jumlah Blok, Jumlah Makam) --}}
-                            <td colspan="3" class="p-0 border-r border-slate-200 dark:border-slate-800">
+                            {{-- Kapasitas Blok (Agama, Jumlah Blok, Kapasitas per Blok, Total Kapasitas, Makam Terisi, Makam Kosong) --}}
+                            <td colspan="6" class="p-0 border-r border-slate-200 dark:border-slate-800">
                                 @if(empty($kapasitas))
                                     <div class="p-4 text-xs text-slate-400 italic text-center">Belum ada data blok</div>
                                 @else
@@ -294,8 +297,17 @@
                                                 <td class="px-3 py-1.5 text-slate-700 dark:text-slate-300 text-center border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
                                                     {{ $k['jumlah_blok'] ?? '-' }}
                                                 </td>
-                                                <td class="px-3 py-1.5 text-slate-900 dark:text-white font-bold text-center whitespace-nowrap">
+                                                <td class="px-3 py-1.5 text-slate-600 dark:text-slate-400 text-center border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
+                                                    {{ $k['kapasitas_per_blok'] ?? '-' }}
+                                                </td>
+                                                <td class="px-3 py-1.5 text-slate-900 dark:text-white font-bold text-center border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
                                                     {{ $k['jumlah_makam'] ?? '-' }}
+                                                </td>
+                                                <td class="px-3 py-1.5 text-amber-700 dark:text-amber-300 font-semibold text-center border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
+                                                    {{ $k['makam_terisi'] ?? '-' }}
+                                                </td>
+                                                <td class="px-3 py-1.5 text-emerald-700 dark:text-emerald-300 font-semibold text-center whitespace-nowrap">
+                                                    {{ $k['makam_kosong'] ?? '-' }}
                                                 </td>
                                             </tr>
                                         @endforeach

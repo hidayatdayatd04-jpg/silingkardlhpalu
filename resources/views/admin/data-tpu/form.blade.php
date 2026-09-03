@@ -13,10 +13,10 @@
     }
 
     $initialBlok = old('kapasitas_blok', $record->kapasitas_blok ?? [
-        ['agama' => 'Islam', 'jumlah_blok' => '', 'jumlah_makam' => ''],
-        ['agama' => 'Kristen', 'jumlah_blok' => '', 'jumlah_makam' => ''],
-        ['agama' => 'Hindu', 'jumlah_blok' => '', 'jumlah_makam' => ''],
-        ['agama' => 'Buddha', 'jumlah_blok' => '', 'jumlah_makam' => ''],
+        ['agama' => 'Islam', 'jumlah_blok' => '', 'kapasitas_per_blok' => '', 'jumlah_makam' => '', 'makam_terisi' => '', 'makam_kosong' => ''],
+        ['agama' => 'Kristen', 'jumlah_blok' => '', 'kapasitas_per_blok' => '', 'jumlah_makam' => '', 'makam_terisi' => '', 'makam_kosong' => ''],
+        ['agama' => 'Hindu', 'jumlah_blok' => '', 'kapasitas_per_blok' => '', 'jumlah_makam' => '', 'makam_terisi' => '', 'makam_kosong' => ''],
+        ['agama' => 'Buddha', 'jumlah_blok' => '', 'kapasitas_per_blok' => '', 'jumlah_makam' => '', 'makam_terisi' => '', 'makam_kosong' => ''],
     ]);
     if (!is_array($initialBlok)) {
         $initialBlok = [];
@@ -39,7 +39,7 @@
             this.vegetasiList.splice(index, 1);
         },
         addBlok() {
-            this.blokList.push({ agama: '', jumlah_blok: '', jumlah_makam: '' });
+            this.blokList.push({ agama: '', jumlah_blok: '', kapasitas_per_blok: '', jumlah_makam: '', makam_terisi: '', makam_kosong: '' });
         },
         removeBlok(index) {
             this.blokList.splice(index, 1);
@@ -313,55 +313,104 @@
                 </template>
 
                 <template x-for="(item, index) in blokList" :key="'blok-' + index">
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                        <div class="w-6 text-center text-xs font-bold text-slate-400" x-text="index + 1 + '.'"></div>
-                        
-                        {{-- Agama --}}
-                        <div class="w-44 sm:w-56">
-                            <input
-                                type="text"
-                                :name="'kapasitas_blok[' + index + '][agama]'"
-                                x-model="item.agama"
-                                placeholder="Agama (misal: Islam, Kristen)"
-                                @if($readOnly) disabled @endif
-                                class="w-full px-3.5 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold"
-                            />
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50 pb-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 text-xs font-bold flex items-center justify-center" x-text="index + 1"></span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="item.agama ? item.agama : 'Kategori Blok Baru'"></span>
+                            </div>
+                            @if(!$readOnly)
+                                <button
+                                    type="button"
+                                    @click="removeBlok(index)"
+                                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                    title="Hapus Baris Blok"
+                                >
+                                    <x-icons.ui name="trash" class="w-3.5 h-3.5" />
+                                    <span>Hapus Baris</span>
+                                </button>
+                            @endif
                         </div>
 
-                        {{-- Jumlah Blok --}}
-                        <div class="flex-1">
-                            <input
-                                type="text"
-                                :name="'kapasitas_blok[' + index + '][jumlah_blok]'"
-                                x-model="item.jumlah_blok"
-                                placeholder="Jumlah Blok (misal: 88 blok)"
-                                @if($readOnly) disabled @endif
-                                class="w-full px-3.5 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
-                            />
-                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {{-- Agama --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Agama</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][agama]'"
+                                    x-model="item.agama"
+                                    placeholder="Agama (misal: Islam, Kristen)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold"
+                                />
+                            </div>
 
-                        {{-- Jumlah Makam --}}
-                        <div class="flex-1">
-                            <input
-                                type="text"
-                                :name="'kapasitas_blok[' + index + '][jumlah_makam]'"
-                                x-model="item.jumlah_makam"
-                                placeholder="Jumlah Makam (misal: 1.408 makam)"
-                                @if($readOnly) disabled @endif
-                                class="w-full px-3.5 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
-                            />
-                        </div>
+                            {{-- Jumlah Blok --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Jumlah Blok</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][jumlah_blok]'"
+                                    x-model="item.jumlah_blok"
+                                    placeholder="Jumlah Blok (misal: 88 blok)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
+                                />
+                            </div>
 
-                        @if(!$readOnly)
-                            <button
-                                type="button"
-                                @click="removeBlok(index)"
-                                class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                                title="Hapus Baris"
-                            >
-                                <x-icons.ui name="trash" class="w-4 h-4" />
-                            </button>
-                        @endif
+                            {{-- Kapasitas per Blok --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Kapasitas per Blok</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][kapasitas_per_blok]'"
+                                    x-model="item.kapasitas_per_blok"
+                                    placeholder="Kapasitas per Blok (misal: 16 makam/blok)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
+                                />
+                            </div>
+
+                            {{-- Total Kapasitas Makam --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Total Kapasitas Makam</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][jumlah_makam]'"
+                                    x-model="item.jumlah_makam"
+                                    placeholder="Total Kapasitas (misal: 1.408 makam)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold"
+                                />
+                            </div>
+
+                            {{-- Makam Terisi --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Makam Terisi</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][makam_terisi]'"
+                                    x-model="item.makam_terisi"
+                                    placeholder="Makam Terisi (misal: 1.200 makam)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold text-amber-700 dark:text-amber-300"
+                                />
+                            </div>
+
+                            {{-- Makam Kosong --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Makam Kosong</label>
+                                <input
+                                    type="text"
+                                    :name="'kapasitas_blok[' + index + '][makam_kosong]'"
+                                    x-model="item.makam_kosong"
+                                    placeholder="Makam Kosong (misal: 208 makam)"
+                                    @if($readOnly) disabled @endif
+                                    class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold text-emerald-700 dark:text-emerald-300"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </template>
             </div>

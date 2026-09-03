@@ -985,7 +985,10 @@ class ResourceController extends Controller
                         $kapasitasBlok[] = [
                             'agama' => trim((string) $b['agama']),
                             'jumlah_blok' => trim((string) ($b['jumlah_blok'] ?? '')),
+                            'kapasitas_per_blok' => trim((string) ($b['kapasitas_per_blok'] ?? '')),
                             'jumlah_makam' => trim((string) ($b['jumlah_makam'] ?? '')),
+                            'makam_terisi' => trim((string) ($b['makam_terisi'] ?? '')),
+                            'makam_kosong' => trim((string) ($b['makam_kosong'] ?? '')),
                         ];
                     }
                 }

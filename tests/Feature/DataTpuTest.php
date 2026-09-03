@@ -23,7 +23,10 @@ class DataTpuTest extends TestCase
             ->assertSee('Taman Pemakaman Umum')
             ->assertSee('TPU Lambara')
             ->assertSee('TPU Poboya')
-            ->assertSee('TPU Valagguni');
+            ->assertSee('TPU Valagguni')
+            ->assertSee('Total Kapasitas Makam')
+            ->assertSee('Makam Terisi')
+            ->assertSee('Makam Kosong');
 
         // Test redirect
         $this->get('/taman-pemakaman-umum')
@@ -43,8 +46,22 @@ class DataTpuTest extends TestCase
                     ['jenis_pohon' => 'Trembesi', 'jumlah' => '5'],
                 ],
                 'kapasitas_blok' => [
-                    ['agama' => 'Islam', 'jumlah_blok' => '30 blok', 'jumlah_makam' => '500 makam'],
-                    ['agama' => 'Kristen', 'jumlah_blok' => '10 blok', 'jumlah_makam' => '150 makam'],
+                    [
+                        'agama' => 'Islam',
+                        'jumlah_blok' => '30 blok',
+                        'kapasitas_per_blok' => '17 makam/blok',
+                        'jumlah_makam' => '500 makam',
+                        'makam_terisi' => '400 makam',
+                        'makam_kosong' => '100 makam',
+                    ],
+                    [
+                        'agama' => 'Kristen',
+                        'jumlah_blok' => '10 blok',
+                        'kapasitas_per_blok' => '15 makam/blok',
+                        'jumlah_makam' => '150 makam',
+                        'makam_terisi' => '120 makam',
+                        'makam_kosong' => '30 makam',
+                    ],
                 ],
             ]);
 
@@ -55,6 +72,8 @@ class DataTpuTest extends TestCase
         $this->assertCount(2, $tpu->kapasitas_blok);
         $this->assertSame(25, $tpu->totalPohon());
         $this->assertSame(650, $tpu->totalMakam());
+        $this->assertSame(520, $tpu->totalMakamTerisi());
+        $this->assertSame(130, $tpu->totalMakamKosong());
 
         $response->assertRedirect(route('admin.resources.show', ['data-tpu', $tpu]));
 
@@ -63,7 +82,10 @@ class DataTpuTest extends TestCase
             ->assertOk()
             ->assertSee('TPU Palu Barat Test')
             ->assertSee('Kamboja Putih')
-            ->assertSee('500 makam');
+            ->assertSee('17 makam/blok')
+            ->assertSee('500 makam')
+            ->assertSee('400 makam')
+            ->assertSee('100 makam');
     }
 
     public function test_bidang_rth_can_create_tpu_with_dynamic_photos_or_empty(): void

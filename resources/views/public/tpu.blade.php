@@ -189,7 +189,7 @@
                                 {{-- Badge Kapasitas --}}
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-300 text-xs font-bold">
                                     <x-icons.ui name="building" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                                    <span>{{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam</span>
+                                    <span>Total Kapasitas: {{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam</span>
                                 </span>
 
                                 {{-- Badge Vegetasi --}}
@@ -306,46 +306,74 @@
 
                         {{-- Tab 3: Kapasitas Blok Makam --}}
                         <div x-show="getTab({{ $tpu->id }}) === 'kapasitas'" class="space-y-4" style="display: none;">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                    Daftar Kapasitas Blok & Daya Tampung Makam
+                                    Daftar Kapasitas Blok & Status Makam
                                 </h3>
-                                <span class="text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
-                                    Total: {{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam
-                                </span>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
+                                        Total Kapasitas: {{ number_format($tpu->totalMakam(), 0, ',', '.') }} Makam
+                                    </span>
+                                    @if($tpu->totalMakamTerisi() > 0)
+                                        <span class="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800">
+                                            Terisi: {{ number_format($tpu->totalMakamTerisi(), 0, ',', '.') }}
+                                        </span>
+                                    @endif
+                                    @if($tpu->totalMakamKosong() > 0)
+                                        <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                            Kosong: {{ number_format($tpu->totalMakamKosong(), 0, ',', '.') }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
-                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
                                 <table class="w-full text-left text-sm divide-y divide-slate-200 dark:divide-slate-800">
                                     <thead class="bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                                         <tr>
-                                            <th class="px-4 py-3 w-12 text-center">No.</th>
+                                            <th class="px-3 py-3 w-10 text-center">No.</th>
                                             <th class="px-4 py-3">Agama</th>
-                                            <th class="px-4 py-3 text-center w-36">Jumlah Blok</th>
-                                            <th class="px-4 py-3 text-right w-44">Jumlah Makam</th>
+                                            <th class="px-4 py-3 text-center whitespace-nowrap">Jumlah Blok</th>
+                                            <th class="px-4 py-3 text-center whitespace-nowrap">Kapasitas per Blok</th>
+                                            <th class="px-4 py-3 text-center whitespace-nowrap">Total Kapasitas Makam</th>
+                                            <th class="px-4 py-3 text-center text-amber-700 dark:text-amber-400 whitespace-nowrap">Makam Terisi</th>
+                                            <th class="px-4 py-3 text-center text-emerald-700 dark:text-emerald-400 whitespace-nowrap">Makam Kosong</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                         @forelse($kapasitas as $idx => $k)
                                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                                                <td class="px-4 py-3 text-center text-xs text-slate-500 font-bold">{{ $idx + 1 }}</td>
-                                                <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                                                <td class="px-3 py-3 text-center text-xs text-slate-500 font-bold">{{ $idx + 1 }}</td>
+                                                <td class="px-4 py-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                                     {{ $k['agama'] ?? '-' }}
                                                 </td>
-                                                <td class="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">
+                                                <td class="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                                     <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
                                                         {{ $k['jumlah_blok'] ?? '-' }}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-right font-black text-slate-900 dark:text-white">
-                                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300">
+                                                <td class="px-4 py-3 text-center font-medium text-slate-600 dark:text-slate-400 text-xs whitespace-nowrap">
+                                                    {{ $k['kapasitas_per_blok'] ?? '-' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-center font-black text-slate-900 dark:text-white whitespace-nowrap">
+                                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 text-xs font-bold">
                                                         {{ $k['jumlah_makam'] ?? '-' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                                                        {{ $k['makam_terisi'] ?? '-' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                                                        {{ $k['makam_kosong'] ?? '-' }}
                                                     </span>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="px-4 py-6 text-center text-slate-500 text-xs italic">
+                                                <td colspan="7" class="px-4 py-6 text-center text-slate-500 text-xs italic">
                                                     Belum ada data rincian kapasitas blok makam.
                                                 </td>
                                             </tr>

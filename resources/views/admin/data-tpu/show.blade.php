@@ -155,7 +155,10 @@
                         <tr>
                             <th class="px-4 py-2.5">Agama</th>
                             <th class="px-4 py-2.5 text-center w-28">Jumlah Blok</th>
-                            <th class="px-4 py-2.5 text-right w-36">Jumlah Makam</th>
+                            <th class="px-4 py-2.5 text-center w-32">Kap. / Blok</th>
+                            <th class="px-4 py-2.5 text-right w-36">Total Kapasitas</th>
+                            <th class="px-4 py-2.5 text-center w-28 text-amber-600 dark:text-amber-400">Terisi</th>
+                            <th class="px-4 py-2.5 text-center w-28 text-emerald-600 dark:text-emerald-400">Kosong</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -163,11 +166,14 @@
                             <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
                                 <td class="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200">{{ $k['agama'] ?? '-' }}</td>
                                 <td class="px-4 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-300">{{ $k['jumlah_blok'] ?? '-' }}</td>
+                                <td class="px-4 py-2.5 text-center text-xs font-medium text-slate-500 dark:text-slate-400">{{ $k['kapasitas_per_blok'] ?? '-' }}</td>
                                 <td class="px-4 py-2.5 text-right font-black text-slate-900 dark:text-white">{{ $k['jumlah_makam'] ?? '-' }}</td>
+                                <td class="px-4 py-2.5 text-center text-xs font-bold text-amber-700 dark:text-amber-300">{{ $k['makam_terisi'] ?? '-' }}</td>
+                                <td class="px-4 py-2.5 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300">{{ $k['makam_kosong'] ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-4 py-6 text-center text-xs text-slate-400 italic">Belum ada data kapasitas blok</td>
+                                <td colspan="6" class="px-4 py-6 text-center text-xs text-slate-400 italic">Belum ada data kapasitas blok</td>
                             </tr>
                         @endforelse
                     </tbody>
