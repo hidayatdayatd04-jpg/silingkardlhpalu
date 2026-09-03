@@ -317,7 +317,7 @@
                 </div>
 
                 <!-- Bidang Sampah LB3 -->
-                <div x-data="{ open: false, persampahanOpen: false, petaOpen: false }" @click.away="open = false; persampahanOpen = false; petaOpen = false" class="relative">
+                <div x-data="{ open: false, persampahanOpen: false }" @click.away="open = false; persampahanOpen = false" class="relative">
                     <button @click="open = !open"
                         class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'monitoring-armada', 'statistik-timbulan-sampah', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('Sampah & LB3') }}</span>
@@ -349,26 +349,7 @@
                                 class="pl-4 space-y-1 mt-1"
                                 style="display: none;">
 
-                                <!-- Peta Persampahan Submenu -->
-                                <div class="relative">
-                                    <button type="button" @click="petaOpen = !petaOpen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*') ? 'text-brand-600 dark:text-brand-400' : '' }}">
-                                        <span>{{ __('Peta Persampahan') }}</span>
-                                        <x-icons.ui name="chevron-right" class="ml-2 h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-90': petaOpen }" />
-                                    </button>
-                                    <div x-show="petaOpen"
-                                        x-transition:enter="transition ease-out duration-150"
-                                        x-transition:enter-start="opacity-0 -translate-x-1"
-                                        x-transition:enter-end="opacity-100 translate-x-0"
-                                        x-transition:leave="transition ease-in duration-100"
-                                        x-transition:leave-start="opacity-100 translate-x-0"
-                                        x-transition:leave-end="opacity-0 -translate-x-1"
-                                        class="pl-4 space-y-1 mt-1"
-                                        style="display: none;">
-                                        <a href="/jalur-angkut" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors whitespace-nowrap {{ request()->is('jalur-angkut', 'peta-persampahan') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Jalur Angkut') }}</a>
-                                        <a href="/tpa" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors whitespace-nowrap {{ request()->is('tpa') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('TPA') }}</a>
-                                    </div>
-                                </div>
-
+                                <a href="/peta-persampahan" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('peta-persampahan*', 'jalur-angkut*', 'tpa*') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Peta Persampahan') }}</a>
                                 <a href="/monitoring-armada" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('monitoring-armada') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Monitoring Armada') }}</a>
                                 <a href="/statistik-timbulan-sampah" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Statistik Timbulan Sampah') }}</a>
                             </div>
@@ -632,8 +613,7 @@
                 <!-- Bidang Sampah LB3 (Dropdown Mobile) -->
                 <div x-data="{
                     open: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'true' : 'false' }},
-                    persampahanOpen: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'true' : 'false' }},
-                    petaOpen: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*') ? 'true' : 'false' }}
+                    persampahanOpen: {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'true' : 'false' }}
                 }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('jalur-angkut*', 'tpa*', 'peta-persampahan*', 'registrasi-usaha-lb3', 'cek-registrasi-lb3', 'pengajuan-rintek-pertek', 'cek-rintek-pertek', 'monitoring-armada', 'statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('Sampah & LB3') }}</span>
@@ -651,18 +631,7 @@
                                 <x-icons.ui name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-180': persampahanOpen }" />
                             </button>
                             <div x-show="persampahanOpen" class="pl-3 space-y-1 mt-1 border-l border-slate-200 dark:border-slate-800 ml-2">
-                                {{-- Sub-submenu Peta Persampahan (Mobile Accordion) --}}
-                                <div>
-                                    <button type="button" @click="petaOpen = !petaOpen" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer">
-                                        <span>{{ __('Peta Persampahan') }}</span>
-                                        <x-icons.ui name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="{ 'rotate-180': petaOpen }" />
-                                    </button>
-                                    <div x-show="petaOpen" class="pl-3 space-y-1 mt-1 border-l border-slate-200 dark:border-slate-800 ml-2">
-                                        <a href="/jalur-angkut" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('jalur-angkut', 'peta-persampahan') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Jalur Angkut') }}</a>
-                                        <a href="/tpa" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('tpa') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('TPA') }}</a>
-                                    </div>
-                                </div>
-
+                                <a href="/peta-persampahan" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('peta-persampahan*', 'jalur-angkut*', 'tpa*') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Peta Persampahan') }}</a>
                                 <a href="/monitoring-armada" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('monitoring-armada') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Monitoring Armada') }}</a>
                                 <a href="/statistik-timbulan-sampah" class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->is('statistik-timbulan-sampah') ? 'text-brand-600 dark:text-brand-400 font-semibold' : '' }}">{{ __('Statistik Timbulan Sampah') }}</a>
                             </div>
@@ -816,8 +785,7 @@
                 <div class="col-span-1 lg:col-span-1 min-w-0 space-y-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('Sampah & LB3') }}</h2>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/jalur-angkut" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Jalur Angkut') }}</a></li>
-                        <li><a href="/tpa" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('TPA') }}</a></li>
+                        <li><a href="/peta-persampahan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Peta Persampahan') }}</a></li>
                         <li><a href="/monitoring-armada" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Monitoring Armada') }}</a></li>
                         <li><a href="/statistik-timbulan-sampah" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Statistik Timbulan Sampah') }}</a></li>
                         <li><a href="/registrasi-usaha-lb3" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Registrasi LB3') }}</a></li>

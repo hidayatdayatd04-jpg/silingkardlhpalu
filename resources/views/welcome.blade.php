@@ -135,12 +135,11 @@
                 ],
                 [
                     'title' => __('Sampah & LB3'),
-                    'desc' => __('Peta jalur angkut, TPA, monitoring armada, statistik timbulan sampah, registrasi LB3, & RINTEK/PERTEK.'),
+                    'desc' => __('Peta persampahan, monitoring armada, statistik timbulan sampah, registrasi LB3, & RINTEK/PERTEK.'),
                     'accent' => 'amber',
                     'icon' => 'sampah',
                     'links' => [
-                        [__('Peta Jalur Angkut'), '/jalur-angkut'],
-                        [__('TPA'), '/tpa'],
+                        [__('Peta Persampahan'), '/peta-persampahan'],
                         [__('Monitoring Armada'), '/monitoring-armada'],
                         [__('Statistik Timbulan Sampah'), '/statistik-timbulan-sampah'],
                         [__('Pengaduan'), '/pengaduan'],

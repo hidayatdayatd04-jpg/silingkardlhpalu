@@ -8,13 +8,7 @@ class PetaPersampahanController extends Controller
 {
     public function index()
     {
-        return $this->jalurAngkut();
-    }
-
-    public function jalurAngkut()
-    {
-        // Ambil SELURUH layer bidang sampah-lb3 (tanpa filter public di sini),
-        // karena kita perlu mengetahui induk/root untuk menerapkan aturan visibilitas.
+        // Ambil SELURUH layer bidang sampah-lb3
         $allLayers = GisDataLayer::where('bidang', 'sampah-lb3')
             ->orderBy('z_index')
             ->orderBy('created_at')
@@ -35,15 +29,14 @@ class PetaPersampahanController extends Controller
             $rootOf[$l->id] = $root;
         }
 
-        // Aturan visibilitas publik: sebuah layer tampil di publik hanya jika
-        // dirinya visible & public DAN layer utamanya (root) juga visible & public
-        // DAN target tampilkan_di adalah jalur-angkut (atau null).
+        // Aturan visibilitas publik: sebuah layer tampil di publik jika
+        // dirinya visible & public DAN layer utamanya (root) juga visible & public.
+        // Baik layer jalur-angkut maupun TPA/fasilitas digabung dalam satu peta terpadu.
         $visibleLayers = $allLayers->filter(function ($l) use ($rootOf) {
             $root = $rootOf[$l->id] ?? $l;
-            $target = $root->tampilkan_di ?: 'jalur-angkut';
-            return $target === 'jalur-angkut'
-                && $l->is_visible && $l->is_public
-                && $root->is_visible && $root->is_public;
+            return $l->is_visible
+                && ($l->is_public || $root->is_public)
+                && $root->is_visible;
         });
 
         // Flat array (untuk inisialisasi peta di JS)
@@ -54,9 +47,18 @@ class PetaPersampahanController extends Controller
             'jenis_geometri' => $layer->jenis_geometri,
             'metadata' => $layer->metadata ?? ['color' => GisDataLayer::defaultColor($layer->bidang)],
             'geojson' => $layer->toGeoJson(),
+            'tampilkan_di' => $layer->tampilkan_di ?? 'jalur-angkut',
+            'is_facility' => ($layer->tampilkan_di === 'tpa' || ($rootOf[$layer->id]->tampilkan_di ?? null) === 'tpa'),
         ])->values()->all();
 
-        // Kategorisasi tipe kendaraan DIAMBIL DARI DATA
+        // Data fasilitas TPA & TPS3R untuk toggle dan informasi di peta
+        $facilityLayers = $visibleLayers->filter(function ($l) use ($rootOf) {
+            $root = $rootOf[$l->id] ?? $l;
+            return $root->tampilkan_di === 'tpa';
+        });
+        $totalFasilitas = $facilityLayers->sum(fn ($l) => count($l->geojson_features ?? []));
+
+        // Kategorisasi tipe kendaraan (hanya untuk root layer armada, bukan fasilitas TPA)
         $typeInfo = function (string $nama): array {
             $n = strtolower($nama);
             if (str_contains($n, 'pick')) {
@@ -80,6 +82,11 @@ class PetaPersampahanController extends Controller
             if (!$l->show_in_filter) {
                 continue;
             }
+            // Fasilitas TPA bukan kategori kendaraan
+            if ($l->tampilkan_di === 'tpa') {
+                continue;
+            }
+
             $info = $typeInfo($l->nama_layer);
             $key = $info['key'];
             if (isset($vehicleTypes[$key])) {
@@ -126,52 +133,23 @@ class PetaPersampahanController extends Controller
             $defaultType = array_key_first($vehicleTypes) ?? 'pickup';
         }
 
-        return view('public.jalur-angkut', [
+        return view('public.peta-persampahan', [
             'layers' => $layers,
             'vehicleTypes' => $vehicleTypes,
             'defaultType' => $defaultType,
+            'totalFasilitas' => $totalFasilitas,
+            'facilityLayerIds' => $facilityLayers->pluck('id')->values()->all(),
         ]);
+    }
+
+    public function jalurAngkut()
+    {
+        return redirect()->route('peta-persampahan');
     }
 
     public function tpa()
     {
-        $allLayers = GisDataLayer::where('bidang', 'sampah-lb3')
-            ->orderBy('z_index')
-            ->orderBy('created_at')
-            ->get();
-
-        $byId = $allLayers->keyBy('id');
-        $rootOf = [];
-        foreach ($allLayers as $l) {
-            $root = $l;
-            $pid = $l->parent_id;
-            $guard = 0;
-            while ($pid && isset($byId[$pid]) && $guard++ < 20) {
-                $root = $byId[$pid];
-                $pid = $root->parent_id;
-            }
-            $rootOf[$l->id] = $root;
-        }
-
-        $visibleLayers = $allLayers->filter(function ($l) use ($rootOf) {
-            $root = $rootOf[$l->id] ?? $l;
-            return ($root->tampilkan_di === 'tpa')
-                && $l->is_visible
-                && ($l->is_public || $root->is_public);
-        });
-
-        $layers = $visibleLayers->map(fn ($layer) => [
-            'id' => $layer->id,
-            'nama_layer' => $layer->nama_layer,
-            'deskripsi' => $layer->deskripsi,
-            'jenis_geometri' => $layer->jenis_geometri,
-            'metadata' => $layer->metadata ?? ['color' => GisDataLayer::defaultColor($layer->bidang)],
-            'geojson' => $layer->toGeoJson(),
-        ])->values()->all();
-
-        return view('public.tpa-persampahan', [
-            'layers' => $layers,
-        ]);
+        return redirect()->route('peta-persampahan');
     }
 
     public function layers()
@@ -194,12 +172,11 @@ class PetaPersampahanController extends Controller
             $rootOf[$l->id] = $root;
         }
 
-        // Sama seperti index(): sembunyikan layer beserta sub-layer-nya jika
-        // layer utama (root) tidak visible/public.
         $layers = $allLayers->filter(function ($l) use ($rootOf) {
             $root = $rootOf[$l->id] ?? $l;
-            return $l->is_visible && $l->is_public
-                && $root->is_visible && $root->is_public;
+            return $l->is_visible
+                && ($l->is_public || $root->is_public)
+                && $root->is_visible;
         })->map(fn ($layer) => [
             'id' => $layer->id,
             'nama_layer' => $layer->nama_layer,
@@ -212,3 +189,4 @@ class PetaPersampahanController extends Controller
         return response()->json($layers);
     }
 }
+

@@ -324,7 +324,7 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
 
             // Tambahkan layers berdasarkan jenis geometri
             if (layer.jenis_geometri === 'point' || layer.jenis_geometri === 'mixed') {
-                // Gunakan DlhMarkers untuk custom SVG markers
+                // Gunakan DlhMarkers untuk custom SVG markers (TPA, TPS3R, TPS, dll.)
                 var pointMarkers = [];
                 var features = (layer.geojson && layer.geojson.features) || [];
                 features.forEach(function (f) {
@@ -333,7 +333,8 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
                     if (!coords || !coords[0] || !coords[1]) return;
                     var props = f.properties || {};
                     var html = makePopupHtml(props, color, layer.nama_layer);
-                    var mk = DlhMarkers.addToMap(map, 'tps', [coords[0], coords[1]], html, { size: 26 });
+                    var markerType = (layer.metadata && layer.metadata.marker_type) || DlhMarkers.detectType(layer.nama_layer, props);
+                    var mk = DlhMarkers.addToMap(map, markerType, [coords[0], coords[1]], html, { size: 28 });
                     pointMarkers.push(mk);
                 });
                 // Simpan referensi marker untuk toggle visibility
@@ -342,15 +343,40 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
 
             if (layer.jenis_geometri === 'line' || layer.jenis_geometri === 'mixed') {
                 var lineId = sourceId + '-line';
-                map.addLayer({ id: lineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2 } });
+                map.addLayer({ id: lineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2.5 } });
             }
 
             if (layer.jenis_geometri === 'polygon' || layer.jenis_geometri === 'mixed') {
                 var fillId = sourceId + '-fill';
                 var outlineId = sourceId + '-outline';
-                map.addLayer({ id: fillId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.3 } });
-                map.addLayer({ id: outlineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1 } });
+                map.addLayer({ id: fillId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.35 } });
+                map.addLayer({ id: outlineId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1.5 } });
             }
+
+            // Click listener untuk fitur line dan polygon (rute atau batas area TPA)
+            var interactiveLayerIds = [sourceId + '-line', sourceId + '-fill'].filter(function (id) {
+                return map.getLayer(id);
+            });
+            interactiveLayerIds.forEach(function (lyId) {
+                map.on('click', lyId, function (e) {
+                    if (!e.features || !e.features.length) return;
+                    var f = e.features[0];
+                    var props = f.properties || {};
+                    var name = props.NAMA || props.nama || props.Name || props.NAME || layer.nama_layer;
+                    var desc = props.DESKRIPSI || props.deskripsi || props.KETERANGAN || props.keterangan || '';
+                    var esc = DlhMarkers.escapeHtml || function (s) { return String(s || ''); };
+                    var popHtml = '<div style="min-width:200px;padding:12px;font-family:system-ui,-apple-system,sans-serif">'
+                        + '<h4 style="font-weight:700;font-size:13px;color:#0f172a;margin:0 0 4px">' + esc(name) + '</h4>'
+                        + '<p style="font-size:11px;color:#64748b;margin:0">' + (desc ? esc(desc) : ('Layer: ' + esc(layer.nama_layer))) + '</p>'
+                        + '</div>';
+                    new maplibregl.Popup({ offset: [0, -10], closeButton: true })
+                        .setLngLat(e.lngLat)
+                        .setHTML(popHtml)
+                        .addTo(map);
+                });
+                map.on('mouseenter', lyId, function () { map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', lyId, function () { map.getCanvas().style.cursor = ''; });
+            });
         }
 
         // Fungsi untuk menambahkan semua layer persampahan
@@ -360,11 +386,17 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
             });
         }
 
-        // Visibility: hanya layer milik tipe aktif (dan kelurahan terpilih) yang tampil
+        var fasilitasVisible = true;
+
+        // Visibility: hanya layer milik tipe aktif (dan kelurahan terpilih) yang tampil,
+        // serta layer fasilitas TPA & TPS3R dikontrol fasilitasVisible.
         function layerVisible(layerId) {
+            var layer = layers.find(function (l) { return l.id == layerId; });
+            var isFacility = layer && (layer.is_facility || !typeByLayer[layerId]);
+            if (isFacility) {
+                return fasilitasVisible;
+            }
             var t = typeByLayer[layerId];
-            // Layer "Tanpa Filter" (tidak terdaftar di tipe kendaraan mana pun)
-            // selalu tampil di peta, tidak terpengaruh filter yang aktif.
             if (!t) return true;
             if (!activeType) return false;
             if (t !== activeType) return false;
@@ -422,6 +454,11 @@ window.dlhPetaPersampahan = function (containerId, layers, armada, config) {
             activeKelurahan = layerId ? String(layerId) : null;
             applyVisibility();
             if (activeKelurahan) fitToLayer(activeKelurahan);
+        };
+
+        window.dlhPetaPersampahanToggleFasilitas = function (visible) {
+            fasilitasVisible = !!visible;
+            applyVisibility();
         };
 
         window.dlhPetaPersampahanSetArmada = function (visible) {

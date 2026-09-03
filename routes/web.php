@@ -242,9 +242,9 @@ Route::get('/tpu', function () {
 Route::redirect('/taman-pemakaman-umum', '/tpu');
 
 // Sampah & LB3 Public Routes
-Route::get('/jalur-angkut', [\App\Http\Controllers\PetaPersampahanController::class, 'jalurAngkut'])->name('jalur-angkut')->middleware('throttle:60,1');
-Route::get('/tpa', [\App\Http\Controllers\PetaPersampahanController::class, 'tpa'])->name('tpa')->middleware('throttle:60,1');
-Route::get('/peta-persampahan', fn () => redirect()->route('jalur-angkut'))->name('peta-persampahan');
+Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->name('peta-persampahan')->middleware('throttle:60,1');
+Route::redirect('/jalur-angkut', '/peta-persampahan')->name('jalur-angkut');
+Route::redirect('/tpa', '/peta-persampahan')->name('tpa');
 Route::get('/api/peta-persampahan/layers', [\App\Http\Controllers\PetaPersampahanController::class, 'layers'])->middleware('throttle:120,1');
 Route::get('/statistik-timbulan-sampah', [\App\Http\Controllers\StatistikSampahPublicController::class, 'index'])->name('statistik-timbulan-sampah')->middleware('throttle:60,1');
 Route::redirect('/statistik-sampah', '/statistik-timbulan-sampah');

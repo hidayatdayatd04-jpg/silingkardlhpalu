@@ -26,7 +26,7 @@ class PetaPersampahanStatisticsTest extends TestCase
             'periode' => 'mingguan',
         ]);
 
-        $this->get('/peta-persampahan')
+        $this->get('/statistik-timbulan-sampah')
             ->assertOk()
             ->assertViewHas('chartSeries', function (array $series): bool {
                 $harian = $series['harian'] ?? [];
