@@ -403,11 +403,12 @@
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
+            class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-hidden scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             @click.self="closeLightbox()"
             role="dialog"
             aria-modal="true"
             aria-label="Dokumentasi TPU"
+            data-no-img-fallback="1"
         >
             <div
                 x-show="lightboxOpen"
@@ -417,7 +418,8 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden"
+                class="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                data-no-img-fallback="1"
             >
                 {{-- Header Bar --}}
                 <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900/95 border-b border-slate-800 text-white select-none shrink-0">
@@ -459,13 +461,13 @@
                 </div>
 
                 {{-- Image Container with Navigation Arrows --}}
-                <div class="relative flex-1 min-h-0 bg-black/50 p-3 sm:p-4 flex items-center justify-center overflow-hidden">
+                <div class="relative flex-1 min-h-0 bg-black/50 p-2 sm:p-4 flex items-center justify-center overflow-hidden select-none">
                     {{-- Previous button --}}
                     <button
                         type="button"
                         x-show="lightboxPhotos.length > 1"
                         @click="prevPhoto()"
-                        class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
+                        class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
                         aria-label="Foto Sebelumnya"
                     >
                         <x-icons.ui name="chevron-left" class="w-5 h-5" />
@@ -476,7 +478,8 @@
                             :src="currentPhoto().url"
                             :alt="currentPhoto().label + ' - ' + lightboxTpuName"
                             :key="currentPhoto().url"
-                            class="max-h-[70vh] w-auto max-w-full object-contain rounded-xl shadow-2xl select-none"
+                            data-no-img-fallback="1"
+                            class="max-h-[58vh] sm:max-h-[64vh] w-auto max-w-full object-contain rounded-xl shadow-2xl select-none"
                         />
                     </template>
 
@@ -485,7 +488,7 @@
                         type="button"
                         x-show="lightboxPhotos.length > 1"
                         @click="nextPhoto()"
-                        class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
+                        class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-lg transition-all hover:scale-105 cursor-pointer backdrop-blur-sm focus:outline-none"
                         aria-label="Foto Berikutnya"
                     >
                         <x-icons.ui name="chevron-right" class="w-5 h-5" />
@@ -494,15 +497,15 @@
 
                 {{-- Thumbnail Strip if multiple photos --}}
                 <template x-if="lightboxPhotos.length > 1">
-                    <div class="px-4 py-2.5 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-center gap-2 overflow-x-auto">
+                    <div class="px-4 py-2.5 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-center gap-2 overflow-x-auto overflow-y-hidden scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
                         <template x-for="(ph, idx) in lightboxPhotos" :key="idx">
                             <button
                                 type="button"
                                 @click="lightboxIndex = idx"
-                                class="relative h-12 w-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
+                                class="relative h-11 w-14 sm:h-12 sm:w-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
                                 :class="lightboxIndex === idx ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-700 opacity-60 hover:opacity-100'"
                             >
-                                <img :src="ph.url" :alt="ph.label" class="w-full h-full object-cover" />
+                                <img :src="ph.url" :alt="ph.label" data-no-img-fallback="1" class="w-full h-full object-cover" />
                             </button>
                         </template>
                     </div>

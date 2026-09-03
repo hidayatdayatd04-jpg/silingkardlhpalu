@@ -108,15 +108,11 @@ class DataTpu extends Model
             return $path;
         }
 
-        try {
-            return Storage::disk('public')->temporaryUrl($path, now()->addHours(24));
-        } catch (Throwable $e) {
-            try {
-                return Storage::disk('public')->url($path);
-            } catch (Throwable $e) {
-                return asset('storage/' . ltrim($path, '/'));
-            }
-        }
+        // Gunakan custom URL bersih /{resource}/{file} seperti di admin
+        return route('file.preview', [
+            'resource' => 'data-tpu',
+            'file' => basename($path),
+        ]);
     }
 
     /**
@@ -133,13 +129,16 @@ class DataTpu extends Model
             $counter = 1;
             foreach ($this->foto_dokumentasi as $path) {
                 if (is_string($path) && filled($path)) {
-                    $url = $this->resolvePhotoUrl((string) $path);
-                    if ($url) {
-                        $photos[] = [
-                            'label' => 'Dokumentasi ' . $counter++,
-                            'path' => (string) $path,
-                            'url' => $url,
-                        ];
+                    $isExternal = str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
+                    if ($isExternal || Storage::disk('public')->exists($path)) {
+                        $url = $this->resolvePhotoUrl((string) $path);
+                        if ($url) {
+                            $photos[] = [
+                                'label' => 'Dokumentasi ' . $counter++,
+                                'path' => (string) $path,
+                                'url' => $url,
+                            ];
+                        }
                     }
                 }
             }
@@ -155,13 +154,16 @@ class DataTpu extends Model
             $path = $this->{$field};
 
             if (filled($path)) {
-                $url = $this->resolvePhotoUrl((string) $path);
-                if ($url) {
-                    $photos[] = [
-                        'label' => 'Dokumentasi ' . (count($photos) + 1),
-                        'path' => (string) $path,
-                        'url' => $url,
-                    ];
+                $isExternal = str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
+                if ($isExternal || Storage::disk('public')->exists($path)) {
+                    $url = $this->resolvePhotoUrl((string) $path);
+                    if ($url) {
+                        $photos[] = [
+                            'label' => 'Dokumentasi ' . (count($photos) + 1),
+                            'path' => (string) $path,
+                            'url' => $url,
+                        ];
+                    }
                 }
             }
         }

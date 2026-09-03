@@ -461,9 +461,14 @@ class ResourceController extends Controller
         $resource = (string) $request->route('resource');
         $file = (string) $request->route('file');
 
-        // Otorisasi per-bidang: resource wajib dikenal (find() akan 404 bila tak dikenal).
+        // Otorisasi: resource wajib dikenal (find() akan 404 bila tak dikenal).
         $meta = AdminRegistry::find($resource);
-        $this->authorize($meta);
+
+        // data-tpu merupakan resource publik (dokumentasi foto pemakaman umum) sehingga dapat diakses publik
+        if ($resource !== 'data-tpu') {
+            abort_unless(auth()->check() && auth()->user()->hasAdminAccess(), 403, 'Akses file ditolak. Silakan masuk terlebih dahulu.');
+            $this->authorize($meta);
+        }
 
         // Validasi path: tolak kosong, traversal (..), path absolut,
         // drive letter Windows, null byte, dan backslash.

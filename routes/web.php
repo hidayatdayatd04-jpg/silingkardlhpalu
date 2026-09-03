@@ -336,5 +336,4 @@ Route::get('/.well-known/security.txt', function () {
 // {file} = nama file (basename), tanpa subdirektori maupun sufiks.
 Route::get('/{resource}/{file}', [ResourceController::class, 'previewFile'])
     ->name('file.preview')
-    ->middleware(['auth', 'admin.access', 'no-store'])
     ->where('file', '.*');

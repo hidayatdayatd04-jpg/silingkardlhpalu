@@ -106,6 +106,9 @@ class DataTpuTest extends TestCase
 
     public function test_bidang_rth_can_update_tpu(): void
     {
+        Storage::fake('public');
+        Storage::disk('public')->put('admin/data-tpu/existing.jpg', 'dummy image content');
+
         $tpu = DataTpu::create([
             'nama_tpu' => 'TPU Sebelum Update',
             'luas_area_makam' => '2 Ha',
