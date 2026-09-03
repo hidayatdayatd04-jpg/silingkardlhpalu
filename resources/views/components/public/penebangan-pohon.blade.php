@@ -101,71 +101,35 @@ new class extends Component {
 
 <div class="space-y-6">
     {{-- INFORMASI PENTING: KHUSUS POHON DI AREA PUBLIK / FASILITAS UMUM --}}
-    <div class="relative overflow-hidden rounded-2xl md:rounded-3xl border border-rose-200/80 bg-gradient-to-br from-rose-50/70 via-white to-amber-50/40 p-5 sm:p-7 md:p-8 shadow-[0_4px_24px_-4px_rgba(244,63,94,0.12)] dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
-        {{-- Ambient decorative glow --}}
-        <div class="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-rose-400/10 blur-2xl"></div>
-        <div class="pointer-events-none absolute -bottom-12 -left-12 size-40 rounded-full bg-amber-400/10 blur-2xl"></div>
-
-        <div class="relative space-y-4 sm:space-y-5">
-            {{-- Top Badge & Scope --}}
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rose-100 pb-3 dark:border-rose-900/40">
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-black uppercase tracking-wider text-white shadow-xs shadow-rose-600/30">
-                        <x-icons.ui name="alert-triangle" class="size-3.5" />
-                        {{ __('PENTING') }}
-                    </span>
-                    <span class="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                        {{ __('Ketentuan Layanan DLH Kota Palu') }}
-                    </span>
-                </div>
-                <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                    <x-icons.ui name="check-circle" class="size-3.5" />
-                    {{ __('Khusus Pohon Fasilitas Umum') }}
+    <div class="rounded-3xl bg-[#fef9ee] dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 p-5 sm:p-6 space-y-3.5">
+        {{-- Header: Icon + Judul --}}
+        <div class="flex items-center gap-3">
+            <span class="size-9 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <x-icons.ui name="alert-triangle" class="size-5" />
+            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-black tracking-wider uppercase text-amber-800 dark:text-amber-400">
+                    {{ __('KETENTUAN LAYANAN') }}
+                </span>
+                <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    {{ __('Khusus Pohon di Area Publik & Fasilitas Umum') }}
                 </span>
             </div>
+        </div>
 
-            {{-- Main Notice (BIG, HIGH IMPACT & CLEAR) --}}
-            <div class="space-y-2">
-                <h3 class="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-snug">
-                    <span class="text-rose-600 dark:text-rose-400">{{ __('DLH TIDAK MENERIMA') }}</span> {{ __('laporan atau permohonan untuk pohon yang berada di area pribadi') }}
-                </h3>
-                <p class="text-sm sm:text-base md:text-lg font-bold text-rose-800 dark:text-rose-300 leading-relaxed">
-                    {{ __('(seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya).') }}
-                </p>
-            </div>
+        {{-- Penjelasan Ruang Lingkup Fasum --}}
+        <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+            Dinas Lingkungan Hidup (DLH) Kota Palu <strong>hanya melayani permohonan penebangan atau pemangkasan pohon pelindung/perindang yang berada di fasilitas umum</strong>, seperti sempadan jalan raya, trotoar, jalur hijau publik, median jalan, atau taman kota.
+        </p>
 
-            {{-- Explanatory Info & Emergency Exception --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
-                {{-- Fasilitas Umum --}}
-                <div class="flex items-start gap-3 rounded-2xl bg-white/90 p-4 border border-slate-200/80 dark:bg-slate-900/80 dark:border-slate-800 shadow-2xs">
-                    <span class="size-8.5 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                        <x-icons.ui name="tree" class="size-4.5" />
-                    </span>
-                    <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <strong class="font-bold text-slate-900 dark:text-white block mb-0.5">{{ __('Area yang Dilayani:') }}</strong>
-                        Dinas Lingkungan Hidup (DLH) Kota Palu <strong>hanya melayani permohonan penebangan atau pemangkasan pohon pelindung/perindang yang berada di fasilitas umum</strong>, seperti sempadan jalan raya, trotoar, jalur hijau publik, median jalan, atau taman kota.
-                    </div>
-                </div>
-
-                {{-- Tanggung Jawab Lahan & Emergency --}}
-                <div class="flex items-start gap-3 rounded-2xl bg-amber-50/80 p-4 border border-amber-200/80 dark:bg-amber-950/30 dark:border-amber-900/50 shadow-2xs">
-                    <span class="size-8.5 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs shadow-amber-500/20">
-                        <x-icons.ui name="alert" class="size-4.5" />
-                    </span>
-                    <div class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <div>
-                            <strong class="font-bold text-slate-900 dark:text-white block mb-0.5">{{ __('Tanggung Jawab Pemilik Lahan:') }}</strong>
-                            *{{ __('Pemangkasan/penebangan pohon pada area pribadi sepenuhnya menjadi tanggung jawab pemilik lahan,') }}
-                        </div>
-                        <div>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-rose-600 text-white shadow-xs">
-                                <x-icons.ui name="alert-triangle" class="size-3.5" />
-                                {{ __('Kecuali Keadaan Emergency (Pohon Tumbang)') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        {{-- Box PENTING (Warna Merah Muda Lembut Sesuai Desain Asli, Ukuran Teks Diperbesar) --}}
+        <div class="rounded-2xl bg-rose-100/70 dark:bg-rose-950/40 border border-rose-200/90 dark:border-rose-900/50 p-4 sm:p-5 text-rose-950 dark:text-rose-100 space-y-2">
+            <p class="text-base sm:text-lg font-bold leading-snug">
+                <strong>{{ __('PENTING:') }}</strong> {{ __('DLH TIDAK MENERIMA laporan atau permohonan untuk pohon yang berada di area pribadi (seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya).') }}
+            </p>
+            <p class="text-sm sm:text-base font-medium text-rose-900/90 dark:text-rose-200/90 italic leading-relaxed">
+                *{{ __('Pemangkasan/penebangan pohon pada area pribadi sepenuhnya menjadi tanggung jawab pemilik lahan, Kecuali Keadaan Emergency (pohon Tumbang).') }}
+            </p>
         </div>
     </div>
 

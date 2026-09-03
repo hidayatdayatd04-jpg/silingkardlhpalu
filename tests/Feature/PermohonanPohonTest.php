@@ -36,7 +36,7 @@ class PermohonanPohonTest extends TestCase
         $response->assertSee('TIDAK MENERIMA');
         $response->assertSee('area pribadi');
         $response->assertSee('seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya');
-        $response->assertSee('Kecuali Keadaan Emergency (Pohon Tumbang)');
+        $response->assertSee('Kecuali Keadaan Emergency (pohon Tumbang)', false);
         $response->assertDontSee('Sudah pernah mengajukan permohonan?');
     }
 
