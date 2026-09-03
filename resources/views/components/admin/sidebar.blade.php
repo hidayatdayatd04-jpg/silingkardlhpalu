@@ -15,6 +15,7 @@
         'pinjam-taman' => 'park-bench',
         'data-tanam-pohon' => 'seedling',
         'data-tpu' => 'park',
+        'permohonan-pohon' => 'axe',
         'pengaduan-tata-penataan' => 'building',
         'pelanggaran' => 'alert-triangle',
         'sosialisasi' => 'presentation',

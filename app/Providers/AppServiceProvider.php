@@ -15,6 +15,7 @@ use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
+use App\Models\PermohonanPohon;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\Sanksi;
@@ -26,6 +27,7 @@ use App\Policies\PelanggaranPolicy;
 use App\Policies\PengaduanTataPenataanPolicy;
 use App\Policies\PengajuanRintekPertekPolicy;
 use App\Policies\PermohonanPinjamTamanPolicy;
+use App\Policies\PermohonanPohonPolicy;
 use App\Policies\PermohonanRekomendasiPolicy;
 use App\Policies\RegistrasiUsahaLb3Policy;
 use App\Policies\UserPolicy;
@@ -114,6 +116,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RegistrasiUsahaLb3::class, RegistrasiUsahaLb3Policy::class);
         Gate::policy(PengajuanRintekPertek::class, PengajuanRintekPertekPolicy::class);
         Gate::policy(PermohonanPinjamTaman::class, PermohonanPinjamTamanPolicy::class);
+        Gate::policy(PermohonanPohon::class, PermohonanPohonPolicy::class);
         Gate::policy(Pelanggaran::class, PelanggaranPolicy::class);
         Gate::policy(PengaduanTataPenataan::class, PengaduanTataPenataanPolicy::class);
 
@@ -126,6 +129,7 @@ class AppServiceProvider extends ServiceProvider
             PengajuanRintekPertek::class,
             RegistrasiUsahaLb3::class,
             PermohonanPinjamTaman::class,
+            PermohonanPohon::class,
             PengaduanTataPenataan::class,
             Pelanggaran::class,
             Sanksi::class,
@@ -155,6 +159,7 @@ class AppServiceProvider extends ServiceProvider
             PengajuanRintekPertek::class,
             RegistrasiUsahaLb3::class,
             PermohonanPinjamTaman::class,
+            PermohonanPohon::class,
             PengaduanTataPenataan::class,
             Pelanggaran::class,
             Sosialisasi::class,

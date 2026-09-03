@@ -167,6 +167,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
             'data-tpu' => 'admin.data-tpu.form',
+            'permohonan-pohon' => 'admin.permohonan-pohon.form',
             default => 'admin.resources.form',
         };
 
@@ -245,6 +246,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.show',
             'artikel' => 'admin.artikel.show',
             'data-tpu' => 'admin.data-tpu.show',
+            'permohonan-pohon' => 'admin.permohonan-pohon.show',
             default => 'admin.resources.show',
         };
 
@@ -266,6 +268,7 @@ class ResourceController extends Controller
             'pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth' => 'admin.pengendalian.form',
             'artikel' => 'admin.artikel.form',
             'data-tpu' => 'admin.data-tpu.form',
+            'permohonan-pohon' => 'admin.permohonan-pohon.form',
             default => 'admin.resources.form',
         };
 
@@ -1070,6 +1073,90 @@ class ResourceController extends Controller
             return $payload;
         }
 
+        if ($meta['slug'] === 'permohonan-pohon') {
+            $fillableKeys = [
+                'status',
+                'catatan_verifikasi',
+                'tanggal_survei',
+                'petugas_survei',
+                'kondisi_pohon',
+                'rekomendasi_tindakan',
+                'catatan_survei',
+                'alasan_penolakan',
+                'tanggal_pelaksanaan',
+                'tim_pelaksana',
+                'catatan_pelaksanaan',
+            ];
+
+            foreach ($fillableKeys as $key) {
+                if ($request->has($key)) {
+                    $payload[$key] = $request->input($key);
+                }
+            }
+
+            if (! $record->exists) {
+                foreach (['nama_pelapor', 'nomor_hp', 'jenis_tindakan', 'lokasi_pohon', 'latitude', 'longitude', 'jenis_pohon', 'alasan_pengajuan', 'keterangan_tambahan'] as $k) {
+                    if ($request->has($k)) {
+                        $payload[$k] = $request->input($k);
+                    }
+                }
+                if ($request->hasFile('foto_pohon')) {
+                    $stored = app(FileUploadService::class)->store($request->file('foto_pohon'), 'admin/permohonan-pohon', 'public');
+                    if ($stored !== false) {
+                        $payload['foto_pohon'] = $stored;
+                    }
+                }
+            }
+
+            // Dynamic foto_sebelum
+            $existingSebelum = $request->input('existing_foto_sebelum', $record->foto_sebelum ?? []);
+            if (is_string($existingSebelum)) {
+                $existingSebelum = json_decode($existingSebelum, true) ?: [];
+            }
+            $existingSebelum = is_array($existingSebelum) ? array_values(array_filter($existingSebelum)) : [];
+
+            if ($request->hasFile('foto_sebelum')) {
+                $files = $request->file('foto_sebelum');
+                if (! is_array($files)) {
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $stored = app(FileUploadService::class)->store($file, 'admin/permohonan-pohon', 'public');
+                        if ($stored !== false) {
+                            $existingSebelum[] = $stored;
+                        }
+                    }
+                }
+            }
+            $payload['foto_sebelum'] = array_values(array_unique($existingSebelum));
+
+            // Dynamic foto_sesudah
+            $existingSesudah = $request->input('existing_foto_sesudah', $record->foto_sesudah ?? []);
+            if (is_string($existingSesudah)) {
+                $existingSesudah = json_decode($existingSesudah, true) ?: [];
+            }
+            $existingSesudah = is_array($existingSesudah) ? array_values(array_filter($existingSesudah)) : [];
+
+            if ($request->hasFile('foto_sesudah')) {
+                $files = $request->file('foto_sesudah');
+                if (! is_array($files)) {
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $stored = app(FileUploadService::class)->store($file, 'admin/permohonan-pohon', 'public');
+                        if ($stored !== false) {
+                            $existingSesudah[] = $stored;
+                        }
+                    }
+                }
+            }
+            $payload['foto_sesudah'] = array_values(array_unique($existingSesudah));
+
+            return $payload;
+        }
+
         foreach (AdminRegistry::formFields($meta) as $field) {
             $name = $field['name'];
             $type = $field['type'] ?? 'text';
@@ -1299,6 +1386,39 @@ class ResourceController extends Controller
             return;
         }
 
+        if ($meta['slug'] === 'permohonan-pohon') {
+            $statusOptions = \App\Enums\StatusPermohonanPohon::options();
+            $rules = [
+                'status' => ['required', Rule::in(array_keys($statusOptions))],
+                'catatan_verifikasi' => ['nullable', 'string'],
+                'tanggal_survei' => ['nullable', 'date'],
+                'petugas_survei' => ['nullable', 'string', 'max:255'],
+                'kondisi_pohon' => ['nullable', 'string'],
+                'rekomendasi_tindakan' => ['nullable', 'string'],
+                'catatan_survei' => ['nullable', 'string'],
+                'alasan_penolakan' => ['nullable', 'string'],
+                'tanggal_pelaksanaan' => ['nullable', 'date'],
+                'tim_pelaksana' => ['nullable', 'string', 'max:255'],
+                'catatan_pelaksanaan' => ['nullable', 'string'],
+                'foto_sebelum' => ['nullable'],
+                'foto_sebelum.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
+                'foto_sesudah' => ['nullable'],
+                'foto_sesudah.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,heic,heif', 'max:5120'],
+            ];
+
+            if ($request->input('status') === \App\Enums\StatusPermohonanPohon::DITOLAK->value) {
+                $rules['alasan_penolakan'] = ['required', 'string'];
+            }
+
+            $request->validate($rules, [
+                'status.required' => 'Status alur kerja wajib dipilih.',
+                'status.in' => 'Status alur kerja tidak valid.',
+                'alasan_penolakan.required' => 'Alasan penolakan wajib diisi bila permohonan ditolak.',
+            ]);
+
+            return;
+        }
+
         $pengaduanSlugs = ['pengaduan-pengendalian', 'pengaduan-sampah', 'pengaduan-rth'];
 
         if (! in_array($meta['slug'], $pengaduanSlugs)) {
@@ -1360,7 +1480,7 @@ class ResourceController extends Controller
      */
     protected function validateFromFields(Request $request, array $meta, bool $updating, ?Model $model): void
     {
-        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth', 'data-tpu'], true)) {
+        if (in_array($meta['slug'], ['artikel', 'artikel-pengendalian', 'artikel-sampah-lb3', 'artikel-tata-penataan', 'artikel-rth', 'data-tpu', 'permohonan-pohon'], true)) {
             if (str_starts_with($meta['slug'], 'artikel')) {
                 $this->validateArtikelFields($request, $updating, $model);
             }

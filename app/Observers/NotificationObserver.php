@@ -12,6 +12,7 @@ use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
+use App\Models\PermohonanPohon;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\Sosialisasi;
@@ -42,6 +43,8 @@ class NotificationObserver
                 ($model->nama_perusahaan ?? 'Usaha').' melakukan registrasi LB3.', 'registrasi-usaha-lb3', $model->getKey()),
             $model instanceof PermohonanPinjamTaman => $this->notify('rth', 'park-bench', 'teal', 'Penyewaan Taman Baru',
                 ($model->nama_pemohon ?? 'Pemohon').' mengajukan penyewaan taman.', 'pinjam-taman', $model->getKey()),
+            $model instanceof PermohonanPohon => $this->notify('rth', 'axe', 'emerald', 'Permohonan Penebangan/Pemangkasan Pohon Baru',
+                ($model->nama_pelapor ?? 'Pelapor').' mengajukan permohonan '.($model->jenis_tindakan?->value ?? 'pohon').'.', 'permohonan-pohon', $model->getKey()),
             $model instanceof PengaduanTataPenataan => $this->notify('tata-penataan', 'building', 'purple', 'Pengaduan Tata Penataan Baru',
                 ($model->nama_pelapor ?? 'Pelapor').' mengirim pengaduan tata penataan.', 'pengaduan-tata-penataan', $model->getKey()),
             $model instanceof Pelanggaran => $this->notify('tata-penataan', 'alert-triangle', 'rose', 'Pelanggaran Terdeteksi',
@@ -89,6 +92,8 @@ class NotificationObserver
                 'Status registrasi "'.$model->nama_usaha.'" berubah menjadi '.$this->statusLabel($model->status).'.', 'registrasi-usaha-lb3', $model->getKey()),
             $model instanceof PengaduanTataPenataan => $this->notify('tata-penataan', 'building', 'purple', 'Status Pengaduan Berubah',
                 'Status pengaduan tata penataan #'.$model->id.' berubah menjadi '.$this->statusLabel($model->status).'.', 'pengaduan-tata-penataan', $model->getKey()),
+            $model instanceof PermohonanPohon => $this->notify('rth', 'axe', 'emerald', 'Status Permohonan Pohon Berubah',
+                'Status permohonan '.$model->nomor_tiket.' berubah menjadi '.$this->statusLabel($model->status).'.', 'permohonan-pohon', $model->getKey()),
             default => null,
         };
     }
@@ -108,6 +113,7 @@ class NotificationObserver
             $model instanceof PengajuanRintekPertek => 'pengajuan-rintek-pertek',
             $model instanceof RegistrasiUsahaLb3 => 'registrasi-usaha-lb3',
             $model instanceof PermohonanPinjamTaman => 'pinjam-taman',
+            $model instanceof PermohonanPohon => 'permohonan-pohon',
             $model instanceof PengaduanTataPenataan => 'pengaduan-tata-penataan',
             $model instanceof Pelanggaran => 'pelanggaran',
             $model instanceof Sosialisasi => 'sosialisasi',

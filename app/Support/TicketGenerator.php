@@ -27,6 +27,7 @@ class TicketGenerator
     {
         return match ($modelKey) {
             'permohonan_pinjam_taman' => 'PJM',
+            'permohonan_pohon' => 'PHN',
             'pengaduan_tata_penataan' => 'TTP',
             default => 'DLH',
         };

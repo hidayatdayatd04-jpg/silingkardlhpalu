@@ -162,14 +162,14 @@
                 ],
                 [
                     'title' => __('Ruang Terbuka Hijau'),
-                    'desc' => __('Pengaduan, penyewaan taman, & data TPU.'),
+                    'desc' => __('Penebangan pohon fasum, data TPU, & penyewaan taman.'),
                     'accent' => 'brand',
                     'icon' => 'rth',
                     'links' => [
                         [__('Data TPU'), '/tpu'],
-                        [__('Pengaduan'), '/pengaduan'],
+                        [__('Pohon Fasum'), '/penebangan-pohon'],
+                        [__('Cek Status Pohon'), '/cek-permohonan-pohon'],
                         [__('Penyewaan Taman'), '/pinjam-taman'],
-                        [__('Cek Penyewaan'), '/cek-pinjam-taman'],
                     ],
                 ],
             ];

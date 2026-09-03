@@ -227,8 +227,6 @@ Route::get('/syarat-ketentuan', fn () => view('public.syarat-ketentuan'));
 Route::redirect('/pengaduan-rth', '/pengaduan?bidang=rth');
 // Halaman cek lama sudah dipindahkan ke /lacak — link lama tetap berfungsi via redirect.
 Route::redirect('/cek-pengaduan-rth', '/lacak');
-Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
-Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middleware('throttle:30,1');
 Route::get('/tpu', function () {
     $tpus = \App\Models\DataTpu::all();
     return view('public.tpu', [
@@ -240,6 +238,17 @@ Route::get('/tpu', function () {
     ]);
 })->name('tpu')->middleware('throttle:60,1');
 Route::redirect('/taman-pemakaman-umum', '/tpu');
+
+Route::get('/penebangan-pohon', fn () => view('public.penebangan-pohon'))->name('penebangan-pohon');
+Route::redirect('/pemangkasan-pohon', '/penebangan-pohon');
+Route::redirect('/layanan-pohon', '/penebangan-pohon');
+Route::redirect('/permohonan-pohon', '/penebangan-pohon');
+
+Route::get('/cek-permohonan-pohon', fn () => view('public.cek-permohonan-pohon'))->name('cek-permohonan-pohon')->middleware('throttle:30,1');
+Route::redirect('/cek-pohon', '/cek-permohonan-pohon');
+
+Route::get('/pinjam-taman', fn () => view('public.pinjam-taman'));
+Route::get('/cek-pinjam-taman', fn () => view('public.cek-pinjam-taman'))->middleware('throttle:30,1');
 
 // Sampah & LB3 Public Routes
 Route::get('/peta-persampahan', [\App\Http\Controllers\PetaPersampahanController::class, 'index'])->name('peta-persampahan')->middleware('throttle:60,1');

@@ -12,6 +12,7 @@ use App\Models\PengaduanSampah;
 use App\Models\PengaduanTataPenataan;
 use App\Models\PengajuanRintekPertek;
 use App\Models\PermohonanPinjamTaman;
+use App\Models\PermohonanPohon;
 use App\Models\PermohonanRekomendasi;
 use App\Models\RegistrasiUsahaLb3;
 use App\Models\Sidak;
@@ -65,9 +66,10 @@ class AdminRegistry
                 'icon' => 'tree',
                 'items' => [
                     array_merge(self::resource('pengaduan-rth', 'Pengaduan RTH', PengaduanRth::class, ['nomor_tiket', 'nama_pelapor', 'jenis_pengaduan', 'status', 'created_at']), ['can_create' => false]),
-                    array_merge(self::resource('pinjam-taman', 'Penyewaan Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']), ['can_create' => false]),
                     self::resource('data-tanam-pohon', 'Data Tanam Pohon', DataTanamPohon::class, ['jenis_pohon', 'jumlah_pohon', 'nama_penanggung_jawab', 'latitude', 'longitude']),
                     self::resource('data-tpu', 'Data Taman Pemakaman Umum (TPU)', DataTpu::class, ['nama_tpu', 'luas_area_makam', 'created_at']),
+                    array_merge(self::resource('permohonan-pohon', 'Penebangan/Pemangkasan Pohon', PermohonanPohon::class, ['nomor_tiket', 'nama_pelapor', 'jenis_tindakan', 'lokasi_pohon', 'status', 'created_at']), ['can_create' => false]),
+                    array_merge(self::resource('pinjam-taman', 'Penyewaan Taman', PermohonanPinjamTaman::class, ['nomor_tiket', 'nama_pemohon', 'tanggal_kegiatan', 'tanggal_selesai', 'status']), ['can_create' => false]),
                 ],
             ],
             'konten' => [
@@ -1303,6 +1305,197 @@ class AdminRegistry
             ]);
         }
 
+        // Custom fields untuk resource 'permohonan-pohon'
+        if ($resource['slug'] === 'permohonan-pohon') {
+            return self::decorateFields($resource, [
+                [
+                    'name' => '_section_pelapor',
+                    'label' => 'Data Permohonan & Pelapor',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'nomor_tiket',
+                    'label' => 'Nomor Tiket',
+                    'type' => 'text',
+                    'options' => [],
+                    'readonly' => true,
+                    'hide_on_create' => true,
+                ],
+                [
+                    'name' => 'nama_pelapor',
+                    'label' => 'Nama Pelapor',
+                    'type' => 'text',
+                    'options' => [],
+                    'required' => true,
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'nomor_hp',
+                    'label' => 'Nomor WhatsApp / Telepon',
+                    'type' => 'tel',
+                    'options' => [],
+                    'required' => true,
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'jenis_tindakan',
+                    'label' => 'Jenis Tindakan',
+                    'type' => 'select',
+                    'options' => \App\Enums\JenisTindakanPohon::options(),
+                    'required' => true,
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'lokasi_pohon',
+                    'label' => 'Lokasi Pohon (Area Publik / Fasum)',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'required' => true,
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'latitude',
+                    'label' => 'Latitude',
+                    'type' => 'number',
+                    'options' => [],
+                    'step' => '0.000001',
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'longitude',
+                    'label' => 'Longitude',
+                    'type' => 'number',
+                    'options' => [],
+                    'step' => '0.000001',
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'jenis_pohon',
+                    'label' => 'Jenis Pohon (Jika Diketahui)',
+                    'type' => 'text',
+                    'options' => [],
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'alasan_pengajuan',
+                    'label' => 'Alasan Pengajuan',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'required' => true,
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'keterangan_tambahan',
+                    'label' => 'Keterangan Tambahan',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => 'foto_pohon',
+                    'label' => 'Foto Pohon dari Pelapor',
+                    'type' => 'file',
+                    'options' => [],
+                    'accept' => 'image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif',
+                    'wide' => true,
+                    'readonly_on_edit' => true,
+                ],
+                [
+                    'name' => '_section_verifikasi',
+                    'label' => 'Verifikasi & Hasil Survei Lapangan',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'status',
+                    'label' => 'Status Alur Kerja',
+                    'type' => 'select',
+                    'options' => \App\Enums\StatusPermohonanPohon::options(),
+                    'required' => true,
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'catatan_verifikasi',
+                    'label' => 'Catatan Verifikasi (Kesesuaian Area Publik)',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'tanggal_survei',
+                    'label' => 'Tanggal Survei Lapangan',
+                    'type' => 'date',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'petugas_survei',
+                    'label' => 'Petugas Survei Lapangan',
+                    'type' => 'text',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'kondisi_pohon',
+                    'label' => 'Kondisi Fisik Pohon (Tinggi, Diameter, Kelayakan)',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'rekomendasi_tindakan',
+                    'label' => 'Rekomendasi Tindakan Teknis',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'catatan_survei',
+                    'label' => 'Catatan Tambahan Hasil Survei',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+                [
+                    'name' => 'alasan_penolakan',
+                    'label' => 'Alasan Penolakan (Jika Ditolak)',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+                [
+                    'name' => '_section_pelaksanaan',
+                    'label' => 'Jadwal Pelaksanaan & Dokumentasi Eksekusi',
+                    'type' => 'section',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'tanggal_pelaksanaan',
+                    'label' => 'Jadwal / Tanggal Pelaksanaan',
+                    'type' => 'date',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'tim_pelaksana',
+                    'label' => 'Tim Pelaksana Lapangan DLH',
+                    'type' => 'text',
+                    'options' => [],
+                ],
+                [
+                    'name' => 'catatan_pelaksanaan',
+                    'label' => 'Catatan Pelaksanaan Pekerjaan',
+                    'type' => 'textarea',
+                    'options' => [],
+                    'wide' => true,
+                ],
+            ]);
+        }
+
         // Custom fields untuk resource 'pinjam-taman'
         // Taman dibatasi ke 5 taman resmi (konsisten dgn form publik).
         if ($resource['slug'] === 'pinjam-taman') {
@@ -2148,7 +2341,19 @@ class AdminRegistry
             'surat_permohonan' => 'Surat Permohonan',
             'ktp_nib' => 'KTP/NIB',
             'foto_pohon' => 'Foto Pohon',
+            'foto_sebelum' => 'Foto Sebelum Eksekusi',
+            'foto_sesudah' => 'Foto Sesudah Eksekusi',
             'foto_dokumentasi' => 'Foto Dokumentasi',
+            'jenis_tindakan' => 'Jenis Tindakan',
+            'lokasi_pohon' => 'Lokasi Pohon',
+            'jenis_pohon' => 'Jenis Pohon',
+            'alasan_pengajuan' => 'Alasan Pengajuan',
+            'petugas_survei' => 'Petugas Survei',
+            'kondisi_pohon' => 'Kondisi Pohon',
+            'rekomendasi_tindakan' => 'Rekomendasi Tindakan',
+            'tanggal_pelaksanaan' => 'Tanggal Pelaksanaan',
+            'tim_pelaksana' => 'Tim Pelaksana',
+            'catatan_pelaksanaan' => 'Catatan Pelaksanaan',
             'jaminan_kebersihan' => 'Jaminan Kebersihan',
             'surat_jaminan' => 'Surat Jaminan',
             'tanggal_kegiatan' => 'Tanggal Mulai',

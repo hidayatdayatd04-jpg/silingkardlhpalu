@@ -387,7 +387,7 @@
                 <!-- Bidang RTH Dropdown -->
                 <div x-data="{ open: false }" @click.away="open = false" class="relative">
                     <button @click="open = !open"
-                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
+                        class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*', 'penebangan-pohon*', 'cek-permohonan-pohon*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500/15' : 'text-slate-600 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-slate-800/60' }} transition-colors focus:outline-none cursor-pointer select-none whitespace-nowrap">
                         <span>{{ __('RTH') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
@@ -401,6 +401,8 @@
                         class="absolute left-0 mt-3 w-max min-w-[240px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl p-1.5 z-50 focus:outline-none"
                         style="display: none;">
                         <a href="/tpu" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('tpu*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Taman Pemakaman Umum (TPU)') }}</a>
+                        <a href="/penebangan-pohon" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('penebangan-pohon*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Penebangan/Pemangkasan Pohon') }}</a>
+                        <a href="/cek-permohonan-pohon" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('cek-permohonan-pohon*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Cek Status Penebangan/Pemangkasan') }}</a>
                         <a href="/pinjam-taman" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Penyewaan Taman') }}</a>
                         <a href="/cek-pinjam-taman" class="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-medium transition-colors whitespace-nowrap {{ request()->is('cek-pinjam-taman') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : '' }}">{{ __('Cek Penyewaan Taman') }}</a>
                     </div>
@@ -659,8 +661,8 @@
                 </div>
 
                 <!-- Bidang RTH (Dropdown Mobile) -->
-                <div x-data="{ open: {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
+                <div x-data="{ open: {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*', 'penebangan-pohon*', 'cek-permohonan-pohon*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-base font-semibold {{ request()->is('pinjam-taman', 'cek-pinjam-taman', 'tpu*', 'penebangan-pohon*', 'cek-permohonan-pohon*') ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-900/10' : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' }} focus:outline-none cursor-pointer">
                         <span>{{ __('RTH') }}</span>
                         <x-icons.ui name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
                     </button>
@@ -669,6 +671,8 @@
                          x-transition:enter-start="opacity-0 -translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0">
                         <a href="/tpu" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Taman Pemakaman Umum (TPU)') }}</a>
+                        <a href="/penebangan-pohon" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Penebangan/Pemangkasan Pohon') }}</a>
+                        <a href="/cek-permohonan-pohon" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Cek Status Penebangan/Pemangkasan') }}</a>
                         <a href="/pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Penyewaan Taman') }}</a>
                         <a href="/cek-pinjam-taman" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('Cek Penyewaan Taman') }}</a>
                     </div>
@@ -799,6 +803,8 @@
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">{{ __('RTH') }}</h2>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="/tpu" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Taman Pemakaman Umum (TPU)') }}</a></li>
+                        <li><a href="/penebangan-pohon" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Penebangan/Pemangkasan Pohon') }}</a></li>
+                        <li><a href="/cek-permohonan-pohon" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Status Penebangan/Pemangkasan') }}</a></li>
                         <li><a href="/pengaduan" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Pengaduan RTH') }}</a></li>
                         <li><a href="/pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Penyewaan Taman') }}</a></li>
                         <li><a href="/cek-pinjam-taman" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-0.5 transition-[color,transform] duration-200">{{ __('Cek Penyewaan Taman') }}</a></li>
