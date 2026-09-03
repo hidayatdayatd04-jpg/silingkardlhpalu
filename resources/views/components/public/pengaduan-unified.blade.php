@@ -194,9 +194,9 @@ new class extends Component {
     private function messages(): array
     {
         return [
-            'nomor_hp.required' => 'Nomor telepon wajib diisi.',
-            'nomor_hp.regex' => 'Format nomor telepon tidak valid. Gunakan format: 08xxx.',
-            'nomor_hp.max' => 'Nomor telepon maksimal 15 digit.',
+            'nomor_hp.required' => 'Nomor Whatsapp wajib diisi.',
+            'nomor_hp.regex' => 'Format nomor Whatsapp tidak valid. Gunakan format: 08xxx.',
+            'nomor_hp.max' => 'Nomor Whatsapp maksimal 15 digit.',
             'nik_npwrd.max' => 'NIK/NPWRD maksimal 50 karakter.',
             'photos.required' => 'Foto bukti wajib diunggah minimal 1 foto.',
             'photos.array' => 'Foto bukti harus berupa array.',
@@ -450,7 +450,7 @@ new class extends Component {
                     name="nomor_hp"
                     type="tel"
                     maxlength="15"
-                    label="{{ __('Nomor Telepon') }}"
+                    label="{{ __('Nomor Whatsapp') }}"
                     placeholder="{{ __('Contoh: 08123456789') }}"
                     required
                 />
@@ -740,7 +740,7 @@ new class extends Component {
             phoneInput.addEventListener('blur', function() {
                 const val = this.value.trim();
                 if(val && val.length > 15) {
-                    alert('Nomor telepon maksimal 15 digit!');
+                    alert('Nomor Whatsapp maksimal 15 digit!');
                     this.value = val.substring(0, 15);
                 }
             });

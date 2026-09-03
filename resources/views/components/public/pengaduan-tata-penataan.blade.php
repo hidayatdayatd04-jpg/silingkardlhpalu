@@ -139,7 +139,7 @@ new class extends Component {
                     wire:model="nomor_hp"
                     name="nomor_hp"
                     type="tel"
-                    label="{{ __('Nomor Telepon') }}"
+                    label="{{ __('Nomor Whatsapp') }}"
                     placeholder="{{ __('Contoh: 08123456789') }}"
                 />
 
