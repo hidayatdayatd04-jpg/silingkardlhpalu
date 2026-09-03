@@ -100,36 +100,71 @@ new class extends Component {
 }; ?>
 
 <div class="space-y-6">
-    {{-- INFORMASI PENTING: KHUSUS POHON DI AREA PUBLIK / FASILITAS UMUM --}}
-    <div class="rounded-3xl bg-[#fef9ee] dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 p-5 sm:p-6 space-y-3.5">
-        {{-- Header: Icon + Judul --}}
-        <div class="flex items-center gap-3">
-            <span class="size-9 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <x-icons.ui name="alert-triangle" class="size-5" />
+    {{-- KETENTUAN LAYANAN: KHUSUS POHON DI AREA PUBLIK / FASILITAS UMUM --}}
+    <div class="rounded-2xl bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-amber-50/60 dark:from-amber-950/25 dark:via-orange-950/15 dark:to-amber-950/10 shadow-[0_4px_24px_-6px_rgba(217,119,6,0.15)] overflow-hidden">
+        {{-- Header Strip --}}
+        <div class="bg-gradient-to-r from-amber-500 via-amber-500 to-orange-400 dark:from-amber-600 dark:via-amber-600 dark:to-orange-500 px-5 sm:px-6 py-4 flex items-center gap-3.5">
+            <span class="size-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 ring-1 ring-white/10">
+                <x-icons.ui name="alert-triangle" class="size-5 text-white" />
             </span>
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-black tracking-wider uppercase text-amber-800 dark:text-amber-400">
+            <div class="flex flex-col">
+                <span class="text-[11px] font-black tracking-widest uppercase text-white/70">
                     {{ __('KETENTUAN LAYANAN') }}
                 </span>
-                <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                <span class="text-sm sm:text-base font-bold text-white mt-0.5">
                     {{ __('Khusus Pohon di Area Publik & Fasilitas Umum') }}
                 </span>
             </div>
         </div>
 
-        {{-- Penjelasan Ruang Lingkup Fasum --}}
-        <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
-            Dinas Lingkungan Hidup (DLH) Kota Palu <strong>hanya melayani permohonan penebangan atau pemangkasan pohon pelindung/perindang yang berada di fasilitas umum</strong>, seperti sempadan jalan raya, trotoar, jalur hijau publik, median jalan, atau taman kota.
-        </p>
+        {{-- Body --}}
+        <div class="px-5 sm:px-6 pt-5 pb-6 sm:pt-6 sm:pb-7 space-y-5">
+            {{-- Penjelasan Ruang Lingkup --}}
+            <p class="text-sm sm:text-[15px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                Dinas Lingkungan Hidup (DLH) Kota Palu <strong class="font-bold text-slate-900 dark:text-white">hanya melayani permohonan penebangan atau pemangkasan pohon pelindung/perindang yang berada di fasilitas umum : </strong>.
+            </p>
 
-        {{-- Box PENTING (Warna Merah Muda Lembut Sesuai Desain Asli, Ukuran Teks Diperbesar) --}}
-        <div class="rounded-2xl bg-rose-100/70 dark:bg-rose-950/40 border border-rose-200/90 dark:border-rose-900/50 p-4 sm:p-5 text-rose-950 dark:text-rose-100 space-y-2">
-            <p class="text-base sm:text-lg font-bold leading-snug">
-                <strong>{{ __('PENTING:') }}</strong> {{ __('DLH TIDAK MENERIMA laporan atau permohonan untuk pohon yang berada di area pribadi (seperti halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya).') }}
-            </p>
-            <p class="text-sm sm:text-base font-medium text-rose-900/90 dark:text-rose-200/90 italic leading-relaxed">
-                *{{ __('Pemangkasan/penebangan pohon pada area pribadi sepenuhnya menjadi tanggung jawab pemilik lahan, Kecuali Keadaan Emergency (pohon Tumbang).') }}
-            </p>
+            {{-- Daftar Area yang Dilayani --}}
+            <div class="grid sm:grid-cols-2 gap-2.5">
+                @foreach ([
+                    'Sempadan jalan raya',
+                    'Trotoar & jalur hijau publik',
+                    'Median jalan',
+                    'Taman kota',
+                ] as $area)
+                    <div class="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-400">
+                        <span class="size-5.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        </span>
+                        <span>{{ __($area) }}</span>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Peringatan PENTING --}}
+            <div class="rounded-xl overflow-hidden" style="background: linear-gradient(135deg, #e11d48, #dc2626);">
+                <div class="px-5 sm:px-6 py-5 sm:py-6 space-y-3.5">
+                    {{-- PENTING Label --}}
+                    <div class="flex items-center gap-2.5">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase bg-white/20 text-white backdrop-blur-sm">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                            {{ __('PENTING') }}
+                        </span>
+                    </div>
+
+                    {{-- Pesan Utama --}}
+                    <p class="text-[15px] sm:text-base font-semibold text-white leading-relaxed">
+                        {{ __('DLH tidak menerima laporan atau permohonan untuk pohon yang berada di area pribadi') }}
+                        <span class="font-normal text-white/75">{{ __('(halaman rumah, pekarangan pribadi, lahan milik pribadi, dan area privat lainnya)') }}</span>,
+                        <strong class="font-bold text-white">{{ __('kecuali keadaan darurat (pohon tumbang).') }}</strong>
+                    </p>
+
+                    {{-- Catatan Kaki --}}
+                    <p class="text-xs sm:text-[13px] italic text-white/60 leading-relaxed">
+                        {{ __('Pemangkasan/penebangan pohon pada area pribadi sepenuhnya menjadi tanggung jawab pemilik lahan.') }}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
