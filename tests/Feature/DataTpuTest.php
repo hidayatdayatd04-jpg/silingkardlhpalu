@@ -187,4 +187,42 @@ class DataTpuTest extends TestCase
             ])
             ->assertForbidden();
     }
+
+    public function test_bidang_rth_can_delete_tpu(): void
+    {
+        $tpu = DataTpu::create([
+            'nama_tpu' => 'TPU Mau Dihapus',
+            'luas_area_makam' => '1 Ha',
+            'vegetasi' => [['jenis_pohon' => 'Kamboja', 'jumlah' => '5']],
+            'kapasitas_blok' => [['agama' => 'Islam', 'jumlah_blok' => '5 blok', 'jumlah_makam' => '50 makam']],
+        ]);
+
+        $user = $this->makeUser('bidang-rth');
+
+        $response = $this->actingAs($user)
+            ->delete(route('admin.resources.destroy', ['data-tpu', $tpu]));
+
+        $response->assertRedirect(route('admin.resources.index', 'data-tpu'));
+        $this->assertDatabaseMissing('data_tpu', ['id' => $tpu->id]);
+    }
+
+    public function test_tpu_form_allows_deleting_last_vegetasi_row(): void
+    {
+        $tpu = DataTpu::create([
+            'nama_tpu' => 'TPU Form Test',
+            'luas_area_makam' => '1 Ha',
+            'vegetasi' => [['jenis_pohon' => 'Kamboja', 'jumlah' => '5']],
+            'kapasitas_blok' => [['agama' => 'Islam', 'jumlah_blok' => '5 blok', 'jumlah_makam' => '50 makam']],
+        ]);
+
+        $user = $this->makeUser('bidang-rth');
+
+        $response = $this->actingAs($user)
+            ->get(route('admin.resources.edit', ['data-tpu', $tpu]));
+
+        $response->assertOk();
+        // Tombol hapus baris tidak boleh diblokir dengan :disabled="vegetasiList.length <= 1"
+        $response->assertDontSee(':disabled="vegetasiList.length <= 1"', false);
+        $response->assertDontSee(':disabled="blokList.length <= 1"', false);
+    }
 }

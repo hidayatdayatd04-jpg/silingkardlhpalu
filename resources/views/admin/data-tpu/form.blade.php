@@ -5,11 +5,11 @@
 
 @php
     $readOnly = (bool) ($readOnly ?? false);
-    $initialVegetasi = old('vegetasi', $record->vegetasi ?? [
+    $initialVegetasi = old('vegetasi', $record->vegetasi ?? ($record->exists ? [] : [
         ['jenis_pohon' => '', 'jumlah' => '']
-    ]);
-    if (empty($initialVegetasi) || !is_array($initialVegetasi)) {
-        $initialVegetasi = [['jenis_pohon' => '', 'jumlah' => '']];
+    ]));
+    if (!is_array($initialVegetasi)) {
+        $initialVegetasi = [];
     }
 
     $initialBlok = old('kapasitas_blok', $record->kapasitas_blok ?? [
@@ -18,11 +18,8 @@
         ['agama' => 'Hindu', 'jumlah_blok' => '', 'jumlah_makam' => ''],
         ['agama' => 'Buddha', 'jumlah_blok' => '', 'jumlah_makam' => ''],
     ]);
-    if (empty($initialBlok) || !is_array($initialBlok)) {
-        $initialBlok = [
-            ['agama' => 'Islam', 'jumlah_blok' => '', 'jumlah_makam' => ''],
-            ['agama' => 'Kristen', 'jumlah_blok' => '', 'jumlah_makam' => ''],
-        ];
+    if (!is_array($initialBlok)) {
+        $initialBlok = [];
     }
 
     $existingPhotoList = $record->exists ? $record->getDokumentasiList() : [];
@@ -39,17 +36,13 @@
             this.vegetasiList.push({ jenis_pohon: '', jumlah: '' });
         },
         removeVegetasi(index) {
-            if (this.vegetasiList.length > 1) {
-                this.vegetasiList.splice(index, 1);
-            }
+            this.vegetasiList.splice(index, 1);
         },
         addBlok() {
             this.blokList.push({ agama: '', jumlah_blok: '', jumlah_makam: '' });
         },
         removeBlok(index) {
-            if (this.blokList.length > 1) {
-                this.blokList.splice(index, 1);
-            }
+            this.blokList.splice(index, 1);
         },
         removeExistingPhoto(index) {
             this.existingPhotos.splice(index, 1);
@@ -217,6 +210,22 @@
 
             {{-- Repeater Baris Vegetasi --}}
             <div class="space-y-3">
+                <template x-if="vegetasiList.length === 0">
+                    <div class="p-6 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Belum ada data pohon pelindung atau seluruh baris telah dihapus.</p>
+                        @if(!$readOnly)
+                            <button
+                                type="button"
+                                @click="addVegetasi()"
+                                class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer"
+                            >
+                                <x-icons.ui name="plus" class="w-3.5 h-3.5" />
+                                <span>Tambah Baris Pohon</span>
+                            </button>
+                        @endif
+                    </div>
+                </template>
+
                 <template x-for="(item, index) in vegetasiList" :key="'veg-' + index">
                     <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                         <div class="w-6 text-center text-xs font-bold text-slate-400" x-text="index + 1 + '.'"></div>
@@ -251,8 +260,6 @@
                                 @click="removeVegetasi(index)"
                                 class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                 title="Hapus Baris"
-                                :disabled="vegetasiList.length <= 1"
-                                :class="vegetasiList.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''"
                             >
                                 <x-icons.ui name="trash" class="w-4 h-4" />
                             </button>
@@ -289,6 +296,22 @@
 
             {{-- Repeater Baris Kapasitas Blok --}}
             <div class="space-y-3">
+                <template x-if="blokList.length === 0">
+                    <div class="p-6 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Belum ada data kapasitas blok makam atau seluruh baris telah dihapus.</p>
+                        @if(!$readOnly)
+                            <button
+                                type="button"
+                                @click="addBlok()"
+                                class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-900/30 dark:text-sky-300 transition-all cursor-pointer"
+                            >
+                                <x-icons.ui name="plus" class="w-3.5 h-3.5" />
+                                <span>Tambah Blok Agama</span>
+                            </button>
+                        @endif
+                    </div>
+                </template>
+
                 <template x-for="(item, index) in blokList" :key="'blok-' + index">
                     <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                         <div class="w-6 text-center text-xs font-bold text-slate-400" x-text="index + 1 + '.'"></div>
@@ -335,8 +358,6 @@
                                 @click="removeBlok(index)"
                                 class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                 title="Hapus Baris"
-                                :disabled="blokList.length <= 1"
-                                :class="blokList.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''"
                             >
                                 <x-icons.ui name="trash" class="w-4 h-4" />
                             </button>
