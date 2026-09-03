@@ -181,23 +181,23 @@ new class extends Component {
                 </div>
 
                 {{-- Jenis Tindakan (MINIMAL, CLEAN RADIO CARDS, NO BLACK BORDER) --}}
-                <div>
+                <div x-data="{ selectedTindakan: @entangle('jenis_tindakan') }">
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                         {{ __('Jenis Tindakan yang Dimohonkan') }} <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none
-                            {{ $jenis_tindakan === 'Pemangkasan' ? 'border-emerald-500 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900' }}">
-                            <input type="radio" wire:model.live="jenis_tindakan" value="Pemangkasan" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 size-4 cursor-pointer" />
+                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none"
+                            :class="selectedTindakan === 'Pemangkasan' ? 'border-emerald-500 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'">
+                            <input type="radio" x-model="selectedTindakan" value="Pemangkasan" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 size-4 cursor-pointer" />
                             <div>
                                 <span class="block text-sm font-bold text-slate-900 dark:text-white">{{ __('Pemangkasan (Pruning)') }}</span>
                                 <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{{ __('Pemotongan dahan/ranting yang rimbun, menutupi penerangan jalan, atau mengenai kabel utilitas.') }}</span>
                             </div>
                         </label>
 
-                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none
-                            {{ $jenis_tindakan === 'Penebangan' ? 'border-emerald-500 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900' }}">
-                            <input type="radio" wire:model.live="jenis_tindakan" value="Penebangan" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 size-4 cursor-pointer" />
+                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none"
+                            :class="selectedTindakan === 'Penebangan' ? 'border-emerald-500 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'">
+                            <input type="radio" x-model="selectedTindakan" value="Penebangan" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 size-4 cursor-pointer" />
                             <div>
                                 <span class="block text-sm font-bold text-slate-900 dark:text-white">{{ __('Penebangan Total') }}</span>
                                 <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{{ __('Penebangan habis pohon yang telah lapuk, condong berbahaya, atau akar merusak struktur fasum.') }}</span>
@@ -220,6 +220,7 @@ new class extends Component {
 
                 {{-- Map Picker Koordinat Pohon --}}
                 <div
+                    wire:ignore
                     x-data="{
                         map: null,
                         marker: null,
@@ -293,6 +294,7 @@ new class extends Component {
                     </div>
 
                     <div
+                        wire:ignore
                         x-ref="mapContainer"
                         style="height: 240px;"
                         class="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 shadow-inner"
