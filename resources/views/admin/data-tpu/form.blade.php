@@ -44,6 +44,34 @@
         removeBlok(index) {
             this.blokList.splice(index, 1);
         },
+        calculateBlok(index) {
+            const item = this.blokList[index];
+            if (!item) return;
+
+            const cleanBlok = parseInt(String(item.jumlah_blok || '').replace(/\D/g, ''), 10);
+            const cleanKap = parseInt(String(item.kapasitas_per_blok || '').replace(/\D/g, ''), 10);
+
+            // Auto calculate Total Kapasitas jika jumlah_blok & kapasitas_per_blok diisi angka
+            if (!isNaN(cleanBlok) && !isNaN(cleanKap) && cleanBlok > 0 && cleanKap > 0) {
+                const total = cleanBlok * cleanKap;
+                if (!item.jumlah_makam || item._autoTotal) {
+                    item.jumlah_makam = total.toLocaleString('id-ID') + ' makam';
+                    item._autoTotal = true;
+                }
+            }
+
+            // Auto calculate Makam Kosong (Sisa) = Total Kapasitas - Makam Terisi
+            const cleanTotal = parseInt(String(item.jumlah_makam || '').replace(/\D/g, ''), 10);
+            const cleanTerisi = parseInt(String(item.makam_terisi || '0').replace(/\D/g, ''), 10);
+            if (!isNaN(cleanTotal) && cleanTotal >= 0) {
+                const terisi = isNaN(cleanTerisi) ? 0 : cleanTerisi;
+                const sisa = Math.max(0, cleanTotal - terisi);
+                if (!item.makam_kosong || item._autoKosong) {
+                    item.makam_kosong = sisa.toLocaleString('id-ID') + ' makam';
+                    item._autoKosong = true;
+                }
+            }
+        },
         removeExistingPhoto(index) {
             this.existingPhotos.splice(index, 1);
         },
@@ -353,6 +381,7 @@
                                     type="text"
                                     :name="'kapasitas_blok[' + index + '][jumlah_blok]'"
                                     x-model="item.jumlah_blok"
+                                    @input="calculateBlok(index)"
                                     placeholder="Jumlah Blok (misal: 88 blok)"
                                     @if($readOnly) disabled @endif
                                     class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
@@ -366,6 +395,7 @@
                                     type="text"
                                     :name="'kapasitas_blok[' + index + '][kapasitas_per_blok]'"
                                     x-model="item.kapasitas_per_blok"
+                                    @input="calculateBlok(index)"
                                     placeholder="Kapasitas per Blok (misal: 16 makam/blok)"
                                     @if($readOnly) disabled @endif
                                     class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60"
@@ -379,6 +409,7 @@
                                     type="text"
                                     :name="'kapasitas_blok[' + index + '][jumlah_makam]'"
                                     x-model="item.jumlah_makam"
+                                    @input="item._autoTotal = false; calculateBlok(index)"
                                     placeholder="Total Kapasitas (misal: 1.408 makam)"
                                     @if($readOnly) disabled @endif
                                     class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold"
@@ -392,7 +423,8 @@
                                     type="text"
                                     :name="'kapasitas_blok[' + index + '][makam_terisi]'"
                                     x-model="item.makam_terisi"
-                                    placeholder="Makam Terisi (misal: 1.200 makam)"
+                                    @input="calculateBlok(index)"
+                                    placeholder="Makam Terisi (misal: 17 makam)"
                                     @if($readOnly) disabled @endif
                                     class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold text-amber-700 dark:text-amber-300"
                                 />
@@ -400,12 +432,13 @@
 
                             {{-- Makam Kosong --}}
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Makam Kosong</label>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Makam Kosong (Sisa Kapasitas)</label>
                                 <input
                                     type="text"
                                     :name="'kapasitas_blok[' + index + '][makam_kosong]'"
                                     x-model="item.makam_kosong"
-                                    placeholder="Makam Kosong (misal: 208 makam)"
+                                    @input="item._autoKosong = false"
+                                    placeholder="Sisa Kosong (misal: 1.391 makam)"
                                     @if($readOnly) disabled @endif
                                     class="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-60 font-semibold text-emerald-700 dark:text-emerald-300"
                                 />
@@ -413,6 +446,14 @@
                         </div>
                     </div>
                 </template>
+
+                {{-- Kotak Bantuan Kalkulasi Otomatis --}}
+                <div class="p-3.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 text-xs text-sky-800 dark:text-sky-300 flex items-start gap-2.5">
+                    <x-icons.ui name="info" class="w-4 h-4 shrink-0 mt-0.5 text-sky-600 dark:text-sky-400" />
+                    <p class="leading-relaxed">
+                        <strong>Kalkulasi Otomatis:</strong> Nilai <strong>Total Kapasitas Makam</strong> (Jumlah Blok × Kapasitas per Blok) dan <strong>Makam Kosong / Sisa Kapasitas</strong> (Total Kapasitas − Makam Terisi) akan terhitung otomatis saat Anda mengisi form, dan Anda juga tetap bebas mengetik angka atau teks manual.
+                    </p>
+                </div>
             </div>
         </div>
 
