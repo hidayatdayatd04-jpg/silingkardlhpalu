@@ -360,22 +360,25 @@
                                         </a>
 
                                         {{-- Hapus --}}
-                                        <form
-                                            method="POST"
-                                            action="{{ route('admin.resources.destroy', [$resource['slug'], $record]) }}"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus data {{ $record->nama_tpu }}?');"
-                                            class="inline-block"
+                                        <button
+                                            type="button"
+                                            x-data=""
+                                            x-on:click="$dispatch('open-modal', 'del-tpu-{{ $record->id }}')"
+                                            class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                            title="Hapus Data"
+                                            aria-label="Hapus {{ $record->nama_tpu }}"
                                         >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button
-                                                type="submit"
-                                                class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                                                title="Hapus Data"
-                                            >
-                                                <x-icons.ui name="trash" class="w-4 h-4" />
-                                            </button>
-                                        </form>
+                                            <x-icons.ui name="trash" class="w-4 h-4" />
+                                        </button>
+
+                                        <x-admin.confirm-delete
+                                            name="del-tpu-{{ $record->id }}"
+                                            :action="route('admin.resources.destroy', [$resource['slug'], $record])"
+                                            title="Hapus Data TPU"
+                                            message="Apakah Anda yakin ingin menghapus data {{ $record->nama_tpu }}? Seluruh informasi vegetasi dan kapasitas blok makam akan dihapus permanen. Aksi ini tidak bisa dibatalkan."
+                                            confirm-text="Hapus Data"
+                                            cancel-text="Batal"
+                                        />
                                     @endif
                                 </div>
                             </td>
