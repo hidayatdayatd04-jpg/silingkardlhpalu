@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\JenisPengaduanSampah;
 use App\Models\PengaduanSampah;
 use App\Support\Admin\AdminRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
